@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Создать объявление — TyPlace</title>
+
+<link rel="stylesheet" href="/header.css">
+<link rel="stylesheet" href="/gallery.css">
+
+<style>
+body{
+  margin:0;
+  font-family: Inter, Arial, sans-serif;
+  background:#f6f7f9;
+}
+
+.page{
+  display:flex;
+  justify-content:center;
+  padding:24px 14px 60px;
+}
+
+.container{
+  width:100%;
+  max-width:950px;
+  background:#fff;
+  border-radius:16px;
+  padding:24px;
+  border:1px solid #e5e7eb;
+}
+
+/* ===== TOP ROW ===== */
+.top-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:14px;
+}
+
+/* BACK PILL */
+.back-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:8px 14px;
+  border-radius:999px;
+  border:1px solid #e5e7eb;
+  background:#fff;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+}
+.back-pill:hover{
+  background:#f3f4f6;
+}
+
+/* BREADCRUMB */
+.breadcrumb{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.crumb-icon{
+  width:40px;
+  height:40px;
+  border-radius:8px;
+  object-fit:cover;
+}
+
+
+.crumb-game{
+  font-size:20px;
+  font-weight:600;
+}
+
+.crumb-mode{
+  font-size:18px;
+  font-weight:600;
+  opacity:.7;
+}
+
+/* FORM */
+.form-group{ margin-bottom:16px; }
+
+label{
+  display:block;
+  font-size:13px;
+  font-weight:600;
+  margin-bottom:6px;
+}
+
+/* IMAGE */
+.image-preview{
+  width:100%;
+  aspect-ratio:16/9;
+  border-radius:14px;
+  background:#f3f4f6;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+}
+
+.image-preview img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.image-placeholder{
+  text-align:center;
+  color:#9ca3af;
+}
+
+.image-placeholder .plus{
+  font-size:40px;
+}
+
+.remove-image{
+  position:absolute;
+  top:10px;
+  right:10px;
+  background:rgba(0,0,0,.6);
+  color:#fff;
+  border:none;
+  border-radius:50%;
+  width:28px;
+  height:28px;
+  cursor:pointer;
+}
+
+/* INPUTS */
+input, select{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid #e5e7eb;
+  font-size:14px;
+  box-sizing:border-box;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+
+.row{
+  display:flex;
+  gap:12px;
+}
+
+.row .form-group.price-group{
+  max-width:220px;
+}
+
+.row .form-group.amount-group{
+  max-width:140px;
+}
+
+/* BUTTON */
+.btn{
+  margin-top:20px;
+  width:100%;
+  height:44px;
+  border-radius:12px;
+  border:none;
+  background:#111;
+  color:#fff;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+}
+.field-full{
+  width:100%;
+  flex: 1;
+}
+textarea{
+  width: 100%;              /* ✅ фикс по горизонтали */
+  max-width: 100%;
+  resize: none;             /* ⛔ нельзя тянуть мышкой */
+  box-sizing: border-box;   /* ⛔ текст не вылезает */
+  font-family: Inter, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.input-suffix{
+  position: relative;
+}
+
+.input-suffix input{
+  padding-right: 42px;
+}
+
+.input-suffix .suffix{
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  font-weight: 700;
+  color: #6b7280;
+  pointer-events: none;
+}
+</style>
+</head>
+
+<body>
+
+<div id="header-container"></div>
+
+<div class="page">
+<div class="container">
+
+<!-- TOP -->
+<div class="top-row">
+  <button class="back-pill" id="backBtn">← Назад</button>
+
+  <div class="breadcrumb">
+    <img id="crumbIcon" class="crumb-icon">
+<span class="crumb-game" id="crumbGame"></span>
+<span class="crumb-mode" id="crumbMode"></span>
+  </div>
+</div>
+
+<form id="offerForm">
+
+<div class="form-group">
+<label>Фото товара</label>
+
+<div class="tp-gallery" id="createGallery"></div>
+
+<input type="file" id="imageInput" accept="image/*" multiple hidden>
+</div>
+
+<div id="extraFields"></div>
+<div class="form-group" id="categoryGroup" style="display:none; max-width:320px;">
+  <label>Категория</label>
+  <select id="categoryInput">
+    <option value="">Выберите категорию</option>
+  </select>
+</div>
+
+<!-- PRICE + AMOUNT -->
+<div class="row">
+  <div class="form-group price-group">
+  <label>Цена</label>
+    <div style="position:relative;">
+  <input id="priceInput"
+         type="text"
+         inputmode="numeric"
+         placeholder="Цена"
+         style="padding-right:44px;">
+  <span id="priceCurrency"
+        style="
+          position:absolute;
+          right:14px;
+          top:50%;
+          transform:translateY(-50%);
+          font-weight:700;
+          color:#6b7280;
+        ">₴</span>
+</div>
+    <div id="pricePreview" style="
+  margin-top:6px;
+  font-size:13px;
+  color:#6b7280;
+  display:none;
+  line-height:1.25;
+"></div>
+  </div>
+
+  <div class="form-group amount-group">
+  <label id="amountLabel">Наличие</label>
+
+  <div class="input-suffix" id="amountWrapper" style="display:none">
+    <input
+      id="amountInput"
+      type="number"
+      inputmode="numeric"
+      min="1"
+      value="1"
+    >
+    <span class="suffix">шт.</span>
+  </div>
+
+  <select id="amountSelect" style="display:none"></select>
+</div>
+</div>
+
+<!-- LANGUAGE SELECT (ONLY FOR ACCOUNTS) -->
+<div class="form-group" id="langSelectGroup" style="max-width:220px;">
+  <label>Язык</label>
+  <select id="langSelect">
+    <option value="ru">Русский</option>
+    <option value="uk">Українська</option>
+    <option value="en">English</option>
+  </select>
+</div>
+
+<!-- TITLES + DESCRIPTIONS (ONLY FOR ACCOUNTS) -->
+<div id="titleDescBlock">
+
+  <!-- TITLE RU -->
+  <div class="form-group field-full lang-block lang-ru">
+    <label>Название (RU)</label>
+    <input id="titleRu" type="text" maxlength="100">
+  </div>
+
+  <!-- DESCRIPTION RU -->
+  <div class="form-group field-full lang-block lang-ru">
+    <label>Описание (RU)</label>
+    <textarea id="descRu" style="height:180px"></textarea>
+  </div>
+
+  <!-- TITLE UA -->
+  <div class="form-group field-full lang-block lang-uk" style="display:none">
+    <label>Назва (UA)</label>
+    <input id="titleUk" type="text" maxlength="100">
+  </div>
+
+  <!-- DESCRIPTION UA -->
+  <div class="form-group field-full lang-block lang-uk" style="display:none">
+    <label>Опис (UA)</label>
+    <textarea id="descUk" style="height:180px"></textarea>
+  </div>
+
+  <!-- TITLE EN -->
+  <div class="form-group field-full lang-block lang-en" style="display:none">
+    <label>Title (EN)</label>
+    <input id="titleEn" type="text" maxlength="100">
+  </div>
+
+  <!-- DESCRIPTION EN -->
+  <div class="form-group field-full lang-block lang-en" style="display:none">
+    <label>Description (EN)</label>
+    <textarea id="descEn" style="height:180px"></textarea>
+  </div>
+
+</div> <!-- ✅ ОБЯЗАТЕЛЬНО закрываем titleDescBlock -->
+
+<!-- ✅ КНОПКА ВСЕГДА ВНЕ БЛОКА -->
+<button class="btn" type="submit" id="submitBtn">
+  Создать объявление
+</button>
+<button
+  class="btn"
+  type="button"
+  id="deleteBtn"
+  style="
+    background:#ef4444;
+    margin-top:10px;
+    display:none;
+  "
+>
+  Удалить объявление
+</button>
+
+</form>
+
+</div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/games.list.js"></script>
+<script src="/header.js"></script>
+<script src="/games.config.js"></script>
+<script src="/tp-money.js"></script>
+
+
+<script>
+// LANGUAGE SWITCH
+const langSelect = document.getElementById("langSelect");
+
+langSelect.addEventListener("change", () => {
+  document.querySelectorAll(".lang-block").forEach(el => {
+    el.style.display = "none";
+  });
+
+  document.querySelectorAll(".lang-" + langSelect.value).forEach(el => {
+    el.style.display = "";
+  });
+});
+
+
+
+// BACK
+document.getElementById("backBtn").onclick = () => {
+  localStorage.removeItem(STORAGE_KEY);
+  history.back();
+};
+
+const params = new URLSearchParams(location.search);
+const gameId = params.get("game");
+const mode = params.get("mode");
+const editId = params.get("edit");
+const isEditMode = !!editId;
+
+if(!gameId || !window.GAMES[gameId]){
+  document.body.innerHTML = "<h2 style='padding:24px'>Игра не найдена</h2>";
+  throw new Error("Game not found");
+}
+
+const GAME = window.GAMES[gameId];
+let priceEUR = null;
+const extraFieldsWrap = document.getElementById("extraFields");
+const categoryGroup = document.getElementById("categoryGroup");
+const categoryInput = document.getElementById("categoryInput");
+
+function renderExtraFields(gameId, mode) {
+  extraFieldsWrap.innerHTML = "";
+  categoryGroup.style.display = "none";
+  categoryInput.innerHTML = `<option value="">Выберите категорию</option>`;
+
+  const game = window.GAMES?.[gameId];
+  const modeCfg = game?.modes?.[mode];
+  if (!modeCfg) return;
+
+  // ===== CATEGORIES =====
+  if (Array.isArray(modeCfg.categories) && modeCfg.categories.length) {
+    categoryGroup.style.display = "";
+    modeCfg.categories.forEach(cat => {
+      categoryInput.innerHTML += `<option value="${cat}">${cat}</option>`;
+    });
+  }
+
+  const filters = modeCfg.filters;
+  if (!filters) return;
+
+  Object.entries(filters).forEach(([key, field]) => {
+    const wrap = document.createElement("div");
+    wrap.className = "form-group";
+    wrap.dataset.key = key;
+
+    const label = document.createElement("label");
+    label.textContent = field.label;
+    wrap.appendChild(label);
+
+if (field.type === "range") {
+  const input = document.createElement("input");
+  input.type = "number";
+  input.min = 1;
+  input.placeholder = field.label;
+
+  if (field.showIf) wrap.style.display = "none";
+
+  wrap.appendChild(input);
+  extraFieldsWrap.appendChild(wrap);
+  return;
+}
+
+    // ===== SELECT =====
+    if (field.type === "select") {
+      const select = document.createElement("select");
+      select.innerHTML = `<option value="">${field.label}</option>`;
+
+      field.options.forEach(opt => {
+        if (typeof opt === "object") {
+          select.innerHTML += `<option value="${opt.value}">${opt.label}</option>`;
+        } else {
+          select.innerHTML += `<option value="${opt}">${opt}</option>`;
+        }
+      });
+
+      if (field.showIf) wrap.style.display = "none";
+
+      wrap.appendChild(select);
+      extraFieldsWrap.appendChild(wrap);
+      return;
+    }
+  });
+}
+function updateVisibilityByConfig() {
+  const values = {};
+
+  extraFieldsWrap.querySelectorAll("[data-key]").forEach(wrap => {
+    const key = wrap.dataset.key;
+    const input = wrap.querySelector("select, input");
+    if (input) values[key] = input.value;
+  });
+
+  extraFieldsWrap.querySelectorAll("[data-key]").forEach(wrap => {
+    const key = wrap.dataset.key;
+    const field = GAME.modes[activeMode]?.filters?.[key];
+    if (!field) return;
+
+    let visible = true;
+
+    if (field.showIf) {
+      visible = Object.entries(field.showIf).every(([dep, cond]) =>
+        Array.isArray(cond)
+          ? cond.includes(values[dep])
+          : values[dep] === cond
+      );
+    }
+
+    wrap.style.display = visible ? "" : "none";
+
+    if (!visible) {
+      wrap.querySelectorAll("input, select").forEach(i => i.value = "");
+    }
+  });
+}
+/* ===== PRICE PREVIEW (LIKE FUNPAY) ===== */
+
+const MARKETPLACE_FEE_PERCENT = 10; // ⚠️ ДОЛЖНО СОВПАДАТЬ С СЕРВЕРОМ
+
+const priceInput = document.getElementById("priceInput");
+const pricePreview = document.getElementById("pricePreview");
+
+function round2(n){
+  return Math.round(n * 100) / 100;
+}
+
+function calcGrossFromNet(net){
+  return round2(net * (1 + MARKETPLACE_FEE_PERCENT / 100));
+}
+async function updatePricePreview(){
+  const raw = priceInput.value.replace(",", ".").trim();
+  const value = Number(raw);
+
+  if (!value || value <= 0){
+    pricePreview.style.display = "none";
+    priceEUR = null;
+    return;
+  }
+
+  const cur = localStorage.getItem("tp_currency") || "UAH";
+  const ratesData = await tpMoney.getRates();
+  const rates = ratesData.rates;
+
+  // 🔹 перевод в EUR (ЦЕНА ПРОДАВЦА)
+  let eur =
+    cur === "EUR" ? value :
+    cur === "USD" ? value / rates.USD :
+    value / rates.UAH;
+
+  eur = Math.round(eur * 100) / 100;
+  priceEUR = eur; // ✅ ВАЖНО
+
+  const grossEUR = Math.round(eur * 1.1 * 100) / 100;
+
+  const eurVal = grossEUR;
+  const usdVal = Math.round(grossEUR * rates.USD * 100) / 100;
+  const uahVal = Math.round(grossEUR * rates.UAH);
+
+  const symbols = { EUR:"€", USD:"$", UAH:"₴" };
+
+  pricePreview.innerHTML = `
+    <div>Покупатель заплатит:</div>
+    <div><b>≈ ${
+      cur==="EUR"?eurVal:cur==="USD"?usdVal:uahVal
+    } ${symbols[cur]}</b></div>
+    ${cur!=="EUR"?`<div>≈ ${eurVal} €</div>`:""}
+    ${cur!=="USD"?`<div>≈ ${usdVal} $</div>`:""}
+    ${cur!=="UAH"?`<div>≈ ${uahVal.toLocaleString("ru-RU")} грн</div>`:""}
+  `;
+
+  pricePreview.style.display = "block";
+}
+
+priceInput.addEventListener("input", updatePricePreview);
+
+// breadcrumb
+document.getElementById("crumbIcon").src = GAME.icon;
+document.getElementById("crumbIcon").alt = GAME.title;
+document.getElementById("crumbGame").textContent = GAME.title;
+document.getElementById("crumbMode").textContent =
+  mode || GAME.defaultMode;
+const activeMode = mode || GAME.defaultMode;
+renderExtraFields(gameId, activeMode);
+extraFieldsWrap.addEventListener("change", updateVisibilityByConfig);
+updateVisibilityByConfig();
+
+// ===== AMOUNT (НАЛИЧИЕ) =====
+const amountGroup = document
+  .getElementById("amountLabel")
+  .closest(".form-group");
+const amountWrapper = document.getElementById("amountWrapper");
+
+if (GAME.modes[activeMode]?.amount === true) {
+  amountGroup.style.display = "";
+  amountWrapper.style.display = "";
+} else {
+  amountGroup.style.display = "none";
+}
+
+const titleDescBlock = document.getElementById("titleDescBlock");
+const langSelectGroup = document.getElementById("langSelectGroup");
+
+
+
+// ===== TITLE / DESCRIPTION / LANGUAGE =====
+// ВЕЗДЕ, КРОМЕ РОБУКСОВ
+if (activeMode !== "Робуксы") {
+  titleDescBlock.style.display = "";
+  langSelectGroup.style.display = "";
+} else {
+  titleDescBlock.style.display = "none";
+  langSelectGroup.style.display = "none";
+}
+
+const amountInput = document.getElementById("amountInput");
+
+// ===== SMART CREATE GALLERY =====
+
+const imageInput = document.getElementById("imageInput");
+const createGallery = document.getElementById("createGallery");
+
+let selectedFiles = [];
+let currentIndex = 0;
+// ===== LOCAL SAVE =====
+const STORAGE_KEY = `tp_create_images_${gameId}_${activeMode}`;
+
+function saveImagesToStorage() {
+  const readers = selectedFiles.map(file => {
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(file);
+    });
+  });
+
+  Promise.all(readers).then(base64Images => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(base64Images));
+  });
+}
+
+function loadImagesFromStorage() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return;
+
+  const base64Images = JSON.parse(saved);
+
+  base64Images.forEach(base64 => {
+    const blob = dataURLtoBlob(base64);
+    const file = new File([blob], "image.png", { type: blob.type });
+    selectedFiles.push(file);
+  });
+}
+
+function dataURLtoBlob(dataurl) {
+  const arr = dataurl.split(",");
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+
+  return new Blob([u8arr], { type: mime });
+}
+
+function rebuildInput(){
+  const dt = new DataTransfer();
+  selectedFiles.forEach(file => dt.items.add(file));
+  imageInput.files = dt.files;
+}
+
+function openPicker(){
+  imageInput.click();
+}
+
+imageInput.addEventListener("change", () => {
+  const files = Array.from(imageInput.files);
+
+  files.forEach(file => {
+    if (selectedFiles.length < 5) {
+      selectedFiles.push(file);
+    }
+  });
+
+  rebuildInput();
+  currentIndex = selectedFiles.length - 1;
+  renderGallery();
+  saveImagesToStorage();
+});
+
+function removeCurrent(){
+  if (currentIndex >= selectedFiles.length) return;
+
+  selectedFiles.splice(currentIndex, 1);
+
+  if (currentIndex > selectedFiles.length - 1) {
+    currentIndex = selectedFiles.length - 1;
+  }
+
+  if (currentIndex < 0) currentIndex = 0;
+
+  rebuildInput();
+  saveImagesToStorage(); // ✅ сохраняем новое состояние
+  renderGallery();
+}
+
+function renderGallery(){
+
+  createGallery.innerHTML = "";
+
+  const realCount = selectedFiles.length;
+  const hasPlus = realCount < 5;
+  const totalSlides = realCount + (hasPlus ? 1 : 0);
+  
+
+  // ===== 0 ФОТО =====
+  if (realCount === 0) {
+    const plus = document.createElement("div");
+    plus.className = "tp-gallery__plus";
+    plus.innerHTML = `
+      <div class="tp-gallery__plus-icon">+</div>
+      <div>Добавить фото</div>
+    `;
+    plus.onclick = openPicker;
+    createGallery.appendChild(plus);
+    return;
+  }
+
+// ===== СТРЕЛКИ =====
+const prevBtn = document.createElement("button");
+prevBtn.type = "button"; // ✅ ВАЖНО
+prevBtn.className = "tp-gallery__arrow tp-gallery__arrow--left";
+prevBtn.innerHTML = "‹";
+
+const nextBtn = document.createElement("button");
+nextBtn.type = "button"; // ✅ ВАЖНО
+nextBtn.className = "tp-gallery__arrow tp-gallery__arrow--right";
+nextBtn.innerHTML = "›";
+
+  createGallery.appendChild(prevBtn);
+  createGallery.appendChild(nextBtn);
+
+  // ===== TRACK =====
+const track = document.createElement("div");
+track.className = "tp-gallery__track";
+track.style.display = "flex";
+track.style.height = "100%";
+createGallery.appendChild(track);
+
+  // ===== СЛАЙДЫ =====
+  selectedFiles.forEach((file, i)=>{
+    const slide = document.createElement("div");
+    slide.className = "tp-gallery__slide";
+
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(file);
+
+const removeBtn = document.createElement("button");
+removeBtn.type = "button"; // ✅ ВАЖНО
+removeBtn.className = "tp-gallery__remove";
+removeBtn.innerHTML = "×";
+removeBtn.onclick = (e)=>{
+  e.preventDefault();      // ✅ чтобы не было submit
+  e.stopPropagation();
+  removeCurrent();
+};
+
+    slide.appendChild(img);
+    slide.appendChild(removeBtn);
+    track.appendChild(slide);
+  });
+
+  if (hasPlus) {
+    const plusSlide = document.createElement("div");
+    plusSlide.className = "tp-gallery__slide";
+
+    const plus = document.createElement("div");
+    plus.className = "tp-gallery__plus";
+    plus.innerHTML = `
+      <div class="tp-gallery__plus-icon">+</div>
+      <div>Добавить фото</div>
+    `;
+    plus.onclick = openPicker;
+
+    plusSlide.appendChild(plus);
+    track.appendChild(plusSlide);
+  }
+
+  // ===== ЛОГИКА СТРЕЛОК =====
+  prevBtn.style.display = currentIndex > 0 ? "flex" : "none";
+  nextBtn.style.display = currentIndex < totalSlides - 1 ? "flex" : "none";
+
+prevBtn.onclick = (e)=>{
+  e.preventDefault();
+  if(currentIndex > 0){
+    currentIndex--;
+    updatePosition();
+  }
+};
+
+nextBtn.onclick = (e)=>{
+  e.preventDefault();
+  if(currentIndex < totalSlides - 1){
+    currentIndex++;
+    updatePosition();
+  }
+};
+
+function updatePosition(skipAnimation = false){
+  const width = createGallery.offsetWidth;
+
+  if (skipAnimation) {
+    track.style.transition = "none";
+  } else {
+    track.style.transition = "transform 0.35s ease";
+  }
+
+  track.style.transform = `translateX(-${currentIndex * width}px)`;
+
+  if (skipAnimation) {
+    requestAnimationFrame(() => {
+      track.style.transition = "transform 0.35s ease";
+    });
+  }
+
+  prevBtn.style.display = currentIndex > 0 ? "flex" : "none";
+  nextBtn.style.display = currentIndex < totalSlides - 1 ? "flex" : "none";
+}
+
+updatePosition(true);
+
+}
+
+loadImagesFromStorage();
+rebuildInput();
+renderGallery();
+
+// SUBMIT
+document.getElementById("offerForm").onsubmit = async e => {
+  e.preventDefault();
+
+  const token = localStorage.getItem("tp_token");
+  if(!token){
+    location.href = "/auth.html?mode=login";
+    return;
+  }
+
+if (!priceEUR || priceEUR <= 0) {
+  alert("Укажите корректную цену");
+  return;
+}
+
+const titleRu = document.getElementById("titleRu").value.trim();
+const descRu  = document.getElementById("descRu").value.trim();
+
+const titleUk = document.getElementById("titleUk").value.trim();
+const descUk  = document.getElementById("descUk").value.trim();
+
+const titleEn = document.getElementById("titleEn").value.trim();
+const descEn  = document.getElementById("descEn").value.trim();
+
+// ВЕЗДЕ, КРОМЕ РОБУКСОВ
+if (activeMode !== "Робуксы" && !titleRu) {
+  alert("Введите название (RU)");
+  return;
+}
+
+if (activeMode !== "Робуксы" && !descRu) {
+  alert("Введите описание (RU)");
+  return;
+}
+
+const extra = {};
+
+document.querySelectorAll("#extraFields [data-key]").forEach(wrap => {
+  const key = wrap.dataset.key;
+  const inputs = wrap.querySelectorAll("input, select");
+
+  if (inputs.length === 1) {
+    const v = inputs[0].value;
+    if (v !== "") extra[key] = v;
+  }
+
+  if (inputs.length === 2) {
+    const from = inputs[0].value;
+    const to = inputs[1].value;
+
+    if (from !== "") extra[key + "_from"] = from;
+    if (to !== "") extra[key + "_to"] = to;
+  }
+});
+const formData = new FormData();
+
+formData.append("game", gameId);
+formData.append("mode", mode || GAME.defaultMode);
+formData.append("category", categoryInput?.value || "");
+formData.append("price", priceEUR);
+
+formData.append("title_ru", titleRu);
+formData.append("desc_ru", descRu);
+formData.append("title_uk", titleUk);
+formData.append("desc_uk", descUk);
+formData.append("title_en", titleEn);
+formData.append("desc_en", descEn);
+
+Array.from(imageInput.files).slice(0,5).forEach(file=>{
+  formData.append("images", file);
+});
+// ✅ ДОБАВИТЬ ЭТО
+Object.entries(extra).forEach(([key, value]) => {
+  formData.append(key, value);
+});
+
+const url = isEditMode
+  ? "/api/offers/" + editId
+  : "/api/offers";
+
+const method = isEditMode
+  ? "PUT"
+  : "POST";
+
+const res = await fetch(url, {
+  method,
+  headers: {
+    "Authorization": "Bearer " + token
+  },
+  body: formData
+});
+
+const data = await res.json();
+
+if(data.success){
+
+  localStorage.removeItem(STORAGE_KEY);
+  selectedFiles = [];
+  currentIndex = 0;
+
+  rebuildInput();
+  renderGallery();
+
+  alert(isEditMode ? "Изменения сохранены!" : "Объявление создано!");
+  location.href =
+  `/game.html?game=${gameId}&mode=${encodeURIComponent(mode || GAME.defaultMode)}`;
+}
+else{
+    alert(data.message || "Ошибка");
+  }
+};
+function updateCurrencySymbol(){
+  const cur = localStorage.getItem("tp_currency") || "UAH";
+  const symbols = { EUR:"€", USD:"$", UAH:"₴" };
+  document.getElementById("priceCurrency").textContent = symbols[cur];
+}
+
+updateCurrencySymbol();
+window.addEventListener("tp:currency-change", ()=>{
+  updateCurrencySymbol();
+  updatePricePreview(); // priceEUR обновится внутри
+});
+// ===== EDIT MODE INIT =====
+if (isEditMode) {
+  document.title = "Редактировать объявление — TyPlace";
+  document.getElementById("submitBtn").textContent = "Сохранить изменения";
+
+  const deleteBtn = document.getElementById("deleteBtn");
+  deleteBtn.style.display = "block";
+
+  deleteBtn.onclick = async () => {
+    if (!confirm("Вы уверены, что хотите удалить объявление?")) return;
+
+    const token = localStorage.getItem("tp_token");
+
+    const res = await fetch("/api/offers/" + editId, {
+      method: "DELETE",
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      alert("Объявление удалено");
+      location.href = "/my-offers.html";
+    } else {
+      alert(data.message || "Ошибка удаления");
+    }
+  };
+
+  loadOfferForEdit(editId);
+}
+
+async function loadOfferForEdit(id){
+  const token = localStorage.getItem("tp_token");
+
+  const res = await fetch("/api/offers/" + id, {
+    headers:{
+      Authorization: "Bearer " + token
+    }
+  });
+
+  const data = await res.json();
+  if(!data.success){
+    alert("Оффер не найден");
+    return;
+  }
+
+  const o = data.offer;
+
+  // 💰 цена
+  priceEUR = o.priceNet || o.price;
+  document.getElementById("priceInput").value = priceEUR;
+  updatePricePreview();
+
+// 🧩 категория
+if (o.category) {
+  setTimeout(() => {
+    categoryInput.value = o.category;
+  }, 0);
+}
+
+  // 📝 тексты
+  document.getElementById("titleRu").value = o.title?.ru || "";
+  document.getElementById("descRu").value  = o.description?.ru || "";
+  document.getElementById("titleUk").value = o.title?.uk || "";
+  document.getElementById("descUk").value  = o.description?.uk || "";
+  document.getElementById("titleEn").value = o.title?.en || "";
+  document.getElementById("descEn").value  = o.description?.en || "";
+
+  // 🔧 extra поля
+  if (o.extra) {
+    Object.entries(o.extra).forEach(([key, value]) => {
+      const wrap = document.querySelector(
+        `#extraFields [data-key="${key}"]`
+      );
+      if (!wrap) return;
+      const input = wrap.querySelector("input, select");
+      if (input) input.value = value;
+    });
+    updateVisibilityByConfig();
+  }
+// ===== ЗАГРУЗКА КАРТИНОК ПРИ РЕДАКТИРОВАНИИ =====
+if (Array.isArray(o.images) && o.images.length) {
+
+  selectedFiles = [];
+  currentIndex = 0;
+
+  for (const url of o.images) {
+    const res = await fetch(url);
+    const blob = await res.blob();
+
+    const file = new File(
+      [blob],
+      "image.jpg",
+      { type: blob.type }
+    );
+
+    selectedFiles.push(file);
+  }
+
+  rebuildInput();
+  renderGallery();
+}
+}
+
+</script>
+
+</body>
+</html>

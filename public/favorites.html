@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Избранные — TyPlace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="/header.css">
+  <link rel="stylesheet" href="/game.css">
+</head>
+
+<body>
+
+<div id="header-container"></div>
+
+<div class="page">
+  <div class="container">
+
+    <h2 style="margin:10px 0 20px;">Избранные</h2>
+
+    <div id="offersList" class="offers-list"></div>
+
+    <div id="empty" class="empty" style="display:none;">
+      У тебя пока нет избранных предложений
+    </div>
+
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/games.list.js"></script>
+<script src="/header.js"></script>
+<script src="/tp-money.js"></script>
+<script src="/offer-title.js"></script>
+
+<script>
+/* ================= FAVORITES STORAGE ================= */
+function getFavs(){
+  try{ return JSON.parse(localStorage.getItem("tp_favorites") || "[]"); }
+  catch{ return []; }
+}
+
+function toggleFavorite(id){
+  let favs = getFavs();
+  if(favs.includes(id)) favs = favs.filter(x => x !== id);
+  else favs.push(id);
+  localStorage.setItem("tp_favorites", JSON.stringify(favs));
+}
+
+/* ================= LOAD OFFER ================= */
+async function loadOffer(id){
+  const res = await fetch("/api/offers/" + encodeURIComponent(id));
+  const data = await res.json();
+  return data.success ? data.offer : null;
+}
+
+/* ================= STARS + TIME (как в game.html) ================= */
+function renderStars(avg){
+  const rounded = Math.round(avg || 0);
+  let cls = "r1";
+  if(avg >= 4.5) cls="r5";
+  else if(avg >= 3.5) cls="r4";
+  else if(avg >= 2.5) cls="r3";
+  else if(avg >= 1.5) cls="r2";
+
+  let html = `<span class="stars ${cls}">`;
+  for(let i=1;i<=5;i++){
+    html += `<span class="star ${i<=rounded?"filled":""}">★</span>`;
+  }
+  html += `</span>`;
+  return html;
+}
+
+function timeOnSite(createdAt){
+  if (!createdAt) return "на сайте недавно";
+  const diff = Date.now() - new Date(createdAt).getTime();
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (minutes < 60) return `на сайте ${minutes} мин`;
+  if (hours < 24) return `на сайте ${hours} ч`;
+  return `на сайте ${days} дн`;
+}
+
+/* ================= RENDER ================= */
+const list = document.getElementById("offersList");
+const empty = document.getElementById("empty");
+
+function renderOffer(o){
+  const card = document.createElement("div");
+  card.className = "offer-card";
+  card.style.position = "relative";
+  card.style.cursor = "pointer";
+
+  const offerImage = o.imageUrl || o.imageDataUrl || "/img/offer-default.png";
+
+  const avatar =
+    o.seller?.avatarUrl ||
+    o.seller?.avatarDataUrl ||
+    "/img/avatar-default.svg";
+
+  const online = o.seller?.online === true;
+  const rating = o.seller?.rating || 0;
+  const reviews = o.seller?.reviewsCount || 0;
+  const onSiteText = timeOnSite(o.seller?.createdAt);
+
+const title = buildOfferTitle(o);
+
+  card.innerHTML = `
+    <div class="offer-heart active" title="Убрать из избранного">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 21s-7-4.35-10-8.5C-1.5 7.5 3 3 7.5 6.5
+                 9.5 8 12 10.5 12 10.5S14.5 8 16.5 6.5
+                 C21 3 25.5 7.5 22 12.5
+                 19 16.65 12 21 12 21z"/>
+      </svg>
+    </div>
+
+    <div class="offer-image">
+      <img src="${offerImage}" onerror="this.src='/img/offer-default.png'">
+    </div>
+
+    <div class="offer-body">
+      <div class="offer-title">${title}</div>
+
+      <div class="offer-price" data-price="${o.price}">—</div>
+
+      <div class="offer-seller">
+        <div class="seller-avatar">
+          <img src="${avatar}" onerror="this.src='/img/avatar-default.svg'">
+          <span class="seller-status" style="background:${online ? "#22c55e" : "#9ca3af"}"></span>
+        </div>
+
+        <div>
+          <div class="seller-name">${o.seller?.username || "Продавец"}</div>
+
+          <div class="seller-rating">
+            ${
+              reviews === 0
+                ? `<span class="no-reviews">Нет отзывов</span>`
+                : `${renderStars(rating)}
+                   <span style="margin-left:6px;color:#6b7280;font-weight:600;">
+                     ${reviews}
+                   </span>`
+            }
+          </div>
+
+          <div style="font-size:12px;color:#6b7280;margin-top:2px;">${onSiteText}</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Переход в оффер
+  card.addEventListener("click", ()=>{
+    location.href = "/offer.html?id=" + encodeURIComponent(o.id);
+  });
+
+  // Удаление из избранных (сердце)
+  const heart = card.querySelector(".offer-heart");
+  heart.addEventListener("click", (e)=>{
+    e.stopPropagation();
+    toggleFavorite(o.id);
+    card.remove();
+
+    if(!getFavs().length){
+      empty.style.display = "block";
+    }
+  });
+
+  list.appendChild(card);
+}
+
+/* ================= CURRENCY ================= */
+async function updatePrices(){
+  const els = document.querySelectorAll(".offer-price");
+  for(const el of els){
+    const base = Number(el.dataset.price);
+    if(!base) continue;
+    el.textContent = await tpMoney.formatPrice(base);
+  }
+}
+window.addEventListener("tp:currency-change", updatePrices);
+
+/* ================= INIT ================= */
+async function init(){
+  const favs = getFavs();
+
+  if(!favs.length){
+    empty.style.display = "block";
+    return;
+  }
+
+  for(const id of favs){
+    const offer = await loadOffer(id);
+    if(offer) renderOffer(offer);
+  }
+
+  updatePrices();
+}
+
+init();
+</script>
+
+</body>
+</html>

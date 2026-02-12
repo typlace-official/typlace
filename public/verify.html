@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Подтверждение e-mail</title>
+<style>
+body{
+  font-family:Arial;
+  background:#f6f6f6;
+}
+.box{
+  width:350px;
+  margin:120px auto;
+  background:#fff;
+  padding:20px;
+  border-radius:10px;
+  border:1px solid #ddd;
+}
+input,button{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+}
+button{
+  background:#1E50D4;
+  color:white;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h3>Введите код для подтверждения e-mail</h3>
+
+  <input id="code" placeholder="Код из письма">
+  <button onclick="verify()">Подтвердить</button>
+</div>
+
+<script>
+async function verify(){
+  const code = document.getElementById("code").value.trim();
+  const email = localStorage.getItem("verifyEmail");
+
+  if (!email) {
+    alert("Ошибка: email не найден. Зарегистрируйтесь заново.");
+    location.href = "register.html";
+    return;
+  }
+
+  const res = await fetch("/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, code })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    alert("E-mail подтверждён!");
+    localStorage.removeItem("verifyEmail");
+    location.href = "login.html";
+  } else {
+    alert(data.message);
+  }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Заказ — TyPlace</title>
+<link rel="stylesheet" href="/header.css">
+<style>
+body{margin:0;background:#f6f7f9;font-family:Inter,Arial,sans-serif;color:#111}
+.page{max-width:980px;margin:24px auto;padding:0 16px}
+.card{background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.08);padding:18px;margin-bottom:16px}
+.row{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.img{width:260px;max-width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#e5e7eb}
+.img img{width:100%;height:100%;object-fit:cover;display:block}
+.h1{font-size:22px;font-weight:900;margin:0}
+.muted{color:#555;font-size:13px}
+.price{font-size:22px;font-weight:900;color:#1E50D4;margin-top:8px}
+.badge{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:800;font-size:12px;background:#eef2ff;color:#1E50D4}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.btn{padding:10px 14px;border-radius:12px;border:none;cursor:pointer;font-weight:800}
+.btnBlue{background:#1E50D4;color:#fff}
+.btnGray{background:#eee;color:#111}
+.chat{border:1px solid #e2e6f0;border-radius:12px;padding:10px;background:#fafbff}
+.messages{height:260px;overflow:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.msg{max-width:78%;padding:8px 12px;border-radius:12px;font-size:14px}
+.me{background:#1E50D4;color:#fff;align-self:flex-end}
+.other{background:#e9ecf5;color:#111;align-self:flex-start}
+.system{background:#f1f1f1;color:#555;font-style:italic;align-self:center}
+.send{display:flex;gap:8px}
+.send input{flex:1;padding:10px;border-radius:10px;border:1px solid #ccc}
+.send button{padding:10px 14px;border-radius:10px;border:1px solid #ccc;background:#fff;cursor:pointer}
+.send input:disabled{background:#eee}
+.send button:disabled{opacity:.6}
+</style>
+</head>
+<body>
+
+<div id="header-container"></div>
+
+<div class="page">
+  <div class="card">
+    <div class="row">
+      <div class="img"><img id="offerImg" src="/img/offer-default.png"></div>
+      <div style="flex:1;min-width:260px">
+        <div class="badge" id="statusBadge">—</div>
+        <h1 class="h1" id="title">Загрузка…</h1>
+        <div class="muted" id="sub">—</div>
+        <div class="price" id="price">—</div>
+        <div class="actions" id="actions"></div>
+      </div>
+    </div>
+
+    <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
+
+    <div class="muted"><b>Описание:</b></div>
+    <div id="desc" style="margin-top:6px;line-height:1.55;color:#333">—</div>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:900;margin-bottom:10px">Чат по заказу</div>
+
+    <div class="chat">
+      <div class="messages" id="messages"></div>
+      <div class="send">
+        <input id="msgInput" placeholder="Написать сообщение…">
+        <button id="sendBtn">→</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="card" id="reviewBlock" style="display:none;">
+  <div style="font-weight:900;margin-bottom:10px">⭐ Оставить отзыв</div>
+
+  <select id="reviewRating"
+    style="width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;">
+    <option value="5">★★★★★ Отлично</option>
+    <option value="4">★★★★☆ Хорошо</option>
+    <option value="3">★★★☆☆ Нормально</option>
+    <option value="2">★★☆☆☆ Плохо</option>
+    <option value="1">★☆☆☆☆ Очень плохо</option>
+  </select>
+
+  <textarea
+    id="reviewText"
+    placeholder="Опишите опыт (необязательно)"
+    style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid #ccc;min-height:80px;"
+  ></textarea>
+
+  <button
+    id="sendReviewBtn"
+    class="btn btnBlue"
+    style="margin-top:10px;">
+    Отправить отзыв
+  </button>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/games.list.js"></script>
+<script src="/header.js"></script>
+<script src="/offer-title.js"></script>
+
+<script>
+const orderId = new URLSearchParams(location.search).get("id");
+if(!orderId){
+  alert("Не указан заказ");
+  location.href = "/";
+}
+
+const token = localStorage.getItem("tp_token");
+const myEmail = localStorage.getItem("email");
+
+let chatId = null;
+let role = null;
+
+function statusText(s){
+  if(s==="pending") return "⏳ В процессе";
+  if(s==="completed") return "✅ Завершён";
+  if(s==="refunded") return "↩️ Возврат";
+  return s;
+}
+
+async function loadOrder(){
+  if(!token){
+    location.href="/auth.html?mode=login";
+    return;
+  }
+
+  const res = await fetch("/api/orders/"+orderId,{
+    headers:{ Authorization:"Bearer "+token }
+  });
+  const data = await res.json();
+  if(!data.success){
+    alert(data.message || "Заказ не найден");
+    return;
+  }
+
+  const o = data.order;
+  role = o.role;
+  chatId = o.chatId;
+
+  const offer = o.offer || {};
+title.textContent = buildOfferTitle(offer);
+
+  sub.textContent =
+  `Заказ ${o.orderNumber || "#" + o.id.slice(0,8)}`;
+  const lang = localStorage.getItem("tp_lang") || "ru";
+const description =
+  offer.description?.[lang] ||
+  offer.description?.ru ||
+  "";
+
+desc.textContent = description || "Описание не указано.";
+  statusBadge.textContent = statusText(o.status);
+  // ⭐ отзыв: только покупатель и только после завершения
+const reviewBlock = document.getElementById("reviewBlock");
+
+if (reviewBlock) {
+  if (o.status === "completed" && role === "buyer") {
+  const check = await fetch(`/api/users/${o.sellerEmail}/reviews`);
+  const rdata = await check.json();
+
+  const already = rdata.reviews?.some(r => r.orderId === o.id);
+
+  reviewBlock.style.display = already ? "none" : "block";
+} else {
+    reviewBlock.style.display = "none";
+  }
+}
+
+// ===== PRICE FIX =====
+price.textContent = `${o.price} грн`;
+
+// ===== IMAGE FIX =====
+if (offer.imageUrl) {
+  offerImg.src = offer.imageUrl;
+} else if (Array.isArray(offer.images) && offer.images.length > 0) {
+  offerImg.src = offer.images[0];
+} else {
+  offerImg.src = "/img/offer-default.png";
+}
+
+offerImg.onerror = () => {
+  offerImg.src = "/img/offer-default.png";
+};
+
+  actions.innerHTML = "";
+  if(o.status==="pending"){
+    if(role==="buyer"){
+      actions.innerHTML = `<button class="btn btnBlue" onclick="confirmOrder()">Подтвердить заказ</button>`;
+    }
+    if(role==="seller"){
+      actions.innerHTML = `<button class="btn btnGray" onclick="refundOrder()">Возврат</button>`;
+    }
+  } else {
+    msgInput.disabled = true;
+    sendBtn.disabled = true;
+    msgInput.placeholder = "Чат закрыт";
+  }
+
+  loadMessages();
+}
+
+async function loadMessages(){
+  if(!chatId) return;
+
+  const res = await fetch(`/api/chats/${chatId}/messages`,{
+    headers:{ Authorization:"Bearer "+token }
+  });
+  const data = await res.json();
+  if(!data.success) return;
+
+  messages.innerHTML = "";
+  data.messages.forEach(m=>{
+    const div = document.createElement("div");
+    div.className =
+      m.fromEmail==="system" ? "msg system" :
+      m.fromEmail===myEmail ? "msg me" : "msg other";
+    div.textContent = m.text;
+    messages.appendChild(div);
+  });
+  messages.scrollTop = messages.scrollHeight;
+}
+
+async function sendMsg(){
+  const text = msgInput.value.trim();
+  if(!text || !chatId || msgInput.disabled) return;
+
+  await fetch(`/api/chats/${chatId}/messages`,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      Authorization:"Bearer "+token
+    },
+    body:JSON.stringify({ text })
+  });
+
+  msgInput.value="";
+  loadMessages();
+}
+
+async function confirmOrder(){
+  if(!confirm("Подтвердить заказ? Деньги будут переведены продавцу.")) return;
+  actions.innerHTML = "";
+
+  const r = await fetch(`/api/orders/${orderId}/confirm`,{
+    method:"POST",
+    headers:{ Authorization:"Bearer "+token }
+  });
+  const d = await r.json();
+  if(!d.success) alert(d.message || "Ошибка");
+  loadOrder();
+}
+
+async function refundOrder(){
+  if(!confirm("Сделать возврат? Деньги вернутся покупателю.")) return;
+  actions.innerHTML = "";
+
+  const r = await fetch(`/api/orders/${orderId}/refund`,{
+    method:"POST",
+    headers:{ Authorization:"Bearer "+token }
+  });
+  const d = await r.json();
+  if(!d.success) alert(d.message || "Ошибка");
+  loadOrder();
+}
+
+sendBtn.onclick = sendMsg;
+msgInput.addEventListener("keydown",e=>{ if(e.key==="Enter") sendMsg(); });
+const reviewBtn = document.getElementById("sendReviewBtn");
+
+if (reviewBtn) {
+  reviewBtn.addEventListener("click", async () => {
+    const rating = document.getElementById("reviewRating").value;
+    const text = document.getElementById("reviewText").value;
+
+    const res = await fetch("/api/reviews", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({
+        orderId,
+        rating,
+        text
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      alert(data.message || "Ошибка при отправке отзыва");
+      return;
+    }
+
+    alert("Отзыв добавлен");
+loadOrder();
+  });
+}
+setInterval(loadMessages, 2500);
+loadOrder();
+</script>
+</body>
+</html>

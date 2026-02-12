@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TyPlace — Предложение</title>
+
+  <link rel="stylesheet" href="/header.css">
+  <link rel="stylesheet" href="/gallery.css">
+
+  <style>
+  .section{
+  margin-top:16px;
+}
+
+.section-title{
+  font-size:14px;
+  font-weight:800;
+  margin-bottom:6px;
+  color:#111;
+}
+  .offer-image{
+  position:relative;
+}
+
+.offer-amount-badge{
+  position:absolute;
+  top:10px;
+  right:10px;   /* 🔥 ВАЖНО */
+  background:rgba(0,0,0,.75);
+  color:#fff;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:800;
+  z-index:2;
+}
+    body{
+      margin:0;
+      font-family: Inter, Arial, sans-serif;
+      background:#f6f7f9;
+      color:#111;
+    }
+    .page{
+      max-width:1200px;
+      margin:24px auto;
+      padding:0 16px;
+    }
+    .layout{
+      display:grid;
+      grid-template-columns: 2.2fr 1fr;
+      gap:20px;
+    }
+    @media(max-width:900px){
+      .layout{ grid-template-columns:1fr; }
+    }
+    .card{
+      background:#fff;
+      border-radius:16px;
+      box-shadow:0 8px 30px rgba(0,0,0,.08);
+      padding:20px;
+    }
+    .offer-image{
+  width:100%;
+  aspect-ratio: 16 / 9;     /* 🔥 ВАЖНО */
+  border-radius:14px;
+  overflow:hidden;
+  background:#e5e7eb;
+  margin-bottom:16px;
+}
+
+.offer-image img{
+  width:100%;
+  height:100%;
+  object-fit:cover;          /* 🔥 КЛЮЧЕВОЕ */
+  object-position:center;    /* центр обрезки */
+  display:block;
+}
+    .title{ font-size:26px;font-weight:800; }
+.offer-price{
+  font-size:34px;
+  font-weight:900;
+  color:#111;
+  margin:10px 0 14px;
+}
+    .meta{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      font-size:14px;
+      margin-bottom:14px;
+    }
+    .desc{ font-size:15px;line-height:1.55;color:#333;margin-bottom:16px; }
+    .buybtn{
+      background:#1E50D4;
+      color:#fff;
+      border:none;
+      padding:14px 22px;
+      font-size:16px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:700;
+    }
+    .sellerTop{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-bottom:14px;
+    }
+    .avatar{
+      width:56px;
+      height:56px;
+      border-radius:50%;
+      background:#e5e7eb;
+      overflow:hidden;
+    }
+    .avatar img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+    .sellerName{ font-weight:800; }
+    .sellerSub{ font-size:13px;color:#555; }
+
+    /* Chat */
+    .chatTitle{ font-weight:800;margin-bottom:8px; }
+    .chat{
+      border:1px solid #e2e6f0;
+      border-radius:12px;
+      background:#fafbff;
+      padding:10px;
+    }
+    .messages{
+      height:160px;
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-bottom:8px;
+    }
+    .msg{
+      max-width:80%;
+      padding:8px 12px;
+      border-radius:12px;
+      font-size:14px;
+    }
+    .me{ background:#1E50D4;color:#fff;align-self:flex-end; }
+    .seller{ background:#e9ecf5;color:#111;align-self:flex-start; }
+    .sendRow{ display:flex;gap:8px; }
+    .sendRow input{
+      flex:1;
+      padding:10px;
+      border-radius:10px;
+      border:1px solid #ccc;
+    }
+    .sendRow button{
+      padding:10px 14px;
+      border-radius:10px;
+      border:1px solid #ccc;
+      background:#fff;
+      cursor:pointer;
+    }
+    .avatar{
+  position:relative;
+}
+
+/* ===== SELLER AVATAR (OFFER PAGE) ===== */
+
+.seller-avatar{
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+}
+
+.seller-avatar img{
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  object-fit:cover;
+  display:block;
+}
+
+/* ===== SELLER STATUS DOT (OFFER — LIKE CARD) ===== */
+
+.seller-status{
+  position: absolute;
+
+  width: 18px;
+  height: 18px;
+
+  right: -4px;
+  bottom: -4px;
+
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-sizing: border-box;
+
+  background: #9ca3af; /* offline */
+}
+
+.seller-status.online{
+  background: #22c55e;
+}
+
+.seller-info{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.seller-name{
+  font-weight:800;
+  font-size:15px;
+}
+
+.seller-rating{
+  font-size:13px;
+  color:#6b7280;
+  font-weight:600;
+  margin-top:2px;
+}
+  </style>
+</head>
+
+<body>
+
+<div id="header-container"></div>
+
+<div class="page">
+  <div class="layout">
+
+    <!-- OFFER -->
+    <div class="card">
+
+      <div class="tp-gallery" id="gallery">
+
+  <div class="offer-amount-badge" id="amountBadge" style="display:none;"></div>
+
+  <button class="tp-gallery__arrow tp-gallery__arrow--left" id="galPrev" type="button">
+    ‹
+  </button>
+
+  <div class="tp-gallery__track" id="galTrack"></div>
+
+  <button class="tp-gallery__arrow tp-gallery__arrow--right" id="galNext" type="button">
+    ›
+  </button>
+
+  <div class="tp-gallery__dots" id="galDots"></div>
+</div>
+
+      <div class="title" id="title">Загрузка…</div>
+      <div class="offer-price" id="price" data-price=""></div>
+
+      <div class="section" id="descSection">
+  <div class="section-title">Описание</div>
+  <div class="desc" id="desc"></div>
+</div>
+      <button class="buybtn" id="buyBtn">Купить</button>
+    </div>
+
+    <!-- SELLER + CHAT -->
+    <div class="card">
+      <div class="sellerTop">
+  <div class="seller-avatar">
+    <img id="sellerAvatar" src="/img/avatar-default.svg">
+    <span class="seller-status" id="sellerStatus"></span>
+  </div>
+
+  <div class="seller-info">
+    <div class="seller-name" id="sellerName">—</div>
+    <div class="seller-rating" id="sellerRating"></div>
+  </div>
+</div>
+
+      <div class="chatTitle">Чат с продавцом</div>
+      <div class="chat">
+        <div class="messages" id="messages"></div>
+        <div class="sendRow">
+          <input id="chatInput" placeholder="Написать сообщение…">
+          <button id="sendBtn">→</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/games.list.js"></script>
+<script src="/header.js"></script>
+<script src="/tp-money.js"></script>
+<script src="/gallery.js"></script>
+<script src="/offer-title.js"></script>
+
+<script>
+function getTextByLang(obj){
+  const lang = localStorage.getItem("tp_lang") || "ru";
+  return obj?.[lang] || obj?.ru || "";
+}
+</script>
+
+<script>
+const params = new URLSearchParams(location.search);
+const offerId = params.get("id");
+if(!offerId){ location.href="/roblox.html"; }
+function renderStars(avg){
+  const rounded = Math.round(avg || 0);
+
+  let html = `<span style="color:#facc15;">`;
+  for(let i = 1; i <= 5; i++){
+    html += i <= rounded ? "★" : "☆";
+  }
+  html += `</span>`;
+
+  return html;
+}
+// ===== LOAD OFFER =====
+async function loadOffer(){
+  const res = await fetch(`/api/offers/${offerId}`);
+  const data = await res.json();
+  if(!data.success){
+    alert("Оффер не найден");
+    return;
+  }
+
+  const o = data.offer;
+  const amountBadge = document.getElementById("amountBadge");
+
+const qty = o.stock ?? o.amount;
+
+if (qty && Number(qty) > 1 && o.mode !== "Робуксы") {
+  amountBadge.textContent = `×${qty}`;
+  amountBadge.style.display = "block";
+} else {
+  amountBadge.style.display = "none";
+}
+
+  title.textContent = buildOfferTitle(o);
+  price.dataset.price = o.price;
+await updatePrice();
+
+  // seller
+  sellerName.textContent = o.seller.username;
+  if (o.seller.reviewsCount === 0) {
+  sellerRating.textContent = "Нет отзывов";
+} else {
+  sellerRating.innerHTML =
+    `${renderStars(o.seller.rating)}
+     <span style="margin-left:6px;color:#6b7280;font-weight:600;">
+       ${o.seller.reviewsCount}
+     </span>`;
+}
+  const sellerStatus = document.getElementById("sellerStatus");
+
+if (o.seller.online) {
+  sellerStatus.classList.add("online");
+} else {
+  sellerStatus.classList.remove("online");
+}
+
+  if (o.seller.avatarUrl) {
+    sellerAvatar.src = o.seller.avatarUrl;
+  } else if (o.seller.avatarDataUrl) {
+    sellerAvatar.src = o.seller.avatarDataUrl;
+  }
+
+// ===== GALLERY =====
+const images = Array.isArray(o.images) && o.images.length
+  ? o.images
+  : (o.imageUrl ? [o.imageUrl] : []);
+
+initGallery({
+  images,
+  trackId: "galTrack",
+  prevId: "galPrev",
+  nextId: "galNext",
+  galleryId: "gallery"
+});
+  cleanupOfferUI(o);
+}
+loadOffer();
+async function updatePrice(){
+  const eur = Number(price.dataset.price);
+  if (!eur) return;
+
+  price.textContent = await tpMoney.formatPrice(eur);
+}
+// ===== UI CLEANUP =====
+function cleanupOfferUI(o){
+  const descText = getTextByLang(o.description);
+  const section = document.getElementById("descSection");
+
+  if (!descText) {
+    section.style.display = "none";
+  } else {
+    desc.textContent = descText;
+    section.style.display = "block";
+  }
+}
+
+// ===== SERVER CHAT =====
+let chatId = null;
+
+async function initChat(){
+  const token = localStorage.getItem("tp_token");
+  if(!token) return;
+
+  const res = await fetch("/api/chats/start",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer " + token
+    },
+    body: JSON.stringify({ offerId })
+  });
+
+  const data = await res.json();
+  if(!data.success) return;
+
+  chatId = data.chat.id;
+  loadMessages();
+}
+
+async function loadMessages(){
+  if(!chatId) return;
+
+  const res = await fetch(`/api/chats/${chatId}/messages`,{
+    headers:{
+      "Authorization":"Bearer " + localStorage.getItem("tp_token")
+    }
+  });
+  const data = await res.json();
+  if(!data.success) return;
+
+  messages.innerHTML = "";
+  data.messages.forEach(m=>{
+    const d = document.createElement("div");
+    const myEmail = localStorage.getItem("email");
+
+d.className = "msg " + (m.fromEmail === myEmail ? "me" : "seller");
+    d.textContent = m.text;
+    messages.appendChild(d);
+  });
+
+  messages.scrollTop = messages.scrollHeight;
+}
+
+sendBtn.onclick = async ()=>{
+  const text = chatInput.value.trim();
+  if(!text || !chatId) return;
+
+  await fetch(`/api/chats/${chatId}/messages`,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer " + localStorage.getItem("tp_token")
+    },
+    body: JSON.stringify({ text })
+  });
+
+  chatInput.value = "";
+  loadMessages();
+};
+
+initChat();
+
+// ===== BUY (REAL ORDER LOGIC) =====
+const buyBtn = document.getElementById("buyBtn");
+
+buyBtn.onclick = async () => {
+  const token = localStorage.getItem("tp_token");
+  if (!token) {
+    location.href = "/auth.html?mode=login";
+    return;
+  }
+
+  const ok = confirm("Подтвердить покупку? Средства будут заморожены.");
+  if (!ok) return;
+
+  const res = await fetch("/api/orders/create", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token
+    },
+    body: JSON.stringify({ offerId })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    location.href = "/order.html?id=" + data.order.id;
+  } else {
+    alert(data.message || "Ошибка");
+  }
+};
+setInterval(()=>{
+  if(chatId) loadMessages();
+}, 3000);
+window.addEventListener("tp:currency-change", updatePrice);
+</script>
+
+</body>
+</html>

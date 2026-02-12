@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Создать обращение — TyPlace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="/header.css">
+
+  <style>
+    body{
+      margin:0;
+      font-family:Inter, Arial, sans-serif;
+      background:#f6f7f9;
+      color:#111827;
+    }
+
+.page{
+  max-width:1100px;
+  margin:40px auto;
+  padding:0 16px;
+}
+
+.form{
+  max-width:720px;
+  margin:0 auto;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  padding:24px;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+h1{
+  font-size:24px;
+  margin:20px 0 24px 0;
+}
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    .label{
+      font-size:13px;
+      font-weight:800;
+      color:#6b7280;
+    }
+
+    .input, .select, .textarea{
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      padding:12px;
+      font-size:14px;
+      font-weight:500;
+      outline:none;
+      background:#fff;
+    }
+
+    .textarea{
+      min-height:120px;
+      resize:vertical;
+    }
+
+    .input:focus, .select:focus, .textarea:focus{
+      border-color:#cbd5e1;
+    }
+
+    .btn{
+      margin-top:10px;
+      border:none;
+      border-radius:12px;
+      padding:14px;
+      font-size:15px;
+      font-weight:900;
+      cursor:pointer;
+      background:#1E50D4;
+      color:#fff;
+    }
+
+    .btn:hover{
+      opacity:.9;
+    }
+.support-nav{
+  max-width:1100px;
+  margin:20px auto 0 auto;
+  padding:0 16px;
+
+  display:flex;
+  align-items:center;
+  gap:6px;              /* вместо margin */
+  
+  font-size:13px;
+  font-weight:600;
+  color:#6b7280;
+}
+
+.support-nav a,
+.support-nav .current{
+  text-decoration:none;
+  color:#6b7280;
+}
+
+.support-nav a:hover{
+  color:#111827;
+}
+
+.support-nav .current{
+  color:#111827;
+}
+.attach-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+
+  width:auto;              /* 👈 ВАЖНО */
+  align-self:flex-start;   /* 👈 НЕ растягивается */
+
+  background:#f3f4f6;
+  border:1px solid #e5e7eb;
+  border-radius:8px;
+
+  padding:6px 10px;        /* 👈 меньше воздуха */
+  font-size:14px;
+  font-weight:600;
+
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.attach-btn:hover{
+  background:#e5e7eb;
+}
+
+.attach-icon{
+  width:18px;
+  height:18px;
+}
+
+.attachments-preview{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:10px;
+}
+
+.file-chip{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  background:#f9fafb;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+
+  padding:8px 12px;
+  min-width:240px;
+  max-width:100%;
+
+  font-size:14px;
+}
+
+.file-left{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  overflow:hidden;
+}
+
+.file-name{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:180px;
+}
+
+.file-icon{
+  width:18px;
+  height:18px;
+  color:#6b7280;
+}
+
+.file-remove{
+  cursor:pointer;
+  font-size:16px;
+  font-weight:600;
+  color:#6b7280;
+}
+
+.file-remove:hover{
+  color:#ef4444;
+}
+.textarea{
+  min-height:120px;
+  resize:none;
+
+  font-family: Inter, Arial, sans-serif; /* чтобы точно такой же */
+  font-size:14px;
+  font-weight:400;   /* 👈 обычный текст */
+  line-height:1.6;
+}
+
+.textarea-footer{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:12px;
+  margin-top:4px;
+  color:#9ca3af;
+}
+
+.textarea-error{
+  color:#ef4444;
+}
+
+.textarea.invalid{
+  border-color:#ef4444;
+}
+
+  </style>
+</head>
+
+<body>
+
+<div id="header-container"></div>
+<div class="support-nav">
+  <a href="/help.html">Главная</a>
+  <span>/</span>
+  <span class="current">Создать обращение</span>
+</div>
+
+<div class="page">
+  <h1>Создать обращение</h1>
+
+  <form class="form" id="supportForm">
+
+    <div class="field">
+      <div class="label">Категория</div>
+      <select class="select" name="category" required>
+        <option value="">Выберите категорию</option>
+        <option value="order">Проблема с заказом</option>
+        <option value="finance">Проблема с финансами</option>
+        <option value="account">Проблема с аккаунтом</option>
+        <option value="report">Пожаловаться на пользователя</option>
+        <option value="bug">Сообщить об ошибке (Баг)</option>
+      </select>
+    </div>
+
+<div class="field" id="subjectField" style="display:none;">
+  <div class="label">Тема заявки</div>
+  <select class="select" name="subject" id="subjectSelect"></select>
+</div>
+
+<div class="field" id="orderField" style="display:none;">
+  <div class="label">Номер заказа</div>
+<input 
+  class="input" 
+  name="orderNumber"
+/>
+
+</div>
+
+<div class="field">
+  <div class="label">Описание проблемы</div>
+
+<textarea 
+  class="textarea" 
+  name="message" 
+  id="messageInput"
+  maxlength="10000"
+  required
+></textarea>
+
+  <div class="textarea-footer">
+    <span id="messageError" class="textarea-error"></span>
+    <span id="messageCounter">0 / 10000</span>
+  </div>
+</div>
+
+<div class="field">
+
+  <input 
+    type="file" 
+    id="attachmentsInput"
+    name="attachments"
+    multiple
+    accept="image/*"
+    hidden
+  >
+
+<button type="button" class="attach-btn" id="attachBtn">
+  <svg class="attach-icon" viewBox="0 0 24 24">
+    <path d="M21.44 11.05l-8.49 8.49a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 114.95 4.95l-9.19 9.19a2 2 0 11-2.83-2.83l8.49-8.49"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"/>
+  </svg>
+  Добавить файлы
+</button>
+
+  <div id="attachmentsPreview" class="attachments-preview"></div>
+
+</div>
+
+    <button type="submit" class="btn">
+      Отправить обращение
+    </button>
+
+  </form>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/games.list.js"></script>
+<script src="/header.js"></script>
+
+<script>
+const token = localStorage.getItem("tp_token");
+if(!token){
+  location.href = "/auth.html?mode=login";
+}
+
+const form = document.getElementById("supportForm");
+const categorySelect = form.querySelector("[name='category']");
+const subjectField = document.getElementById("subjectField");
+const subjectSelect = document.getElementById("subjectSelect");
+const orderField = document.getElementById("orderField");
+let SUPPORT_CONFIG = null;
+
+// 1️⃣ Загружаем конфиг с сервера
+async function loadConfig(){
+  const r = await fetch("/api/support/config", {
+    headers:{ Authorization:"Bearer " + token }
+  });
+
+  const d = await r.json();
+  if(!d.success){
+    alert("Ошибка загрузки конфигурации");
+    return;
+  }
+
+  SUPPORT_CONFIG = d.config;
+
+  // очищаем категории
+  categorySelect.innerHTML = `<option value="">Выберите категорию</option>`;
+
+  Object.entries(SUPPORT_CONFIG).forEach(([key, value])=>{
+    const option = document.createElement("option");
+    option.value = key;
+    option.textContent = value.label;
+    categorySelect.appendChild(option);
+  });
+}
+
+// 2️⃣ Отправка формы
+form.onsubmit = async (e)=>{
+  e.preventDefault();
+
+  const formData = new FormData(form);
+
+  formData.delete("attachments");
+
+if(selectedFiles.length > 10){
+    alert("Максимум 10 файлов");
+    return;
+  }
+
+  selectedFiles.forEach(file => {
+    formData.append("attachments", file);
+  });
+
+  const r = await fetch("/api/support/tickets", {
+    method:"POST",
+    headers:{
+      Authorization:"Bearer " + token
+    },
+    body: formData
+  });
+
+  const d = await r.json();
+
+  if(!d.success){
+    alert(d.message || "Ошибка");
+    return;
+  }
+selectedFiles = [];
+preview.innerHTML = "";
+input.value = "";
+
+if(!d.success){
+  alert(d.message || "Ошибка");
+  return;
+}
+
+const newId = d.ticket.id;
+
+// сразу перекидываем на конкретный тикет
+location.href = "/support-ticket.html?id=" + newId;
+
+};
+
+loadConfig();
+categorySelect.addEventListener("change", ()=>{
+// показываем поле номера заказа только для проблем с заказом
+if(categorySelect.value === "order"){
+  orderField.style.display = "flex";
+}else{
+  orderField.style.display = "none";
+}
+  subjectSelect.innerHTML = "";
+
+  if(
+    !SUPPORT_CONFIG ||
+    !SUPPORT_CONFIG[categorySelect.value] ||
+    !SUPPORT_CONFIG[categorySelect.value].topics ||
+    SUPPORT_CONFIG[categorySelect.value].topics.length === 0
+  ){
+    subjectField.style.display = "none";
+    subjectSelect.required = false;
+    return;
+  }
+
+  subjectField.style.display = "flex";
+  subjectSelect.required = true;
+
+  const defaultOption = document.createElement("option");
+  defaultOption.value = "";
+  defaultOption.textContent = "Выберите тему";
+  subjectSelect.appendChild(defaultOption);
+
+  SUPPORT_CONFIG[categorySelect.value].topics.forEach(topic=>{
+    const option = document.createElement("option");
+    option.value = topic;
+    option.textContent = topic;
+    subjectSelect.appendChild(option);
+  });
+});
+const input = document.getElementById("attachmentsInput");
+const btn = document.getElementById("attachBtn");
+const preview = document.getElementById("attachmentsPreview");
+
+let selectedFiles = [];
+
+btn.onclick = () => input.click();
+
+input.onchange = () => {
+  const files = Array.from(input.files);
+
+if(selectedFiles.length + files.length > 10){
+    alert("Максимум 10 файлов");
+    return;
+  }
+
+  files.forEach(file => {
+    selectedFiles.push(file);
+  });
+
+  renderFiles();
+};
+
+function renderFiles(){
+  preview.innerHTML = "";
+
+  selectedFiles.forEach((file, index) => {
+
+    const chip = document.createElement("div");
+    chip.className = "file-chip";
+
+    chip.innerHTML = `
+      <div class="file-left">
+        <svg class="file-icon" viewBox="0 0 24 24">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"/>
+          <polyline points="14 2 14 8 20 8"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"/>
+        </svg>
+        <span class="file-name">${file.name}</span>
+      </div>
+      <div class="file-remove">×</div>
+    `;
+
+    chip.querySelector(".file-remove").onclick = () => {
+      selectedFiles.splice(index,1);
+      renderFiles();
+    };
+
+    preview.appendChild(chip);
+  });
+}
+const messageInput = document.getElementById("messageInput");
+const messageCounter = document.getElementById("messageCounter");
+const messageError = document.getElementById("messageError");
+const submitBtn = form.querySelector(".btn");
+
+// авто-рост
+function autoResize(el){
+  el.style.height = "auto";
+  el.style.height = el.scrollHeight + "px";
+}
+
+const MAX_LENGTH = 10000;
+
+function validateMessage(){
+  const length = messageInput.value.length;
+
+  messageCounter.textContent = `${length} / ${MAX_LENGTH}`;
+
+  if(length > MAX_LENGTH){
+    messageError.textContent = `Максимум ${MAX_LENGTH} символов`;
+    messageInput.classList.add("invalid");
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = ".6";
+  } else {
+    messageError.textContent = "";
+    messageInput.classList.remove("invalid");
+    submitBtn.disabled = false;
+    submitBtn.style.opacity = "1";
+  }
+}
+
+messageInput.addEventListener("input", () => {
+  autoResize(messageInput);
+  validateMessage();
+});
+
+// при загрузке
+validateMessage();
+
+</script>
+
+</body>
+</html>

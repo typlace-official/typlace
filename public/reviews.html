@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Отзывы — TyPlace</title>
+
+  <link rel="stylesheet" href="/header.css">
+
+  <style>
+    :root{
+      --bg:#f6f7f9;
+      --card:#fff;
+      --text:#111;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --radius:14px;
+    }
+
+    body{
+      margin:0;
+      font-family: Inter, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    .page{
+      display:flex;
+      justify-content:center;
+      padding: 18px 14px 40px;
+    }
+    .container{
+      width:100%;
+      max-width:1100px;
+    }
+
+    .top{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+      margin: 12px 0 16px;
+    }
+
+    h1{
+      margin:0;
+      font-size:26px;
+      font-weight:800;
+    }
+
+    .meta{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:6px;
+    }
+
+    .count{
+      color:var(--muted);
+      font-weight:700;
+      font-size:14px;
+    }
+
+    .filters{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .chip{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:999px;
+      padding:8px 12px;
+      font-weight:700;
+      font-size:13px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .chip.active{
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    /* ===== UNIFIED STARS (как в профиле) ===== */
+    .stars{
+      display:inline-flex;
+      gap:2px;
+      font-size:14px;
+      line-height:1;
+    }
+    .star{
+      color:#9ca3af; /* серый контур/пустая */
+    }
+    .star.filled{
+      color:currentColor;
+    }
+
+    .stars.r5{ color:#facc15; }
+    .stars.r4{ color:#fbbf24; }
+    .stars.r3{ color:#f59e0b; }
+    .stars.r2{ color:#ef4444; }
+    .stars.r1{ color:#991b1b; }
+
+    /* ===== grid ===== */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap:14px;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:16px;
+      overflow:hidden;
+    }
+
+    .photo{
+      height:140px;
+      background:#e5e7eb;
+      cursor:pointer;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#9ca3af;
+      font-weight:800;
+    }
+    .photo img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .body{
+      padding:12px;
+    }
+
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .deal{
+      font-weight:900;
+      font-size:14px;
+    }
+
+    .date{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .buyer{
+      margin-top:6px;
+      color:var(--muted);
+      font-weight:700;
+      font-size:12px;
+    }
+
+    .text{
+      margin-top:8px;
+      font-size:13px;
+      line-height:1.35;
+      font-weight:600;
+      color:#111;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .screens{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
+    .shot{
+      width:62px;
+      height:62px;
+      border-radius:10px;
+      border:1px solid var(--line);
+      overflow:hidden;
+      cursor:pointer;
+      background:#f3f4f6;
+    }
+    .shot img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .empty{
+      margin-top:14px;
+      padding:18px;
+      border:1px dashed #d1d5db;
+      border-radius:14px;
+      background:#fff;
+      color:var(--muted);
+      text-align:center;
+      font-weight:700;
+    }
+
+    /* простая модалка для картинки */
+    .modal{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.65);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:9999;
+    }
+    .modal.open{ display:flex; }
+    .modal img{
+      max-width:min(980px, 96vw);
+      max-height:92vh;
+      border-radius:12px;
+      background:#111;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="header-container"></div>
+
+  <div class="page">
+    <div class="container">
+      <div class="top">
+        <div>
+          <h1>Отзывы</h1>
+          <div class="meta">
+            <span id="avgStars"></span>
+            <span class="count" id="countText"></span>
+          </div>
+        </div>
+
+        <div class="filters" id="filters"></div>
+      </div>
+
+      <div id="grid" class="grid"></div>
+      <div id="empty" class="empty" style="display:none;">Пока нет отзывов</div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal">
+    <img id="modalImg" alt="screenshot">
+  </div>
+
+  <script src="/header.js"></script>
+
+  <script>
+    // ===== helpers =====
+    function qs(name){
+      return new URLSearchParams(location.search).get(name);
+    }
+
+    function fmtDate(d){
+      if(!d) return "";
+      const dt = new Date(d);
+      if(String(dt) === "Invalid Date") return "";
+      const dd = String(dt.getDate()).padStart(2,"0");
+      const mm = String(dt.getMonth()+1).padStart(2,"0");
+      const yy = dt.getFullYear();
+      return `${dd}.${mm}.${yy}`;
+    }
+
+    function pick(obj, keys){
+      for(const k of keys){
+        const v = obj?.[k];
+        if(v !== undefined && v !== null && v !== "") return v;
+      }
+      return null;
+    }
+
+    function renderStars(avg){
+      const a = Number(avg) || 0;
+      const rounded = Math.round(a);
+      let cls = "r1";
+      if(a >= 4.5) cls="r5";
+      else if(a >= 3.5) cls="r4";
+      else if(a >= 2.5) cls="r3";
+      else if(a >= 1.5) cls="r2";
+
+      let html = `<span class="stars ${cls}" title="${a.toFixed(2)} / 5">`;
+      for(let i=1;i<=5;i++){
+        html += `<span class="star ${i<=rounded ? "filled" : ""}">★</span>`;
+      }
+      html += `</span>`;
+      return html;
+    }
+
+    // ===== modal =====
+    const modal = document.getElementById("modal");
+    const modalImg = document.getElementById("modalImg");
+    modal.addEventListener("click", ()=> modal.classList.remove("open"));
+
+    function openImg(url){
+      modalImg.src = url;
+      modal.classList.add("open");
+    }
+
+    // ===== load =====
+    const userEmail = qs("user");
+    const grid = document.getElementById("grid");
+    const empty = document.getElementById("empty");
+    const countText = document.getElementById("countText");
+    const avgStars = document.getElementById("avgStars");
+    const filtersEl = document.getElementById("filters");
+
+    let allReviews = [];
+    let currentFilter = "all"; // all | "5".."1"
+
+    function makeFilters(){
+      const items = [
+        {id:"all", label:"Все"},
+        {id:"5", label:"5★"},
+        {id:"4", label:"4★"},
+        {id:"3", label:"3★"},
+        {id:"2", label:"2★"},
+        {id:"1", label:"1★"},
+      ];
+
+      filtersEl.innerHTML = "";
+      items.forEach(it=>{
+        const b = document.createElement("div");
+        b.className = "chip" + (it.id===currentFilter ? " active" : "");
+        b.textContent = it.label;
+        b.onclick = ()=>{
+          currentFilter = it.id;
+          makeFilters();
+          render();
+        };
+        filtersEl.appendChild(b);
+      });
+    }
+
+    function computeHeader(){
+      const count = allReviews.length;
+      countText.textContent = count ? `${count} отзывов` : "";
+
+      if(!count){
+        avgStars.innerHTML = "";
+        return;
+      }
+      const avg = allReviews.reduce((s,r)=> s + (Number(r.rating)||0), 0) / count;
+      avgStars.innerHTML = renderStars(avg);
+    }
+
+    function normalizeReview(r){
+  return {
+    rating: Number(r.rating) || 0,
+    createdAt: r.createdAt,
+    text: r.text || "",
+
+    orderId: r.orderId,
+    orderNumber: r.orderNumber,
+
+    buyerName: r.buyer?.username || "Покупатель",
+
+    offerId: r.offer?.id,
+    offerTitle: r.offer?.description || "Без описания",
+    offerImage: r.offer?.imageDataUrl || ""
+  };
+}
+
+    function render(){
+      grid.innerHTML = "";
+
+      const list = allReviews
+        .map(normalizeReview)
+        .filter(x => currentFilter==="all" ? true : String(Math.round(x.rating)) === currentFilter);
+
+      empty.style.display = list.length ? "none" : "block";
+
+      list.forEach(x=>{
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const date = fmtDate(x.createdAt);
+
+        // фото кликабельное: если есть offerId -> открываем offer.html?id=
+        const photo = document.createElement("div");
+        photo.className = "photo";
+        photo.title = x.offerId ? "Открыть объявление" : "Фото сделки";
+
+        if(x.offerImage){
+          const img = document.createElement("img");
+          img.src = x.offerImage;
+          img.onerror = () => { photo.textContent = "Фото"; };
+          photo.appendChild(img);
+        }else{
+          photo.textContent = "Фото";
+        }
+
+        photo.onclick = ()=>{
+          if(x.offerId) location.href = `/offer.html?id=${encodeURIComponent(x.offerId)}`;
+          else if(x.offerImage) openImg(x.offerImage);
+        };
+
+        const body = document.createElement("div");
+        body.className = "body";
+
+        body.innerHTML = `
+          <div class="row">
+            <div class="deal">${escapeHtml(x.offerTitle)}</div>
+            <div class="date">${date || ""}</div>
+          </div>
+
+          <div class="row" style="margin-top:8px;">
+            <div>${renderStars(x.rating)}</div>
+            <div></div>
+          </div>
+
+          <div class="buyer">
+  Заказ <b>#${x.orderNumber}</b> · Покупатель: <b>${escapeHtml(x.buyerName)}</b>
+</div>
+          ${x.text ? `<div class="text">${escapeHtml(x.text)}</div>` : ""}
+        `;
+
+        card.appendChild(photo);
+        card.appendChild(body);
+        grid.appendChild(card);
+
+        // клики по мини-скринам
+        card.querySelectorAll(".shot").forEach(s=>{
+          s.addEventListener("click", (e)=>{
+            e.stopPropagation();
+            openImg(s.getAttribute("data-url"));
+          });
+        });
+      });
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+    function escapeAttr(str){
+      // для атрибутов достаточно базового экранирования
+      return escapeHtml(str);
+    }
+
+    async function init(){
+      makeFilters();
+
+      if(!userEmail){
+        empty.style.display = "block";
+        empty.textContent = "Не указан пользователь. Открой так: /reviews.html?user=email";
+        return;
+      }
+
+      // грузим отзывы
+      const res = await fetch(`/api/users/${encodeURIComponent(userEmail)}/reviews`);
+      const data = await res.json().catch(()=>({}));
+
+      allReviews = data?.success && Array.isArray(data.reviews) ? data.reviews : [];
+
+      computeHeader();
+      render();
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Кошелёк — TyPlace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Хедер -->
+  <link rel="stylesheet" href="header.css">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f6f6f6;
+    }
+
+    .container {
+      max-width: 560px;
+      margin: 30px auto;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid #ddd;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+    }
+
+    .balance {
+      font-size: 26px;
+      font-weight: bold;
+      margin: 10px 0 20px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .actions button {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .deposit {
+      background: #2563eb;
+      color: #fff;
+    }
+
+    .withdraw {
+      background: #e5e7eb;
+    }
+
+    h2 {
+      margin: 20px 0 10px;
+      font-size: 18px;
+    }
+
+    .history {
+      border-top: 1px solid #eee;
+    }
+
+    .item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+
+    .item.plus {
+      color: #16a34a;
+    }
+
+    .item.minus {
+      color: #dc2626;
+    }
+
+    .date {
+      color: #6b7280;
+      font-size: 12px;
+    }
+
+    .empty {
+      color: #6b7280;
+      font-size: 14px;
+      padding: 10px 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ХЕДЕР -->
+  <div id="header-container"></div>
+
+  <div class="container">
+    <h1>Кошелёк</h1>
+
+    <div class="balance" id="balance">—</div>
+
+    <div class="actions">
+      <button class="deposit">Пополнить</button>
+      <button class="withdraw">Вывести</button>
+    </div>
+
+    <h2>История операций</h2>
+    <div class="history" id="history"></div>
+  </div>
+
+  <!-- header.js -->
+<script src="/socket.io/socket.io.js"></script>
+<script src="/games.list.js"></script>
+<script src="/header.js"></script>
+
+  <script>
+  let cachedRates = null;
+
+async function getRatesCached() {
+  if (cachedRates) return cachedRates;
+
+  const res = await fetch("/api/rates");
+  cachedRates = await res.json();
+
+if (!cachedRates.success || !cachedRates.rates) {
+  throw new Error("Rates not loaded");
+}
+
+return cachedRates;
+}
+    const token = localStorage.getItem("tp_token");
+    if (!token) location.href = "/auth.html?mode=login";
+
+    let baseBalance = 0;
+    let historyItems = [];
+
+    function getCurrentCurrency() {
+      return localStorage.getItem("tp_currency") || "EUR";
+    }
+
+    function symbol(cur) {
+      return cur === "USD" ? "$" : cur === "UAH" ? "₴" : "€";
+    }
+
+    async function convert(amountEUR) {
+  const cur = getCurrentCurrency();
+  const rates = await getRatesCached();
+
+  if (!rates?.success || !rates?.rates?.[cur]) {
+    console.warn("⚠️ Нет курса для", cur, "— использую EUR");
+    return Math.round(amountEUR * 100) / 100; // fallback: EUR
+  }
+
+  const rate = rates.rates[cur];
+  return Math.round(amountEUR * rate * 100) / 100;
+}
+
+
+    async function renderBalance() {
+      const value = await convert(baseBalance);
+      document.getElementById("balance").innerText =
+        value.toFixed(2) + " " + symbol(getCurrentCurrency());
+    }
+
+    async function renderHistory() {
+      const box = document.getElementById("history");
+      box.innerHTML = "";
+
+      if (!historyItems.length) {
+        box.innerHTML = `<div class="empty">История пуста</div>`;
+        return;
+      }
+
+      for (const h of historyItems) {
+        const v = await convert(h.amount);
+        const row = document.createElement("div");
+        row.className = "item " + (h.amount >= 0 ? "plus" : "minus");
+        row.innerHTML = `
+          <div>
+            <div>${h.text}</div>
+            <div class="date">${new Date(h.createdAt).toLocaleString()}</div>
+          </div>
+          <div>${v.toFixed(2)} ${symbol(getCurrentCurrency())}</div>
+        `;
+        box.appendChild(row);
+      }
+    }
+
+    async function loadWallet() {
+      const [balRes, histRes] = await Promise.all([
+        fetch("/api/balance", { headers: { Authorization: "Bearer " + token }}),
+        fetch("/api/wallet/history", { headers: { Authorization: "Bearer " + token }})
+      ]);
+
+      const bal = await balRes.json();
+      const hist = await histRes.json();
+
+      baseBalance = bal.balance || 0;
+      historyItems = hist.items || [];
+
+      await renderBalance();
+      await renderHistory();
+    }
+
+    document.querySelector(".deposit").onclick = async () => {
+      const v = Number(prompt("Введите сумму пополнения (EUR):"));
+      if (!v || v <= 0) return;
+
+      await fetch("/api/balance/deposit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token
+        },
+        body: JSON.stringify({ amount: v })
+      });
+
+      loadWallet();
+    };
+
+    document.querySelector(".withdraw").onclick = async () => {
+      const v = Number(prompt("Введите сумму вывода (EUR):"));
+      if (!v || v <= 0) return;
+
+      await fetch("/api/balance/withdraw", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token
+        },
+        body: JSON.stringify({ amount: v })
+      });
+
+      loadWallet();
+    };
+
+window.addEventListener("tp:currency-change", () => {
+  renderBalance();
+  renderHistory();
+});
+
+    loadWallet();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Мои предложения — TyPlace</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="/header.css">
+<link rel="stylesheet" href="/game.css">
+
+<style>
+body{
+  margin:0;
+  font-family:Inter,Arial,sans-serif;
+  background:#f6f7f9;
+}
+
+.wrap{
+  max-width:1200px;
+  margin:24px auto;
+  padding:0 14px;
+}
+
+.head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:16px;
+}
+
+.title{
+  font-size:22px;
+  font-weight:900;
+}
+
+.tabs{
+  display:flex;
+  gap:6px;
+}
+
+.tab{
+  padding:8px 14px;
+  border-radius:999px;
+  border:1px solid #e5e7eb;
+  background:#fff;
+  cursor:pointer;
+  font-weight:800;
+  font-size:13px;
+}
+
+.tab.active{
+  background:#111;
+  color:#fff;
+  border-color:#111;
+}
+
+.offer-meta{
+  font-size:13px;
+  color:#6b7280;
+  margin-top:6px;
+  font-weight:700;
+}
+
+.offer-actions{
+  margin-top:10px;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.offer-actions button{
+  padding:8px 12px;
+  border-radius:10px;
+  border:none;
+  cursor:pointer;
+  font-weight:800;
+  font-size:13px;
+  white-space:nowrap;
+}
+.btn-danger{
+  background:#fee2e2;
+  color:#b91c1c;
+}
+
+.btn-primary{
+  background:#1E50D4;
+  color:#fff;
+}
+
+.btn-secondary{
+  background:#e5e7eb;
+  color:#111;
+}
+
+.empty{
+  padding:30px;
+  text-align:center;
+  background:#fff;
+  border-radius:14px;
+  font-weight:700;
+  color:#6b7280;
+}
+</style>
+</head>
+
+<body>
+<div id="header-container"></div>
+
+<div class="wrap">
+  <div class="head">
+    <div class="title">Мои предложения</div>
+
+    <div class="tabs">
+      <button class="tab" id="tab-active" onclick="setTab('active')">Активные</button>
+      <button class="tab" id="tab-inactive" onclick="setTab('inactive')">Неактивные</button>
+    </div>
+  </div>
+
+  <div id="list" class="offers-list"></div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/games.list.js"></script>
+<script src="/header.js"></script>
+<script src="/tp-money.js"></script>
+<script src="/offer-title.js"></script>
+
+<script>
+const token = localStorage.getItem("tp_token");
+const list = document.getElementById("list");
+
+let allOffers = [];
+let currentTab = "active";
+
+function formatDate(ts){
+  if(!ts) return "";
+  const d = new Date(ts);
+  return d.toLocaleDateString("ru-RU", {
+    day:"numeric",
+    month:"long"
+  });
+}
+
+function setTab(tab){
+  currentTab = tab;
+
+  document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
+  document.getElementById("tab-" + tab).classList.add("active");
+
+  render();
+}
+
+fetch("/api/my-offers", {
+  headers:{ Authorization:"Bearer " + token }
+})
+.then(r=>r.json())
+.then(d=>{
+  if(!d.success){
+    list.innerHTML = `<div class="empty">Ошибка загрузки</div>`;
+    return;
+  }
+  allOffers = d.offers || [];
+  setTab("active");
+});
+
+function render(){
+  list.innerHTML = "";
+
+  const now = Date.now();
+
+  const filtered = allOffers.filter(o=>{
+    if(currentTab === "active"){
+      return o.status === "active" && o.activeUntil > now;
+    }
+
+    if(currentTab === "inactive"){
+      return (
+        o.status !== "active" ||
+        (o.activeUntil && o.activeUntil <= now)
+      );
+    }
+  });
+
+  if(!filtered.length){
+    list.innerHTML = `<div class="empty">Нет предложений</div>`;
+    return;
+  }
+
+  filtered.forEach(renderCard);
+  updatePrices();
+}
+
+function renderCard(o){
+
+  const card = document.createElement("div");
+  card.className = "offer-card";
+  card.style.cursor = "pointer";
+
+  card.addEventListener("click",()=>{
+    location.href = "/offer.html?id=" + o.id;
+  });
+
+  const image = o.imageUrl || "/img/offer-default.png";
+  const title = buildOfferTitle(o);
+  const gameObj = (window.GAMES_LIST || []).find(g => g.id === o.game);
+const gameTitle = gameObj ? gameObj.name : o.game;
+
+const gameLine = [
+  gameTitle,
+  o.mode
+]
+  .filter(Boolean)
+  .join(", ");
+
+  let meta = "";
+
+  if(o.status === "active" && o.activeUntil){
+    meta = `<div class="offer-meta">
+      Активно до ${formatDate(o.activeUntil)}
+    </div>`;
+  }
+
+  let actions = "";
+
+  if(currentTab === "inactive"){
+  actions = `
+    <div class="offer-actions">
+      <button class="btn-primary" onclick="activate('${o.id}',event)">Активировать</button>
+      <button class="btn-secondary" onclick="edit('${o.id}',event)">Редактировать</button>
+    </div>
+  `;
+} else {
+  actions = `
+    <div class="offer-actions">
+      <button class="btn-secondary" onclick="edit('${o.id}',event)">Редактировать</button>
+      <button class="btn-danger" onclick="deactivate('${o.id}',event)">
+  Деактивировать
+</button>
+    </div>
+  `;
+}
+
+  card.innerHTML = `
+    <div class="offer-image">
+      <img src="${image}" onerror="this.src='/img/offer-default.png'">
+    </div>
+
+    <div class="offer-body">
+      <div class="offer-title">${title}</div>
+
+<div class="offer-price" data-price="${o.price}">—</div>
+
+<div class="offer-meta">
+  ${gameLine}
+</div>
+      ${meta}
+      ${actions}
+    </div>
+  `;
+
+  list.appendChild(card);
+}
+
+function activate(id,e){
+  e.stopPropagation();
+
+  fetch("/api/offers/" + id + "/activate",{
+    method:"POST",
+    headers:{ Authorization:"Bearer " + token }
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    if(d.success) location.reload();
+    else alert("Ошибка");
+  });
+}
+function deactivate(id, e){
+  e.stopPropagation();
+
+  if(!confirm("Деактивировать объявление?")){
+    return;
+  }
+
+  fetch("/api/offers/" + id + "/deactivate", {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  })
+  .then(r => r.json())
+  .then(d => {
+    if(d.success){
+      location.reload();
+    } else {
+      alert(d.message || "Ошибка");
+    }
+  });
+}
+function edit(id, e){
+  e.stopPropagation();
+
+  const offer = allOffers.find(o => o.id === id);
+  if (!offer) {
+    alert("Оффер не найден");
+    return;
+  }
+
+  const params = new URLSearchParams({
+    game: offer.game,
+    mode: offer.mode,
+    edit: id
+  });
+
+  location.href = "/offer-create.html?" + params.toString();
+}
+
+async function updatePrices(){
+  const els = document.querySelectorAll(".offer-price");
+  for(const el of els){
+    const eur = Number(el.dataset.price);
+    if(!eur) continue;
+    el.textContent = await tpMoney.formatPrice(eur);
+  }
+}
+
+window.addEventListener("tp:currency-change", updatePrices);
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+<svg width="200" height="200" viewBox="0 0 200 200"
+     xmlns="http://www.w3.org/2000/svg">
+
+  <!-- фон -->
+  <circle cx="100" cy="100" r="100" fill="#E5E7EB"/>
+
+  <!-- голова -->
+  <circle cx="100" cy="75" r="32" fill="#9CA3AF"/>
+
+  <!-- тело -->
+  <path d="M40 170c0-33 27-55 60-55s60 22 60 55"
+        fill="#9CA3AF"/>
+</svg>

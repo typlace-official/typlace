@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Вход / Регистрация — TyPlace</title>
+  <link rel="stylesheet" href="header.css">
+
+  <style>
+    body { margin:0; font-family: Arial, sans-serif; background:#f6f6f6; color:#111; }
+    #header-container { position: sticky; top: 0; z-index: 10; background:#fff; }
+
+    /* page layout like FunPay: header stays, content centered */
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 16px;
+    }
+
+    .auth-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .card {
+      width: 520px;
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 14px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: #f4f6fb;
+      border-bottom: 1px solid #e8e8e8;
+    }
+    .tab {
+      padding: 14px 12px;
+      text-align: center;
+      cursor: pointer;
+      font-weight: 700;
+      color: #5a5a5a;
+      user-select: none;
+    }
+    .tab.active {
+      background: #ffffff;
+      color: #1E50D4;
+      border-bottom: 3px solid #1E50D4;
+    }
+
+    .content { padding: 18px 18px 14px; }
+
+    .title { font-size: 18px; font-weight: 800; margin: 2px 0 14px; }
+
+    label { display:block; font-size: 13px; color:#333; margin: 10px 0 6px; }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px 12px;
+      border: 1px solid #dcdcdc;
+      border-radius: 10px;
+      outline: none;
+      font-size: 14px;
+      background: #fff;
+    }
+    input:focus { border-color: #1E50D4; box-shadow: 0 0 0 3px rgba(30,80,212,0.12); }
+
+    .btn {
+      width: 100%;
+      margin-top: 14px;
+      padding: 12px 12px;
+      border: none;
+      border-radius: 10px;
+      background: #1E50D4;
+      color: #fff;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .subline {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #555;
+      display:flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .link {
+      color: #1E50D4;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    /* ===== modal POP (code) ===== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 16px;
+    }
+    .modal {
+      width: 520px;
+      max-width: 95vw;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 20px 70px rgba(0,0,0,0.25);
+      overflow: hidden;
+    }
+    .modal-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid #eee;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .modal-head b { font-size: 15px; }
+    .xbtn {
+      border: none;
+      background: transparent;
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px 8px;
+      color:#333;
+    }
+    .modal-body { padding: 16px; }
+    .hint { color:#555; font-size: 13px; margin-top: 6px; }
+
+    .code-row {
+      margin-top: 14px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    .code-cell {
+      width: 48px;
+      height: 54px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 800;
+      border-radius: 12px;
+      border: 1px solid #dcdcdc;
+      outline: none;
+    }
+    .code-cell:focus { border-color: #1E50D4; box-shadow: 0 0 0 3px rgba(30,80,212,0.12); }
+
+    .modal-actions {
+      margin-top: 16px;
+      display:flex;
+      gap: 10px;
+    }
+    .btn2 {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #dcdcdc;
+      background: #fff;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .btnPrimary {
+      background: #1E50D4;
+      color:#fff;
+      border: none;
+    }
+
+    .error {
+      margin-top: 10px;
+      color: #c0392b;
+      font-size: 13px;
+      font-weight: 700;
+      display:none;
+    }
+
+    @media (max-width: 600px) {
+      .card { width: 100%; }
+      .modal { width: 100%; }
+      .code-cell { width: 42px; height: 50px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="header-container"></div>
+
+  <div class="page">
+    <div class="auth-wrap">
+      <div class="card">
+        <div class="tabs">
+          <div class="tab active" id="tabLogin">Вход</div>
+          <div class="tab" id="tabRegister">Регистрация</div>
+        </div>
+
+        <div class="content">
+          <!-- LOGIN FORM -->
+          <div id="loginPane">
+            <div class="title">Вход</div>
+
+            <label for="loginEmail">Адрес электронной почты</label>
+            <input id="loginEmail" type="email" placeholder="example@gmail.com" autocomplete="email"/>
+
+            <button class="btn" type="button" id="loginSendBtn">Получить код</button>
+
+            <div class="subline">
+              <span>Нет аккаунта? <a class="link" href="#" id="goRegisterLink">Регистрация</a></span>
+              <!-- пароля нет => "забыли пароль" не нужно -->
+            </div>
+          </div>
+
+          <!-- REGISTER FORM -->
+          <div id="registerPane" style="display:none;">
+            <div class="title">Регистрация</div>
+
+            <label for="regNick">Никнейм</label>
+            <input id="regNick" type="text" placeholder="Придумайте ник" autocomplete="nickname" />
+
+            <label for="regEmail">Адрес электронной почты</label>
+            <input id="regEmail" type="email" placeholder="example@gmail.com" autocomplete="email" />
+
+            <button class="btn" type="button" id="regSendBtn">Получить код</button>
+
+            <div class="subline">
+              <span>Уже есть аккаунт? <a class="link" href="#" id="goLoginLink">Вход</a></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- POP modal -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <b id="modalTitle">Подтверждение</b>
+        <button class="xbtn" id="modalCloseBtn" aria-label="Закрыть">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div style="font-size:15px;font-weight:800;display:flex;align-items:center;gap:10px;">
+          <span>🔑</span><span>Введите код из почты</span>
+        </div>
+        <div class="hint" id="modalHint">Мы отправили письмо на …</div>
+
+        <div class="code-row" id="codeRow">
+          <input class="code-cell" inputmode="numeric" maxlength="1" />
+          <input class="code-cell" inputmode="numeric" maxlength="1" />
+          <input class="code-cell" inputmode="numeric" maxlength="1" />
+          <input class="code-cell" inputmode="numeric" maxlength="1" />
+          <input class="code-cell" inputmode="numeric" maxlength="1" />
+          <input class="code-cell" inputmode="numeric" maxlength="1" />
+        </div>
+
+        <div class="error" id="modalError"></div>
+
+        <div class="modal-actions">
+          <button class="btn2" type="button" id="resendBtn">Отправить повторно</button>
+          <button class="btn2 btnPrimary" type="button" id="verifyBtn">Подтвердить</button>
+        </div>
+
+        <div class="hint" id="timerHint" style="margin-top:10px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Подключаем твой header.js (он сам подтянет header.html через fetch) -->
+  <script src="header.js"></script>
+
+  <script>
+    // ====== state ======
+    let mode = "login"; // login | register
+    let currentEmail = "";
+    let currentNick = "";
+    let resendTimer = null;
+    let resendLeft = 0;
+
+    // ====== elements ======
+    const tabLogin = document.getElementById("tabLogin");
+    const tabRegister = document.getElementById("tabRegister");
+    const loginPane = document.getElementById("loginPane");
+    const registerPane = document.getElementById("registerPane");
+
+    const loginEmail = document.getElementById("loginEmail");
+    const regEmail = document.getElementById("regEmail");
+    const regNick = document.getElementById("regNick");
+
+    const loginSendBtn = document.getElementById("loginSendBtn");
+    const regSendBtn = document.getElementById("regSendBtn");
+
+    const goRegisterLink = document.getElementById("goRegisterLink");
+    const goLoginLink = document.getElementById("goLoginLink");
+
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    const modalCloseBtn = document.getElementById("modalCloseBtn");
+    const modalHint = document.getElementById("modalHint");
+    const modalError = document.getElementById("modalError");
+    const resendBtn = document.getElementById("resendBtn");
+    const verifyBtn = document.getElementById("verifyBtn");
+    const timerHint = document.getElementById("timerHint");
+    const codeInputs = Array.from(document.querySelectorAll(".code-cell"));
+
+    // ====== tab switch ======
+    function setMode(newMode) {
+  mode = newMode;
+
+  if (mode === "login") {
+    tabLogin.classList.add("active");
+    tabRegister.classList.remove("active");
+    loginPane.style.display = "block";
+    registerPane.style.display = "none";
+  } else {
+    tabRegister.classList.add("active");
+    tabLogin.classList.remove("active");
+    registerPane.style.display = "block";
+    loginPane.style.display = "none";
+  }
+
+  const url = new URL(location.href);
+  url.searchParams.set("mode", mode);
+  history.replaceState({}, "", url.toString());
+
+  // 🔔 ВАЖНО
+  window.dispatchEvent(
+    new CustomEvent("auth:mode-change", {
+      detail: { mode }
+    })
+  );
+}
+
+    tabLogin.addEventListener("click", () => setMode("login"));
+    tabRegister.addEventListener("click", () => setMode("register"));
+    goRegisterLink.addEventListener("click", (e) => { e.preventDefault(); setMode("register"); });
+    goLoginLink.addEventListener("click", (e) => { e.preventDefault(); setMode("login"); });
+
+    // init mode from url
+    (function initFromUrl(){
+      const url = new URL(location.href);
+      const m = url.searchParams.get("mode");
+      if (m === "register") setMode("register");
+      else setMode("login");
+    })();
+
+    // ====== modal helpers ======
+    function openModal(email) {
+      modalError.style.display = "none";
+      modalError.textContent = "";
+      codeInputs.forEach(i => i.value = "");
+      modalHint.textContent = "Мы отправили письмо на " + email;
+
+      modalBackdrop.style.display = "flex";
+      setTimeout(() => codeInputs[0].focus(), 50);
+
+      startResendTimer(48); // как на твоем примере
+    }
+
+    function closeModal() {
+      modalBackdrop.style.display = "none";
+      stopResendTimer();
+    }
+
+    modalCloseBtn.addEventListener("click", closeModal);
+    modalBackdrop.addEventListener("click", (e) => {
+      if (e.target === modalBackdrop) closeModal();
+    });
+
+    function showModalError(msg) {
+      modalError.textContent = msg;
+      modalError.style.display = "block";
+    }
+
+    function startResendTimer(seconds) {
+      resendLeft = seconds;
+      resendBtn.disabled = true;
+      timerHint.textContent = "Отправить повторно можно через " + resendLeft + " c.";
+
+      stopResendTimer();
+      resendTimer = setInterval(() => {
+        resendLeft -= 1;
+        if (resendLeft <= 0) {
+          stopResendTimer();
+          resendBtn.disabled = false;
+          timerHint.textContent = "";
+        } else {
+          timerHint.textContent = "Отправить повторно можно через " + resendLeft + " c.";
+        }
+      }, 1000);
+    }
+
+    function stopResendTimer() {
+      if (resendTimer) clearInterval(resendTimer);
+      resendTimer = null;
+    }
+
+    // auto move in code inputs
+    codeInputs.forEach((inp, idx) => {
+      inp.addEventListener("input", () => {
+        inp.value = inp.value.replace(/\D/g, "").slice(0,1);
+        if (inp.value && idx < codeInputs.length - 1) codeInputs[idx+1].focus();
+      });
+      inp.addEventListener("keydown", (e) => {
+        if (e.key === "Backspace" && !inp.value && idx > 0) codeInputs[idx-1].focus();
+      });
+      inp.addEventListener("paste", (e) => {
+        e.preventDefault();
+        const text = (e.clipboardData.getData("text") || "").replace(/\D/g, "").slice(0,6);
+        if (!text) return;
+        for (let i=0;i<6;i++){
+          codeInputs[i].value = text[i] || "";
+        }
+        const lastFilled = Math.min(text.length, 6) - 1;
+        if (lastFilled >= 0) codeInputs[lastFilled].focus();
+      });
+    });
+
+    function getCodeValue() {
+      return codeInputs.map(i => i.value).join("");
+    }
+
+    // ====== API ======
+    async function requestCode(email, mode, username) {
+      const body = { email, mode };
+      if (mode === "register") body.username = username;
+
+      const r = await fetch("/auth/request-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      return r.json();
+    }
+
+    async function verifyCode(email, mode, code) {
+      const r = await fetch("/auth/verify-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, mode, code })
+      });
+      return r.json();
+    }
+
+    function maskEmail(email) {
+      // чуть маскируем визуально
+      const [a,b] = email.split("@");
+      if (!b) return email;
+      const left = a.length <= 2 ? a[0] + "*" : a.slice(0,2) + "*".repeat(Math.min(6, a.length-2));
+      return left + "@" + b;
+    }
+
+    // ====== actions ======
+    loginSendBtn.addEventListener("click", async () => {
+      const email = String(loginEmail.value || "").trim().toLowerCase();
+      if (!email) return alert("Введите email.");
+
+      loginSendBtn.disabled = true;
+      try {
+        const d = await requestCode(email, "login");
+        if (!d.success) return alert(d.message);
+
+        currentEmail = email;
+        currentNick = "";
+        modalHint.textContent = "Мы отправили письмо на " + maskEmail(email);
+        openModal(maskEmail(email));
+      } catch {
+        alert("Ошибка. Попробуйте снова.");
+      } finally {
+        loginSendBtn.disabled = false;
+      }
+    });
+
+    regSendBtn.addEventListener("click", async () => {
+      const email = String(regEmail.value || "").trim().toLowerCase();
+      const nick = String(regNick.value || "").trim();
+
+      if (!nick) return alert("Введите ник.");
+      if (nick.length < 3) return alert("Ник минимум 3 символа.");
+      if (!email) return alert("Введите email.");
+
+      regSendBtn.disabled = true;
+      try {
+        const d = await requestCode(email, "register", nick);
+        if (!d.success) return alert(d.message);
+
+        currentEmail = email;
+        currentNick = nick;
+        openModal(maskEmail(email));
+      } catch {
+        alert("Ошибка. Попробуйте снова.");
+      } finally {
+        regSendBtn.disabled = false;
+      }
+    });
+
+    resendBtn.addEventListener("click", async () => {
+      if (!currentEmail) return;
+
+      resendBtn.disabled = true;
+      try {
+        const d = await requestCode(currentEmail, mode, currentNick);
+        if (!d.success) {
+          resendBtn.disabled = false;
+          return showModalError(d.message);
+        }
+        startResendTimer(48);
+      } catch {
+        resendBtn.disabled = false;
+        showModalError("Ошибка отправки. Попробуйте снова.");
+      }
+    });
+
+    verifyBtn.addEventListener("click", async () => {
+  const code = getCodeValue();
+  if (!/^\d{6}$/.test(code)) {
+    showModalError("Введите 6 цифр кода.");
+    return;
+  }
+
+  verifyBtn.disabled = true;
+
+  try {
+    const r = await fetch("/auth/verify-code", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: currentEmail,
+        mode,
+        code
+      })
+    });
+
+    const d = await r.json();
+
+    if (!d.success) {
+      showModalError(d.message || "Ошибка");
+      return;
+    }
+
+    // 🔥 ВАЖНО: сохраняем ВСЁ ЯВНО
+    localStorage.setItem("tp_token", d.token);
+    localStorage.setItem("userName", d.user.username);
+    localStorage.setItem("userEmail", d.user.email);
+
+    if (d.user.avatarUrl) {
+      localStorage.setItem("avatarUrl", d.user.avatarUrl);
+      localStorage.removeItem("avatarDataUrl");
+    }
+
+    if (d.user.avatarDataUrl) {
+      localStorage.setItem("avatarDataUrl", d.user.avatarDataUrl);
+      localStorage.removeItem("avatarUrl");
+    }
+
+    // 🔥 ДЛЯ ОТЛАДКИ (временно)
+    console.log("TOKEN SAVED:", d.token);
+
+    closeModal();
+location.replace("index.html");
+
+  } catch (err) {
+    console.error(err);
+    showModalError("Ошибка соединения");
+  } finally {
+    verifyBtn.disabled = false;
+  }
+});
+
+    // enter submits code
+    document.addEventListener("keydown", (e) => {
+      if (modalBackdrop.style.display === "flex" && e.key === "Enter") {
+        verifyBtn.click();
+      }
+    });
+  </script>
+</body>
+</html>

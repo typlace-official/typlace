@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>История обращений — TyPlace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="/header.css">
+
+  <style>
+    body{
+      margin:0;
+      font-family:Inter, Arial, sans-serif;
+      background:#f6f7f9;
+      color:#111827;
+    }
+
+.page{
+  max-width:1100px;
+  margin:40px auto;
+  padding:0 16px;
+}
+
+
+
+h1{
+  font-size:24px;
+  margin:20px 0 24px 0;
+}
+    .layout{
+      display:grid;
+      grid-template-columns:320px 1fr;
+      gap:16px;
+    }
+
+    @media(max-width:900px){
+      .layout{ grid-template-columns:1fr; }
+    }
+
+    .card{
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:16px;
+      overflow:hidden;
+    }
+
+    .ticket{
+      padding:14px;
+      border-top:1px solid #f3f4f6;
+      cursor:pointer;
+    }
+
+    .ticket:hover{
+      background:#f9fafb;
+    }
+
+    .ticket.active{
+      background:#eef2ff;
+    }
+
+    .ticket-title{
+      font-weight:800;
+      font-size:14px;
+      margin-bottom:6px;
+    }
+
+    .ticket-meta{
+      font-size:12px;
+      color:#6b7280;
+      font-weight:700;
+    }
+
+    .badge{
+      display:inline-block;
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+    }
+
+    .waiting{ background:#fef3c7; color:#92400e; }
+    .closed{ background:#e5e7eb; color:#374151; }
+
+    .messages{
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      max-height:500px;
+      overflow:auto;
+    }
+
+    .msg{
+      max-width:70%;
+      padding:10px 14px;
+      border-radius:14px;
+      font-weight:700;
+      font-size:14px;
+      white-space:pre-wrap;
+    }
+
+    .me{
+      align-self:flex-end;
+      background:#1E50D4;
+      color:#fff;
+    }
+
+    .support{
+      background:#f3f4f6;
+    }
+
+    .reply{
+      padding:16px;
+      border-top:1px solid #e5e7eb;
+      display:flex;
+      gap:10px;
+    }
+
+    .textarea{
+      flex:1;
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      padding:10px;
+      font-weight:700;
+      resize:vertical;
+    }
+
+    .btn{
+      border:none;
+      border-radius:12px;
+      padding:12px 18px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .btn-primary{
+      background:#1E50D4;
+      color:#fff;
+    }
+
+    .btn-danger{
+      background:#fee2e2;
+      color:#b91c1c;
+    }
+
+    .empty{
+      padding:20px;
+      text-align:center;
+      color:#6b7280;
+      font-weight:700;
+    }
+.support-nav{
+  max-width:1100px;
+  margin:20px auto 0 auto;
+  padding:0 16px;
+
+  display:flex;
+  align-items:center;
+  gap:6px;              /* вместо margin */
+  
+  font-size:13px;
+  font-weight:600;
+  color:#6b7280;
+}
+
+.support-nav a,
+.support-nav .current{
+  text-decoration:none;
+  color:#6b7280;
+}
+
+.support-nav a:hover{
+  color:#111827;
+}
+
+.support-nav .current{
+  color:#111827;
+}
+
+  </style>
+</head>
+
+<body>
+
+<div id="header-container"></div>
+<div class="support-nav">
+  <a href="/help.html">Главная</a>
+  <span>/</span>
+  <span class="current">История обращений</span>
+</div>
+
+<div class="page">
+  <h1>История обращений</h1>
+
+  <div class="layout">
+
+    <!-- LEFT -->
+    <div class="card" id="ticketList">
+      <div class="empty">Загрузка...</div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="card" id="chatPane">
+      <div class="empty">Выберите обращение</div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/games.list.js"></script>
+<script src="/header.js"></script>
+
+<script>
+const token = localStorage.getItem("tp_token");
+if(!token){
+  location.href = "/auth.html?mode=login";
+}
+
+const ticketListEl = document.getElementById("ticketList");
+const chatPaneEl = document.getElementById("chatPane");
+
+let currentId = null;
+let tickets = [];
+
+function esc(s){
+  return String(s ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;");
+}
+
+function formatDate(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString("ru-RU") + " " +
+         d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});
+}
+
+function statusBadge(status){
+  if(status === "closed"){
+    return `<span class="badge closed">Закрыто</span>`;
+  }
+  return `<span class="badge waiting">Ожидает</span>`;
+}
+
+async function loadTickets(){
+  const r = await fetch("/api/support/tickets",{
+    headers:{ Authorization:"Bearer " + token }
+  });
+  const d = await r.json();
+
+  if(!d.success){
+    ticketListEl.innerHTML = "<div class='empty'>Ошибка</div>";
+    return;
+  }
+
+  tickets = d.tickets || [];
+
+  if(!tickets.length){
+    ticketListEl.innerHTML = "<div class='empty'>Обращений нет</div>";
+    return;
+  }
+
+  ticketListEl.innerHTML = "";
+
+  tickets.forEach(t=>{
+    const div = document.createElement("div");
+    div.className = "ticket" + (t.id === currentId ? " active" : "");
+
+    div.innerHTML = `
+      <div class="ticket-title">${esc(t.subject)}</div>
+      <div class="ticket-meta">
+        ${statusBadge(t.status)} • ${formatDate(t.createdAt)}
+      </div>
+    `;
+
+div.onclick = ()=> {
+  location.href = "/support-ticket.html?id=" + t.id;
+};
+
+    ticketListEl.appendChild(div);
+  });
+}
+
+async function openTicket(id){
+  currentId = id;
+  currentId = id;
+loadTickets();
+
+  const r = await fetch("/api/support/tickets/"+id,{
+    headers:{ Authorization:"Bearer " + token }
+  });
+
+  const d = await r.json();
+  if(!d.success){
+    chatPaneEl.innerHTML = "<div class='empty'>Ошибка</div>";
+    return;
+  }
+
+  const t = d.ticket;
+  const msgs = d.messages || [];
+
+  chatPaneEl.innerHTML = `
+    <div class="messages" id="msgs"></div>
+    ${t.status !== "closed" ? `
+      <div class="reply">
+        <textarea class="textarea" id="replyText"></textarea>
+        <button class="btn btn-primary" id="sendBtn">Отправить</button>
+        <button class="btn btn-danger" id="closeBtn">Закрыть</button>
+      </div>
+    ` : `<div class="empty">Тикет закрыт</div>`}
+  `;
+
+  const msgsEl = document.getElementById("msgs");
+
+  msgs.forEach(m=>{
+    const div = document.createElement("div");
+    div.className = "msg " + (m.from === "user" ? "me" : "support");
+    div.innerHTML = esc(m.text);
+    msgsEl.appendChild(div);
+  });
+
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+
+  if(t.status !== "closed"){
+
+    document.getElementById("sendBtn").onclick = async ()=>{
+      const text = document.getElementById("replyText").value.trim();
+      if(!text) return;
+
+      await fetch("/api/support/tickets/"+id+"/message",{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          Authorization:"Bearer " + token
+        },
+        body: JSON.stringify({ text })
+      });
+
+      openTicket(id);
+    };
+
+    document.getElementById("closeBtn").onclick = async ()=>{
+      if(!confirm("Закрыть обращение?")) return;
+
+      await fetch("/api/support/tickets/"+id+"/close",{
+        method:"POST",
+        headers:{ Authorization:"Bearer " + token }
+      });
+
+      openTicket(id);
+    };
+  }
+}
+// открыть тикет если есть ?id=
+const params = new URLSearchParams(window.location.search);
+const ticketFromUrl = params.get("id");
+
+if(ticketFromUrl){
+  currentId = ticketFromUrl;
+}
+
+loadTickets().then(() => {
+  if(currentId){
+    openTicket(currentId);
+  }
+});
+
+</script>
+
+</body>
+</html>

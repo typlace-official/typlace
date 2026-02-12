@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Обращение — TyPlace</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="/header.css">
+
+<style>
+body{
+  margin:0;
+  font-family:Inter,Arial,sans-serif;
+  background:#f6f7f9;
+}
+
+.page{
+  max-width:1100px;
+  margin:40px auto;
+  padding:0 16px;
+}
+
+.support-nav{
+  max-width:1100px;
+  margin:20px auto 0 auto;
+  padding:0 16px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:13px;
+  font-weight:600;
+  color:#6b7280;
+}
+
+.support-nav a{
+  text-decoration:none;
+  color:#6b7280;
+}
+
+.support-nav a:hover{
+  color:#111827;
+}
+
+.support-nav .current{
+  color:#111827;
+}
+
+.support-layout{
+  display:flex;
+  gap:24px;
+  align-items:flex-start;
+}
+
+.chat-section{
+  flex:1;
+  background:#fff;
+  border-radius:16px;
+  border:1px solid #e5e7eb;
+  padding:24px;
+  display:flex;
+  flex-direction:column;
+}
+
+.ticket-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+.status{
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:700;
+}
+
+.status.pending{
+  background:#fef3c7;
+  color:#92400e;
+}
+.status.closed{
+  background:#e5e7eb;
+  color:#374151;
+}
+
+.messages{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin-bottom:16px;
+  max-height:500px;
+  overflow-y:auto;
+}
+
+.message{
+  padding:12px 16px;
+  border-radius:12px;
+  max-width:70%;
+  font-size:14px;
+  line-height:1.5;
+}
+
+.message.user{
+  align-self:flex-end;
+  background:#e0edff;
+}
+
+.message.support{
+  align-self:flex-start;
+  background:#f3f4f6;
+}
+
+.chat-input{
+  display:flex;
+  gap:12px;
+}
+
+.chat-input textarea{
+  flex:1;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding:12px;
+  font-size:14px;
+  resize:none;
+  outline:none;
+}
+
+.chat-input button{
+  border:none;
+  background:#1E50D4;
+  color:#fff;
+  border-radius:12px;
+  padding:0 20px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.ticket-sidebar{
+  width:280px;
+}
+
+.sidebar-card{
+  background:#fff;
+  border-radius:16px;
+  border:1px solid #e5e7eb;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  font-size:14px;
+}
+
+.close-ticket-btn{
+  margin-top:10px;
+  border:none;
+  border-radius:12px;
+  padding:10px;
+  font-weight:700;
+  cursor:pointer;
+  background:#f3f4f6;
+}
+.message-wrapper{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+}
+
+.message-wrapper.user{
+  flex-direction:row-reverse;
+}
+
+.msg-avatar{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  object-fit:cover;
+}
+
+.msg-name{
+  font-size:12px;
+  font-weight:700;
+  margin-bottom:4px;
+  color:#6b7280;
+}
+
+.message-content{
+  display:flex;
+  flex-direction:column;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="header-container"></div>
+
+<div class="support-nav">
+  <a href="/help.html">Главная</a>
+  <span>/</span>
+  <a href="/support-history.html">История обращений</a>
+  <span>/</span>
+  <span class="current" id="breadcrumbTicket"></span>
+</div>
+
+<div class="page support-layout">
+
+  <div class="chat-section">
+
+    <div class="ticket-header">
+      <h1 id="ticketTitle"></h1>
+      <span class="status" id="ticketStatus"></span>
+    </div>
+
+<div class="messages" id="messages"></div>
+
+    <div class="chat-input">
+      <textarea placeholder="Введите сообщение..."></textarea>
+      <button>Отправить</button>
+    </div>
+
+  </div>
+
+  <div class="ticket-sidebar">
+<div class="sidebar-card" id="sidebar"></div>
+  </div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/games.list.js"></script>
+<script src="/header.js"></script>
+<script>
+const token = localStorage.getItem("tp_token");
+if(!token){
+  location.href = "/auth.html?mode=login";
+}
+
+const params = new URLSearchParams(window.location.search);
+const ticketId = params.get("id");
+
+if(!ticketId){
+  location.href = "/support-history.html";
+}
+
+const breadcrumb = document.getElementById("breadcrumbTicket");
+const title = document.getElementById("ticketTitle");
+const messagesEl = document.getElementById("messages");
+const statusEl = document.getElementById("ticketStatus");
+const sidebarEl = document.getElementById("sidebar");
+
+function formatDate(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString("ru-RU") + " " +
+         d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});
+}
+
+function esc(s){
+  return String(s || "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;");
+}
+
+async function loadTicket(){
+
+  const r = await fetch("/api/support/tickets/" + ticketId,{
+    headers:{
+      Authorization:"Bearer " + token
+    }
+  });
+
+  const d = await r.json();
+
+  if(!d.success){
+    alert("Ошибка загрузки");
+    return;
+  }
+
+  const t = d.ticket;
+  const msgs = d.messages || [];
+
+  // Заголовок
+  const short = t.shortId || t.id;
+  breadcrumb.textContent = "Обращение #" + short;
+  title.textContent = "Обращение #" + short;
+
+  // Статус
+statusEl.classList.remove("pending","closed");
+
+if(t.status === "closed"){
+  statusEl.textContent = "Закрыто";
+  statusEl.classList.add("closed");
+} else {
+  statusEl.textContent = "Ожидает";
+  statusEl.classList.add("pending");
+}
+
+  // Сообщения
+  messagesEl.innerHTML = "";
+
+msgs.forEach(m=>{
+  const wrapper = document.createElement("div");
+  wrapper.className = "message-wrapper " + (m.from === "user" ? "user" : "support");
+
+  const avatar = document.createElement("img");
+  avatar.className = "msg-avatar";
+
+  if(m.from === "user"){
+    avatar.src = m.avatarDataUrl || m.avatarUrl || "/img/default-avatar.png";
+  } else {
+    avatar.src = "/img/support-avatar.png";
+  }
+
+  const content = document.createElement("div");
+  content.className = "message-content";
+
+  const name = document.createElement("div");
+  name.className = "msg-name";
+  name.textContent = m.from === "user"
+    ? m.username
+    : "Поддержка TyPlace";
+
+  const text = document.createElement("div");
+  text.className = "message " + (m.from === "user" ? "user" : "support");
+  text.innerHTML = esc(m.text);
+
+  content.appendChild(name);
+  content.appendChild(text);
+
+  wrapper.appendChild(avatar);
+  wrapper.appendChild(content);
+
+  messagesEl.appendChild(wrapper);
+});
+
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+
+  // Sidebar
+  sidebarEl.innerHTML = `
+    <div><b>Статус:</b> ${t.status === "closed" ? "Закрыто" : "Ожидает"}</div>
+    <div><b>Создано:</b> ${formatDate(t.createdAt)}</div>
+    <div><b>Категория:</b> ${esc(t.category)}</div>
+    <div><b>Тема:</b> ${esc(t.subject)}</div>
+    ${t.orderId ? `<div><b>Номер заказа:</b> ${esc(t.orderId)}</div>` : ""}
+    ${t.status !== "closed"
+      ? `<button class="close-ticket-btn" onclick="closeTicket()">Закрыть обращение</button>`
+      : ""}
+  `;
+}
+
+async function sendMessage(){
+
+  const textarea = document.querySelector(".chat-input textarea");
+  const text = textarea.value.trim();
+  if(!text) return;
+
+  await fetch("/api/support/tickets/" + ticketId + "/message",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      Authorization:"Bearer " + token
+    },
+    body: JSON.stringify({ text })
+  });
+
+  textarea.value = "";
+  loadTicket();
+}
+
+async function closeTicket(){
+
+  if(!confirm("Закрыть обращение?")) return;
+
+  await fetch("/api/support/tickets/" + ticketId + "/close",{
+    method:"POST",
+    headers:{
+      Authorization:"Bearer " + token
+    }
+  });
+
+  loadTicket();
+}
+
+document.querySelector(".chat-input button")
+  .addEventListener("click", sendMessage);
+document.querySelector(".chat-input textarea")
+  .addEventListener("keydown", e=>{
+    if(e.key === "Enter" && !e.shiftKey){
+      e.preventDefault();
+      sendMessage();
+    }
+});
+
+loadTicket();
+</script>
+
+</body>
+</html>

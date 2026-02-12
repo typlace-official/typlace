@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Профиль — TyPlace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- HEADER CSS -->
+  <link rel="stylesheet" href="/header.css">
+
+  <style>
+    :root{
+      --bg:#f6f6f6;
+      --card:#fff;
+      --text:#111;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --blue:#1E50D4;
+      --radius:12px;
+    }
+
+    body{
+      margin:0;
+      font-family:Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    .container{
+      max-width:960px;
+      margin:28px auto;
+      background:var(--card);
+      border:1px solid #ddd;
+      border-radius:var(--radius);
+      padding:20px;
+    }
+
+    h1{margin:0 0 18px;font-size:28px;}
+
+    .profile-top{
+      display:flex;
+      gap:16px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .avatar{
+      width:96px;
+      height:96px;
+      border-radius:50%;
+      object-fit:cover;
+      background:#ddd;
+      border:1px solid #ccc;
+    }
+
+    .info{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    .username{
+      font-size:20px;
+      font-weight:900;
+    }
+
+    .rating-line{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-weight:800;
+      cursor:pointer;
+      user-select:none;
+    }
+
+    .rating-line:hover{
+      text-decoration:underline;
+    }
+
+    .rating-count{
+      font-size:14px;
+      color:var(--muted);
+      font-weight:700;
+    }
+
+    .since{
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    .nav{
+      margin-top:24px;
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+    }
+
+    @media(max-width:720px){
+      .nav{grid-template-columns:repeat(2,1fr);}
+    }
+
+    @media(max-width:420px){
+      .nav{grid-template-columns:1fr;}
+    }
+
+    .nav-item{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:14px;
+      text-decoration:none;
+      color:var(--text);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-weight:900;
+      background:#fff;
+    }
+
+    .nav-item:hover{
+      background:#fafafa;
+    }
+
+    .logout{
+      margin-top:18px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-weight:800;
+      color:#6b7280;
+      text-decoration:none;
+    }
+
+    .logout:hover{
+      color:#8a1f1f;
+    }
+
+    /* ===== RATING STARS ===== */
+    .stars{
+      display:inline-flex;
+      gap:2px;
+      font-size:16px;
+    }
+    .star{ color:#9ca3af; }
+    .star.filled{ color:currentColor; }
+    .stars.r5{ color:#facc15; }
+    .stars.r4{ color:#fbbf24; }
+    .stars.r3{ color:#f59e0b; }
+    .stars.r2{ color:#ef4444; }
+    .stars.r1{ color:#991b1b; }
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <div id="header-container"></div>
+
+  <!-- PAGE -->
+  <div class="container">
+    <h1>Профиль</h1>
+
+    <div class="profile-top">
+      <img id="avatar" class="avatar" alt="avatar">
+
+      <div class="info">
+        <div id="username" class="username">User</div>
+        <div id="ratingLink" class="rating-line"></div>
+        <div id="since" class="since"></div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <a class="nav-item" href="/my-offers.html">Мои предложения</a>
+      <a class="nav-item" href="/purchases.html">Покупки</a>
+      <a class="nav-item" href="/sales.html">Продажи</a>
+      <a class="nav-item" href="/favorites.html">Избранные</a>
+      <a class="nav-item" href="/wallet.html">Кошелёк</a>
+      <a class="nav-item" href="/settings.html">Настройки</a>
+    </div>
+
+  </div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/games.list.js"></script>
+<script src="/header.js"></script>
+
+  <!-- PAGE SCRIPT -->
+  <script>
+    const TOKEN_KEY = "tp_token";
+    const DEFAULT_AVATAR =
+      "data:image/svg+xml;utf8," +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">' +
+          '<rect width="64" height="64" rx="32" fill="#d9d9d9"/>' +
+          '<circle cx="32" cy="26" r="12" fill="#bdbdbd"/>' +
+          '<path d="M12 56c4-12 14-18 20-18s16 6 20 18" fill="#bdbdbd"/>' +
+        "</svg>"
+      );
+
+    function getToken(){
+      return localStorage.getItem(TOKEN_KEY);
+    }
+
+    function goLogin(){
+      location.href = "/auth.html?mode=login";
+    }
+
+    function renderStars(avg){
+      const rounded = Math.round(avg);
+      let cls = "r1";
+      if(avg >= 4.5) cls = "r5";
+      else if(avg >= 3.5) cls = "r4";
+      else if(avg >= 2.5) cls = "r3";
+      else if(avg >= 1.5) cls = "r2";
+
+      let html = `<span class="stars ${cls}">`;
+      for(let i=1;i<=5;i++){
+        html += `<span class="star ${i<=rounded?"filled":""}">★</span>`;
+      }
+      html += `</span>`;
+      return html;
+    }
+
+    async function api(path){
+      const res = await fetch(path, {
+        headers:{ Authorization:"Bearer " + getToken() }
+      });
+      return res.json().catch(()=>({}));
+    }
+
+    async function init(){
+      const token = getToken();
+      if(!token) return goLogin();
+
+      const me = await api("/auth/me");
+      if(!me.success) return goLogin();
+
+      const user = me.user;
+
+      document.getElementById("username").textContent = user.username;
+      document.getElementById("avatar").src =
+        user.avatarUrl || user.avatarDataUrl || DEFAULT_AVATAR;
+
+      if(user.createdAt){
+  const date = new Date(user.createdAt);
+
+  const formatted = date.toLocaleDateString("ru-RU", {
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  });
+
+  document.getElementById("since").textContent =
+    `На TyPlace с ${formatted}`;
+}
+
+      const reviewsRes = await fetch(`/api/users/${encodeURIComponent(user.email)}/reviews`);
+      const reviewsData = await reviewsRes.json().catch(()=>({}));
+      const reviews = reviewsData.success ? reviewsData.reviews : [];
+      const count = reviews.length;
+
+      const ratingLink = document.getElementById("ratingLink");
+      ratingLink.onclick = ()=>{
+        location.href = `/reviews.html?user=${encodeURIComponent(user.email)}`;
+      };
+
+      if(count === 0){
+        ratingLink.innerHTML = `<span class="rating-count">Нет отзывов</span>`;
+      } else if(count < 10){
+        ratingLink.innerHTML = `<span class="rating-count">${count} отзывов</span>`;
+      } else {
+        const avg =
+          reviews.reduce((s,r)=>s+(Number(r.rating)||0),0)/count;
+        ratingLink.innerHTML =
+          `${renderStars(avg)} <span class="rating-count">${count} отзывов</span>`;
+      }
+
+    }
+
+    init();
+  </script>
+</body>
+</html>

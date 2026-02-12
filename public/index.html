@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TyPlace</title>
+
+  <link rel="stylesheet" href="/header.css">
+
+  <style>
+    body{
+      margin:0;
+      font-family: Arial, sans-serif;
+      background:#f6f6f6;
+      color:#111;
+    }
+
+    /* ===== layout ===== */
+    .page{
+      max-width:1100px;
+      margin:0 auto;
+      display:flex;
+      gap:24px;
+      padding:24px 16px 60px;
+    }
+
+    /* ===== alphabet ===== */
+    .alphabet{
+      position:sticky;
+      top:120px;
+      align-self:flex-start;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      font-weight:800;
+      user-select:none;
+    }
+
+    .alphabet div{
+      cursor:pointer;
+      color:#9ca3af;
+      text-align:center;
+      transition:color .15s;
+    }
+
+    .alphabet div.active{
+      color:#111;
+    }
+
+    .alphabet div:hover{
+      color:#1E50D4;
+    }
+
+    /* ===== content ===== */
+    .content{
+      flex:1;
+    }
+
+    .letter-block{
+      margin-bottom:48px;
+    }
+
+    .letter-title{
+  font-size:18px;
+  font-weight:700;
+  color:#9ca3af;
+  margin-bottom:14px;
+  padding-left:4px;
+}
+
+    /* ===== games grid ===== */
+    .games-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(90px,1fr));
+  gap:14px;
+}
+
+    .game-card{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:8px;
+      cursor:pointer;
+    }
+
+    .game-icon{
+  width:96px;
+  height:96px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+    .game-icon img{
+  width:72px;
+  height:72px;
+  object-fit:contain;
+  border-radius:16px;
+}
+
+    .game-card span{
+  font-size:12px;
+  font-weight:700;
+  text-align:center;
+}
+
+    @media(max-width:700px){
+      .alphabet{
+        display:none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <div id="header-container"></div>
+
+  <!-- PAGE -->
+  <div class="page">
+
+    <!-- ALPHABET -->
+    <div class="alphabet" id="alphabet"></div>
+
+    <!-- CONTENT -->
+    <div class="content" id="content"></div>
+
+  </div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/header.js"></script>
+<script src="/games.list.js"></script>
+  <script>
+
+    const games = window.GAMES_LIST || [];
+games.sort((a,b)=>a.name.localeCompare(b.name));
+
+    const alphabetEl = document.getElementById("alphabet");
+    const contentEl  = document.getElementById("content");
+
+    let currentLetter = "";
+    const letterMap = {};
+
+    games.forEach(game=>{
+      const letter = game.name[0].toUpperCase();
+
+      if(letter !== currentLetter){
+        currentLetter = letter;
+
+        // alphabet
+        const a = document.createElement("div");
+        a.textContent = letter;
+        a.dataset.letter = letter;
+        a.onclick = ()=>{
+          document.getElementById("letter-"+letter)
+            .scrollIntoView({behavior:"smooth", block:"start"});
+        };
+        alphabetEl.appendChild(a);
+        letterMap[letter] = a;
+
+        // block
+        const block = document.createElement("div");
+        block.className = "letter-block";
+        block.id = "letter-"+letter;
+        block.dataset.letter = letter;
+        block.innerHTML = `
+          <div class="letter-title">${letter}</div>
+          <div class="games-grid" id="grid-${letter}"></div>
+        `;
+        contentEl.appendChild(block);
+      }
+
+      const grid = document.getElementById("grid-"+currentLetter);
+
+      const card = document.createElement("div");
+card.className = "game-card";
+card.innerHTML = `
+  <div class="game-icon">
+    <img src="/img/games/${game.file}" alt="${game.name}">
+  </div>
+  <span>${game.name}</span>
+`;
+
+card.addEventListener("click", () => {
+  location.href = `/game.html?game=${game.id}`;
+});
+
+grid.appendChild(card);
+    });
+
+    /* ===== scroll spy ===== */
+    const blocks = document.querySelectorAll(".letter-block");
+
+    function updateAlphabet(){
+      let active = null;
+
+      blocks.forEach(block=>{
+        const rect = block.getBoundingClientRect();
+        if(rect.top <= 140){
+          active = block.dataset.letter;
+        }
+      });
+
+      if(active){
+        document.querySelectorAll(".alphabet div")
+          .forEach(el=>el.classList.remove("active"));
+
+        if(letterMap[active]){
+          letterMap[active].classList.add("active");
+        }
+      }
+    }
+
+    window.addEventListener("scroll", updateAlphabet);
+    updateAlphabet();
+  </script>
+
+</body>
+</html>

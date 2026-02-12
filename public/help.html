@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Центр поддержки — TyPlace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="/header.css">
+
+  <style>
+    body{
+      margin:0;
+      font-family:Inter, Arial, sans-serif;
+      background:#f6f7f9;
+      color:#111827;
+    }
+
+    .page{
+      max-width:1200px;
+      margin:40px auto;
+      padding:0 14px;
+    }
+
+    /* центрируем блок с заголовком + кнопками */
+    .center{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:26px;
+      text-align:center;
+    }
+
+    .title{
+      font-size:26px;
+      font-weight:900;
+      margin:0;
+    }
+
+    /* кнопки в ряд, по центру, на мобилке переносятся */
+    .support-menu{
+      display:flex;
+      justify-content:center;
+      gap:18px;
+      flex-wrap:wrap;
+      width:100%;
+    }
+
+    .menu-btn{
+      width:260px;
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:16px;
+      padding:22px 20px;
+      font-size:16px;
+      font-weight:900;
+      cursor:pointer;
+      text-align:center;
+      transition:.15s;
+    }
+
+    .menu-btn:hover{
+      background:#f3f4f6;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="header-container"></div>
+
+  <div class="page">
+    <div class="center">
+      <h1 class="title">Центр поддержки</h1>
+
+      <div class="support-menu">
+        <button class="menu-btn" onclick="location.href='/support-create.html'">
+          Создать обращение
+        </button>
+
+        <button class="menu-btn" onclick="location.href='/support-history.html'">
+          История обращений
+        </button>
+
+        <button class="menu-btn" onclick="location.href='/rules.html'">
+          Правила платформы
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/games.list.js"></script>
+  <script src="/header.js"></script>
+
+  <script>
+    const token = localStorage.getItem("tp_token");
+    if(!token){
+      location.href = "/auth.html?mode=login";
+    }
+  </script>
+</body>
+</html>

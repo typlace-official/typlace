@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Правила платформы — TyPlace</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="/header.css">
+
+<style>
+body{
+  margin:0;
+  font-family:Inter,Arial,sans-serif;
+  background:#f6f7f9;
+}
+
+.page{
+  max-width:900px;
+  margin:40px auto;
+  padding:0 16px;
+}
+
+h1{
+  font-size:28px;
+  margin-bottom:20px;
+}
+
+h2{
+  margin-top:24px;
+  font-size:18px;
+}
+
+.section{
+  background:#fff;
+  border-radius:16px;
+  padding:24px;
+  border:1px solid #e5e7eb;
+}
+
+p{
+  line-height:1.6;
+  color:#334155;
+}
+.support-nav{
+  max-width:1100px;
+  margin:20px auto 0 auto;
+  padding:0 16px;
+
+  display:flex;
+  align-items:center;
+  gap:6px;              /* вместо margin */
+  
+  font-size:13px;
+  font-weight:600;
+  color:#6b7280;
+}
+
+.support-nav a,
+.support-nav .current{
+  text-decoration:none;
+  color:#6b7280;
+}
+
+.support-nav a:hover{
+  color:#111827;
+}
+
+.support-nav .current{
+  color:#111827;
+}
+</style>
+</head>
+
+<body>
+
+<div id="header-container"></div>
+<div class="support-nav">
+  <a href="/help.html">Главная</a>
+  <span>/</span>
+  <span class="current">Правила платформы</span>
+</div>
+
+<div class="page">
+  <div class="section">
+
+    <h1>Правила платформы TyPlace</h1>
+
+    <h2>1. Общие положения</h2>
+    <p>
+      TyPlace — это маркетплейс цифровых товаров.
+      Пользователь обязан соблюдать правила платформы.
+    </p>
+
+    <h2>2. Объявления</h2>
+    <p>
+      Запрещено размещать мошеннические, запрещённые или вводящие в заблуждение предложения.
+    </p>
+
+    <h2>3. Сделки</h2>
+    <p>
+      Все сделки проходят через систему гарантии TyPlace.
+      Обход системы запрещён.
+    </p>
+
+    <h2>4. Блокировка</h2>
+    <p>
+      За нарушение правил аккаунт может быть ограничен или заблокирован.
+    </p>
+
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/games.list.js"></script>
+<script src="/header.js"></script>
+
+</body>
+</html>
