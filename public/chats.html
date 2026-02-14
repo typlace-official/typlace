@@ -6,6 +6,7 @@
 <title>Чаты — TyPlace</title>
 
 <link rel="stylesheet" href="header.css">
+<link rel="stylesheet" href="/footer.css">
 
 <style>
   body{margin:0;font-family:Arial;background:#f6f6f6;}
@@ -272,7 +273,9 @@
   <!-- ✅ ваш общий хедер вставится сюда -->
   <div id="header-container"></div>
 
+  <main class="page-content">
   <div class="wrap">
+
     <div class="chat-shell">
       <!-- LEFT -->
       <div class="panel left">
@@ -319,10 +322,14 @@
 
     <div class="debug" id="debug"></div>
   </div>
+</main>
+
+<div id="footer-container"></div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
 <script src="/header.js"></script>
+<script src="/footer.js"></script>
 
 <script>
 const token = localStorage.getItem("tp_token");

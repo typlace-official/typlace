@@ -6,6 +6,7 @@
   <title>TyPlace</title>
 
   <link rel="stylesheet" href="/header.css">
+  <link rel="stylesheet" href="/footer.css">
 
   <style>
     body{
@@ -118,6 +119,7 @@
   <div id="header-container"></div>
 
   <!-- PAGE -->
+  <main class="page-content">
   <div class="page">
 
     <!-- ALPHABET -->
@@ -127,9 +129,15 @@
     <div class="content" id="content"></div>
 
   </div>
+  </main>
+
+  <div id="footer-container"></div>
+
 <script src="/socket.io/socket.io.js"></script>
 <script src="/header.js"></script>
 <script src="/games.list.js"></script>
+<script src="/footer.js"></script>
+
   <script>
 
     const games = window.GAMES_LIST || [];

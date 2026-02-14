@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Профиль пользователя — TyPlace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="/header.css">
+  <link rel="stylesheet" href="/footer.css">
+
+  <style>
+    body{
+      margin:0;
+      font-family:Arial, sans-serif;
+      background:#f6f6f6;
+    }
+
+    .container{
+      max-width:900px;
+      margin:40px auto;
+      background:#fff;
+      border-radius:12px;
+      padding:24px;
+      border:1px solid #e5e7eb;
+    }
+
+    .profile{
+      display:flex;
+      gap:16px;
+      align-items:center;
+      margin-bottom:24px;
+    }
+
+    .avatar{
+      width:100px;
+      height:100px;
+      border-radius:50%;
+      object-fit:cover;
+      background:#ddd;
+    }
+
+    .username{
+      font-size:22px;
+      font-weight:900;
+    }
+
+    .user-id{
+      font-size:14px;
+      color:#6b7280;
+    }
+
+    .since{
+      font-size:13px;
+      color:#6b7280;
+    }
+  </style>
+</head>
+<body>
+
+<div id="header-container"></div>
+
+<main>
+  <div class="container">
+
+    <div class="profile">
+      <img id="avatar" class="avatar">
+      <div>
+        <div id="username" class="username"></div>
+        <div id="userId" class="user-id"></div>
+        <div id="since" class="since"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div id="footer-container"></div>
+
+<script src="/header.js"></script>
+<script src="/footer.js"></script>
+
+<script>
+const params = new URLSearchParams(location.search);
+const id = params.get("id");
+
+if(!id){
+  document.body.innerHTML = "Пользователь не найден";
+}
+
+fetch("/api/users/by-id/" + id)
+.then(r=>r.json())
+.then(data=>{
+  if(!data.success){
+    document.body.innerHTML = "Пользователь не найден";
+    return;
+  }
+
+  const user = data.user;
+
+  document.getElementById("username").textContent = user.username;
+  document.getElementById("userId").textContent = "ID " + user.userId;
+
+  const avatar = user.avatarUrl || user.avatarDataUrl || "";
+  if(avatar){
+    document.getElementById("avatar").src = avatar;
+  }
+
+  if(user.createdAt){
+    const date = new Date(user.createdAt);
+    document.getElementById("since").textContent =
+      "На TyPlace с " + date.toLocaleDateString("ru-RU");
+  }
+});
+</script>
+
+</body>
+</html>

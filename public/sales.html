@@ -2,11 +2,12 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Мои продажи — TyPlace</title>
+  <title>Продажи — TyPlace</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="/header.css">
   <link rel="stylesheet" href="/card.css">
+  <link rel="stylesheet" href="/footer.css">
 
   <style>
     body{
@@ -150,10 +151,10 @@
 <body>
 
   <div id="header-container"></div>
-
+<main class="page-content">
   <div class="page">
     <div class="topbar">
-      <h2 style="margin:0;">Мои продажи</h2>
+      <h2 style="margin:0;">Продажи</h2>
 
       <div class="filters">
         <select class="select" id="statusFilter">
@@ -167,12 +168,16 @@
 
     <div id="list" class="sales-grid"></div>
   </div>
+</main>
+
+<div id="footer-container"></div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
 <script src="/header.js"></script>
 <script src="/tp-money.js"></script>
 <script src="/offer-title.js"></script>
+<script src="/footer.js"></script>
 
   <script>
     const token = localStorage.getItem("tp_token");

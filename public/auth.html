@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Вход / Регистрация — TyPlace</title>
-  <link rel="stylesheet" href="header.css">
+<link rel="stylesheet" href="/header.css">
+<link rel="stylesheet" href="/footer.css">
 
   <style>
     body { margin:0; font-family: Arial, sans-serif; background:#f6f6f6; color:#111; }
@@ -190,13 +191,16 @@
       .modal { width: 100%; }
       .code-cell { width: 42px; height: 50px; }
     }
+    
   </style>
 </head>
 
 <body>
-  <div id="header-container"></div>
+<div id="header-container"></div>
 
+<main class="page-content">
   <div class="page">
+
     <div class="auth-wrap">
       <div class="card">
         <div class="tabs">
@@ -276,8 +280,13 @@
     </div>
   </div>
 
-  <!-- Подключаем твой header.js (он сам подтянет header.html через fetch) -->
-  <script src="header.js"></script>
+</main>
+
+<div id="footer-container"></div>
+
+<script src="/games.list.js"></script>
+<script src="/header.js"></script>
+<script src="/footer.js"></script>
 
   <script>
     // ====== state ======
@@ -566,7 +575,7 @@
     console.log("TOKEN SAVED:", d.token);
 
     closeModal();
-location.replace("index.html");
+location.replace("/");
 
   } catch (err) {
     console.error(err);

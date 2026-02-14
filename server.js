@@ -7,6 +7,9 @@ const fetch = (...args) =>
 const express = require("express");
 const path = require("path");
 const multer = require("multer");
+
+const supportService = require("./services/support.service");
+
 const sharp = require("sharp");
 const fs = require("fs");
 const SUPPORT_CONFIG = require("./config/support.config");
@@ -39,6 +42,8 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 const onlineSockets = new Map(); // email -> socket.id
+supportService.setSocket(io, onlineSockets);
+
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json({ limit: "5mb" }));
@@ -73,13 +78,7 @@ const chats = [];
 const messages = [];
 const orders = [];
 const reviews = [];
-/* ================== SUPPORT (TICKETS) ================== */
-const supportTickets = [];      // список тикетов
-const supportMessages = [];     // сообщения тикетов
 
-function makeShortId(){
-  return Math.random().toString(36).slice(2, 8).toUpperCase();
-}
 /* ================== SETTINGS ================== */
 const SESSION_DAYS = 2; // ✅ ты говорил максимум 2 дня, не 7
 
@@ -187,6 +186,18 @@ function now() {
 function makeToken() {
   return crypto.randomBytes(24).toString("hex");
 }
+function generateUserId() {
+  let id;
+  let exists = true;
+
+  while (exists) {
+    id = Math.floor(10000000 + Math.random() * 90000000).toString(); // 8 цифр
+    exists = Array.from(users.values()).some(u => u.userId === id);
+  }
+
+  return id;
+}
+
 function generateOrderCode(){
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let code = "";
@@ -242,6 +253,13 @@ function authRequired(req, res, next) {
   }
 
   const u = users.get(s.email);
+  if (u.banned) {
+  sessions.delete(token);
+  return res.status(403).json({
+    success: false,
+    message: "Аккаунт заблокирован"
+  });
+}
   if (!u) return res.status(401).json({ success: false, message: "Пользователь не найден" });
 
   // ✅ ОБНОВЛЕНИЕ СТАТУСА
@@ -372,14 +390,15 @@ app.post("/auth/verify-code", (req, res) => {
 users.set(email, {
   email,
   username,
+  userId: generateUserId(),
   avatarDataUrl: "",
   avatarUrl: "",
   createdAt: new Date().toISOString(),
   online: false,
   lastSeen: Date.now(),
   balance: 0,
-
-  role: "user",   // 👈 ДОБАВИТЬ ЭТУ СТРОКУ
+banned: false,
+role: email === "dmytropolishchuk2109@gmail.com" ? "admin" : "user",
 
   notify: {
     site: true,
@@ -418,14 +437,20 @@ users.set(email, {
  */
 app.get("/auth/me", authRequired, (req, res) => {
   const u = req.user;
+  // если старый пользователь без ID — создаём ID
+if (!u.userId) {
+  u.userId = generateUserId();
+}
   return res.json({
     success: true,
     user: {
       email: u.email,
       username: u.username,
+      userId: u.userId || null,
       avatarDataUrl: u.avatarDataUrl || "",
       avatarUrl: u.avatarUrl || "",
-      createdAt: u.createdAt || null   // 👈 ВОТ ЭТО ДОБАВЛЕНО
+      createdAt: u.createdAt || null,
+      role: u.role || "user"   // 👈 ДОБАВЬ ЭТУ СТРОКУ
     },
   });
 });
@@ -1171,8 +1196,9 @@ if (sort === "amount_desc") {
     return {
       ...o,
       seller: seller ? {
-        username: seller.username || "Продавец",
-        avatarUrl: seller.avatarUrl || null,
+  username: seller.username || "Продавец",
+  userId: seller.userId || null,   // 👈 ДОБАВЬ
+  avatarUrl: seller.avatarUrl || null,
         avatarDataUrl: seller.avatarDataUrl || null,
         online: Boolean(seller.online),
         rating: seller.rating || 0,
@@ -1209,8 +1235,9 @@ app.get("/api/offers/:id", (req, res) => {
     success: true,
     offer: {
       ...offer,
-      seller: seller ? {
-        username: seller.username || "Продавец",
+seller: seller ? {
+  username: seller.username || "Продавец",
+  userId: seller.userId || null,
         avatarUrl: seller.avatarUrl && seller.avatarUrl.trim() !== ""
           ? seller.avatarUrl
           : null,
@@ -1702,6 +1729,39 @@ app.get("/api/users/:email/reviews", (req, res) => {
 
   res.json({ success: true, reviews: result });
 });
+// Публичный профиль по ID
+app.get("/api/users/by-id/:id", (req, res) => {
+
+  const userId = String(req.params.id || "").trim();
+
+  const user = Array.from(users.values())
+    .find(u => u.userId === userId);
+
+  if (!user) {
+    return res.json({ success:false, message:"Пользователь не найден" });
+  }
+
+  const userOffers = offers.filter(o =>
+    o.sellerEmail === user.email &&
+    o.status === "active"
+  );
+
+  res.json({
+    success:true,
+    user:{
+      username: user.username,
+      userId: user.userId,
+      avatarUrl: user.avatarUrl || null,
+      avatarDataUrl: user.avatarDataUrl || null,
+      createdAt: user.createdAt,
+      rating: user.rating || 0,
+      reviewsCount: user.reviewsCount || 0
+    },
+    offers: userOffers
+  });
+
+});
+
 updateRates();
 setInterval(updateRates, 60 * 60 * 1000);
 /* ================== UNREAD COUNT ================== */
@@ -1751,19 +1811,78 @@ app.get("/api/chats/unread-count", authRequired, (req, res) => {
 io.on("connection", (socket) => {
   console.log("🔌 Socket connected:", socket.id);
 
-  socket.on("auth", (email) => {
-    onlineSockets.set(email, socket.id);
-  });
+socket.on("auth", ({ token }) => {
+  try {
+    const s = sessions.get(String(token || ""));
+    if (!s) return;
 
-  socket.on("disconnect", () => {
-    for (const [email, id] of onlineSockets.entries()) {
-      if (id === socket.id) {
-        onlineSockets.delete(email);
-        break;
-      }
+    // сессия могла истечь
+    if (Date.now() > s.expiresAt) {
+      sessions.delete(token);
+      return;
+    }
+
+    onlineSockets.set(s.email, socket.id);
+    socket.data.email = s.email;
+  } catch(e) {}
+});
+
+socket.on("disconnect", () => {
+  const email = socket.data.email;
+  if (email && onlineSockets.get(email) === socket.id) {
+    onlineSockets.delete(email);
+    return;
+  }
+
+  // fallback если email не сохранился
+  for (const [e, id] of onlineSockets.entries()) {
+    if (id === socket.id) {
+      onlineSockets.delete(e);
+      break;
+    }
+  }
+});
+});
+function emitTicketUpdate(ticket, event){
+  // всем support/admin онлайн
+  users.forEach(u => {
+    if ((u.role === "support" || u.role === "admin") && onlineSockets.has(u.email)) {
+      io.to(onlineSockets.get(u.email)).emit("support-ticket-updated", {
+        event,
+        ticketId: ticket.id,
+        status: ticket.status,
+        assignedTo: ticket.assignedTo || null,
+        priority: ticket.priority || "normal",
+        updatedAt: ticket.updatedAt
+      });
     }
   });
-});
+
+  // владельцу тикета
+  if (onlineSockets.has(ticket.userEmail)) {
+    io.to(onlineSockets.get(ticket.userEmail)).emit("support-ticket-updated", {
+      event,
+      ticketId: ticket.id,
+      status: ticket.status,
+      assignedTo: ticket.assignedTo || null,
+      priority: ticket.priority || "normal",
+      updatedAt: ticket.updatedAt
+    });
+  }
+
+  // назначенному
+  if (ticket.assignedTo && onlineSockets.has(ticket.assignedTo)) {
+    io.to(onlineSockets.get(ticket.assignedTo)).emit("support-ticket-updated", {
+      event,
+      ticketId: ticket.id,
+      status: ticket.status,
+      assignedTo: ticket.assignedTo || null,
+      priority: ticket.priority || "normal",
+      updatedAt: ticket.updatedAt
+    });
+  }
+}
+
 /* ================== SUPPORT API ================== */
 // Получить конфигурацию поддержки
 app.get("/api/support/config", authRequired, (req, res) => {
@@ -1779,171 +1898,564 @@ app.post(
   authRequired,
   upload.array("attachments", 10),
   (req, res) => {
-  const subject = String(req.body.subject || "").trim().slice(0, 80);
-  const category = String(req.body.category || "other").trim().slice(0, 30);
-  const orderId = String(req.body.orderId || "").trim().slice(0, 80);
-  const message = String(req.body.message || "").trim().slice(0, 2000);
-// сохраняем вложения
-let attachments = [];
 
-if(req.files && req.files.length > 0){
-  attachments = req.files.map(file => "/uploads/" + file.filename);
+    const subject = String(req.body.subject || "").trim().slice(0, 80);
+    const category = String(req.body.category || "other").trim().slice(0, 30);
+    const orderId = String(req.body.orderId || "").trim().slice(0, 80);
+    const message = String(req.body.message || "").trim().slice(0, 2000);
+let priority = "normal";
+
+if (category === "order") {
+  priority = "high";
 }
-  if(!subject){
-    return res.json({ success:false, message:"Введите тему" });
+
+    let attachments = [];
+
+    if (req.files && req.files.length > 0) {
+      attachments = req.files.map(file => "/uploads/" + file.filename);
+    }
+
+    if (!subject) {
+      return res.json({ success: false, message: "Введите тему" });
+    }
+
+    if (!message) {
+      return res.json({ success: false, message: "Введите описание" });
+    }
+    // 🔐 Если указали заказ — проверяем его существование
+if (orderId) {
+
+  const order = orders.find(o => o.id === orderId || o.orderNumber === orderId);
+
+  if (!order) {
+    return res.json({
+      success: false,
+      message: "Заказ не найден"
+    });
   }
-  if(!message){
-    return res.json({ success:false, message:"Введите описание" });
+
+  // пользователь должен быть участником заказа
+  if (
+    order.buyerEmail !== req.user.email &&
+    order.sellerEmail !== req.user.email
+  ) {
+    return res.json({
+      success: false,
+      message: "Вы не являетесь участником этого заказа"
+    });
   }
+}
+// максимум 3 активных тикета
+const activeTickets = supportService
+  .getTicketsForUser(req.user)
+  .filter(t => t.status !== "resolved");
 
-  const ticketId = crypto.randomUUID();
-  const createdAt = Date.now();
+if (activeTickets.length >= 3) {
+  return res.json({
+    success:false,
+    message:"У вас слишком много активных тикетов"
+  });
+}
+try {
 
-  const ticket = {
-    id: ticketId,
-    shortId: makeShortId(),
-
-    userEmail: req.user.email,
-
+  const ticket = supportService.createTicket({
+    user: req.user,
     subject,
-    category: category || "other",
-    orderId: orderId || null,
-
-    status: "waiting",           // сразу ждёт ответа поддержки
-    createdAt,
-    updatedAt: createdAt
-  };
-
-  supportTickets.push(ticket);
-
-supportMessages.push({
-  id: crypto.randomUUID(),
-  ticketId,
-  from: "user",
-  userEmail: req.user.email,
-  username: req.user.username,
-  avatarUrl: req.user.avatarUrl || null,
-  avatarDataUrl: req.user.avatarDataUrl || null,
-  text: message,
-  attachments,
-  createdAt
+    category,
+    orderId,
+    message,
+    attachments,
+    priority
+  });
+// 🔔 Уведомляем всех support онлайн
+users.forEach(u => {
+  if (
+    (u.role === "support" || u.role === "admin") &&
+    onlineSockets.has(u.email)
+  ) {
+    const socketId = onlineSockets.get(u.email);
+    io.to(socketId).emit("new-support-ticket", {
+      id: ticket.id,
+      shortId: ticket.shortId,
+      subject: ticket.subject,
+      priority: ticket.priority
+    });
+  }
 });
 
-  res.json({ success:true, ticket });
-});
+  res.json({ success: true, ticket });
+
+} catch (e) {
+
+  res.json({
+    success: false,
+    message: e.message
+  });
+
+}
+
+  }
+);
 
 // Получить мои тикеты
 app.get("/api/support/tickets", authRequired, (req, res) => {
 
-  let result;
+  let tickets = supportService.getTicketsForUser(req.user);
 
-  if(req.user.role === "support" || req.user.role === "admin"){
-    // поддержка видит ВСЕ тикеты
-    result = supportTickets;
-  } else {
-    // обычный пользователь — только свои
-    result = supportTickets.filter(t => t.userEmail === req.user.email);
+  // 🔐 Support видит:
+  // 1. неназначенные
+  // 2. назначенные ему
+  if (req.user.role === "support") {
+    tickets = tickets.filter(t =>
+      !t.assignedTo || t.assignedTo === req.user.email
+    );
   }
 
-  result = result.sort((a,b) =>
-    (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt)
-  );
+  // 🔎 фильтр "только мои"
+  if (req.query.assigned === "me") {
+    tickets = tickets.filter(t => t.assignedTo === req.user.email);
+  }
 
-  res.json({ success:true, tickets: result });
+  // 🔎 фильтр по статусу
+  const status = String(req.query.status || "").trim();
+  if (status) {
+    tickets = tickets.filter(t => t.status === status);
+  }
+tickets = tickets.map(t => {
+
+  let assignedUsername = null;
+
+  if (t.assignedTo) {
+    const u = users.get(t.assignedTo);
+    if (u) assignedUsername = u.username;
+  }
+
+  const msgs = supportService.getMessages(t.id);
+  const unread = msgs.filter(m => 
+    m.from === "user" && 
+    req.user.role !== "user" &&
+    m.userEmail !== req.user.email
+  ).length;
+
+  // 🔥 ДОБАВЛЯЕМ CATEGORY LABEL ИЗ CONFIG
+  const categoryConfig = SUPPORT_CONFIG[t.category];
+
+  return {
+    ...t,
+    unread,
+    assignedUsername,
+    categoryLabel: categoryConfig
+      ? categoryConfig.label
+      : t.category
+  };
 });
+
+  res.json({
+    success: true,
+    tickets
+  });
+});
+// Статистика тикетов (только support/admin)
+app.get("/api/support/stats", authRequired, supportRequired, (req, res) => {
+
+  const tickets = supportService.getTicketsForUser(req.user);
+
+const stats = {
+  waiting: tickets.filter(t => t.status === "waiting").length,
+  in_progress: tickets.filter(t => t.status === "in_progress").length,
+  resolved: tickets.filter(t => t.status === "resolved").length,
+  total: tickets.length
+};
+
+  res.json({
+    success: true,
+    stats
+  });
+});
+// Назначить тикет сотруднику (только support/admin)
+app.post(
+  "/api/support/tickets/:id/assign",
+  authRequired,
+  supportRequired,
+  (req, res) => {
+
+    const ticket = supportService.getTicketById(req.params.id);
+    let assignedUser = null;
+
+if (ticket.assignedTo) {
+  const u = users.get(ticket.assignedTo);
+  if (u) {
+    assignedUser = {
+      email: u.email,
+      username: u.username,
+      role: u.role
+    };
+  }
+}
+    if (!ticket) {
+      return res.json({ success:false, message:"Тикет не найден" });
+    }
+
+    if (ticket.status === "resolved") {
+      return res.json({ success:false, message:"Тикет закрыт" });
+    }
+
+    // если уже назначен другому и ты не admin
+    if (
+      ticket.assignedTo &&
+      ticket.assignedTo !== req.user.email &&
+      req.user.role !== "admin"
+    ) {
+      return res.json({
+        success:false,
+        message:"Тикет уже назначен другому сотруднику"
+      });
+    }
+
+    ticket.assignedTo = req.user.email;
+    ticket.assignedAt = Date.now();
+    ticket.status = "in_progress";
+    ticket.updatedAt = Date.now();
+
+    supportService.addLog(ticket.id, "assigned", req.user);
+    emitTicketUpdate(ticket, "assigned");
+
+    res.json({ success:true, ticket });
+  }
+);
+
+// Передать тикет другому сотруднику (только admin)
+app.post(
+  "/api/support/tickets/:id/transfer",
+  authRequired,
+  supportRequired,
+  (req, res) => {
+
+    const ticket = supportService.getTicketById(req.params.id);
+    if (!ticket) {
+      return res.json({ success:false, message:"Тикет не найден" });
+    }
+
+    const { newEmail } = req.body;
+if (newEmail === ticket.assignedTo) {
+  return res.json({
+    success:false,
+    message:"Тикет уже назначен этому сотруднику"
+  });
+}
+
+    if (!newEmail) {
+      return res.json({ success:false, message:"Не указан сотрудник" });
+    }
+
+    const targetUser = users.get(newEmail);
+    if (!targetUser || (targetUser.role !== "support" && targetUser.role !== "admin")) {
+      return res.json({ success:false, message:"Сотрудник не найден" });
+    }
+
+    // только admin может передавать
+    if (req.user.role !== "admin") {
+      return res.json({ success:false, message:"Только администратор может передавать тикеты" });
+    }
+
+    ticket.assignedTo = newEmail;
+    ticket.assignedAt = Date.now();
+    ticket.status = "in_progress";
+    ticket.updatedAt = Date.now();
+
+    supportService.addLog(ticket.id, "transferred", req.user);
+
+    emitTicketUpdate(ticket, "transferred");
+
+    res.json({ success:true, ticket });
+  }
+);
 
 // Получить тикет + сообщения
 app.get("/api/support/tickets/:id", authRequired, (req, res) => {
-  const ticket = supportTickets.find(t => t.id === req.params.id);
 
-  if(!ticket){
-    return res.json({ success:false, message:"Тикет не найден" });
+  const ticket = supportService.getTicketById(req.params.id);
+
+  if (!ticket) {
+    return res.json({ success: false, message: "Тикет не найден" });
   }
 
-if(
+if (
   ticket.userEmail !== req.user.email &&
-  req.user.role !== "support" &&
-  req.user.role !== "admin"
-){
+  req.user.role !== "admin" &&
+  (
+    req.user.role !== "support" ||
+    (ticket.assignedTo && ticket.assignedTo !== req.user.email)
+  )
+) {
   return res.json({ success:false, message:"Нет доступа" });
 }
+let assignedUser = null;
 
-  const msgs = supportMessages
-    .filter(m => m.ticketId === ticket.id)
-    .sort((a,b) => a.createdAt - b.createdAt);
+if (ticket.assignedTo) {
+  const u = users.get(ticket.assignedTo);
+  if (u) {
+    assignedUser = {
+      email: u.email,
+      username: u.username,
+      role: u.role
+    };
+  }
+}
 
-  res.json({ success:true, ticket, messages: msgs });
+  const messages = supportService.getMessages(ticket.id);
+const logs = supportService.getLogs(ticket.id);
+
+const categoryConfig = SUPPORT_CONFIG[ticket.category];
+
+res.json({
+  success: true,
+  ticket: {
+    ...ticket,
+    assignedUser,
+    categoryLabel: categoryConfig ? categoryConfig.label : ticket.category
+  },
+  messages,
+  logs,
+  userRole: req.user.role
+});
 });
 
 // Добавить сообщение в тикет (со стороны пользователя)
-app.post("/api/support/tickets/:id/message", authRequired, (req, res) => {
-  const ticket = supportTickets.find(t => t.id === req.params.id);
+app.post(
+  "/api/support/tickets/:id/message",
+  authRequired,
+  upload.array("attachments", 10),
+  (req, res) => {
 
-  if(!ticket){
-    return res.json({ success:false, message:"Тикет не найден" });
+  const ticket = supportService.getTicketById(req.params.id);
+
+  if (!ticket) {
+    return res.json({ success: false, message: "Тикет не найден" });
   }
 
-if(
+if (
   ticket.userEmail !== req.user.email &&
-  req.user.role !== "support" &&
-  req.user.role !== "admin"
-){
+  req.user.role !== "admin" &&
+  (
+    req.user.role !== "support" ||
+    (ticket.assignedTo && ticket.assignedTo !== req.user.email)
+  )
+) {
   return res.json({ success:false, message:"Нет доступа" });
 }
-  if(ticket.status === "closed"){
-    return res.json({ success:false, message:"Тикет закрыт" });
-  }
 
   const text = String(req.body.text || "").trim().slice(0, 2000);
-  if(!text){
-    return res.json({ success:false, message:"Пустое сообщение" });
-  }
+  let attachments = [];
 
-  const createdAt = Date.now();
+if (req.files && req.files.length > 0) {
+  attachments = req.files.map(file => "/uploads/" + file.filename);
+}
 
-supportMessages.push({
-  id: crypto.randomUUID(),
-  ticketId: ticket.id,
-  from: req.user.role === "support" ? "support" : "user",
-  userEmail: req.user.email,
-  username: req.user.username,
-  avatarUrl: req.user.avatarUrl || null,
-  avatarDataUrl: req.user.avatarDataUrl || null,
+if (!text && attachments.length === 0) {
+  return res.json({ success: false, message: "Пустое сообщение" });
+}
+
+  try {
+    if (ticket.status === "resolved") {
+  return res.json({
+    success: false,
+    message: "Тикет закрыт"
+  });
+}
+
+supportService.addMessage({
+  ticket,
+  user: req.user,
   text,
-  createdAt
+  attachments
 });
 
-if(req.user.role === "support" || req.user.role === "admin"){
-  ticket.status = "answered";
-} else {
-  ticket.status = "waiting";
-}
-  ticket.updatedAt = createdAt;
+    res.json({ success: true });
 
-  res.json({ success:true });
+  } catch (e) {
+    res.json({ success: false, message: e.message });
+  }
 });
 
 // Закрыть тикет
-app.post("/api/support/tickets/:id/close", authRequired, (req, res) => {
-  const ticket = supportTickets.find(t => t.id === req.params.id);
+app.post(
+  "/api/support/tickets/:id/close",
+  authRequired,
+  (req, res) => {
 
-  if(!ticket){
-    return res.json({ success:false, message:"Тикет не найден" });
+    const ticket = supportService.getTicketById(req.params.id);
+
+    if (!ticket) {
+      return res.json({ success: false, message: "Тикет не найден" });
+    }
+
+    // 🔹 Если support или admin
+    if (req.user.role === "support" || req.user.role === "admin") {
+
+      if (
+        req.user.role === "support" &&
+        ticket.assignedTo !== req.user.email
+      ) {
+        return res.json({
+          success:false,
+          message:"Можно закрыть только назначенный вам тикет"
+        });
+      }
+
+    }
+
+    // 🔹 Если обычный пользователь
+    else if (ticket.userEmail === req.user.email) {
+
+      if (ticket.status !== "in_progress") {
+        return res.json({
+          success:false,
+          message:"Закрыть можно только после ответа поддержки"
+        });
+      }
+
+      const messages = supportService.getMessages(ticket.id);
+      const hasSupportReply = messages.some(m =>
+  m.from === "support" ||
+  m.userEmail === ticket.assignedTo
+);
+
+      if (!hasSupportReply) {
+        return res.json({
+          success:false,
+          message:"Поддержка ещё не ответила"
+        });
+      }
+
+    }
+
+    else {
+      return res.json({ success:false, message:"Нет доступа" });
+    }
+
+    supportService.closeTicket(ticket, req.user);
+    emitTicketUpdate(ticket, "closed");
+
+    res.json({ success:true });
   }
+);
 
-if(
-  ticket.userEmail !== req.user.email &&
-  req.user.role !== "support" &&
-  req.user.role !== "admin"
-){
-  return res.json({ success:false, message:"Нет доступа" });
+// Переоткрыть тикет (только владелец)
+app.post(
+  "/api/support/tickets/:id/reopen",
+  authRequired,
+  (req, res) => {
+
+    const ticket = supportService.getTicketById(req.params.id);
+    if (!ticket) {
+      return res.json({ success:false, message:"Тикет не найден" });
+    }
+
+    if (ticket.userEmail !== req.user.email) {
+      return res.json({ success:false, message:"Нет доступа" });
+    }
+
+    if (ticket.status !== "resolved") {
+      return res.json({
+        success:false,
+        message:"Тикет не закрыт"
+      });
+    }
+// ❗️разрешаем переоткрыть только 1 раз
+ticket.reopenCount = Number(ticket.reopenCount || 0);
+
+if (ticket.reopenCount >= 1) {
+  return res.json({
+    success: false,
+    message: "Тикет уже переоткрывали. Создайте новый тикет."
+  });
 }
 
-  ticket.status = "closed";
-  ticket.updatedAt = Date.now();
+ticket.reopenCount += 1;
+
+    ticket.status = "waiting";
+    ticket.updatedAt = Date.now();
+    supportService.addLog(ticket.id, "reopened", req.user);
+emitTicketUpdate(ticket, "reopened");
+    res.json({ success:true, ticket });
+  }
+);
+// Получить список пользователей (только admin)
+app.get("/api/admin/users", authRequired, (req, res) => {
+
+  if (req.user.role !== "admin") {
+    return res.json({ success:false, message:"Нет доступа" });
+  }
+
+  const list = Array.from(users.values()).map(u => ({
+    email: u.email,
+    username: u.username,
+    role: u.role || "user",
+    banned: Boolean(u.banned),
+    balance: u.balance || 0,
+    createdAt: u.createdAt
+  }));
+
+  res.json({ success:true, users:list });
+});
+
+
+// Забанить / разбанить
+app.post("/api/admin/ban", authRequired, (req,res)=>{
+
+  if (req.user.role !== "admin") {
+    return res.json({ success:false, message:"Нет доступа" });
+  }
+
+  const { email, banned } = req.body;
+
+  const target = users.get(email);
+  if (!target) {
+    return res.json({ success:false, message:"Пользователь не найден" });
+  }
+
+  target.banned = Boolean(banned);
 
   res.json({ success:true });
 });
+// Авто-закрытие тикетов через 5 дней после ответа поддержки
+setInterval(() => {
+
+  const allTickets = supportService.getAllTickets();
+  const FIVE_DAYS = 5 * 24 * 60 * 60 * 1000;
+  const nowTime = Date.now();
+
+  allTickets.forEach(ticket => {
+
+    if (ticket.status === "resolved") return;
+
+    const messages = supportService.getMessages(ticket.id);
+    if (!messages.length) return;
+
+    const lastMessage = messages[messages.length - 1];
+
+    // если последнее сообщение от поддержки
+    if (
+      lastMessage.from === "support" &&
+      nowTime - lastMessage.createdAt > FIVE_DAYS
+    ) {
+      ticket.status = "resolved";
+      ticket.updatedAt = nowTime;
+
+      supportService.addLog(ticket.id, "auto_closed", {
+        email: "system",
+        username: "System",
+        role: "system"
+      });
+
+      emitTicketUpdate(ticket, "auto_closed");
+    }
+
+  });
+
+}, 60 * 60 * 1000);
+
 /* ================== START ================== */
 server.listen(PORT, () => {
   console.log(`✅ Server running: http://localhost:${PORT}`);

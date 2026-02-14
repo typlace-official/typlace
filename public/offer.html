@@ -7,6 +7,8 @@
 
   <link rel="stylesheet" href="/header.css">
   <link rel="stylesheet" href="/gallery.css">
+  <link rel="stylesheet" href="/footer.css">
+
 
   <style>
   .section{
@@ -181,28 +183,6 @@
   display:block;
 }
 
-/* ===== SELLER STATUS DOT (OFFER — LIKE CARD) ===== */
-
-.seller-status{
-  position: absolute;
-
-  width: 18px;
-  height: 18px;
-
-  right: -4px;
-  bottom: -4px;
-
-  border-radius: 50%;
-  border: 3px solid #fff;
-  box-sizing: border-box;
-
-  background: #9ca3af; /* offline */
-}
-
-.seller-status.online{
-  background: #22c55e;
-}
-
 .seller-info{
   display:flex;
   flex-direction:column;
@@ -220,6 +200,15 @@
   font-weight:600;
   margin-top:2px;
 }
+.seller-name:hover,
+.seller-rating:hover {
+  opacity: 0.8;
+}
+.seller-last-seen{
+  font-size:13px;
+  color:#6b7280;
+  margin-top:2px;
+}
   </style>
 </head>
 
@@ -227,7 +216,10 @@
 
 <div id="header-container"></div>
 
+<main class="page-content">
+
 <div class="page">
+
   <div class="layout">
 
     <!-- OFFER -->
@@ -265,12 +257,12 @@
       <div class="sellerTop">
   <div class="seller-avatar">
     <img id="sellerAvatar" src="/img/avatar-default.svg">
-    <span class="seller-status" id="sellerStatus"></span>
   </div>
 
   <div class="seller-info">
     <div class="seller-name" id="sellerName">—</div>
     <div class="seller-rating" id="sellerRating"></div>
+    <div class="seller-last-seen" id="sellerLastSeen"></div>
   </div>
 </div>
 
@@ -286,6 +278,9 @@
 
   </div>
 </div>
+</main>
+
+<div id="footer-container"></div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
@@ -293,6 +288,7 @@
 <script src="/tp-money.js"></script>
 <script src="/gallery.js"></script>
 <script src="/offer-title.js"></script>
+<script src="/footer.js"></script>
 
 <script>
 function getTextByLang(obj){
@@ -341,23 +337,60 @@ if (qty && Number(qty) > 1 && o.mode !== "Робуксы") {
   price.dataset.price = o.price;
 await updatePrice();
 
-  // seller
-  sellerName.textContent = o.seller.username;
-  if (o.seller.reviewsCount === 0) {
+// seller
+sellerName.textContent = o.seller.username;
+
+// 👉 Переход в профиль по ID
+if (o.seller.userId) {
+
+  sellerName.style.cursor = "pointer";
+  sellerAvatar.style.cursor = "pointer";
+
+  sellerName.onclick = () => {
+    location.href = `/profile.html?id=${o.seller.userId}`;
+  };
+
+  sellerAvatar.onclick = () => {
+    location.href = `/profile.html?id=${o.seller.userId}`;
+  };
+
+}
+if (o.seller.reviewsCount === 0) {
   sellerRating.textContent = "Нет отзывов";
 } else {
+
   sellerRating.innerHTML =
     `${renderStars(o.seller.rating)}
      <span style="margin-left:6px;color:#6b7280;font-weight:600;">
        ${o.seller.reviewsCount}
      </span>`;
+
+  sellerRating.style.cursor = "pointer";
+
+  sellerRating.onclick = () => {
+    location.href = `/reviews.html?id=${o.seller.userId}`;
+  };
 }
-  const sellerStatus = document.getElementById("sellerStatus");
+const sellerLastSeen = document.getElementById("sellerLastSeen");
 
 if (o.seller.online) {
-  sellerStatus.classList.add("online");
+  sellerLastSeen.textContent = "В сети";
+} else if (o.seller.lastSeen) {
+
+  const diff = Date.now() - o.seller.lastSeen;
+  const minutes = Math.floor(diff / 60000);
+
+  if (minutes < 1) {
+    sellerLastSeen.textContent = "Был(а) только что";
+  } else if (minutes < 60) {
+    sellerLastSeen.textContent = `Был(а) ${minutes} мин назад`;
+  } else {
+    const hours = Math.floor(minutes / 60);
+    sellerLastSeen.textContent = `Был(а) ${hours} ч назад`;
+  }
+
 } else {
-  sellerStatus.classList.remove("online");
+  sellerLastSeen.textContent = "Не в сети";
 }
 
   if (o.seller.avatarUrl) {

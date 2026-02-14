@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="/header.css">
+  <link rel="stylesheet" href="/footer.css">
 
   <style>
     body{
@@ -16,11 +17,10 @@
     }
 
 .page{
-  max-width:1100px;
-  margin:40px auto;
-  padding:0 16px;
+  max-width:1000px;
+  margin:24px auto;
+  padding:0 12px;
 }
-
 
 
 h1{
@@ -69,17 +69,6 @@ h1{
       color:#6b7280;
       font-weight:700;
     }
-
-    .badge{
-      display:inline-block;
-      padding:4px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:900;
-    }
-
-    .waiting{ background:#fef3c7; color:#92400e; }
-    .closed{ background:#e5e7eb; color:#374151; }
 
     .messages{
       padding:16px;
@@ -176,6 +165,173 @@ h1{
 .support-nav .current{
   color:#111827;
 }
+.filters{
+  display:flex;
+  gap:8px;
+  margin-bottom:20px;
+  flex-wrap:wrap;
+}
+
+.filter-pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
+  padding:8px 14px;
+  border:1px solid #e5e7eb;
+  border-radius:999px;
+
+  background:#fff;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.15s;
+}
+
+.filter-pill:hover{
+  background:#f3f4f6;
+}
+
+.filter-pill.active{
+  background:#111827;
+  color:#fff;
+  border-color:#111827;
+}
+
+.tickets{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:16px;
+}
+
+@media(max-width:1100px){
+  .tickets{
+    grid-template-columns:repeat(2, 1fr);
+  }
+}
+
+@media(max-width:700px){
+  .tickets{
+    grid-template-columns:1fr;
+  }
+}
+
+.ticket-card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:18px;
+  padding:18px;
+  cursor:pointer;
+  transition:all 0.2s ease;
+
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+
+  min-height:160px;
+}
+
+.ticket-card:hover{
+  background:#f3f4f6;
+}
+
+
+.ticket-id{
+  font-weight:700;
+  font-size:14px;
+}
+
+.ticket-category{
+  font-size:12px;
+  color:#6b7280;
+  font-weight:600;
+}
+
+.ticket-subject{
+  font-size:15px;
+  font-weight:700;
+}
+
+.ticket-bottom{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:12px;
+  color:#6b7280;
+}
+
+.ticket-order{
+  font-weight:600;
+}
+
+
+
+.ticket-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:8px;
+}
+
+.ticket-title{
+  font-weight:700;
+  font-size:15px;
+}
+
+.ticket-date{
+  font-size:12px;
+  color:#6b7280;
+}
+
+.ticket-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+.ticket-status{
+  display:inline-flex;
+  align-items:center;
+
+  padding:8px 14px;
+  border-radius:8px;     /* не 999px */
+
+  font-size:13px;
+  font-weight:600;
+  letter-spacing:0.2px;
+
+  color:#fff;
+}
+
+.ticket-sidebar{
+  width:340px;
+}
+
+.sidebar-card{
+  background:#fff;
+  border-radius:16px;
+  border:1px solid #e5e7eb;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  font-size:14px;
+}
+
+.close-ticket-btn{
+  margin-top:10px;
+  border:none;
+  border-radius:12px;
+  padding:10px;
+  font-weight:700;
+  cursor:pointer;
+  background:#f3f4f6;
+}
+
+.ticket-status.waiting{ background:#f59e0b; }
+.ticket-status.in_progress{ background:#1d4ed8; }
+.ticket-status.resolved{ background:#374151; }
 
   </style>
 </head>
@@ -183,6 +339,7 @@ h1{
 <body>
 
 <div id="header-container"></div>
+<main class="page-content">
 <div class="support-nav">
   <a href="/help.html">Главная</a>
   <span>/</span>
@@ -192,24 +349,37 @@ h1{
 <div class="page">
   <h1>История обращений</h1>
 
-  <div class="layout">
-
-    <!-- LEFT -->
-    <div class="card" id="ticketList">
-      <div class="empty">Загрузка...</div>
-    </div>
-
-    <!-- RIGHT -->
-    <div class="card" id="chatPane">
-      <div class="empty">Выберите обращение</div>
-    </div>
-
-  </div>
+<div style="margin-bottom:20px;">
+<select id="statusFilter" style="
+  height:40px;
+  border-radius:12px;
+  border:1px solid #e5e7eb;
+  background:#fff;
+  padding:0 12px;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  outline:none;
+  box-shadow:none;
+">
+    <option value="all">Статус</option>
+    <option value="waiting">Ожидает ответа</option>
+    <option value="in_progress">В процессе</option>
+    <option value="resolved">Решена</option>
+  </select>
 </div>
+
+<div class="tickets" id="ticketList"></div>
+
+</div>
+</main>
+<div id="footer-container"></div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
 <script src="/header.js"></script>
+<script src="/footer.js"></script>
+
 
 <script>
 const token = localStorage.getItem("tp_token");
@@ -218,35 +388,28 @@ if(!token){
 }
 
 const ticketListEl = document.getElementById("ticketList");
-const chatPaneEl = document.getElementById("chatPane");
 
-let currentId = null;
 let tickets = [];
+let currentFilter = "all";
 
-function esc(s){
-  return String(s ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;");
+function getStatusText(status){
+  if(status === "waiting") return "Ожидает ответа";
+  if(status === "in_progress") return "В процессе";
+  if(status === "resolved") return "Решена";
+  return status;
 }
-
 function formatDate(ts){
   const d = new Date(ts);
   return d.toLocaleDateString("ru-RU") + " " +
          d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});
 }
 
-function statusBadge(status){
-  if(status === "closed"){
-    return `<span class="badge closed">Закрыто</span>`;
-  }
-  return `<span class="badge waiting">Ожидает</span>`;
-}
-
 async function loadTickets(){
+
   const r = await fetch("/api/support/tickets",{
     headers:{ Authorization:"Bearer " + token }
   });
+
   const d = await r.json();
 
   if(!d.success){
@@ -256,114 +419,97 @@ async function loadTickets(){
 
   tickets = d.tickets || [];
 
-  if(!tickets.length){
+  renderTickets();
+}
+
+function renderTickets(){
+
+  tickets.sort((a,b)=>{
+    if(a.status === "resolved" && b.status !== "resolved") return 1;
+    if(a.status !== "resolved" && b.status === "resolved") return -1;
+    return b.createdAt - a.createdAt;
+  });
+
+  let filtered = tickets;
+
+  if(currentFilter !== "all"){
+    filtered = tickets.filter(t => t.status === currentFilter);
+  }
+
+  if(!filtered.length){
     ticketListEl.innerHTML = "<div class='empty'>Обращений нет</div>";
     return;
   }
 
   ticketListEl.innerHTML = "";
 
-  tickets.forEach(t=>{
-    const div = document.createElement("div");
-    div.className = "ticket" + (t.id === currentId ? " active" : "");
+  filtered.forEach(t => {
 
-    div.innerHTML = `
-      <div class="ticket-title">${esc(t.subject)}</div>
-      <div class="ticket-meta">
-        ${statusBadge(t.status)} • ${formatDate(t.createdAt)}
-      </div>
-    `;
+    const card = document.createElement("div");
+    card.className = "ticket-card";
 
-div.onclick = ()=> {
-  location.href = "/support-ticket.html?id=" + t.id;
-};
+card.innerHTML = `
+  <div class="ticket-top">
+    <div class="ticket-id">
+      Обращение ${t.shortId || t.id}
+    </div>
 
-    ticketListEl.appendChild(div);
+    <div class="ticket-status ${t.status}">
+      ${getStatusText(t.status)}
+    </div>
+  </div>
+
+  <div class="ticket-category">
+    ${t.categoryLabel || t.category || "Без категории"}
+  </div>
+
+  <div class="ticket-subject">
+    ${t.subject}
+  </div>
+
+  <div class="ticket-bottom">
+    <div>
+      ${formatDate(t.createdAt)}
+    </div>
+
+    ${
+      t.orderId
+        ? `<div class="ticket-order">Заказ: ${t.orderId}</div>`
+        : ""
+    }
+  </div>
+`;
+
+    card.onclick = () => {
+      location.href = "/support-ticket.html?id=" + t.id;
+    };
+
+    ticketListEl.appendChild(card);
   });
 }
 
-async function openTicket(id){
-  currentId = id;
-  currentId = id;
+/* FILTER LOGIC */
+const statusFilter = document.getElementById("statusFilter");
+
+statusFilter.addEventListener("change", () => {
+  currentFilter = statusFilter.value;
+  renderTickets();
+});
+
 loadTickets();
 
-  const r = await fetch("/api/support/tickets/"+id,{
-    headers:{ Authorization:"Bearer " + token }
-  });
+const socket = io();
 
-  const d = await r.json();
-  if(!d.success){
-    chatPaneEl.innerHTML = "<div class='empty'>Ошибка</div>";
-    return;
-  }
+socket.on("connect", () => {
+  socket.emit("auth", { token });
+});
 
-  const t = d.ticket;
-  const msgs = d.messages || [];
+socket.on("new-support-message", () => {
+  loadTickets();
+});
 
-  chatPaneEl.innerHTML = `
-    <div class="messages" id="msgs"></div>
-    ${t.status !== "closed" ? `
-      <div class="reply">
-        <textarea class="textarea" id="replyText"></textarea>
-        <button class="btn btn-primary" id="sendBtn">Отправить</button>
-        <button class="btn btn-danger" id="closeBtn">Закрыть</button>
-      </div>
-    ` : `<div class="empty">Тикет закрыт</div>`}
-  `;
-
-  const msgsEl = document.getElementById("msgs");
-
-  msgs.forEach(m=>{
-    const div = document.createElement("div");
-    div.className = "msg " + (m.from === "user" ? "me" : "support");
-    div.innerHTML = esc(m.text);
-    msgsEl.appendChild(div);
-  });
-
-  msgsEl.scrollTop = msgsEl.scrollHeight;
-
-  if(t.status !== "closed"){
-
-    document.getElementById("sendBtn").onclick = async ()=>{
-      const text = document.getElementById("replyText").value.trim();
-      if(!text) return;
-
-      await fetch("/api/support/tickets/"+id+"/message",{
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          Authorization:"Bearer " + token
-        },
-        body: JSON.stringify({ text })
-      });
-
-      openTicket(id);
-    };
-
-    document.getElementById("closeBtn").onclick = async ()=>{
-      if(!confirm("Закрыть обращение?")) return;
-
-      await fetch("/api/support/tickets/"+id+"/close",{
-        method:"POST",
-        headers:{ Authorization:"Bearer " + token }
-      });
-
-      openTicket(id);
-    };
-  }
-}
-// открыть тикет если есть ?id=
-const params = new URLSearchParams(window.location.search);
-const ticketFromUrl = params.get("id");
-
-if(ticketFromUrl){
-  currentId = ticketFromUrl;
-}
-
-loadTickets().then(() => {
-  if(currentId){
-    openTicket(currentId);
-  }
+socket.on("support-ticket-updated", () => {
+  loadTickets();
 });
 
 </script>

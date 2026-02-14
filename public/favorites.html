@@ -7,13 +7,17 @@
 
   <link rel="stylesheet" href="/header.css">
   <link rel="stylesheet" href="/game.css">
+  <link rel="stylesheet" href="/footer.css">
+
 </head>
 
 <body>
 
 <div id="header-container"></div>
 
-<div class="page">
+<main class="page-content">
+  <div class="page">
+
   <div class="container">
 
     <h2 style="margin:10px 0 20px;">Избранные</h2>
@@ -26,12 +30,16 @@
 
   </div>
 </div>
+</main>
+
+<div id="footer-container"></div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
 <script src="/header.js"></script>
 <script src="/tp-money.js"></script>
 <script src="/offer-title.js"></script>
+<script src="/footer.js"></script>
 
 <script>
 /* ================= FAVORITES STORAGE ================= */

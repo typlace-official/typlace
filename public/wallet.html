@@ -6,7 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Хедер -->
-  <link rel="stylesheet" href="header.css">
+<link rel="stylesheet" href="/header.css">
+<link rel="stylesheet" href="/footer.css">
 
   <style>
     body {
@@ -102,7 +103,8 @@
   <!-- ХЕДЕР -->
   <div id="header-container"></div>
 
-  <div class="container">
+   <main class="page-content">
+      <div class="container">
     <h1>Кошелёк</h1>
 
     <div class="balance" id="balance">—</div>
@@ -115,11 +117,13 @@
     <h2>История операций</h2>
     <div class="history" id="history"></div>
   </div>
-
+  </main>
+<div id="footer-container"></div>
   <!-- header.js -->
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
 <script src="/header.js"></script>
+<script src="/footer.js"></script>
 
   <script>
   let cachedRates = null;

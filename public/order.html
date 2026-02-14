@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Заказ — TyPlace</title>
 <link rel="stylesheet" href="/header.css">
+<link rel="stylesheet" href="/footer.css">
+
 <style>
 body{margin:0;background:#f6f7f9;font-family:Inter,Arial,sans-serif;color:#111}
 .page{max-width:980px;margin:24px auto;padding:0 16px}
@@ -37,7 +39,10 @@ body{margin:0;background:#f6f7f9;font-family:Inter,Arial,sans-serif;color:#111}
 
 <div id="header-container"></div>
 
+<main class="page-content">
+
 <div class="page">
+
   <div class="card">
     <div class="row">
       <div class="img"><img id="offerImg" src="/img/offer-default.png"></div>
@@ -93,10 +98,15 @@ body{margin:0;background:#f6f7f9;font-family:Inter,Arial,sans-serif;color:#111}
     Отправить отзыв
   </button>
 </div>
+</main>
+
+<div id="footer-container"></div>
+
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
 <script src="/header.js"></script>
 <script src="/offer-title.js"></script>
+<script src="/footer.js"></script>
 
 <script>
 const orderId = new URLSearchParams(location.search).get("id");

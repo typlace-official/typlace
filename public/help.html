@@ -5,7 +5,8 @@
   <title>Центр поддержки — TyPlace</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link rel="stylesheet" href="/header.css">
+<link rel="stylesheet" href="/header.css">
+<link rel="stylesheet" href="/footer.css">
 
   <style>
     body{
@@ -65,11 +66,13 @@
 </head>
 
 <body>
-  <div id="header-container"></div>
+<div id="header-container"></div>
 
+<main class="page-content">
   <div class="page">
+
     <div class="center">
-      <h1 class="title">Центр поддержки</h1>
+      <h1 class="title">Центр помощи</h1>
 
       <div class="support-menu">
         <button class="menu-btn" onclick="location.href='/support-create.html'">
@@ -86,10 +89,13 @@
       </div>
     </div>
   </div>
+</main>
+<div id="footer-container"></div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/games.list.js"></script>
   <script src="/header.js"></script>
+  <script src="/footer.js"></script>
 
   <script>
     const token = localStorage.getItem("tp_token");

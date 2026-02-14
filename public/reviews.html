@@ -6,6 +6,8 @@
   <title>Отзывы — TyPlace</title>
 
   <link rel="stylesheet" href="/header.css">
+  <link rel="stylesheet" href="/footer.css">
+
 
   <style>
     :root{
@@ -236,7 +238,10 @@
 <body>
   <div id="header-container"></div>
 
+  <main class="page-content">
+
   <div class="page">
+
     <div class="container">
       <div class="top">
         <div>
@@ -258,8 +263,14 @@
   <div class="modal" id="modal">
     <img id="modalImg" alt="screenshot">
   </div>
+  </main>
 
-  <script src="/header.js"></script>
+  <div id="footer-container"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/games.list.js"></script>
+<script src="/header.js"></script>
+<script src="/footer.js"></script>
 
   <script>
     // ===== helpers =====

@@ -7,6 +7,7 @@
 
   <!-- HEADER CSS -->
   <link rel="stylesheet" href="/header.css">
+  <link rel="stylesheet" href="/footer.css">
 
   <style>
     :root{
@@ -103,18 +104,21 @@
       .nav{grid-template-columns:1fr;}
     }
 
-    .nav-item{
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:14px;
-      text-decoration:none;
-      color:var(--text);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      font-weight:900;
-      background:#fff;
-    }
+.nav-item{
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:14px;
+  text-decoration:none;
+  color:var(--text);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;   /* ← центрируем */
+  text-align:center;
+
+  font-weight:900;
+  background:#fff;
+}
 
     .nav-item:hover{
       background:#fafafa;
@@ -147,6 +151,25 @@
     .stars.r3{ color:#f59e0b; }
     .stars.r2{ color:#ef4444; }
     .stars.r1{ color:#991b1b; }
+.user-id{
+  font-size:13px;
+  font-weight:700;
+  color:var(--muted);
+  cursor:pointer;
+  user-select:none;
+  position:relative;
+  display:inline-block;
+  transition:color .2s ease;
+}
+
+.user-id:hover{
+  color:var(--blue);
+}
+
+.user-id.copied{
+  color:#16a34a; /* зелёный при копировании */
+}
+
   </style>
 </head>
 
@@ -156,17 +179,22 @@
   <div id="header-container"></div>
 
   <!-- PAGE -->
+  <main class="page-content">
+
   <div class="container">
     <h1>Профиль</h1>
 
     <div class="profile-top">
       <img id="avatar" class="avatar" alt="avatar">
 
-      <div class="info">
-        <div id="username" class="username">User</div>
-        <div id="ratingLink" class="rating-line"></div>
-        <div id="since" class="since"></div>
-      </div>
+<div class="info">
+  <div id="username" class="username">User</div>
+
+  <div id="userId" class="user-id" title="Нажмите, чтобы скопировать"></div>
+
+  <div id="ratingLink" class="rating-line"></div>
+  <div id="since" class="since"></div>
+</div>
     </div>
 
     <div class="nav">
@@ -179,10 +207,13 @@
     </div>
 
   </div>
+</main>
+ <div id="footer-container"></div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
 <script src="/header.js"></script>
+<script src="/footer.js"></script>
 
   <!-- PAGE SCRIPT -->
   <script>
@@ -228,54 +259,91 @@
       return res.json().catch(()=>({}));
     }
 
-    async function init(){
-      const token = getToken();
-      if(!token) return goLogin();
+async function init(){
 
-      const me = await api("/auth/me");
-      if(!me.success) return goLogin();
+  const params = new URLSearchParams(location.search);
+  const externalId = params.get("id");
 
-      const user = me.user;
+  let user;
+  let isExternal = false;
 
-      document.getElementById("username").textContent = user.username;
-      document.getElementById("avatar").src =
-        user.avatarUrl || user.avatarDataUrl || DEFAULT_AVATAR;
+  // 👉 ЕСЛИ открываем чужой профиль
+  if (externalId) {
 
-      if(user.createdAt){
-  const date = new Date(user.createdAt);
+    const res = await fetch(`/api/users/by-id/${externalId}`);
+    const data = await res.json();
 
-  const formatted = date.toLocaleDateString("ru-RU", {
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  });
+    if (!data.success) {
+      alert("Пользователь не найден");
+      return;
+    }
 
-  document.getElementById("since").textContent =
-    `На TyPlace с ${formatted}`;
+    user = data.user;
+    isExternal = true;
+
+  } else {
+    // 👉 если свой профиль
+    const token = getToken();
+    if(!token) return goLogin();
+
+    const me = await api("/auth/me");
+    if(!me.success) return goLogin();
+
+    user = me.user;
+  }
+
+  // ===== USERNAME =====
+  document.getElementById("username").textContent = user.username;
+
+  // ===== USER ID =====
+  if(user.userId){
+    const idEl = document.getElementById("userId");
+    idEl.textContent = "ID " + user.userId;
+
+    // копирование ТОЛЬКО для своего профиля
+    if (!isExternal) {
+      idEl.onclick = async () => {
+        try{
+          await navigator.clipboard.writeText(user.userId);
+          idEl.classList.add("copied");
+          setTimeout(()=>{
+            idEl.classList.remove("copied");
+          }, 1200);
+        }catch(e){}
+      };
+    } else {
+      idEl.style.cursor = "default";
+      idEl.title = "";
+    }
+  }
+
+  // ===== AVATAR =====
+  document.getElementById("avatar").src =
+    user.avatarUrl || user.avatarDataUrl || DEFAULT_AVATAR;
+
+  // ===== SINCE =====
+  if(user.createdAt){
+    const date = new Date(user.createdAt);
+    const formatted = date.toLocaleDateString("ru-RU", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+    document.getElementById("since").textContent =
+      `На TyPlace с ${formatted}`;
+  }
+
+  // ===== ОТЗЫВЫ =====
+  const ratingLink = document.getElementById("ratingLink");
+
+  if (user.userId) {
+    ratingLink.onclick = ()=>{
+      location.href = `/reviews.html?id=${user.userId}`;
+    };
+  }
+
 }
 
-      const reviewsRes = await fetch(`/api/users/${encodeURIComponent(user.email)}/reviews`);
-      const reviewsData = await reviewsRes.json().catch(()=>({}));
-      const reviews = reviewsData.success ? reviewsData.reviews : [];
-      const count = reviews.length;
-
-      const ratingLink = document.getElementById("ratingLink");
-      ratingLink.onclick = ()=>{
-        location.href = `/reviews.html?user=${encodeURIComponent(user.email)}`;
-      };
-
-      if(count === 0){
-        ratingLink.innerHTML = `<span class="rating-count">Нет отзывов</span>`;
-      } else if(count < 10){
-        ratingLink.innerHTML = `<span class="rating-count">${count} отзывов</span>`;
-      } else {
-        const avg =
-          reviews.reduce((s,r)=>s+(Number(r.rating)||0),0)/count;
-        ratingLink.innerHTML =
-          `${renderStars(avg)} <span class="rating-count">${count} отзывов</span>`;
-      }
-
-    }
 
     init();
   </script>

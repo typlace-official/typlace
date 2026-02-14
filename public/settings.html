@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="/header.css">
+  <link rel="stylesheet" href="/footer.css">
 
   <style>
     :root{
@@ -197,7 +198,7 @@
 
 <body>
   <div id="header-container"></div>
-
+<main class="page-content">
   <div class="wrap">
     <div class="card">
 
@@ -259,12 +260,16 @@
 
     </div>
   </div>
+</main>
+
+<div id="footer-container"></div>
 
   <audio id="notifySound" src="/sounds/notify.mp3"></audio>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
 <script src="/header.js"></script>
+<script src="/footer.js"></script>
 
   <script>
   const TOKEN_KEY = "tp_token";

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Панель поддержки — TyPlace</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/header.css">
+
+<style>
+body{
+  margin:0;
+  font-family:Inter,Arial,sans-serif;
+  background:#f6f7f9;
+  color:#111827;
+}
+
+.page{
+  max-width:1200px;
+  margin:40px auto;
+  padding:0 16px;
+}
+
+h1{
+  font-size:24px;
+  margin-bottom:20px;
+}
+
+.filters{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:20px;
+}
+
+.select{
+  padding:8px 12px;
+  border-radius:10px;
+  border:1px solid #e5e7eb;
+  font-weight:700;
+}
+
+.card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  overflow:hidden;
+}
+
+.ticket{
+  padding:16px;
+  border-top:1px solid #f3f4f6;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.ticket:hover{
+  background:#f9fafb;
+}
+
+.ticket-info{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.badge{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+}
+
+.waiting{ background:#fef3c7; color:#92400e; }
+.in_progress{ background:#dbeafe; color:#1e40af; }
+.answered{ background:#ede9fe; color:#5b21b6; }
+.resolved{ background:#e5e7eb; color:#374151; }
+
+.btn{
+  border:none;
+  padding:8px 14px;
+  border-radius:10px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.btn-primary{
+  background:#1E50D4;
+  color:#fff;
+}
+
+.empty{
+  padding:20px;
+  text-align:center;
+  color:#6b7280;
+  font-weight:700;
+}
+.stat-box{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  padding:10px 16px;
+  border-radius:12px;
+  font-weight:700;
+  font-size:14px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="header-container"></div>
+
+<div class="page">
+  <h1>Панель поддержки</h1>
+<div id="statsBar" style="
+  display:flex;
+  gap:14px;
+  margin-bottom:20px;
+  flex-wrap:wrap;
+">
+  <div class="stat-box" id="statWaiting">Ожидают: 0</div>
+  <div class="stat-box" id="statInProgress">В работе: 0</div>
+  <div class="stat-box" id="statAnswered">Ответ дан: 0</div>
+  <div class="stat-box" id="statResolved">Закрытые: 0</div>
+</div>
+
+  <div class="filters">
+    <select class="select" id="statusFilter">
+      <option value="">Все статусы</option>
+      <option value="waiting">Ожидают</option>
+      <option value="in_progress">В работе</option>
+      <option value="answered">Ответ дан</option>
+      <option value="resolved">Закрытые</option>
+    </select>
+
+    <select class="select" id="assignedFilter">
+      <option value="">Все тикеты</option>
+      <option value="me">Только мои</option>
+    </select>
+  </div>
+
+  <div class="card" id="ticketList">
+    <div class="empty">Загрузка...</div>
+  </div>
+</div>
+
+<script src="/header.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+async function loadStats(){
+
+  const r = await fetch("/api/support/stats",{
+    headers:{ Authorization:"Bearer " + token }
+  });
+
+  const d = await r.json();
+  if(!d.success) return;
+
+  document.getElementById("statWaiting").textContent =
+    "Ожидают: " + d.stats.waiting;
+
+  document.getElementById("statInProgress").textContent =
+    "В работе: " + d.stats.in_progress;
+
+  document.getElementById("statAnswered").textContent =
+    "Ответ дан: " + d.stats.answered;
+
+  document.getElementById("statResolved").textContent =
+    "Закрытые: " + d.stats.resolved;
+}
+
+const token = localStorage.getItem("tp_token");
+if(!token){
+  location.href = "/auth.html?mode=login";
+}
+
+let userRole = null;
+let lastTicketIds = new Set();
+const socket = io();
+
+async function loadMe(){
+  const r = await fetch("/auth/me",{
+    headers:{ Authorization:"Bearer " + token }
+  });
+  const d = await r.json();
+  if(!d.success) location.href="/auth.html?mode=login";
+  userRole = d.user.role;
+
+  if(userRole !== "support" && userRole !== "admin"){
+    location.href = "/";
+  }
+    // 🔌 авторизуем сокет
+  socket.emit("auth", { token });
+}
+
+function badge(status){
+  const map = {
+    waiting:"Ожидает",
+    in_progress:"В работе",
+    answered:"Ответ дан",
+    resolved:"Закрыт"
+  };
+  return `<span class="badge ${status}">${map[status] || status}</span>`;
+}
+
+async function loadTickets(){
+
+  const status = document.getElementById("statusFilter").value;
+  const assigned = document.getElementById("assignedFilter").value;
+
+  let url = "/api/support/tickets?";
+  if(status) url += "status="+status+"&";
+  if(assigned) url += "assigned="+assigned+"&";
+
+  const r = await fetch(url,{
+    headers:{ Authorization:"Bearer " + token }
+  });
+
+  const d = await r.json();
+  const list = document.getElementById("ticketList");
+
+  if(!d.success){
+    list.innerHTML="<div class='empty'>Ошибка</div>";
+    return;
+  }
+// 🔥 Сортировка по приоритету
+d.tickets.sort((a,b)=>{
+
+  // 1️⃣ проблемы с заказом выше
+  if(a.category === "order" && b.category !== "order") return -1;
+  if(b.category === "order" && a.category !== "order") return 1;
+
+  // 2️⃣ waiting выше остальных
+  if(a.status === "waiting" && b.status !== "waiting") return -1;
+  if(b.status === "waiting" && a.status !== "waiting") return 1;
+
+  // 3️⃣ новые выше старых
+  return (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt);
+});
+
+  if(!d.tickets.length){
+    list.innerHTML="<div class='empty'>Тикетов нет</div>";
+    return;
+  }
+const newSet = new Set(d.tickets.map(t=>t.id));
+  list.innerHTML="";
+
+  d.tickets.forEach(t=>{
+    const div = document.createElement("div");
+    div.className="ticket";
+const minutesWaiting = Math.floor((Date.now() - t.createdAt) / 60000);
+let waitingLabel = "";
+
+if(t.status === "waiting"){
+  waitingLabel = `<div style="font-size:12px;color:${
+    minutesWaiting > 10 ? "#dc2626" : "#6b7280"
+  }">
+    Ждёт: ${minutesWaiting} мин.
+  </div>`;
+}
+
+    div.innerHTML=`
+      <div class="ticket-info">
+        <strong>${t.shortId}</strong>
+        <div>${t.subject}</div>
+${waitingLabel}
+        <div>${badge(t.status)}</div>
+        <div style="font-size:12px;color:#6b7280">
+          ${
+  t.assignedTo
+    ? "Назначен: " + (t.assignedUsername || t.assignedTo)
+    : "Не назначен"
+}
+        </div>
+      </div>
+
+      <div>
+        ${!t.assignedTo ? `
+          <button class="btn btn-primary" onclick="assign('${t.id}')">
+            Взять
+          </button>` : ""}
+        <button class="btn" onclick="openTicket('${t.id}')">
+          Открыть
+        </button>
+      </div>
+    `;
+if(!lastTicketIds.has(t.id)){
+  div.style.background = "#ecfdf5";
+  div.style.transition = "0.5s";
+
+  document.getElementById("newTicketSound").play().catch(()=>{});
+
+  setTimeout(()=>{
+    div.style.background = "";
+  },2000);
+}
+
+    list.appendChild(div);
+  });
+  lastTicketIds = newSet;
+}
+
+async function assign(id){
+  await fetch("/api/support/tickets/"+id+"/assign",{
+    method:"POST",
+    headers:{ Authorization:"Bearer " + token }
+  });
+  loadTickets();
+}
+
+function openTicket(id){
+  location.href="/support-ticket.html?id="+id;
+}
+
+document.getElementById("statusFilter").onchange=loadTickets;
+document.getElementById("assignedFilter").onchange=loadTickets;
+loadMe().then(()=>{
+  loadTickets();
+  loadStats();
+});
+socket.on("new-support-ticket", () => {
+  loadTickets();
+  loadStats();
+
+  document.getElementById("newTicketSound").play().catch(()=>{});
+});
+</script>
+<audio id="newTicketSound" src="/sounds/notify.mp3" preload="auto"></audio>
+</body>
+</html>

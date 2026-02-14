@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="stylesheet" href="/header.css">
+<link rel="stylesheet" href="/footer.css">
 
 <style>
 body{
@@ -56,10 +57,14 @@ body{
   background:#fff;
   border-radius:16px;
   border:1px solid #e5e7eb;
-  padding:24px;
+
   display:flex;
   flex-direction:column;
+
+  height:600px;
+  overflow:hidden; /* важно */
 }
+
 
 .ticket-header{
   display:flex;
@@ -68,77 +73,22 @@ body{
   margin-bottom:20px;
 }
 
-.status{
-  padding:6px 12px;
-  border-radius:999px;
+.ticket-status{
+  display:inline-flex;
+  align-items:center;
+
+  padding:8px 14px;
+  border-radius:8px;     /* не 999px */
+
   font-size:13px;
-  font-weight:700;
-}
+  font-weight:600;
+  letter-spacing:0.2px;
 
-.status.pending{
-  background:#fef3c7;
-  color:#92400e;
-}
-.status.closed{
-  background:#e5e7eb;
-  color:#374151;
-}
-
-.messages{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  margin-bottom:16px;
-  max-height:500px;
-  overflow-y:auto;
-}
-
-.message{
-  padding:12px 16px;
-  border-radius:12px;
-  max-width:70%;
-  font-size:14px;
-  line-height:1.5;
-}
-
-.message.user{
-  align-self:flex-end;
-  background:#e0edff;
-}
-
-.message.support{
-  align-self:flex-start;
-  background:#f3f4f6;
-}
-
-.chat-input{
-  display:flex;
-  gap:12px;
-}
-
-.chat-input textarea{
-  flex:1;
-  border:1px solid #e5e7eb;
-  border-radius:12px;
-  padding:12px;
-  font-size:14px;
-  resize:none;
-  outline:none;
-}
-
-.chat-input button{
-  border:none;
-  background:#1E50D4;
   color:#fff;
-  border-radius:12px;
-  padding:0 20px;
-  font-weight:700;
-  cursor:pointer;
 }
 
 .ticket-sidebar{
-  width:280px;
+  width:340px;
 }
 
 .sidebar-card{
@@ -161,9 +111,30 @@ body{
   cursor:pointer;
   background:#f3f4f6;
 }
+
+.message-wrapper.user{
+  flex-direction:row-reverse;
+}
+.messages{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+  padding:24px;
+  overflow-y:auto;
+
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+}
+
+
+.messages::-webkit-scrollbar{
+  display:none;               /* Chrome */
+}
+
 .message-wrapper{
   display:flex;
-  gap:10px;
+  gap:12px;
   align-items:flex-start;
 }
 
@@ -172,30 +143,366 @@ body{
 }
 
 .msg-avatar{
-  width:36px;
-  height:36px;
+  width:40px;
+  height:40px;
   border-radius:50%;
   object-fit:cover;
+  border:1px solid #e5e7eb;
+}
+
+.message-content{
+  max-width:80%;
 }
 
 .msg-name{
-  font-size:12px;
-  font-weight:700;
+  font-size:13px;
+  font-weight:600;
   margin-bottom:4px;
   color:#6b7280;
 }
 
-.message-content{
-  display:flex;
-  flex-direction:column;
+.message{
+  padding:14px 16px;
+  border-radius:14px;
+  font-size:14px;
+  line-height:1.6;
+  word-break:break-word;
 }
 
+.message.user{
+  background:#2563eb;
+  color:#fff;
+  border-top-right-radius:6px;
+}
+
+.message.support{
+  background:#f3f4f6;
+  border-top-left-radius:6px;
+}
+
+.msg-time{
+  font-size:11px;
+  color:#9ca3af;
+  margin-top:6px;
+}
+.chat-input{
+  position:relative;   /* 🔥 добавить */
+  padding:16px 24px;
+  background:#fff;
+}
+
+.chat-input textarea{
+  flex:1;
+  height:44px;
+
+  padding:10px 14px;
+
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+
+  font-size:14px;
+  font-family:Inter, Arial, sans-serif;
+  line-height:1.4;
+
+  resize:none;
+  outline:none;
+
+  overflow-y:auto;
+  box-sizing:border-box;
+
+  scrollbar-width:none;       /* Firefox */
+  -ms-overflow-style:none;    /* IE */
+}
+
+.chat-input textarea::-webkit-scrollbar{
+  display:none;               /* Chrome */
+}
+
+.chat-input textarea:focus{
+  border-color:#e5e7eb;
+  box-shadow:none;
+}
+
+.chat-input button{
+  height:44px;               /* 👈 одинаковая высота */
+  padding:0 20px;
+
+  border:none;
+  background:#2563eb;
+  color:#fff;
+  border-radius:10px;
+  font-weight:600;
+  cursor:pointer;
+
+  transition:background 0.2s; /* без подпрыгивания */
+}
+
+.chat-input button:hover{
+  background:#1e40af;
+}
+
+
+.ticket-status.waiting{
+  background:#f59e0b;
+}
+
+.ticket-status.in_progress{
+  background:#1d4ed8;   /* чуть глубже чем 2563eb */
+}
+
+.ticket-status.resolved{
+  background:#374151;   /* более серьёзный серый */
+}
+
+.sidebar-card{
+  transition:0.2s;
+}
+
+.sidebar-card:hover{
+  box-shadow:0 8px 20px rgba(0,0,0,0.04);
+}
+.sidebar-inner{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+.sidebar-section{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  align-items:flex-start;   /* 🔥 вот это важно */
+}
+
+
+.sidebar-label{
+  font-size:12px;
+  font-weight:700;
+  text-transform:uppercase;
+  color:#9ca3af;
+  letter-spacing:0.5px;
+}
+
+.sidebar-meta{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  font-size:14px;
+  color:#374151;
+}
+
+.sidebar-divider{
+  height:1px;
+  background:#e5e7eb;
+}
+.attach-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:#f3f4f6;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  padding:12px 14px;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.2s;
+  color:#111827;
+}
+.attach-btn:hover{ background:#e5e7eb; }
+
+
+.file-link:hover{
+  background:#eef2ff;
+  border-color:#c7d2fe;
+  color:#2563eb;
+}
+
+.file-left{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.file-icon{
+  width:16px;
+  height:16px;
+  color:#6b7280;
+}
+
+.file-link-name{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.chat-input-row{
+  display:flex;
+  gap:10px;
+  align-items:stretch; /* 👈 ВАЖНО */
+  width:100%;
+}
+
+
+.attach-icon-btn{
+  width:44px;
+  height:44px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  background:#f3f4f6;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:18px;
+  font-weight:700;
+
+  flex-shrink:0;
+}
+
+.attach-icon-btn:hover{
+  background:#e5e7eb;
+}
+
+.attachments-preview{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+
+
+.attachments-preview::-webkit-scrollbar{
+  display:none;
+}
+
+/* Вложения внутри сообщения */
+.msg-attachments{
+  margin-top:10px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.file-link{
+  background:#f3f4f6;
+  border:1px solid #e5e7eb;
+  color:#111827;
+
+  padding:8px 12px;
+  border-radius:12px;
+
+  max-width:160px;
+  margin-top:0;
+
+  cursor:pointer; /* ← ВОТ ЭТО ДОБАВЬ */
+}
+
+/* Чтобы текст не вылазил */
+.file-link-name{
+  max-width:90px;
+}
+
+/* ВНУТРИ синего сообщения — инверсия */
+.message.user .file-link{
+  background:rgba(255,255,255,0.18);
+  border-color:rgba(255,255,255,0.25);
+  color:#fff;
+}
+
+.message.user .file-icon{
+  color:rgba(255,255,255,0.85);
+}
+.file-preview-item{
+  position:relative;
+  display:inline-block;
+}
+
+.file-preview-item .file-link{
+  background:#f3f4f6;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding:8px 12px;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  cursor:pointer;
+}
+
+.file-preview-item .file-link:hover{
+  background:#eef2ff;
+}
+
+.file-preview-item .file-remove{
+  position:absolute;
+  top:-10px;
+  right:-10px;
+
+  width:30px;
+  height:30px;
+
+  background:#ef4444;
+  color:#fff;
+
+  border-radius:50%;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size:18px;
+  font-weight:700;
+
+  cursor:pointer;
+}
+.file-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:space-between;
+
+  background:#f9fafb;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+
+  padding:10px 14px;
+
+  font-size:15px;
+  font-weight:600;
+
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.file-link:hover{
+  background:#eef2ff;
+  border-color:#c7d2fe;
+  color:#2563eb;
+}
+
+.file-link-name{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.file-remove{
+  font-size:20px;
+  font-weight:900;
+  color:#6b7280;
+  cursor:pointer;
+  margin-left:12px;
+}
+
+.file-remove:hover{
+  color:#ef4444;
+}
 </style>
 </head>
 
 <body>
 
 <div id="header-container"></div>
+<main class="page-content">
 
 <div class="support-nav">
   <a href="/help.html">Главная</a>
@@ -209,34 +516,84 @@ body{
 
   <div class="chat-section">
 
-    <div class="ticket-header">
-      <h1 id="ticketTitle"></h1>
-      <span class="status" id="ticketStatus"></span>
-    </div>
-
 <div class="messages" id="messages"></div>
 
-    <div class="chat-input">
-      <textarea placeholder="Введите сообщение..."></textarea>
-      <button>Отправить</button>
-    </div>
+<div class="chat-input" style="flex-direction:column; gap:10px;">
+<div id="chatAttachmentsPreview" class="attachments-preview"></div>
+<div class="chat-input-row">
+
+  <label class="attach-icon-btn">
+    <input type="file" id="chatAttachmentsInput" multiple accept="image/*" hidden>
+    +
+  </label>
+
+  <textarea 
+    placeholder="Сообщение"
+    id="chatText"
+  ></textarea>
+
+  <button type="button" id="chatSendBtn">Отправить</button>
+
+</div>
+
+</div>
+
 
   </div>
 
   <div class="ticket-sidebar">
 <div class="sidebar-card" id="sidebar"></div>
+
   </div>
 
 </div>
+<div id="imageModal" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.8);
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+">
+
+  <span id="imageModalClose" style="
+    position:absolute;
+    top:20px;
+    right:30px;
+    font-size:32px;
+    color:#fff;
+    cursor:pointer;
+    font-weight:700;
+  ">✕</span>
+
+  <img id="imageModalImg" style="
+    max-width:90%;
+    max-height:90%;
+    border-radius:12px;
+    box-shadow:0 10px 40px rgba(0,0,0,0.5);
+  ">
+</div>
+</main>
+
+<div id="footer-container"></div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
 <script src="/header.js"></script>
+<script src="/footer.js"></script>
+
 <script>
 const token = localStorage.getItem("tp_token");
 if(!token){
   location.href = "/auth.html?mode=login";
 }
+
+const socket = io();
+socket.on("connect", () => {
+  socket.emit("auth", { token });
+});
+
 
 const params = new URLSearchParams(window.location.search);
 const ticketId = params.get("id");
@@ -246,10 +603,74 @@ if(!ticketId){
 }
 
 const breadcrumb = document.getElementById("breadcrumbTicket");
-const title = document.getElementById("ticketTitle");
 const messagesEl = document.getElementById("messages");
-const statusEl = document.getElementById("ticketStatus");
 const sidebarEl = document.getElementById("sidebar");
+let currentUserRole = "user";
+const chatText = document.getElementById("chatText");
+const chatAttachmentsInput = document.getElementById("chatAttachmentsInput");
+
+const chatSendBtn = document.getElementById("chatSendBtn");
+const chatPreview = document.getElementById("chatAttachmentsPreview");
+
+let selectedChatFiles = [];
+
+
+
+chatAttachmentsInput.onchange = () => {
+  const files = Array.from(chatAttachmentsInput.files);
+
+  if(selectedChatFiles.length + files.length > 3){
+    alert("Максимум 3 файла");
+    chatAttachmentsInput.value = "";
+    return;
+  }
+
+  files.forEach(f => selectedChatFiles.push(f));
+  chatAttachmentsInput.value = "";
+  renderChatFiles();
+};
+
+function renderChatFiles(){
+  chatPreview.innerHTML = "";
+
+  selectedChatFiles.forEach((file, index) => {
+
+    const extension = file.name.split(".").pop();
+    const shortName = "photo." + extension;
+
+    const fileLink = document.createElement("div");
+    fileLink.className = "file-link";
+    fileLink.style.position = "relative";
+
+    fileLink.innerHTML = `
+      <div class="file-left">
+        <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="3"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <path d="M21 15l-5-5L5 21"></path>
+        </svg>
+        <div class="file-link-name">${shortName}</div>
+      </div>
+      <div class="file-remove">×</div>
+    `;
+
+    fileLink.querySelector(".file-remove").onclick = (e) => {
+      e.stopPropagation();
+      selectedChatFiles.splice(index,1);
+      renderChatFiles();
+    };
+
+    fileLink.onclick = () => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        openImageModal(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    };
+
+    chatPreview.appendChild(fileLink);
+  });
+}
 
 function formatDate(ts){
   const d = new Date(ts);
@@ -280,23 +701,26 @@ async function loadTicket(){
   }
 
   const t = d.ticket;
+  let priorityBadge = "";
+
+if(t.priority === "high"){
+  priorityBadge = `<span style="
+    background:#fee2e2;
+    color:#991b1b;
+    padding:4px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+    margin-left:10px;
+  ">Высокий приоритет</span>`;
+}
   const msgs = d.messages || [];
+
+currentUserRole = d.userRole || "user";
 
   // Заголовок
   const short = t.shortId || t.id;
-  breadcrumb.textContent = "Обращение #" + short;
-  title.textContent = "Обращение #" + short;
-
-  // Статус
-statusEl.classList.remove("pending","closed");
-
-if(t.status === "closed"){
-  statusEl.textContent = "Закрыто";
-  statusEl.classList.add("closed");
-} else {
-  statusEl.textContent = "Ожидает";
-  statusEl.classList.add("pending");
-}
+breadcrumb.textContent = "Обращение " + short;
 
   // Сообщения
   messagesEl.innerHTML = "";
@@ -309,9 +733,9 @@ msgs.forEach(m=>{
   avatar.className = "msg-avatar";
 
   if(m.from === "user"){
-    avatar.src = m.avatarDataUrl || m.avatarUrl || "/img/default-avatar.png";
+    avatar.src = m.avatarDataUrl || m.avatarUrl || "/img/avatar-default.svg";
   } else {
-    avatar.src = "/img/support-avatar.png";
+    avatar.src = "/img/avatar-default.svg";
   }
 
   const content = document.createElement("div");
@@ -319,16 +743,55 @@ msgs.forEach(m=>{
 
   const name = document.createElement("div");
   name.className = "msg-name";
-  name.textContent = m.from === "user"
-    ? m.username
-    : "Поддержка TyPlace";
+name.textContent = m.from === "user"
+  ? m.username
+  : m.username || "Поддержка TyPlace";
 
   const text = document.createElement("div");
   text.className = "message " + (m.from === "user" ? "user" : "support");
   text.innerHTML = esc(m.text);
+if(m.attachments && m.attachments.length > 0){
 
-  content.appendChild(name);
-  content.appendChild(text);
+const attachmentsBlock = document.createElement("div");
+attachmentsBlock.className = "msg-attachments";
+
+
+  m.attachments.forEach(url => {
+
+    const fileName = url.split("/").pop();
+    const extension = fileName.split(".").pop();
+    const shortName = "photo." + extension;
+
+    const fileLink = document.createElement("div");
+    fileLink.className = "file-link";
+
+    fileLink.innerHTML = `
+      <div class="file-left">
+        <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="3"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <path d="M21 15l-5-5L5 21"></path>
+        </svg>
+        <div class="file-link-name">${shortName}</div>
+      </div>
+    `;
+
+    fileLink.onclick = () => openImageModal(url);
+
+    attachmentsBlock.appendChild(fileLink);
+  });
+
+  text.appendChild(attachmentsBlock);
+}
+
+
+  const time = document.createElement("div");
+time.className = "msg-time";
+time.textContent = formatDate(m.createdAt);
+
+content.appendChild(name);
+content.appendChild(text);
+content.appendChild(time);
 
   wrapper.appendChild(avatar);
   wrapper.appendChild(content);
@@ -337,44 +800,139 @@ msgs.forEach(m=>{
 });
 
   messagesEl.scrollTop = messagesEl.scrollHeight;
+// Блокируем ввод если обращение решено
+const chatInput = document.querySelector(".chat-input");
 
-  // Sidebar
-  sidebarEl.innerHTML = `
-    <div><b>Статус:</b> ${t.status === "closed" ? "Закрыто" : "Ожидает"}</div>
-    <div><b>Создано:</b> ${formatDate(t.createdAt)}</div>
-    <div><b>Категория:</b> ${esc(t.category)}</div>
-    <div><b>Тема:</b> ${esc(t.subject)}</div>
-    ${t.orderId ? `<div><b>Номер заказа:</b> ${esc(t.orderId)}</div>` : ""}
-    ${t.status !== "closed"
-      ? `<button class="close-ticket-btn" onclick="closeTicket()">Закрыть обращение</button>`
-      : ""}
-  `;
+if(t.status === "resolved"){
+  chatInput.style.display = "none";
+} else {
+  chatInput.style.display = "flex";
 }
 
+  // Sidebar
+sidebarEl.innerHTML = `
+<div class="sidebar-inner">
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Статус</div>
+    <div class="ticket-status ${t.status}">
+      ${getStatusText(t.status)}
+    </div>
+
+    <div class="sidebar-meta">
+      <div><b>Создано:</b> ${formatDate(t.createdAt)}</div>
+    </div>
+  </div>
+
+  <div class="sidebar-divider"></div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Детали обращения</div>
+
+    <div class="sidebar-meta">
+      <div><b>Категория:</b> ${esc(t.categoryLabel || t.category)}</div>
+      <div><b>Тема:</b> ${esc(t.subject)}</div>
+      ${t.orderId ? `<div><b>Номер заказа:</b> ${esc(t.orderId)}</div>` : ""}
+    </div>
+  </div>
+
+  ${
+    t.assignedUser 
+      ? `
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Ответственный</div>
+        <div class="sidebar-meta">
+          ${esc(t.assignedUser.username)}
+        </div>
+      </div>
+      `
+      : ""
+  }
+
+  ${
+    (t.status !== "resolved" && currentUserRole === "support")
+      ? `<button class="close-ticket-btn" onclick="closeTicket()">Отметить как решено</button>`
+      : ""
+  }
+
+  ${
+    (t.status === "in_progress" && currentUserRole === "user")
+      ? `<button class="close-ticket-btn" onclick="closeTicket()">Закрыть обращение</button>`
+      : ""
+  }
+
+</div>
+`;
+
+}
+function getStatusText(status){
+  if(status === "waiting") return "Ожидает ответа";
+  if(status === "in_progress") return "В процессе";
+  if(status === "resolved") return "Решена";
+  return status;
+}
 async function sendMessage(){
 
-  const textarea = document.querySelector(".chat-input textarea");
-  const text = textarea.value.trim();
-  if(!text) return;
+  const text = chatText.value.trim();
 
-  await fetch("/api/support/tickets/" + ticketId + "/message",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      Authorization:"Bearer " + token
-    },
-    body: JSON.stringify({ text })
+  if(!text && selectedChatFiles.length === 0) return;
+
+  const formData = new FormData();
+  formData.append("text", text);
+
+  selectedChatFiles.forEach(file=>{
+    formData.append("attachments", file);
   });
 
-  textarea.value = "";
-  loadTicket();
+  const r = await fetch("/api/support/tickets/" + ticketId + "/message",{
+    method:"POST",
+    headers:{
+      Authorization:"Bearer " + token
+    },
+    body: formData
+  });
+
+  const d = await r.json().catch(()=>null);
+
+  if(d && d.success === false){
+    alert(d.message || "Ошибка");
+    return;
+  }
+
+  chatText.value = "";
+  selectedChatFiles = [];
+  renderChatFiles();
+
+  await loadTicket();   // ← ВОТ ЭТО ДОБАВЬ
 }
 
 async function closeTicket(){
 
   if(!confirm("Закрыть обращение?")) return;
 
-  await fetch("/api/support/tickets/" + ticketId + "/close",{
+  const r = await fetch("/api/support/tickets/" + ticketId + "/close",{
+    method:"POST",
+    headers:{
+      Authorization:"Bearer " + token
+    }
+  });
+
+  const data = await r.json();
+
+  if(!data.success){
+    alert(data.message || "Ошибка закрытия");
+    return;
+  }
+
+  loadTicket();
+}
+
+async function reopenTicket(){
+
+  if(!confirm("Переоткрыть обращение?")) return;
+
+  await fetch("/api/support/tickets/" + ticketId + "/reopen",{
     method:"POST",
     headers:{
       Authorization:"Bearer " + token
@@ -384,8 +942,15 @@ async function closeTicket(){
   loadTicket();
 }
 
-document.querySelector(".chat-input button")
-  .addEventListener("click", sendMessage);
+chatSendBtn.addEventListener("click", sendMessage);
+
+chatText.addEventListener("keydown", e=>{
+  if(e.key === "Enter" && !e.shiftKey){
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
 document.querySelector(".chat-input textarea")
   .addEventListener("keydown", e=>{
     if(e.key === "Enter" && !e.shiftKey){
@@ -395,6 +960,39 @@ document.querySelector(".chat-input textarea")
 });
 
 loadTicket();
+socket.on("new-support-message", (data) => {
+  if(data.ticketId === ticketId){
+    loadTicket();
+  }
+});
+
+socket.on("support-ticket-updated", (data) => {
+  if(data.ticketId === ticketId){
+    loadTicket();
+  }
+});
+const imageModal = document.getElementById("imageModal");
+const imageModalImg = document.getElementById("imageModalImg");
+const imageModalClose = document.getElementById("imageModalClose");
+
+function openImageModal(url){
+  imageModal.style.display = "flex";
+  imageModalImg.src = url;
+}
+
+function closeImageModal(){
+  imageModal.style.display = "none";
+  imageModalImg.src = "";
+}
+
+imageModalClose.onclick = closeImageModal;
+
+imageModal.onclick = (e) => {
+  if(e.target === imageModal){
+    closeImageModal();
+  }
+};
+
 </script>
 
 </body>

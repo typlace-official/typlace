@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Админка — Пользователи</title>
+<link rel="stylesheet" href="/header.css">
+<style>
+body{font-family:Inter,Arial;background:#f6f7f9;margin:0;}
+.page{max-width:1200px;margin:40px auto;padding:0 16px;}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;}
+.row{display:flex;justify-content:space-between;padding:14px;border-top:1px solid #f3f4f6;}
+.btn{border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:600;}
+.ban{background:#dc2626;color:#fff;}
+.unban{background:#16a34a;color:#fff;}
+.role{font-size:12px;font-weight:700;}
+</style>
+</head>
+<body>
+
+<div id="header-container"></div>
+
+<div class="page">
+<h1>Пользователи</h1>
+<div class="card" id="list"></div>
+</div>
+
+<script src="/header.js"></script>
+<script>
+
+const token = localStorage.getItem("tp_token");
+if(!token) location.href="/auth.html?mode=login";
+
+async function load(){
+
+  const r = await fetch("/api/admin/users",{
+    headers:{ Authorization:"Bearer "+token }
+  });
+
+  const d = await r.json();
+  if(!d.success){
+    alert("Нет доступа");
+    location.href="/";
+    return;
+  }
+
+  const list = document.getElementById("list");
+  list.innerHTML="";
+
+  d.users.forEach(u=>{
+    const div = document.createElement("div");
+    div.className="row";
+
+    div.innerHTML=`
+      <div>
+        <b>${u.username}</b> (${u.email})<br>
+        <span class="role">Роль: ${u.role}</span><br>
+        Баланс: €${u.balance}
+      </div>
+
+      <div>
+        ${
+          u.banned
+          ? `<button class="btn unban" onclick="toggleBan('${u.email}',false)">Разбанить</button>`
+          : `<button class="btn ban" onclick="toggleBan('${u.email}',true)">Забанить</button>`
+        }
+      </div>
+    `;
+
+    list.appendChild(div);
+  });
+}
+
+async function toggleBan(email, banned){
+  await fetch("/api/admin/ban",{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      Authorization:"Bearer "+token
+    },
+    body: JSON.stringify({ email, banned })
+  });
+
+  load();
+}
+
+load();
+</script>
+
+</body>
+</html>
