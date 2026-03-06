@@ -193,6 +193,72 @@
     .logout:hover{
       text-decoration:underline;
     }
+    .profile{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+  margin-bottom:20px;
+}
+
+.avatar-wrap{
+  position:relative;
+  width:96px;
+  height:96px;
+  cursor:pointer;
+}
+
+.avatar{
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  object-fit:cover;
+  background:#e5e7eb;
+}
+
+.avatar-wrap::after{
+  content:"Изменить фото";
+  position:absolute;
+  bottom:-22px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:13px;
+  font-weight:600;
+  color:#2563eb;
+}
+
+.profile-name{
+  margin-top:28px;
+  font-size:18px;
+  font-weight:800;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  cursor:pointer;
+}
+
+.arrow{
+  font-size:18px;
+  color:#9ca3af;
+}
+.toast{
+  position:fixed;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#111827;
+  color:#fff;
+  padding:12px 18px;
+  border-radius:999px;
+  font-size:13px;
+  opacity:0;
+  transition:.3s;
+  pointer-events:none;
+}
+
+.toast.show{
+  opacity:1;
+}
   </style>
 </head>
 
@@ -205,17 +271,16 @@
       <h1>Настройки</h1>
 
       <!-- PROFILE -->
-      <div class="profile">
-        <img id="avatar" class="avatar">
-        <div class="p-info">
-          <div class="p-name">
-            <span id="username">User</span>
-            <button class="edit-btn" onclick="editName()">✎ Ник</button>
-          </div>
-          <div class="p-email" id="email">email@example.com</div>
-          <button class="edit-btn" onclick="editAvatar()">Изменить фото</button>
-        </div>
-      </div>
+<div class="profile">
+  <div class="avatar-wrap" onclick="editAvatar()">
+    <img id="avatar" class="avatar">
+  </div>
+
+  <div class="profile-name" onclick="editName()">
+    <span id="username">User</span>
+    <span class="arrow">›</span>
+  </div>
+</div>
 
       <!-- NOTIFICATIONS -->
       <div class="section">
@@ -264,6 +329,8 @@
 
 <div id="footer-container"></div>
 
+<div id="toast" class="toast"></div>
+
   <audio id="notifySound" src="/sounds/notify.mp3"></audio>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -297,7 +364,6 @@
     }
 
     username.textContent = me.user.username;
-    email.textContent = me.user.email;
     avatar.src =
       me.user.avatarUrl ||
       me.user.avatarDataUrl ||
@@ -356,55 +422,58 @@
   /* =======================
      ✅ ЗАГРУЗКА АВАТАРА
   ======================= */
-  function editAvatar(){
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
+function editAvatar(){
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
 
-    input.onchange = async () => {
-      const file = input.files[0];
-      if(!file) return;
+  input.onchange = async () => {
+    const file = input.files[0];
+    if(!file) return;
 
-      if(file.size > 2 * 1024 * 1024){
-        alert("Максимальный размер аватара — 2MB");
-        return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+
+      const res = await api("/profile",{
+        method:"PUT",
+        body:JSON.stringify({
+          avatarDataUrl: reader.result
+        })
+      });
+
+      if(res.success){
+        avatar.src = res.user.avatarDataUrl;
+
+        // обновляем хедер
+        localStorage.setItem("avatarDataUrl", res.user.avatarDataUrl);
+        window.dispatchEvent(new Event("storage"));
+      } else {
+        showToast("Ошибка загрузки фото");
       }
-
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const res = await api("/profile",{
-          method:"PUT",
-          body:JSON.stringify({
-            avatarDataUrl: reader.result
-          })
-        });
-
-        if(res.success){
-  avatar.src = res.user.avatarDataUrl;
-
-  // 🔥 ДОБАВИТЬ ЭТО:
-  localStorage.setItem("avatarDataUrl", res.user.avatarDataUrl);
-
-  // уведомляем хедер
-  window.dispatchEvent(new Event("storage"));
-}
-else{
-          alert("Ошибка загрузки аватара");
-        }
-      };
-      reader.readAsDataURL(file);
     };
 
-    input.click();
-  }
+    reader.readAsDataURL(file);
+  };
+
+  input.click();
+}
 
   function logout(){
     localStorage.removeItem(TOKEN_KEY);
     location.href="/auth.html?mode=login";
   }
+function showToast(text){
+  const toast = document.getElementById("toast");
+  toast.textContent = text;
+  toast.classList.add("show");
 
+  setTimeout(()=>{
+    toast.classList.remove("show");
+  },2000);
+}
   loadProfile();
   loadNotify();
+
 </script>
 </body>
 </html>

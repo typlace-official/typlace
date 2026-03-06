@@ -13,9 +13,9 @@
     "</svg>"
   );
 
-  const LANGS = {
+const LANGS = {
   ru: { label:"Русский" },
-  ua: { label:"Українська" },
+  uk: { label:"Українська" },
   en: { label:"English" }
 };
 
@@ -25,7 +25,7 @@
     { id:"USD", label:"Доллары" },
     { id:"EUR", label:"Евро" }
   ],
-  ua: [
+  uk: [
     { id:"UAH", label:"Гривні" },
     { id:"USD", label:"Долари" },
     { id:"EUR", label:"Євро" }
@@ -39,7 +39,7 @@
 
   const DEFAULT_CURRENCY = {
   ru:"UAH",
-  ua:"UAH",
+  uk:"UAH",
   en:"USD"
 };
 
@@ -47,10 +47,11 @@
     return !!localStorage.getItem(TOKEN_KEY);
   }
 
-  function getLang(){
-    const v = localStorage.getItem(KEY_LANG);
-    return (v === "ru" || v === "ua" || v === "en") ? v : "en";
-  }
+function getLang(){
+  const v = localStorage.getItem(KEY_LANG);
+  return (v === "ru" || v === "uk" || v === "en") ? v : "ru";
+}
+
   function setLang(v){ localStorage.setItem(KEY_LANG, v); }
 
   function getCur(){ return localStorage.getItem(KEY_CUR) || ""; }
@@ -103,20 +104,31 @@ if (isAuthed() && window.io) {
 
     const data = await res.json();
     if (data.success) {
-      socket.emit("auth", data.user.email);
+      socket.emit("auth", {
+  token: localStorage.getItem(TOKEN_KEY)
+});
     }
   });
-
+let lastMessageId = null;
 socket.on("new-message", (message) => {
 
   if (!message || !message.chatId) return;
 
-  const isInChat = window.tpActiveChatId === message.chatId;
+  // 🚫 защита от повторов
+  if (message.id === lastMessageId) return;
+  lastMessageId = message.id;
 
-  // 🔊 звук
-  playMessageSound(isInChat);
+  const isInChat =
+    window.tpActiveChatId === message.chatId &&
+    document.visibilityState === "visible";
 
-  // 🔢 badge обновляем ТОЛЬКО если не в открытом чате
+  const myEmail = localStorage.getItem("tp_user_email");
+  const isMine = myEmail && message.fromEmail === myEmail;
+
+  if (!isMine) {
+    playMessageSound(isInChat);
+  }
+
   if (!isInChat) {
     updateUnreadCount();
   }
@@ -125,6 +137,7 @@ socket.on("new-message", (message) => {
     detail: message
   }));
 });
+
   socket.on("disconnect", () => {
     console.log("🔴 WebSocket disconnected");
   });
@@ -137,23 +150,9 @@ socket.on("new-message", (message) => {
     // ===== SOUNDS =====
 const soundMessage = new Audio("/sounds/message.mp3");
 const soundTick = new Audio("/sounds/tick.mp3");
-// 🔓 Разблокировка аудио после первого клика
-function unlockAudio(){
-  soundMessage.play().then(()=>{
-    soundMessage.pause();
-    soundMessage.currentTime = 0;
-  }).catch(()=>{});
-
-  soundTick.play().then(()=>{
-    soundTick.pause();
-    soundTick.currentTime = 0;
-  }).catch(()=>{});
-
-  document.removeEventListener("click", unlockAudio);
-}
-
-document.addEventListener("click", unlockAudio);
-
+// 🔓 Просто preload без воспроизведения
+soundMessage.preload = "auto";
+soundTick.preload = "auto";
 soundMessage.volume = 0.8;
 soundTick.volume = 0.3;
 
@@ -171,28 +170,191 @@ function playMessageSound(isInChat){
     const elAvatar   = document.getElementById("tpAvatar");
     const elProfileLabel = document.getElementById("tpProfileLabel");
 
-    const langBtn    = document.getElementById("tpLangBtn");
-    const langText   = document.getElementById("tpLangText");
-    const langPanel  = document.getElementById("tpLangPanel");
+// DESKTOP
+const sInputDesktop = document.getElementById("tpSearch");
+const sClearDesktop = document.getElementById("tpClear");
 
-    const curBtn     = document.getElementById("tpCurBtn");
-    const curText    = document.getElementById("tpCurText");
-    const curPanel   = document.getElementById("tpCurPanel");
+// MOBILE
+const sInputMobile  = document.getElementById("tpMobileSearch");
+const burgerMobile  = document.getElementById("tpMobileBurger");
 
-    const sInput   = document.getElementById("tpSearch");
-    const sClear   = document.getElementById("tpClear");
-    const drop     = document.getElementById("tpDrop");
-    const dropList = document.getElementById("tpDropList");
-    const overlay  = document.getElementById("tpOverlay");
+function getActiveSearchInput(){
+  return window.innerWidth <= 640
+    ? sInputMobile
+    : sInputDesktop;
+}
+const sClear = sClearDesktop; // на мобиле clear можно пока не делать
 
-    function closePanels(){
-      langPanel.classList.remove("show");
-      curPanel.classList.remove("show");
-    }
+// GLOBAL DROP + OVERLAY
+const drop     = document.getElementById("tpDrop");
+const dropList = document.getElementById("tpDropList");
+const overlay  = document.getElementById("tpOverlay");
+
+const burgerLangToggle = document.getElementById("tpBurgerLangToggle");
+const burgerCurToggle  = document.getElementById("tpBurgerCurToggle");
+
+const burgerLangSub = document.getElementById("tpBurgerLangSub");
+const burgerCurSub  = document.getElementById("tpBurgerCurSub");
+
+const burgerLangValue = document.getElementById("tpBurgerLangValue");
+const burgerCurValue  = document.getElementById("tpBurgerCurValue");
+
+if (burgerLangToggle && burgerCurToggle) {
+
+  function updateBurgerValues() {
+    const lang = getLang();
+    const cur = ensureCurrencyMatchesLang(lang);
+
+    burgerLangValue.textContent = LANGS[lang].label;
+
+    const curItem = (CURRENCIES_BY_LANG[lang] || [])
+      .find(x => x.id === cur);
+
+    burgerCurValue.textContent = curItem ? curItem.label : "";
+  }
+
+  function renderBurgerLists() {
+    const lang = getLang();
+
+    // LANG LIST
+    burgerLangSub.innerHTML = "";
+["ru","uk","en"].forEach(id => {
+
+  if (id === getLang()) return; // ❗ не показываем выбранный
+
+  const btn = document.createElement("button");
+  btn.className = "tp-item";
+  btn.textContent = LANGS[id].label;
+
+btn.onclick = async () => {
+  setLang(id);
+
+  if (window.tpI18n?.load) {
+    await window.tpI18n.load(id);
+    window.tpI18n.apply();
+  }
+
+  window.dispatchEvent(
+    new CustomEvent("tp:lang-change", {
+      detail: { lang: id }
+    })
+  );
+
+    applyLangAndCurrency();
+
+  renderBurgerLists();
+};
+
+  burgerLangSub.appendChild(btn);
+});
+
+// CUR LIST
+burgerCurSub.innerHTML = "";
+const currentCur = ensureCurrencyMatchesLang(lang);
+
+(CURRENCIES_BY_LANG[lang] || []).forEach(x => {
+
+  if (x.id === currentCur) return; // ❗ не показываем выбранную валюту
+
+  const btn = document.createElement("button");
+  btn.className = "tp-item";
+  btn.textContent = x.label;
+
+  btn.onclick = () => {
+    setCur(x.id);
+    updateBurgerValues();
+
+    burgerCurSub.classList.remove("open");
+    burgerCurToggle.classList.remove("open");
+  };
+
+  burgerCurSub.appendChild(btn);
+});
+
+    updateBurgerValues();
+  }
+
+burgerLangToggle.addEventListener("click", () => {
+
+  const nowOpen = burgerLangSub.classList.toggle("open");
+  burgerLangToggle.classList.toggle("open", nowOpen);
+
+  burgerCurSub.classList.remove("open");
+  burgerCurToggle.classList.remove("open");
+});
+
+burgerCurToggle.addEventListener("click", () => {
+
+  const willOpen = !burgerCurSub.classList.contains("open");
+
+  burgerCurSub.classList.toggle("open", willOpen);
+  burgerCurToggle.classList.toggle("open", willOpen);
+
+  burgerLangSub.classList.remove("open");
+  burgerLangToggle.classList.remove("open");
+});
+
+  renderBurgerLists();
+}
+
+const burgerBtn   = document.getElementById("tpBurger");
+const burgerPanel = document.getElementById("tpBurgerPanel");
+
+function openBurger(){
+  if (!burgerPanel) return;
+  burgerPanel.classList.add("show");
+  // overlay НЕ включаем для бургера
+}
+
+function closeBurger(){
+  if (!burgerPanel) return;
+  burgerPanel.classList.remove("show");
+
+  // overlay НЕ трогаем (он только для поиска)
+
+  burgerLangSub?.classList.remove("open");
+  burgerCurSub?.classList.remove("open");
+  burgerLangToggle?.classList.remove("open");
+  burgerCurToggle?.classList.remove("open");
+}
+
+function toggleBurger(){
+  if (!burgerPanel) return;
+  burgerPanel.classList.contains("show") ? closeBurger() : openBurger();
+}
+
+// клик по бургеру (desktop)
+burgerBtn?.addEventListener("click", (e)=>{
+  e.stopPropagation();
+  toggleBurger();
+});
+
+// клик по бургеру (mobile)
+if (burgerMobile) {
+  burgerMobile.addEventListener("click", (e)=>{
+    e.stopPropagation();
+    toggleBurger();
+  });
+}
+// клик вне панели — закрыть
+document.addEventListener("click", (e)=>{
+  if (!burgerPanel?.classList.contains("show")) return;
+
+  const t = e.target;
+
+  if (
+    burgerPanel.contains(t) ||
+    t.closest("#tpBurger") ||
+    t.closest("#tpMobileBurger")
+  ) {
+    return;
+  }
+
+  closeBurger();
+});
 
 function closeDrop(){
 
-  // если поиск не открыт — просто выходим
   if (!document.body.classList.contains("tp-search-open")) {
     return;
   }
@@ -200,55 +362,74 @@ function closeDrop(){
   drop.classList.remove("show");
   dropList.innerHTML = "";
 
-  if (overlay) overlay.classList.remove("show");
+  if (overlay && !burgerPanel?.classList.contains("show")) {
+  overlay.classList.remove("show");
+}
+  document.body.classList.remove("tp-search-open");
 
+  // 🔓 Разморозка
   document.body.style.position = "";
   document.body.style.top = "";
   document.body.style.left = "";
   document.body.style.right = "";
   document.body.style.width = "";
 
-  document.body.classList.remove("tp-search-open");
-
   window.scrollTo(0, scrollY);
 }
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
 
-// ⬛ клик по затемнению — закрывает поиск
-if (overlay) {
-  overlay.addEventListener("click", () => {
+  // сначала закрываем поиск, если открыт
+  if (document.body.classList.contains("tp-search-open")) {
     closeDrop();
-    closePanels();
-  });
-}
-// 🔽 Закрытие поиска при клике вне поля поиска
-document.addEventListener("click", (e) => {
-
-  const searchWrap = document.querySelector(".tp-search");
-
-  // если поиск открыт
-  if (drop.classList.contains("show")) {
-
-    // если клик НЕ внутри поиска
-    if (!searchWrap.contains(e.target)) {
-      closeDrop();
-    }
-
+    return;
   }
 
+  // иначе закрываем бургер
+  closeBurger();
 });
+if (overlay) {
+overlay.addEventListener("click", () => {
+  if (document.body.classList.contains("tp-search-open")) {
+    closeDrop();
+  }
+});
+}
+
+document.addEventListener("click", (e) => {
+  const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
+  const searchWrap = isMobile
+    ? document.querySelector(".tp-mobile-search")
+    : document.querySelector(".tp-search");
+
+  if (drop.classList.contains("show")) {
+    if (!searchWrap || !searchWrap.contains(e.target)) {
+      closeDrop();
+    }
+  }
+});
+
     async function applyAuthUI(){
   const authed = isAuthed();
   const lang = getLang();
 
-  elLogin.style.display    = authed ? "none" : "inline-flex";
-  elRegister.style.display = authed ? "none" : "inline-flex";
-  elProfile.style.display  = authed ? "inline-flex" : "none";
-  elChats.style.display    = authed ? "inline-flex" : "none";
+// всегда показываем профиль и чаты
+elProfile.style.display = "inline-flex";
+elChats.style.display   = "inline-flex";
 
-  if(!authed){
-    elAvatar.src = DEFAULT_AVATAR;
-    return;
-  }
+if(!authed){
+  elAvatar.src = DEFAULT_AVATAR;
+
+  // если не авторизован — клики ведут на логин
+  elProfile.href = "/auth.html?mode=login";
+  elChats.href   = "/auth.html?mode=login";
+  return;
+}
+
+// если авторизован — нормальные ссылки
+elProfile.href = "/profile.html";
+elChats.href   = "/chats.html";
 
   // 🔥 получаем реальные данные пользователя
   const res = await fetch("/auth/me", {
@@ -265,6 +446,10 @@ document.addEventListener("click", (e) => {
   }
 
   const user = data.user;
+  // 🔥 СОХРАНЯЕМ МОЙ USER ID
+if (user.userId) {
+  localStorage.setItem("tp_user_id", user.userId);
+}
 
   elAvatar.src =
     user.avatarDataUrl ||
@@ -276,10 +461,7 @@ localStorage.setItem(
   "tp_avatar",
   user.avatarUrl || user.avatarDataUrl || ""
 );
-  elProfileLabel.textContent =
-    lang === "en" ? "Profile" :
-    lang === "ua" ? "Профіль" :
-    "Профиль";
+
 }
 
 async function updateUnreadCount(){
@@ -323,111 +505,7 @@ localStorage.setItem("tp_last_unread", count);
       const lang = getLang();
       const cur = ensureCurrencyMatchesLang(lang);
 
-      langText.textContent = LANGS[lang].label;
-
-      const item = CURRENCIES_BY_LANG[lang].find(x=>x.id===cur);
-      curText.textContent = item ? item.label : "";
-
-      sInput.placeholder =
-  lang === "en" ? "Search" :
-  lang === "ua" ? "Пошук" :
-  "Поиск";
-
-
-      elLogin.textContent =
-  lang === "en" ? "Login" :
-  lang === "ua" ? "Вхід" :
-  "Вход";
-      elRegister.textContent =
-  lang === "en" ? "Sign up" :
-  lang === "ua" ? "Реєстрація" :
-  "Регистрация";
-
-      langPanel.innerHTML = "";
-      ["ru","ua","en"].forEach(id=>{
-        const b = document.createElement("button");
-        b.className="tp-item";
-        b.innerHTML = `<span>${LANGS[id].label}</span><small>${lang===id?"✓":""}</small>`;
-        b.onclick = (e)=>{
-  e.preventDefault();
-
-  setLang(id);
-  applyLangAndCurrency();
-  applyAuthUI();
-  closePanels();
-
-};
-        langPanel.appendChild(b);
-      });
-
-      curPanel.innerHTML = "";
-      CURRENCIES_BY_LANG[lang].forEach(x=>{
-        const b = document.createElement("button");
-        b.className="tp-item";
-        b.innerHTML = `<span>${x.label}</span><small>${x.id===cur?"✓":""}</small>`;
-        b.onclick = (e)=>{
-  e.preventDefault();
-
-  setCur(x.id);
-  applyLangAndCurrency();
-  closePanels();
-  window.dispatchEvent(new Event("tp:currency-change"));
-
-};
-        curPanel.appendChild(b);
-      });
-// === CHATS LABEL ===
-const chatsLabel = document.getElementById("tpChatsLabel");
-if (chatsLabel) {
-  if (lang === "ru") chatsLabel.textContent = "Чаты";
-  else if (lang === "ua") chatsLabel.textContent = "Чати";
-  else chatsLabel.textContent = "Chats";
-}
     }
-
-    function togglePanel(panel){
-  const wrap = panel.closest(".tp-pill-wrap");
-  const isOpen = panel.classList.contains("show");
-
-  // закрываем всё
-  langPanel.classList.remove("show");
-  curPanel.classList.remove("show");
-  document.querySelectorAll(".tp-pill-wrap").forEach(w=>w.classList.remove("open"));
-  closeDrop();
-
-  if (!isOpen) {
-    panel.classList.add("show");
-    wrap.classList.add("open"); // 🔥 для поворота стрелки
-  }
-}
-
-    langBtn.onclick = e=>{ e.stopPropagation(); togglePanel(langPanel); };
-    curBtn.onclick  = e=>{ e.stopPropagation(); togglePanel(curPanel); };
-// 🔽 Закрытие языковой и валютной панели при клике вне их
-document.addEventListener("click", (e) => {
-
-  const langWrap = langBtn.closest(".tp-pill-wrap");
-  const curWrap  = curBtn.closest(".tp-pill-wrap");
-
-  // если клик вне языка
-  if (!langWrap.contains(e.target)) {
-    langPanel.classList.remove("show");
-    langWrap.classList.remove("open");
-  }
-
-  // если клик вне валюты
-  if (!curWrap.contains(e.target)) {
-    curPanel.classList.remove("show");
-    curWrap.classList.remove("open");
-  }
-
-});
-    document.addEventListener("keydown", e=>{
-      if(e.key==="Escape"){
-        closePanels();
-        closeDrop();
-      }
-    });
 
     function escReg(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
     function highlight(t,q){
@@ -456,7 +534,7 @@ if (results.length === 0) {
   empty.className = "tp-row tp-row-empty";
   empty.textContent =
     lang === "en" ? "Nothing found" :
-    lang === "ua" ? "Нічого не знайдено" :
+    lang === "uk" ? "Нічого не знайдено" :
     "Не найдено";
 
   dropList.appendChild(empty);
@@ -477,18 +555,15 @@ if (results.length === 0) {
       </div>
     `;
 
-    row.onclick = () => {
-      closeDrop();
-      closePanels();
-      location.href = "/game.html?game=" + game.id;
-    };
+row.onclick = () => {
+  closeDrop();
+  location.href = "/game.html?game=" + game.id;
+};
 
     dropList.appendChild(row);
   });
 }
 
-
-// если уже открыт — ничего не делаем
 if (!drop.classList.contains("show")) {
 
   drop.classList.add("show");
@@ -497,7 +572,7 @@ if (!drop.classList.contains("show")) {
 
   document.body.classList.add("tp-search-open");
 
-  // 🔒 блокируем скролл только ОДИН раз
+  // 🔒 Замораживаем страницу
   scrollY = window.scrollY;
 
   document.body.style.position = "fixed";
@@ -508,24 +583,34 @@ if (!drop.classList.contains("show")) {
 }
 
 }
-    sInput.addEventListener("input", ()=>{
-      const v = sInput.value || "";
-      sClear.hidden = !v.trim();
-      renderSearch(v);
-    });
+function bindSearchInput(input){
+  if(!input) return;
 
-    sInput.addEventListener("focus", ()=>{
-      if((sInput.value||"").trim()){
-        renderSearch(sInput.value);
-      }
-    });
+  input.addEventListener("input", ()=>{
+    const v = input.value || "";
+    if (sClear) sClear.hidden = !v.trim();
+    renderSearch(v);
+  });
 
-    sClear.onclick=()=>{
-      sInput.value="";
-      sClear.hidden = true;
-      closeDrop();
-      sInput.focus();
-    };
+  input.addEventListener("focus", ()=>{
+    if((input.value||"").trim()){
+      renderSearch(input.value);
+    }
+  });
+}
+
+bindSearchInput(sInputDesktop);
+bindSearchInput(sInputMobile);
+
+if (sClear) {
+  sClear.onclick = () => {
+    const input = getActiveSearchInput();
+    if (input) input.value = "";
+    sClear.hidden = true;
+    closeDrop();
+    input?.focus();
+  };
+}
 
     window.addEventListener("storage", (e)=>{
       if(e.key === TOKEN_KEY){
@@ -536,25 +621,55 @@ if (!drop.classList.contains("show")) {
 applyLangAndCurrency();
 applyAuthUI();
 updateUnreadCount();
+if (window.tpI18n?.apply) {
+  window.tpI18n.apply();
+}
+// === ACTIVE HEADER ICON ===
+const path = location.pathname;
 
+if (path.includes("help")) {
+  document.querySelector(".tp-help")?.classList.add("is-active");
+}
+
+if (path.includes("chats")) {
+  document.querySelector(".tp-chat")?.classList.add("is-active");
+}
+
+if (path.includes("profile")) {
+  document.querySelector(".tp-profile")?.classList.add("is-active");
+}
+// === ACTIVE MOBILE BOTTOM MENU ===
+document.querySelectorAll(".tp-bottom-item").forEach(link => {
+
+  const href = link.getAttribute("href");
+
+  if (location.pathname.includes(href)) {
+    link.classList.add("is-active");
+  }
+
+});
 // === ACTIVE AUTH TAB ===
 const url = new URL(location.href);
 const mode = url.searchParams.get("mode");
 
-// сначала снимаем активность с обоих
-elLogin.classList.remove("is-active");
-elRegister.classList.remove("is-active");
+if (elLogin && elRegister) {
 
-// включаем нужную
-if (mode === "login") {
-  elLogin.classList.add("is-active");
-}
+  elLogin.classList.remove("is-active");
+  elRegister.classList.remove("is-active");
 
-if (mode === "register") {
-  elRegister.classList.add("is-active");
+  if (mode === "login") {
+    elLogin.classList.add("is-active");
+  }
+
+  if (mode === "register") {
+    elRegister.classList.add("is-active");
+  }
+
 }
-// 🔁 синхронизация с auth.html (вкладки снизу)
 window.addEventListener("auth:mode-change", (e) => {
+
+  if (!elLogin || !elRegister) return;
+
   const m = e.detail.mode;
 
   elLogin.classList.remove("is-active");
@@ -563,10 +678,71 @@ window.addEventListener("auth:mode-change", (e) => {
   if (m === "login") {
     elLogin.classList.add("is-active");
   }
+
   if (m === "register") {
     elRegister.classList.add("is-active");
   }
+
 });
+// ===== iOS KEYBOARD FIX (PROPER VERSION) =====
+// ===== SCROLL CLOSE KEYBOARD (NO TEXT MODE) =====
+
+if (sInputMobile) {
+
+  let startY = 0;
+
+  window.addEventListener("touchstart", (e) => {
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+
+  window.addEventListener("touchmove", (e) => {
+
+    const searchOpen = document.body.classList.contains("tp-search-open");
+
+    // Если уже открыт поиск (есть текст) — ничего не делаем
+    if (searchOpen) return;
+
+    const active = document.activeElement === sInputMobile;
+    if (!active) return;
+
+    const diff = e.touches[0].clientY - startY;
+
+if (Math.abs(diff) > 10) {
+  sInputMobile.blur();
+}
+
+  }, { passive: true });
+
+}
+if (window.visualViewport && sInputMobile) {
+
+  const headerMobile = document.querySelector(".tp-header-mobile");
+  const bottomNav = document.querySelector(".tp-bottom-mobile");
+
+  function updateViewport() {
+
+    const viewportHeight = window.visualViewport.height;
+    const windowHeight = window.innerHeight;
+
+    const keyboardOpen = viewportHeight < windowHeight - 120;
+
+    if (keyboardOpen) {
+
+      // скрываем нижний бар
+      if (bottomNav) bottomNav.style.display = "none";
+
+    } else {
+
+      // возвращаем
+      if (bottomNav) bottomNav.style.display = "flex";
+
+    }
+  }
+
+  window.visualViewport.addEventListener("resize", updateViewport);
+  window.visualViewport.addEventListener("scroll", updateViewport);
+
+}
   }
 
   mountHeader();

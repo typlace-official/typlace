@@ -44,35 +44,71 @@
         </button>
       </div>
 
-      <div class="topbar">
-        <div class="filters">
-          <div id="extraFilters" style="display:none;"></div>
-          <select class="select" id="subcatSelect" style="display:none;"></select>
-          <select class="select" id="methodSelect" style="display:none;"></select>
+<div class="topbar">
 
-          <div class="sort-chip" id="priceSort">
-            <span>Цена</span>
-            <span class="state" id="priceState">—</span>
-          </div>
+  <!-- 🔹 1. Кнопка фильтров + сортировка -->
+  <div class="mobile-controls">
 
-          <div class="sort-chip" id="stockSort" style="display:none;">
-            <span>Количество</span>
-            <span class="state" id="stockState">—</span>
-          </div>
-        </div>
+<button class="sort-chip" id="filterToggle">
+  <svg class="filter-icon" viewBox="0 0 24 24">
+    <line x1="4" y1="6" x2="20" y2="6"/>
+    <circle cx="9" cy="6" r="2"/>
+    <line x1="4" y1="12" x2="20" y2="12"/>
+    <circle cx="15" cy="12" r="2"/>
+    <line x1="4" y1="18" x2="20" y2="18"/>
+    <circle cx="11" cy="18" r="2"/>
+  </svg>
+  <span data-i18n="common.filters"></span>
+</button>
 
-        <div class="search">
-          <input id="searchInput" type="text" placeholder="Поиск по названию">
-          <span class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="7"></circle>
-              <path d="M20 20l-3.5-3.5"></path>
-            </svg>
-          </span>
-        </div>
+    <div class="sort-chip" id="priceSort">
+      <span data-i18n="common.price"></span>
+      <span class="state" id="priceState">—</span>
+    </div>
 
-        <button class="sell-btn" id="sellBtn">Продать</button>
-      </div>
+    <div class="sort-chip" id="stockSort" style="display:none;">
+      <span data-i18n="common.amount"></span>
+      <span class="state" id="stockState">—</span>
+    </div>
+
+  </div>
+
+  <!-- 🔹 2. Скрытая панель фильтров -->
+  <div class="filters-panel" id="filtersPanel">
+
+    <div id="extraFilters"></div>
+    <select class="select" id="subcatSelect"></select>
+<select class="select" id="methodSelect" style="display:none;"></select>
+  </div>
+
+  <!-- 🔹 3. Поиск + Продать -->
+  <div class="mobile-search-row">
+
+    <div class="search">
+      <input
+        id="searchInput"
+        type="text"
+        data-i18n-placeholder="common.search_by_name">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="M20 20l-3.5-3.5"></path>
+        </svg>
+      </span>
+    </div>
+
+    <button
+      class="sell-btn"
+      id="sellBtn"
+      data-i18n="common.sell">
+    </button>
+
+  </div>
+
+  <!-- 🔹 4. Количество объявлений -->
+  <div class="offers-count" id="offersCount"></div>
+
+</div>
 
       <div id="offersList" class="offers-list"></div>
 
@@ -85,14 +121,27 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
 <script src="/header.js"></script>
-<script src="/games.config.js"></script>
+<script src="/i18n.js"></script>
+<script type="module" src="/games/index.js"></script>
 <script src="/tp-money.js"></script>
 <script src="/offer-title.js"></script>
+<script src="/offer-card.js"></script>
 <script src="/footer.js"></script>
 
-  <script>
-    // ===== GAME FROM URL =====
-    const urlParams = new URLSearchParams(location.search);
+<script>
+(async () => {
+
+  // ✅ ждём пока /games/index.js успеет создать window.GAMES
+  await new Promise(resolve => {
+    const check = () => {
+      if (window.GAMES) resolve();
+      else setTimeout(check, 10);
+    };
+    check();
+  });
+
+  // ===== GAME FROM URL =====
+  const urlParams = new URLSearchParams(location.search);
     const extraFilterValues = {};
 
     // 🔥 ВОССТАНАВЛЕНИЕ ФИЛЬТРОВ ИЗ URL
@@ -105,7 +154,8 @@ const GAME_ID = urlParams.get("game");
 const MODE_FROM_URL = urlParams.get("mode");
 
     if(!GAME_ID || !window.GAMES || !window.GAMES[GAME_ID]){
-      document.body.innerHTML = "<h2 style='padding:24px'>Game not specified / unknown</h2>";
+      document.body.innerHTML =
+  `<h2 style="padding:24px">${window.tpI18n?.t("errors.game_not_found") || ""}</h2>`;
       throw new Error("Game not specified / unknown");
     }
 
@@ -122,15 +172,28 @@ const MODE_FROM_URL = urlParams.get("mode");
 
     // ===== Roblox-only defaults (пока) =====
     // позже мы вынесем FILTERS в config для каждой игры
-    const MODES = Array.isArray(GAME.modes)
-  ? GAME.modes
-  : Object.keys(GAME.modes || {});
-    let currentMode =
+const MODES = Object.entries(GAME.modes || {});
+
+let currentMode =
   MODE_FROM_URL ||
   localStorage.getItem("tp_last_mode_" + GAME_ID) ||
   GAME.defaultMode ||
-  (MODES[0] || "");
-    crumbMode.textContent = currentMode;
+  (MODES[0] ? MODES[0][0] : null);
+// если mode не был в URL — добавляем его
+if (!MODE_FROM_URL && currentMode) {
+
+  const url = new URL(window.location);
+
+  url.searchParams.set("mode", currentMode);
+
+  history.replaceState({}, "", url);
+
+}
+  const currentModeData = GAME.modes?.[currentMode];
+crumbMode.textContent =
+  currentModeData?.labelKey && window.tpI18n?.t
+    ? window.tpI18n.t(currentModeData.labelKey)
+    : currentMode;
 
     // ===== Elements =====
     const modesEl = document.getElementById("modes");
@@ -145,6 +208,16 @@ let selectedCategory = urlParams.get("category") || null;
 let selectedSearch = "";
 const searchInput = document.getElementById("searchInput");
 
+// 🔥 ВСТАВЛЯЕШЬ ВОТ СЮДА
+const filterToggle = document.getElementById("filterToggle");
+const filtersPanel = document.getElementById("filtersPanel");
+
+if (filterToggle && filtersPanel) {
+  filterToggle.addEventListener("click", () => {
+    filtersPanel.classList.toggle("show");
+filterToggle.classList.toggle("active");
+  });
+}
 searchInput.addEventListener("input", () => {
   selectedSearch = searchInput.value.trim();
   loadOffers();
@@ -190,10 +263,17 @@ stockSort.addEventListener("click", ()=>{
 });
 
 
-    function updateBreadcrumb(){
-      crumbMode.textContent = currentMode;
-      document.title = (GAME.title || "Game") + " — TyPlace";
-    }
+function updateBreadcrumb(){
+  const modeData = GAME.modes?.[currentMode];
+
+  crumbMode.textContent =
+    modeData?.labelKey && window.tpI18n?.t
+      ? window.tpI18n.t(modeData.labelKey)
+      : currentMode;
+
+  document.title = (GAME.title || "Game") + " — TyPlace";
+}
+
 function updateCategoryFilter() {
   subcatSelect.style.display = "none";
   subcatSelect.innerHTML = "";
@@ -203,73 +283,70 @@ function updateCategoryFilter() {
 
   if (Array.isArray(categories) && categories.length) {
     subcatSelect.style.display = "";
-    subcatSelect.innerHTML = `<option value="">Все</option>`;
+    subcatSelect.innerHTML = `
+  <option value="">
+    ${window.tpI18n?.t("common.category_placeholder")}
+  </option>
+`;
 
-    categories.forEach(cat => {
-      subcatSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
-    });
+categories.forEach(cat => {
+  const key = `${GAME_ID}.categories.${cat}`;
+  const tr = window.tpI18n?.t ? window.tpI18n.t(key) : key;
+
+  const label = (tr === key) ? cat : tr;
+
+  subcatSelect.innerHTML += `
+    <option value="${cat}">${label}</option>
+  `;
+});
   }
 }
-    // ===== Render Modes (4 rows) =====
-    function renderModes(){
-      const rows = modesEl.querySelectorAll(".modes-row");
-      rows.forEach(r => r.innerHTML = "");
+function renderModes(){
+  const rows = modesEl.querySelectorAll(".modes-row");
+  rows.forEach(r => r.innerHTML = "");
 
-      MODES.forEach((name, index)=>{
-        const pill = document.createElement("div");
-        pill.className = "mode-pill" + (name === currentMode ? " active" : "");
-        pill.textContent = name;
+  MODES.forEach(([modeId, modeData], index)=>{
 
-        pill.onclick = () => {
-          for (const k in extraFilterValues) delete extraFilterValues[k];
-  localStorage.setItem("tp_last_mode_" + GAME_ID, name);
-  currentMode = name;
+    const label =
+      modeData.labelKey && window.tpI18n?.t
+        ? window.tpI18n.t(modeData.labelKey)
+        : modeId;
 
-  const url = new URL(window.location);
-  url.searchParams.set("mode", name);
-  history.replaceState({}, "", url);
+    const pill = document.createElement("div");
+    pill.className = "mode-pill" + (modeId === currentMode ? " active" : "");
+    pill.textContent = label;
 
-  // ✅ КНОПКА "ПРОДАТЬ" — ВСЕГДА ВИДНА НА СТРАНИЦЕ ИГРЫ
-document.getElementById("sellBtn").style.display = "";
-  
+    pill.onclick = () => {
 
-  // сброс фильтров
-  selectedSearch = "";
-searchInput.value = "";
-  sortPrice = null;
-  sortAmount = null;
-  priceState.textContent = "—";
-  stockState.textContent = "—";
-  stockSort.style.display = "none";
-  methodSelect.style.display = "none";
+      for (const k in extraFilterValues) delete extraFilterValues[k];
 
-  // скрываем все фильтры
-methodSelect.style.display = "none";
+      localStorage.setItem("tp_last_mode_" + GAME_ID, modeId);
+      currentMode = modeId;
 
-stockSort.style.display = "none";
+      const url = new URL(window.location);
+      url.searchParams.set("mode", modeId);
+      history.replaceState({}, "", url);
 
-  renderModes();
-  // 🛡 защита от скрытия кнопки
-document.getElementById("sellBtn").style.display = "";
-  updateBreadcrumb();
-  updateCategoryFilter();
-  renderExtraFilters();
-  // 🔥 ВОССТАНАВЛЕНИЕ ЗНАЧЕНИЙ В SELECT
-Object.entries(extraFilterValues).forEach(([key, value]) => {
-  const el = document.querySelector(`[data-key="${key}"] select`);
-  if (el) el.value = value;
+      selectedSearch = "";
+      searchInput.value = "";
 
-  const input = document.querySelector(`[data-key="${key}"] input`);
-  if (input) input.value = value;
-});
-loadOffers();
-};
+      sortPrice = null;
+      sortAmount = null;
+      priceState.textContent = "—";
+      stockState.textContent = "—";
 
-        rows[index % 4].appendChild(pill);
-      });
+      renderModes();
+      updateBreadcrumb();
+      updateCategoryFilter();
+      renderExtraFilters();
+      loadOffers();
+    };
 
-      requestAnimationFrame(updateArrows);
-    }
+    rows[index % 4].appendChild(pill);
+  });
+
+  requestAnimationFrame(updateArrows);
+}
 
     // ===== Arrows =====
     function updateArrows(){
@@ -305,13 +382,12 @@ loadOffers();
     window.addEventListener("resize", updateArrows);
 const extraFiltersWrap = document.getElementById("extraFilters");
 function renderExtraFilters() {
+  const t = (key, fallback="") => (window.tpI18n?.t ? window.tpI18n.t(key) : (fallback || key || ""));
   extraFiltersWrap.innerHTML = "";
-  extraFiltersWrap.style.display = "none";
 
 const modeConfig = GAME.modes?.[currentMode];
 if (!modeConfig || !modeConfig.filters) return;
 
-  extraFiltersWrap.style.display = "";
 
 Object.entries(modeConfig.filters).forEach(([key, field]) => {
     // ❌ YouTube: subscribers НЕ рендерим как обычное поле
@@ -324,29 +400,29 @@ if (
 }
     let el;
 if (field.type === "range") {
+
   const wrap = document.createElement("div");
   wrap.className = "filter-range";
   wrap.dataset.key = key;
 
-if (field.showIf) {
+  // 🔥 ВСЕГДА скрываем range по умолчанию
   wrap.style.display = "none";
-}
 
   const label = document.createElement("div");
   label.className = "range-label";
-  label.textContent = field.label;
+  label.textContent = field.labelKey ? t(field.labelKey, field.label) : (field.label || "");
 
   const row = document.createElement("div");
   row.className = "filter-range-row";
 
   const from = document.createElement("input");
   from.type = "number";
-  from.placeholder = "От";
+  from.placeholder = window.tpI18n?.t("common.from") || "From";
   from.className = "select range-input";
 
   const to = document.createElement("input");
   to.type = "number";
-  to.placeholder = "До";
+  to.placeholder   = window.tpI18n?.t("common.to") || "To";
   to.className = "select range-input";
 
   from.addEventListener("input", () => {
@@ -371,15 +447,7 @@ extraFilterValues[key + "_to"] = to.value || null;
 }
 
 if (field.type === "number") {
-  el = document.createElement("input");
-  el.type = "number";
-  el.placeholder = field.label;
-  el.className = "select";
-
-  el.addEventListener("change", () => {
-    extraFilterValues[key] = el.value || null;
-    loadOffers();
-  });
+  return;
 }
 
 if (field.type === "select") {
@@ -388,11 +456,17 @@ if (field.type === "select") {
 
   const el = document.createElement("select");
   el.className = "select";
-  el.innerHTML = `<option value="">${field.label}</option>`;
+const first = t(field.labelKey) || field.label || "";
+el.innerHTML = `<option value="">${first}</option>`;
 
-  field.options.forEach(opt => {
+field.options.forEach(opt => {
+  if (typeof opt === "object") {
+    const text = opt.labelKey ? t(opt.labelKey, opt.label) : (opt.label ?? opt.value);
+    el.innerHTML += `<option value="${opt.value}">${text}</option>`;
+  } else {
     el.innerHTML += `<option value="${opt}">${opt}</option>`;
-  });
+  }
+});
 
   if (field.showIf) {
     wrap.style.display = "none";
@@ -414,6 +488,31 @@ Object.entries(modeConfig.filters).forEach(([fKey, fField]) => {
   if (!rangeWrap) return;
 
   if (el.value === need) {
+    rangeWrap.style.display = "";
+  } else {
+    rangeWrap.style.display = "none";
+    delete extraFilterValues[fKey + "_from"];
+    delete extraFilterValues[fKey + "_to"];
+  }
+});
+// ===== Показ range-фильтров по showIf (method) =====
+Object.entries(modeConfig.filters).forEach(([fKey, fField]) => {
+  if (fField.type !== "range") return;
+  if (!fField.showIf) return;
+
+  const need = fField.showIf[key];
+  if (!need) return;
+
+  const rangeWrap = extraFiltersWrap.querySelector(
+    `[data-key="${fKey}"]`
+  );
+  if (!rangeWrap) return;
+
+  const match =
+    (Array.isArray(need) && need.includes(el.value)) ||
+    el.value === need;
+
+  if (match) {
     rangeWrap.style.display = "";
   } else {
     rangeWrap.style.display = "none";
@@ -473,8 +572,15 @@ if (
 async function loadOffers() {
   const params = new URLSearchParams();
 
-  params.set("game", GAME_ID);
-  params.set("mode", currentMode);
+params.set("game", GAME_ID);
+params.set("mode", currentMode);
+
+let currentLang = localStorage.getItem("tp_lang") || "ru";
+if (currentLang === "ua") {
+  currentLang = "uk";
+}
+
+params.set("lang", currentLang);
 
   // 🔹 extra filters
   Object.entries(extraFilterValues).forEach(([key, value]) => {
@@ -516,201 +622,113 @@ async function loadOffers() {
   if (!data.success) return;
 
   renderOffers(data.offers || []);
-  updatePrices();
+  window.tpOfferCard.updatePrices();
 }
 
     // ===== Favorites =====
-    function getFavorites(){
-      try{ return JSON.parse(localStorage.getItem("tp_favorites") || "[]"); }
-      catch{ return []; }
-    }
-    function isFavorite(id){ return getFavorites().includes(id); }
-    function toggleFavorite(id){
-      let favs = getFavorites();
-      if(favs.includes(id)) favs = favs.filter(x=>x!==id);
-      else favs.push(id);
-      localStorage.setItem("tp_favorites", JSON.stringify(favs));
-    }
-
-    // ===== Stars =====
-    function renderStars(avg){
-      const rounded = Math.round(avg || 0);
-      let cls = "r1";
-      if(avg >= 4.5) cls="r5";
-      else if(avg >= 3.5) cls="r4";
-      else if(avg >= 2.5) cls="r3";
-      else if(avg >= 1.5) cls="r2";
-
-      let html = `<span class="stars ${cls}">`;
-      for(let i=1;i<=5;i++){
-        html += `<span class="star ${i<=rounded?"filled":""}">★</span>`;
-      }
-      html += `</span>`;
-      return html;
-    }
-
-    function timeOnSite(createdAt){
-      if (!createdAt) return "на сайте недавно";
-      const diff = Date.now() - new Date(createdAt).getTime();
-      const minutes = Math.floor(diff / 60000);
-      const hours = Math.floor(diff / 3600000);
-      const days = Math.floor(diff / 86400000);
-      if (minutes < 60) return `на сайте ${minutes} мин`;
-      if (hours < 24) return `на сайте ${hours} ч`;
-      return `на сайте ${days} дн`;
-    }
-const METHOD_LABELS = {
-  gamepass: "Game Pass",
-  private_server: "Приватный сервер",
-  official_store: "Официальный магазин",
-  gift_card: "Подарочная карта",
-  premium: "Премиум"
-};
-
-const COUNTRY_LABELS = {
-  EU: "Европа",
-  US: "Америка",
-  RU: "Россия",
-  UA_CIS: "Украина + СНГ",
-  OTHER: "Другие"
-};
-const ACCOUNT_TYPE_LABELS = {
-  sale: "Продажа",
-  rent: "Аренда"
-};
-
-const ACCOUNT_REGION_LABELS = {
-  RU: "Россия",
-  UA: "Украина",
-  KZ: "Казахстан",
-  EU: "Европа",
-  US: "Америка",
-  OTHER: "Другие"
-};
-
-    function renderOffers(offers){
-      const list = document.getElementById("offersList");
-      list.innerHTML = "";
-
-      if(!offers.length){
-        list.innerHTML = `<div class="empty">Пока нет объявлений</div>`;
-        return;
-      }
-
-      offers.forEach(o=>{
-        const card = document.createElement("div");
-        card.className = "offer-card";
-        card.style.position = "relative";
-        card.style.cursor = "pointer";
-
-        card.addEventListener("click", ()=> location.href = `/offer.html?id=${o.id}`);
-
-        const avatar =
-          o.seller?.avatarUrl ||
-          o.seller?.avatarDataUrl ||
-          "/img/avatar-default.svg";
-
-        const online = o.seller?.online === true;
-        const rating = o.seller?.rating || 0;
-        const reviews = o.seller?.reviewsCount || 0;
-        const onSiteText = timeOnSite(o.seller?.createdAt);
-        const offerImage =
-  o.imageUrl ||
-  o.imageDataUrl ||
-  o.image ||
-  "/img/offer-default.png";
-
-        card.innerHTML = `
-          <div class="offer-heart ${isFavorite(o.id) ? "active" : ""}">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 21s-7-4.35-10-8.5C-1.5 7.5 3 3 7.5 6.5
-                       9.5 8 12 10.5 12 10.5S14.5 8 16.5 6.5
-                       C21 3 25.5 7.5 22 12.5
-                       19 16.65 12 21 12 21z"/>
-            </svg>
-          </div>
-
-          <div class="offer-image">
-  ${
-  currentMode !== "Робуксы" &&
-  (o.stock || o.amount) &&
-  Number(o.stock || o.amount) > 1
-    ? `<div class="offer-amount-badge">×${o.stock || o.amount}</div>`
-    : ``
+function getFavorites(){
+  try{ return JSON.parse(localStorage.getItem("tp_favorites") || "[]"); }
+  catch{ return []; }
 }
-  <img src="${offerImage}" onerror="this.src='/img/offer-default.png'">
-</div>
 
-          <div class="offer-body">
-           <div class="offer-title">
-  ${buildOfferTitle(o)}
-</div>
-            <div class="offer-price" data-price="${o.price}">—</div>
+function isFavorite(id){
 
-            <div class="offer-seller">
-              <div class="seller-avatar">
-                <img src="${avatar}" onerror="this.src='/img/avatar-default.svg'">
-                <span class="seller-status" style="background:${online ? "#22c55e" : "#9ca3af"}"></span>
-              </div>
+let lang = localStorage.getItem("tp_lang") || "ru";
+if (lang === "ua") {
+  lang = "uk";
+}
+  return getFavorites().some(f => {
+    if(typeof f === "string") return f === id;
+    return f.id === id && f.lang === lang;
+  });
 
-              <div>
-                <div class="seller-name">${o.seller?.username || "Продавец"}</div>
+}
 
-                <div class="seller-rating">
-  ${
-    reviews === 0
-      ? `<span class="no-reviews">Нет отзывов</span>`
-      : `${renderStars(rating)}
-         <span style="margin-left:6px;color:#6b7280;font-weight:600;">
-           ${reviews}
-         </span>`
+function toggleFavorite(id){
+
+  const lang = localStorage.getItem("tp_lang") || "ru";
+
+  let favs = getFavorites();
+
+const index = favs.findIndex(f => typeof f === "object" && f.id === id && f.lang === lang);
+  if(index >= 0){
+    favs.splice(index,1);
+  }else{
+    favs.push({ id, lang });
   }
-</div>
 
-                <div style="font-size:12px;color:#6b7280;margin-top:2px;">${onSiteText}</div>
-              </div>
-            </div>
-          </div>
-        `;
+  localStorage.setItem("tp_favorites", JSON.stringify(favs));
 
-        const heart = card.querySelector(".offer-heart");
-        heart.addEventListener("click", (e)=>{
-          e.stopPropagation();
-          toggleFavorite(o.id);
-          heart.classList.toggle("active");
-        });
+}
 
-        list.appendChild(card);
-      });
-    }
+function renderOffers(offers){
 
-    // ===== Sell =====
-    document.getElementById("sellBtn").addEventListener("click", ()=>{
-      const token = localStorage.getItem("tp_token");
-      if(!token){
-        location.href = "/auth.html?mode=login";
-        return;
-      }
-      location.href = "/offer-create.html?game=" + GAME_ID + "&mode=" + encodeURIComponent(currentMode);
+  const lang = localStorage.getItem("tp_lang") || "ru";
+
+  // 🔥 фильтруем по языку
+  const visibleOffers = offers.filter(o => {
+    return o.title && o.title[lang] && o.title[lang].trim();
+  });
+
+  const countEl = document.getElementById("offersCount");
+
+  if (countEl) {
+    const n = visibleOffers.length;
+    const text = window.tpI18n.pluralKey("common.offers_found", n);
+    countEl.textContent = text;
+  }
+
+  const list = document.getElementById("offersList");
+  list.innerHTML = "";
+
+  if(!visibleOffers.length){
+    return;
+  }
+
+  visibleOffers.forEach(o => {
+
+    const card = window.tpOfferCard.createOfferCard(o, {
+      showHeart: true,
+      heartActive: isFavorite(o.id),
+
+      onHeartClick: (offer, cardEl, heartEl) => {
+        toggleFavorite(offer.id);
+        heartEl.classList.toggle("active");
+      },
+
+      onClick: (offer) => {
+        location.href = "/offer.html?id=" + encodeURIComponent(offer.id);
+      },
+
+      showAmountBadge: true
     });
 
-    // INIT
-    async function updatePrices(){
-  const els = document.querySelectorAll(".offer-price");
+    list.appendChild(card);
+  });
 
-  for (const el of els) {
-    const eur = Number(el.dataset.price);
-    if (!eur) continue;
+  window.tpOfferCard.updatePrices(list);
 
-    el.textContent = await tpMoney.formatPrice(eur);
+  if (window.tpI18n?.apply) {
+    window.tpI18n.apply();
   }
 }
 
 // INIT
-renderModes();
-updateBreadcrumb();
-updateCategoryFilter();
-renderExtraFilters();
+(async () => {
+
+  const lang = localStorage.getItem("tp_lang") || "ru";
+
+  if (window.tpI18n?.load) {
+    await window.tpI18n.load(lang);
+  }
+
+  renderModes();
+  updateBreadcrumb();
+  updateCategoryFilter();
+  renderExtraFilters();
+  loadOffers();
+
+})();
 
 if (selectedCategory) {
   subcatSelect.value = selectedCategory;
@@ -728,9 +746,51 @@ Object.entries(extraFilterValues).forEach(([key, value]) => {
   if (input) input.value = value;
 });
 
-loadOffers();
+window.addEventListener("tp:currency-change", () => {
+  const list = document.getElementById("offersList");
+  window.tpOfferCard.updatePrices(list);
+});
+// ===== SELL BUTTON =====
+const sellBtn = document.getElementById("sellBtn");
 
-window.addEventListener("tp:currency-change", updatePrices);
+sellBtn.addEventListener("click", () => {
+  // если не выбран режим — не пускаем
+  if (!currentMode) return;
+
+  const url = new URL("/offer-create.html", location.origin);
+  url.searchParams.set("game", GAME_ID);
+  url.searchParams.set("mode", currentMode);
+
+  location.href = url.toString();
+});
+window.addEventListener("tp:lang-change", async (e) => {
+  const lang = e.detail?.lang || (localStorage.getItem("tp_lang") || "ru");
+
+  if (window.tpI18n?.load) {
+    await window.tpI18n.load(lang);
+  }
+
+  // 🔥 ПЕРЕРИСОВЫВАЕМ ВСЁ
+  renderModes();
+  updateBreadcrumb();
+  updateCategoryFilter();
+  renderExtraFilters();
+
+  // 🔥 восстановить значения фильтров
+  Object.entries(extraFilterValues).forEach(([key, value]) => {
+    const wrap = document.querySelector(`[data-key="${key}"]`);
+    if (!wrap) return;
+
+    const select = wrap.querySelector("select");
+    if (select) select.value = value;
+
+    const input = wrap.querySelector("input");
+    if (input) input.value = value;
+  });
+
+  loadOffers();
+});
+})();
   </script>
 </body>
 </html>

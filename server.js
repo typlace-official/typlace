@@ -252,15 +252,22 @@ function authRequired(req, res, next) {
     return res.status(401).json({ success: false, message: "Сессия истекла" });
   }
 
-  const u = users.get(s.email);
-  if (u.banned) {
+const u = users.get(s.email);
+
+if (!u) {
+  return res.status(401).json({
+    success: false,
+    message: "Пользователь не найден"
+  });
+}
+
+if (u.banned) {
   sessions.delete(token);
   return res.status(403).json({
     success: false,
     message: "Аккаунт заблокирован"
   });
 }
-  if (!u) return res.status(401).json({ success: false, message: "Пользователь не найден" });
 
   // ✅ ОБНОВЛЕНИЕ СТАТУСА
   u.online = true;
@@ -283,6 +290,31 @@ function supportRequired(req, res, next) {
 
   next();
 }
+function authRequiredOptional(req, res, next) {
+  const token = getToken(req);
+
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+
+  const s = sessions.get(token);
+  if (!s || Date.now() > s.expiresAt) {
+    req.user = null;
+    return next();
+  }
+
+  const u = users.get(s.email);
+  if (!u) {
+    req.user = null;
+    return next();
+  }
+
+  req.user = u;
+  req.userEmail = u.email;
+
+  next();
+}
 
 /* ================== API ================== */
 
@@ -295,7 +327,51 @@ app.post("/auth/request-code", async (req, res) => {
     const email = String(req.body.email || "").trim().toLowerCase();
     const mode = String(req.body.mode || "").trim();
     const username = String(req.body.username || "").trim();
+// ===== TURNSTILE CHECK (только для регистрации) =====
+if (mode === "register") {
 
+  const token = req.body["cf-turnstile-response"];
+
+  if (!token) {
+    return res.json({
+      success:false,
+      message:"Подтвердите что вы не робот."
+    });
+  }
+
+  try {
+
+    const verifyRes = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({
+          secret: process.env.TURNSTILE_SECRET,
+          response: token,
+          remoteip: req.ip
+        })
+      }
+    );
+
+    const verifyData = await verifyRes.json();
+
+    if (!verifyData.success) {
+      return res.json({
+        success:false,
+        message:"Проверка безопасности не пройдена."
+      });
+    }
+
+  } catch (e) {
+    return res.json({
+      success:false,
+      message:"Ошибка проверки безопасности."
+    });
+  }
+}
     if (!isEmailValid(email)) {
       return res.json({ success: false, message: "Введите корректный email." });
     }
@@ -397,15 +473,16 @@ users.set(email, {
   online: false,
   lastSeen: Date.now(),
   balance: 0,
-banned: false,
-role: email === "dmytropolishchuk2109@gmail.com" ? "admin" : "user",
+  banned: false,
+  role: email === "dmytropolishchuk2109@gmail.com" ? "admin" : "user",
+
+  blockedUsers: [],   // ✅ ДОБАВЬ ЭТО
 
   notify: {
     site: true,
     email: true,
     telegram: false
   },
-
   telegramChatId: null
 });
 
@@ -656,7 +733,7 @@ app.post("/api/offers/:id/activate", authRequired, (req, res) => {
     return res.json({ success: false, message: "Нет доступа" });
   }
 
-  if (offer.status !== "inactive" && offer.status !== "closed") {
+  if (offer.status !== "inactive") {
     return res.json({
       success: false,
       message: "Оффер нельзя активировать"
@@ -694,6 +771,39 @@ app.post("/api/offers/:id/deactivate", authRequired, (req, res) => {
   offer.activeUntil = null;
 
   res.json({ success: true });
+});
+// ===== КЛОНИРОВАТЬ ПРОДАННЫЙ ОФФЕР =====
+app.post("/api/offers/:id/clone", authRequired, (req, res) => {
+
+  const oldOffer = offers.find(o => o.id === req.params.id);
+
+  if (!oldOffer) {
+    return res.json({ success:false, message:"Оффер не найден" });
+  }
+
+  if (oldOffer.sellerEmail !== req.user.email) {
+    return res.json({ success:false, message:"Нет доступа" });
+  }
+
+  if (oldOffer.status !== "closed") {
+    return res.json({
+      success:false,
+      message:"Можно клонировать только проданный оффер"
+    });
+  }
+
+  const newOffer = {
+    ...oldOffer,
+    id: crypto.randomUUID(),
+    status: "active",
+    createdAt: Date.now(),
+    activeUntil: Date.now() + 7 * 24 * 60 * 60 * 1000
+  };
+
+  offers.push(newOffer);
+
+  res.json({ success:true });
+
 });
 /* ================== CHATS ================== */
 
@@ -818,8 +928,8 @@ if (req.files && req.files.length > 0) {
       accountType: accountType || null,
       accountRegion: accountRegion || null,
 voiceChat:
-  voiceChat === "Есть VC" ? true :
-  voiceChat === "Нету VC" ? false :
+  voiceChat === "yes" ? true :
+  voiceChat === "no" ? false :
   null,
 
       images: imageUrls,
@@ -927,10 +1037,10 @@ if (accountRegion !== undefined) {
 }
 
 if (voiceChat !== undefined) {
-  offer.voiceChat =
-    voiceChat === "Есть VC" ? true :
-    voiceChat === "Нету VC" ? false :
-    null;
+offer.voiceChat =
+  voiceChat === "yes" ? true :
+  voiceChat === "no" ? false :
+  null;
 }
 // 🔥 ОБНОВЛЕНИЕ EXTRA ПОЛЕЙ (ТОЛЬКО ДИНАМИЧЕСКИЕ ФИЛЬТРЫ)
 
@@ -1008,7 +1118,8 @@ app.delete("/api/offers/:id", authRequired, (req, res) => {
     return res.json({ success: false, message: "Нет доступа" });
   }
 
-  offers.splice(index, 1);
+offer.status = "deleted";
+offer.activeUntil = null;
 
   res.json({ success: true });
 });
@@ -1032,8 +1143,14 @@ const {
   accountRegion,
   voiceChat,
   subsFrom,
-  subsTo
+  subsTo,
+  lang
 } = req.query;
+// 🔥 безопасный язык
+const langSafe =
+  ["ru","uk","en"].includes(lang)
+    ? lang
+    : "ru";
 
 // 🔧 нормализация range-фильтров (subscribers)
 const normalizedSubsFrom =
@@ -1044,6 +1161,20 @@ const normalizedSubsTo =
 
 // 1️⃣ базовый список
 let result = offers.filter(o => o.status === "active");
+// ===== LANGUAGE FILTER =====
+result = result.filter(o => {
+
+  if (!o.title) return false;
+
+  const titleValue = o.title?.[langSafe];
+
+  // если язык не заполнен — скрываем
+  if (!titleValue || !titleValue.trim()) return false;
+
+  return true;
+
+});
+
 
 // 2️⃣ extra-фильтры (YouTube, TikTok и т.д.)
 const extraFilters = { ...req.query };
@@ -1062,8 +1193,9 @@ const extraFilters = { ...req.query };
   "accountType",
   "accountRegion",
   "voiceChat",
-  "subsFrom",   // ✅ ДОБАВЬ
-  "subsTo"      // ✅ ДОБАВЬ
+  "subsFrom",
+  "subsTo",
+  "lang"   // ✅ ВОТ ЭТУ СТРОКУ ДОБАВЬ
 ].forEach(k => delete extraFilters[k]);
 
 // применяем extra-фильтры
@@ -1117,11 +1249,13 @@ if (mode === "Аккаунты") {
   }
 
   // Voice Chat
-  if (voiceChat !== undefined) {
-    result = result.filter(
-      o => String(o.voiceChat) === String(voiceChat)
-    );
-  }
+if (voiceChat === "yes") {
+  result = result.filter(o => o.voiceChat === true);
+}
+
+if (voiceChat === "no") {
+  result = result.filter(o => o.voiceChat === false);
+}
 }
   // ⚙️ Способ получения
 if (method) {
@@ -1195,16 +1329,24 @@ if (sort === "amount_desc") {
 
     return {
       ...o,
-      seller: seller ? {
-  username: seller.username || "Продавец",
-  userId: seller.userId || null,   // 👈 ДОБАВЬ
-  avatarUrl: seller.avatarUrl || null,
-        avatarDataUrl: seller.avatarDataUrl || null,
-        online: Boolean(seller.online),
-        rating: seller.rating || 0,
-        reviewsCount: seller.reviewsCount || 0,
-        createdAt: seller.createdAt
-      } : {
+seller: seller ? (() => {
+
+  if (!seller.userId) {
+    seller.userId = generateUserId();
+  }
+
+  return {
+    username: seller.username || "Продавец",
+    userId: seller.userId,
+    avatarUrl: seller.avatarUrl || null,
+    avatarDataUrl: seller.avatarDataUrl || null,
+    online: Boolean(seller.online),
+    rating: seller.rating || 0,
+    reviewsCount: seller.reviewsCount || 0,
+    createdAt: seller.createdAt
+  };
+
+})() : {
         username: "Продавец",
         avatarUrl: null,
         avatarDataUrl: null,
@@ -1221,32 +1363,55 @@ if (sort === "amount_desc") {
  * GET /api/offers/:id
  * получение одного объявления
  */
-app.get("/api/offers/:id", (req, res) => {
+app.get("/api/offers/:id", authRequiredOptional, (req, res) => {
   const { id } = req.params;
 
-  const offer = offers.find(o => o.id === id);
-  if (!offer) {
-    return res.json({ success: false, message: "Оффер не найден" });
-  }
+const offer = offers.find(o => o.id === id);
+
+if (!offer) {
+  return res.json({
+    success: true,
+    deleted: true
+  });
+}
+
+if (offer.status === "deleted") {
+  return res.json({
+    success: true,
+    deleted: true
+  });
+}
 
   const seller = users.get(offer.sellerEmail);
+let blockedBySeller = false;
+
+if (req.user && seller?.blockedUsers?.includes(req.user.email)) {
+  blockedBySeller = true;
+}
 
   return res.json({
     success: true,
+    blockedBySeller,
     offer: {
       ...offer,
-seller: seller ? {
-  username: seller.username || "Продавец",
-  userId: seller.userId || null,
-        avatarUrl: seller.avatarUrl && seller.avatarUrl.trim() !== ""
-          ? seller.avatarUrl
-          : null,
-        avatarDataUrl: seller.avatarDataUrl || null,
-        online: Boolean(seller.online),
-        rating: seller.rating || 0,
-        reviewsCount: seller.reviewsCount || 0,
-        createdAt: seller.createdAt
-      } : {
+seller: seller ? (() => {
+
+  if (!seller.userId) {
+    seller.userId = generateUserId();
+  }
+
+  return {
+    username: seller.username || "Продавец",
+    userId: seller.userId,
+    avatarUrl: seller.avatarUrl || null,
+    avatarDataUrl: seller.avatarDataUrl || null,
+    online: Boolean(seller.online),
+    rating: seller.rating || 0,
+    reviewsCount: seller.reviewsCount || 0,
+    createdAt: seller.createdAt
+  };
+
+})() : {
         username: "Продавец",
         avatarUrl: null,
         avatarDataUrl: null,
@@ -1271,19 +1436,35 @@ app.post("/api/chats/start", authRequired, (req, res) => {
   const { offerId } = req.body;
 
   const offer = offers.find(o => o.id === offerId);
+  
   if (!offer) {
     return res.json({ success:false, message:"Оффер не найден" });
   }
 
-  // 👇 ВСТАВИТЬ ВОТ СЮДА
   if (offer.sellerEmail === req.user.email) {
+    const seller = users.get(offer.sellerEmail);
+
+if (seller?.blockedUsers?.includes(req.user.email)) {
+  return res.json({
+    success: false,
+    message: "Товар недоступен"
+  });
+}
     return res.json({
       success: false,
       message: "Нельзя писать самому себе"
     });
   }
+// 🔒 Если продавец заблокировал покупателя
+const seller = users.get(offer.sellerEmail);
 
-  // 🔥 ИЩЕМ ЧАТ ТОЛЬКО ПО ДВУМ УЧАСТНИКАМ
+if (seller?.blockedUsers?.includes(req.user.email)) {
+  return res.json({
+    success: false,
+    message: "Товар недоступен"
+  });
+}
+
   let chat = chats.find(c =>
     (c.buyerEmail === req.user.email && c.sellerEmail === offer.sellerEmail) ||
     (c.sellerEmail === req.user.email && c.buyerEmail === offer.sellerEmail)
@@ -1294,10 +1475,13 @@ app.post("/api/chats/start", authRequired, (req, res) => {
       id: crypto.randomUUID(),
       buyerEmail: req.user.email,
       sellerEmail: offer.sellerEmail,
+      offerId: offer.id,      // 🔥 ВАЖНО
       createdAt: Date.now(),
       blocked: false
     };
     chats.push(chat);
+  } else {
+    chat.offerId = offer.id;  // 🔥 обновляем если перешёл с другого оффера
   }
 
   res.json({ success:true, chat });
@@ -1305,25 +1489,49 @@ app.post("/api/chats/start", authRequired, (req, res) => {
 
 // ===== GET MY CHATS =====
 app.get("/api/chats", authRequired, (req, res) => {
+
   const myEmail = req.user.email;
 
   const myChats = chats
-    .filter(c => c.buyerEmail === myEmail || c.sellerEmail === myEmail)
+    .filter(c =>
+      (c.buyerEmail === myEmail || c.sellerEmail === myEmail) &&
+      !c.deletedBy?.includes(myEmail)
+    )
     .map(c => {
-      const otherEmail = (c.buyerEmail === myEmail) ? c.sellerEmail : c.buyerEmail;
+
+      const otherEmail =
+        c.buyerEmail === myEmail
+          ? c.sellerEmail
+          : c.buyerEmail;
+
       const otherUser = users.get(otherEmail);
+
+      // 🔥 ИЩЕМ ПОСЛЕДНЕЕ СООБЩЕНИЕ
+      const chatMessages = messages
+        .filter(m => m.chatId === c.id)
+        .sort((a,b) => b.createdAt - a.createdAt);
+
+      const lastMessage = chatMessages[0] || null;
 
       return {
         ...c,
-otherUser: otherUser ? {
-  email: otherUser.email,
-  username: otherUser.username,
-  avatarUrl: otherUser.avatarUrl || null,
-  avatarDataUrl: otherUser.avatarDataUrl || null,
-  online: Boolean(otherUser.online),
-  lastSeen: otherUser.lastSeen || null
-} : null
+        lastMessage,
+        blockedByMe: req.user.blockedUsers?.includes(otherEmail) || false,
+        otherUser: otherUser ? {
+          email: otherUser.email,
+          username: otherUser.username,
+          avatarUrl: otherUser.avatarUrl || null,
+          avatarDataUrl: otherUser.avatarDataUrl || null,
+          online: Boolean(otherUser.online),
+          lastSeen: otherUser.lastSeen || null
+        } : null
       };
+    })
+    // 🔥 СОРТИРОВКА ПО ПОСЛЕДНЕМУ СООБЩЕНИЮ
+    .sort((a,b) => {
+      const aTime = a.lastMessage?.createdAt || a.createdAt;
+      const bTime = b.lastMessage?.createdAt || b.createdAt;
+      return bTime - aTime;
     });
 
   res.json({ success: true, chats: myChats });
@@ -1331,42 +1539,123 @@ otherUser: otherUser ? {
 
 // ===== MESSAGES =====
 app.post("/api/chats/:id/messages", authRequired, (req,res)=>{
+
   const { text, media } = req.body;
 
-  const message = {
-  id: crypto.randomUUID(),
-  chatId: req.params.id,
-  fromEmail: req.user.email,
-  text,
-  media: media || [],
-  createdAt: Date.now(),
-  read: false
-};
-
-messages.push(message);
-
   const chat = chats.find(c => c.id === req.params.id);
-
-  if (chat) {
-    const targetEmail =
-      chat.buyerEmail === req.user.email
-        ? chat.sellerEmail
-        : chat.buyerEmail;
-
-    const targetSocket = onlineSockets.get(targetEmail);
-if (targetSocket) {
-  io.to(targetSocket).emit("new-message", message);
-}
-
-// 🔥 отправителю тоже (если он онлайн)
-const mySocket = onlineSockets.get(req.user.email);
-if (mySocket) {
-  io.to(mySocket).emit("new-message", message);
-}
+  if (!chat) {
+    return res.json({ success:false });
   }
+
+  const myEmail = req.user.email;
+
+  const otherEmail =
+    chat.buyerEmail === myEmail
+      ? chat.sellerEmail
+      : chat.buyerEmail;
+// 🔥 ВОССТАНАВЛИВАЕМ ЧАТ ЕСЛИ ОН БЫЛ УДАЛЁН
+if (chat.deletedBy) {
+
+  // если получатель удалял чат
+  if (chat.deletedBy.includes(otherEmail)) {
+
+    const otherUser = users.get(otherEmail);
+
+    // если получатель НЕ заблокировал отправителя
+    if (!otherUser?.blockedUsers?.includes(myEmail)) {
+      chat.deletedBy = chat.deletedBy.filter(e => e !== otherEmail);
+    }
+
+  }
+
+}
+
+  // 🔒 если я заблокировал его — нельзя писать
+  if (req.user.blockedUsers && req.user.blockedUsers.includes(otherEmail)) {
+    return res.json({
+      success:false,
+      message:"Пользователь заблокирован"
+    });
+  }
+
+  // ✅ только теперь создаём сообщение
+  const message = {
+    id: crypto.randomUUID(),
+    chatId: req.params.id,
+    fromEmail: req.user.email,
+    text,
+    media: media || [],
+    createdAt: Date.now(),
+    read: false
+  };
+
+  messages.push(message);
+
+const chatData = chats.find(c => c.id === message.chatId);
+
+if (chatData) {
+
+  const participants = [chatData.buyerEmail, chatData.sellerEmail];
+
+  participants.forEach(email => {
+
+    const user = users.get(email);
+    if (!user) return;
+
+    // 🔒 если получатель заблокировал отправителя — не шлём сокет
+    if (user.blockedUsers?.includes(message.fromEmail)) {
+      return;
+    }
+
+    const socketId = onlineSockets.get(email);
+    if (socketId) {
+      io.to(socketId).emit("new-message", message);
+    }
+
+  });
+}
 
   res.json({ success:true, message });
 });
+// ===== GET ONE CHAT =====
+app.get("/api/chats/:id", authRequired, (req, res) => {
+
+  const chat = chats.find(c => c.id === req.params.id);
+  if (!chat) {
+    return res.json({ success:false });
+  }
+
+  // проверка доступа
+  if (
+    chat.buyerEmail !== req.user.email &&
+    chat.sellerEmail !== req.user.email
+  ) {
+    return res.json({ success:false });
+  }
+
+  const otherEmail =
+    chat.buyerEmail === req.user.email
+      ? chat.sellerEmail
+      : chat.buyerEmail;
+
+  const otherUser = users.get(otherEmail);
+
+  res.json({
+    success: true,
+    chat: {
+      ...chat,
+      otherUser: otherUser ? {
+        email: otherUser.email,
+        username: otherUser.username,
+        avatarUrl: otherUser.avatarUrl || null,
+        avatarDataUrl: otherUser.avatarDataUrl || null,
+        online: Boolean(otherUser.online),
+        lastSeen: otherUser.lastSeen || null
+      } : null
+    }
+  });
+});
+
 // ===== GET MESSAGES =====
 app.get("/api/chats/:id/messages", authRequired, (req, res) => {
   const chatId = req.params.id;
@@ -1434,8 +1723,10 @@ app.post("/api/reviews", authRequired, (req, res) => {
   reviews.push(review);
 
   // пересчёт рейтинга продавца
-  const seller = users.get(order.sellerEmail);
-  const sellerReviews = reviews.filter(r => r.sellerEmail === seller.email);
+const seller = users.get(order.sellerEmail);
+if (!seller) {
+  return res.json({ success:false, message:"Продавец не найден" });
+}
 
   seller.reviewsCount = sellerReviews.length;
 
@@ -1461,76 +1752,86 @@ app.post("/api/orders/create", authRequired, (req, res) => {
     return res.json({ success: false, message: "Оффер не найден" });
   }
 
+  // ❗ Нельзя купить у себя
   if (offer.sellerEmail === req.user.email) {
     return res.json({ success: false, message: "Нельзя купить у себя" });
   }
 
+  // 🔒 ПРОВЕРКА БЛОКИРОВКИ
+  const seller = users.get(offer.sellerEmail);
+
+  if (seller?.blockedUsers?.includes(req.user.email)) {
+    return res.json({
+      success: false,
+      message: "Товар недоступен"
+    });
+  }
+
   if (offer.status !== "active") {
-  return res.json({ success:false, message:"Оффер недоступен" });
-}
+    return res.json({ success:false, message:"Оффер недоступен" });
+  }
 
-if (offer.activeUntil && Date.now() > offer.activeUntil) {
-  offer.status = "inactive";
-  return res.json({ success:false, message:"Оффер истёк" });
-}
+  if (offer.activeUntil && Date.now() > offer.activeUntil) {
+    offer.status = "inactive";
+    return res.json({ success:false, message:"Оффер истёк" });
+  }
 
-  // цена продавца (что он получит)
-const net = roundMoney(offer.priceNet ?? offer.price);
+  const net = roundMoney(offer.priceNet ?? offer.price);
+  const gross = roundMoney(offer.price ?? calcGrossFromNet(net));
+  const commission = roundMoney(gross - net);
 
-// цена для покупателя (с комиссией)
-const gross = roundMoney(offer.price ?? calcGrossFromNet(net));
+  if (req.user.balance < gross) {
+    return res.json({ success: false, message: "Недостаточно средств" });
+  }
 
-// комиссия маркетплейса
-const commission = roundMoney(gross - net);
+  // 💰 Списываем средства
+  req.user.balance -= gross;
 
-if (req.user.balance < gross) {
-  return res.json({ success: false, message: "Недостаточно средств" });
-}
-
-/* 1️⃣ СПИСЫВАЕМ ДЕНЬГИ (ESCROW) */
-req.user.balance -= gross;
-
-  /* 2️⃣ ГАРАНТИРУЕМ ЧАТ */
+  // 📩 Гарантируем чат
   let chat = chats.find(c =>
-  (c.buyerEmail === req.user.email && c.sellerEmail === offer.sellerEmail) ||
-  (c.sellerEmail === req.user.email && c.buyerEmail === offer.sellerEmail)
-);
+    (c.buyerEmail === req.user.email && c.sellerEmail === offer.sellerEmail) ||
+    (c.sellerEmail === req.user.email && c.buyerEmail === offer.sellerEmail)
+  );
 
   if (!chat) {
-  chat = {
-    id: crypto.randomUUID(),
-    buyerEmail: req.user.email,
-    sellerEmail: offer.sellerEmail,
-    createdAt: Date.now(),
-    blocked: false
-  };
-  chats.push(chat);
-}
+    chat = {
+      id: crypto.randomUUID(),
+      buyerEmail: req.user.email,
+      sellerEmail: offer.sellerEmail,
+      createdAt: Date.now(),
+      blocked: false
+    };
+    chats.push(chat);
+  }
 
-  /* 3️⃣ СОЗДАЁМ ЗАКАЗ */
-  const order = {
+const order = {
   id: crypto.randomUUID(),
   orderNumber: generateOrderCode(),
   offerId,
   chatId: chat.id,
   buyerEmail: req.user.email,
   sellerEmail: offer.sellerEmail,
-
-  price: gross,          // сколько заплатил покупатель
-  sellerAmount: net,     // сколько получит продавец
-  commission: commission, // комиссия TyPlace
-
+  price: gross,
+  sellerAmount: net,
+  commission: commission,
   status: "pending",
-  createdAt: Date.now()
+  createdAt: Date.now(),
+
+  // 🔥 СНИМОК ОФФЕРА НА МОМЕНТ ПОКУПКИ
+  offerSnapshot: {
+    id: offer.id,
+    title: offer.title,
+    description: offer.description,
+    imageUrl: offer.imageUrl,
+    price: offer.price
+  }
 };
 
   orders.push(order);
 
-  /* 4️⃣ СКРЫВАЕМ ОФФЕР ИЗ КАТАЛОГА */
   offer.status = "closed";
-offer.activeUntil = null;
+  offer.activeUntil = null;
 
-  /* 5️⃣ СИСТЕМНОЕ СООБЩЕНИЕ В ЧАТ */
   messages.push({
     id: crypto.randomUUID(),
     chatId: chat.id,
@@ -1538,11 +1839,13 @@ offer.activeUntil = null;
     text: "🧾 Покупатель создал заказ. Средства заморожены.",
     createdAt: Date.now()
   });
-const seller = users.get(order.sellerEmail);
-sendNotification(seller, {
-  type: "order",
-  text: "У вас новый заказ на TyPlace"
-});
+
+  const sellerUser = users.get(order.sellerEmail);
+  sendNotification(sellerUser, {
+    type: "order",
+    text: "У вас новый заказ на TyPlace"
+  });
+
   res.json({ success: true, order });
 });
 
@@ -1729,6 +2032,50 @@ app.get("/api/users/:email/reviews", (req, res) => {
 
   res.json({ success: true, reviews: result });
 });
+// 🔥 Получить отзывы по userId
+app.get("/api/users/:id/reviews-by-id", (req, res) => {
+
+  const userId = String(req.params.id || "").trim();
+
+  const user = Array.from(users.values())
+    .find(u => u.userId === userId);
+
+  if (!user) {
+    return res.json({ success:false, message:"Пользователь не найден" });
+  }
+
+  const result = reviews
+    .filter(r => r.sellerEmail === user.email)
+    .map(r => {
+
+      const order = orders.find(o => o.id === r.orderId);
+      const snapshot = order?.offerSnapshot;
+      const buyer = users.get(r.buyerEmail);
+
+      return {
+        id: r.id,
+        rating: r.rating,
+        text: r.text,
+        createdAt: r.createdAt,
+
+        buyer: {
+          username: buyer?.username || "Покупатель",
+          avatarUrl: buyer?.avatarUrl || null,
+          avatarDataUrl: buyer?.avatarDataUrl || null
+        },
+
+offer: {
+  id: snapshot?.id || null,
+  description: snapshot?.description?.ru || "",
+  imageUrl: snapshot?.imageUrl || null,
+  price: snapshot?.price || order?.price || 0
+}
+      };
+    });
+
+  res.json({ success: true, reviews: result });
+});
+
 // Публичный профиль по ID
 app.get("/api/users/by-id/:id", (req, res) => {
 
@@ -1741,10 +2088,30 @@ app.get("/api/users/by-id/:id", (req, res) => {
     return res.json({ success:false, message:"Пользователь не найден" });
   }
 
-  const userOffers = offers.filter(o =>
-    o.sellerEmail === user.email &&
-    o.status === "active"
-  );
+  // 🔥 берём активные офферы пользователя
+  const userOffers = offers
+    .filter(o =>
+      o.sellerEmail === user.email &&
+      o.status === "active"
+    )
+    .map(o => {
+
+      const seller = users.get(o.sellerEmail);
+
+      return {
+        ...o,
+        seller: seller ? {
+          username: seller.username || "Продавец",
+          userId: seller.userId || null,
+          avatarUrl: seller.avatarUrl || null,
+          avatarDataUrl: seller.avatarDataUrl || null,
+          online: Boolean(seller.online),
+          rating: seller.rating || 0,
+          reviewsCount: seller.reviewsCount || 0,
+          createdAt: seller.createdAt
+        } : null
+      };
+    });
 
   res.json({
     success:true,
@@ -1787,25 +2154,90 @@ app.post("/api/chats/:id/read", authRequired, (req, res) => {
 app.get("/api/chats/unread-count", authRequired, (req, res) => {
   const myEmail = req.user.email;
 
-  // мои чаты
-  const myChats = chats.filter(c =>
-    c.buyerEmail === myEmail || c.sellerEmail === myEmail
-  );
+const myChats = chats.filter(c =>
+  (c.buyerEmail === myEmail || c.sellerEmail === myEmail) &&
+  !c.deletedBy?.includes(myEmail)
+);
 
   const myChatIds = myChats.map(c => c.id);
 
-  // считаем сообщения:
-  const unread = messages.filter(m =>
-    myChatIds.includes(m.chatId) &&
-    m.fromEmail !== myEmail &&
-    m.read === false
-  );
+  const unread = messages.filter(m => {
+
+    if (!myChatIds.includes(m.chatId)) return false;
+    if (m.fromEmail === myEmail) return false;
+    if (m.read === true) return false;
+
+    // если я заблокировал этого пользователя — не считаем
+    if (req.user.blockedUsers?.includes(m.fromEmail)) {
+      return false;
+    }
+
+    return true;
+  });
 
   res.json({
     success: true,
     count: unread.length
   });
 });
+
+// ===== BLOCK / UNBLOCK USER =====
+app.post("/api/users/block", authRequired, (req, res) => {
+
+  const { chatId } = req.body;
+  const chat = chats.find(c => c.id === chatId);
+
+  if (!chat) {
+    return res.json({ success:false });
+  }
+
+  const myEmail = req.user.email;
+
+  const otherEmail =
+    chat.buyerEmail === myEmail
+      ? chat.sellerEmail
+      : chat.buyerEmail;
+
+  if (!otherEmail) {
+    return res.json({ success:false });
+  }
+
+  if (!req.user.blockedUsers) {
+    req.user.blockedUsers = [];
+  }
+
+  const alreadyBlocked = req.user.blockedUsers.includes(otherEmail);
+
+  if (alreadyBlocked) {
+    // разблокировать
+    req.user.blockedUsers =
+      req.user.blockedUsers.filter(e => e !== otherEmail);
+
+    return res.json({ success:true, blocked:false });
+  }
+
+  // заблокировать
+  req.user.blockedUsers.push(otherEmail);
+
+  return res.json({ success:true, blocked:true });
+
+});
+app.delete("/api/chats/:id", authRequired, (req, res) => {
+
+  const chat = chats.find(c => c.id === req.params.id);
+  if (!chat) return res.json({ success:false });
+
+  const myEmail = req.user.email;
+
+  if (!chat.deletedBy) chat.deletedBy = [];
+
+  if (!chat.deletedBy.includes(myEmail)) {
+    chat.deletedBy.push(myEmail);
+  }
+
+  res.json({ success:true });
+});
+
 /* ================== SOCKET.IO ================== */
 
 io.on("connection", (socket) => {
@@ -1816,7 +2248,6 @@ socket.on("auth", ({ token }) => {
     const s = sessions.get(String(token || ""));
     if (!s) return;
 
-    // сессия могла истечь
     if (Date.now() > s.expiresAt) {
       sessions.delete(token);
       return;
@@ -1824,6 +2255,16 @@ socket.on("auth", ({ token }) => {
 
     onlineSockets.set(s.email, socket.id);
     socket.data.email = s.email;
+
+    // 🔥 ВОТ ЭТО ДОБАВЛЕНО
+    const myChats = chats.filter(c =>
+      c.buyerEmail === s.email || c.sellerEmail === s.email
+    );
+
+    myChats.forEach(c => {
+      socket.join("chat:" + c.id);
+    });
+
   } catch(e) {}
 });
 
@@ -2457,6 +2898,6 @@ setInterval(() => {
 }, 60 * 60 * 1000);
 
 /* ================== START ================== */
-server.listen(PORT, () => {
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server running: http://localhost:${PORT}`);
 });

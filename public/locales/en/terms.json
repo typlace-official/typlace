@@ -1,0 +1,224 @@
+{
+  "title": "User Agreement",
+
+  "meta": {
+    "line1": "Agreement on the use of the TyPlace marketplace (public offer).",
+    "edition": "Edition:",
+    "year": "2026",
+    "updated": "Last updated:",
+    "updatedDate": "2026-02-27",
+    "line3": "Contacts for legal inquiries:"
+  },
+
+  "note": {
+    "bold": "In short:",
+    "text1": "TyPlace is a platform where users conclude transactions with each other. TyPlace does not sell goods on its own behalf and is not a party to transactions, but provides tools including escrow (secure transaction), chat, and support."
+  },
+
+  "defs": {
+    "title": "1. Terms and Definitions",
+
+    "siteBold": "Website / Platform —",
+    "siteText": "the TyPlace online platform (including website, mobile versions, APIs, interfaces).",
+
+    "operatorBold": "Operator / Administrator —",
+    "operatorText1": "the entity that manages the Platform and ensures its operation (details are published on the page",
+    "aboutLink": "About",
+    "contactsLink": "Contacts",
+    "or": "or",
+
+    "userBold": "User —",
+    "userText": "an individual using the Platform.",
+
+    "sellerBold": "Seller —",
+    "sellerText": "a User who posts listings and offers digital goods/services.",
+
+    "buyerBold": "Buyer —",
+    "buyerText": "a User purchasing digital goods/services.",
+
+    "digitalBold": "Digital goods and services —",
+    "digitalText": "intangible goods/services intended for use in a digital environment (games, accounts, in-game items/currency, digital services, etc.).",
+
+    "adBold": "Listing —",
+    "adText": "a Seller’s publication describing the offer, price, terms, and deadlines.",
+
+    "dealBold": "Transaction —",
+    "dealText": "an agreement between the Seller and the Buyer regarding a specific listing.",
+
+    "escrowBold": "Escrow / Secure Transaction —",
+    "escrowText": "a mechanism for holding the Buyer’s funds until confirmation of transaction completion.",
+
+    "balanceBold": "Balance —",
+    "balanceText": "a virtual record of funds within the Platform (not a bank account)."
+  },
+
+  "accept": {
+    "title": "2. Acceptance of Terms",
+    "p1": "2.1. This Agreement constitutes a public offer. Registration, account login, posting listings, or using Platform functions signifies full and unconditional acceptance of these terms.",
+    "p2": "2.2. If the User does not agree with the terms, they must discontinue using the Platform."
+  },
+
+  "eligibility": {
+    "title": "3. Age and Legal Capacity",
+    "p1": "3.1. Purchase/sale functions and payment processing are available to individuals with sufficient legal capacity to enter into transactions.",
+    "p2": "3.2. The service is intended for individuals aged 18+. If the laws of the User’s country require a different age or parental/guardian consent, the User agrees to comply with such requirements."
+  },
+
+  "account": {
+    "title": "4. Account",
+    "p1": "4.1. Registration is required to access extended features.",
+    "p2": "4.2. The User must keep login credentials confidential. All actions performed from the User’s account are deemed performed by the User.",
+    "p3": "4.3. It is prohibited to transfer accounts to third parties, use other users’ accounts, or create accounts to bypass restrictions.",
+    "p4": "4.4. The Operator may request proof of account ownership in case of suspected compromise."
+  },
+
+  "platform": {
+    "title": "5. Platform Status",
+    "p1": "5.1. TyPlace acts as an informational intermediary and technological platform providing Users with tools to interact and conclude transactions.",
+    "p2": "5.2. The Operator is not a seller of digital goods/services, does not become a party to transactions between Users, and does not acquire ownership of transaction items.",
+    "p3": "5.3. The Operator may provide service functions (escrow, support, rules, anti-fraud) and charge a service fee/commission."
+  },
+
+  "listings": {
+    "title": "6. Listings (Seller Content)",
+    "p1": "6.1. The Seller independently posts listings and is responsible for their content.",
+    "p2": "6.2. The Seller guarantees they have the right to offer the goods/services and that the listing does not infringe third-party rights.",
+    "p3": "6.3. The Seller undertakes to specify accurate terms: composition of goods/services, limitations, deadlines, and Buyer requirements.",
+    "p4": "6.4. The Operator may hide or remove listings in case of rule violations, suspected fraud, or legal requirements."
+  },
+
+  "prohibited": {
+    "title": "7. Prohibited Actions and Content",
+    "p1": "7.1. The following is prohibited:",
+    "l1": "posting illegal goods/services or content infringing third-party rights;",
+    "l2": "fraud, deception, misleading information, substitution of transaction subject;",
+    "l3": "bypassing escrow or commission, encouraging off-platform payments, exchanging contacts to bypass rules;",
+    "l4": "sharing card or banking details in chats;",
+    "l5": "malware, hacking data, phishing, exploitation of vulnerabilities;",
+    "l6": "threats, harassment, hate speech, prohibited content;",
+    "l7": "violating rules of specific games/services if this makes the transaction illegal or prohibited.",
+    "p2": "7.2. The Operator may apply measures (restrictions, suspension, freezing payouts) in case of violations."
+  },
+
+  "deal": {
+    "title": "8. Transaction and Communication",
+    "p1": "8.1. Transactions are concluded directly between Seller and Buyer through the Platform interface.",
+    "p2": "8.2. The Platform chat is used to discuss terms. This helps document agreements and evidence.",
+    "p3": "8.3. Users must act in good faith: avoid delays, abuse of disputes, or manipulation of reviews."
+  },
+
+  "escrow": {
+    "title": "9. Escrow (Secure Transaction)",
+    "p1": "9.1. When escrow is used, Buyer’s funds are held until transaction completion.",
+    "p2": "9.2. Payment to the Seller is made after confirmation of completion or dispute resolution.",
+    "p3": "9.3. The Operator may temporarily hold funds in case of suspected fraud, chargeback, or rule violations.",
+    "p4": "9.4. Escrow reduces risks but does not guarantee absolute protection."
+  },
+
+  "fees": {
+    "title": "10. Fees and Charges",
+    "p1": "10.1. The Platform may charge a service fee (commission) for facilitating transactions.",
+    "p2": "10.2. The commission may vary depending on category, country, or payment method.",
+    "p3": "10.3. Additional payment provider fees may apply.",
+    "p4": "10.4. Use of the Platform constitutes acceptance of the current terms."
+
+},
+
+  "withdrawals": {
+    "title": "11. Payouts and Withdrawals",
+    "p1": "11.1. The Seller gains access to funds after completion of transactions and necessary checks.",
+    "p2": "11.2. The Operator may set technical limits and delays for withdrawals.",
+    "p3": "11.3. The User is responsible for the accuracy of payment details."
+  },
+
+  "refunds": {
+    "title": "12. Cancellations, Refunds and Chargebacks",
+    "p1": "12.1. A transaction may be cancelled by mutual agreement of the parties or through support.",
+    "p2": "12.2. After confirmation of fulfillment, refunds may not be possible for digital goods.",
+    "p3": "12.3. In case of a chargeback, the Operator may temporarily freeze funds."
+  },
+
+  "disputes": {
+    "title": "13. Disputes and Support",
+    "p1": "13.1. In the event of a dispute, the User must contact support and provide evidence.",
+    "p2": "13.2. The Operator reviews the dispute and may decide on the allocation of funds.",
+    "p3": "13.3. Users agree to cooperate with support."
+  },
+
+  "moderation": {
+    "title": "14. Moderation, Suspensions, Measures",
+    "p1": "14.1. The Operator may:",
+    "l1": "restrict account access;",
+    "l2": "remove or hide listings;",
+    "l3": "freeze balance or payouts;",
+    "l4": "cancel transactions in case of violations;",
+    "l5": "request supporting documents.",
+    "p2": "14.2. Measures are applied to protect users and prevent fraud."
+  },
+
+  "ip": {
+    "title": "15. Intellectual Property",
+    "p1": "15.1. All rights to the design, code, and TyPlace brand belong to the Operator.",
+    "p2": "15.2. The User grants the right to publish listing content on the Platform.",
+    "p3": "15.3. It is prohibited to copy Platform elements or extract data without permission."
+  },
+
+  "privacy": {
+    "title": "16. Personal Data",
+    "p1": "16.1. Personal data is processed in accordance with the Privacy Policy published on the Platform.",
+    "p2": "16.2. The User agrees to data processing for contract performance, security, anti-fraud, support, and compliance with legal requirements."
+  },
+
+  "aml": {
+    "title": "17. AML/KYC, Verification and Security",
+    "p1": "17.1. The Operator may conduct checks of transactions and accounts and request documents to comply with provider requirements and prevent fraud.",
+    "p2": "17.2. If information is not provided, the Operator may restrict functions, suspend withdrawals, or terminate the agreement.",
+    "p3": "17.3. The Operator may use automated risk analysis and anti-fraud systems."
+  },
+
+  "international": {
+    "title": "18. International Nature",
+    "p1": "18.1. The Platform is available to users from different countries. The User is responsible for compliance with the laws of their jurisdiction.",
+    "p2": "18.2. If the use of the Platform is prohibited by the laws of the User’s country, the User must refrain from using the service."
+  },
+
+  "liability": {
+    "title": "19. Limitation of Liability",
+    "p1": "19.1. The Platform is provided on an \"as is\" basis. The Operator does not guarantee uninterrupted service.",
+    "p2": "19.2. The Operator is not responsible for Users’ actions or the fulfillment of obligations between transaction parties.",
+    "p3": "19.3. The Operator’s liability is limited to the amount of the service fee actually received for the disputed transaction.",
+    "p4": "19.4. The Operator is not liable for indirect damages, lost profits, or reputational losses."
+  },
+
+  "force": {
+    "title": "20. Force Majeure",
+    "p1": "20.1. The parties are released from liability for failure to perform obligations due to force majeure circumstances."
+  },
+
+  "changes": {
+    "title": "21. Changes to Terms",
+    "p1": "21.1. The Operator may amend the Agreement by publishing a new version on the Platform.",
+    "p2": "21.2. Continued use of the Platform constitutes acceptance of the updated version."
+  },
+
+  "law": {
+    "title": "22. Governing Law and Claims Procedure",
+    "p1": "22.1. The Agreement is governed by the laws of the Operator’s country of registration.",
+    "p2": "22.2. At the time of publication, the Operator is registered in Ukraine.",
+    "p3": "22.3. Claims must be submitted to support or the legal email address."
+  },
+
+  "final": {
+    "title": "23. Final Provisions",
+    "p1": "23.1. If any provision is declared invalid, the remaining provisions remain in force.",
+    "p2": "23.2. The Operator may assign rights and obligations as part of a business transfer.",
+    "p3": "23.3. The User confirms that they have read and accepted these terms."
+  },
+
+  "contacts": {
+    "text": "If you have questions:",
+    "link_contacts": "Contacts",
+    "or": "or",
+    "link_help": "Help Center"
+  }
+}

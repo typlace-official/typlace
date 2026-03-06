@@ -1,0 +1,193 @@
+/* ===== OFFER CARD COMPONENT ===== */
+
+.offer-card{
+  width:100%;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+/* IMAGE */
+
+.offer-image{
+  position:relative;
+  width:100%;
+  aspect-ratio:4 / 3;
+  background:#f3f4f6;
+  overflow:hidden;
+}
+
+.offer-image img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+/* AMOUNT BADGE */
+
+.offer-amount-badge{
+  position:absolute;
+  top:8px;
+  right:8px;
+  z-index:3;
+  background:rgba(0,0,0,0.75);
+  color:#fff;
+  font-size:13px;
+  font-weight:800;
+  padding:4px 8px;
+  border-radius:999px;
+  pointer-events:none;
+  backdrop-filter:blur(4px);
+}
+
+/* BODY */
+
+.offer-body{
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  flex:1;
+}
+
+/* TITLE */
+
+.offer-title{
+  font-size:14px;
+  font-weight:700;
+  line-height:1.35;
+  display:-webkit-box;
+  -webkit-line-clamp:4;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  min-height:76px;
+  word-break:break-word;
+  overflow-wrap:anywhere;
+}
+
+/* PRICE */
+
+.offer-price{
+  font-size:18px;
+  font-weight:800;
+  margin:6px 0;
+}
+
+/* SELLER */
+
+.offer-seller{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  margin-top:auto;
+}
+
+.offer-seller > div{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:2px;
+}
+
+/* AVATAR */
+
+.seller-avatar{
+  position:relative;
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  background:#e5e7eb;
+  flex-shrink:0;
+}
+
+.seller-avatar img{
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  object-fit:cover;
+  display:block;
+}
+
+/* ONLINE DOT */
+
+.seller-status{
+  position:absolute;
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  right:-3px;
+  bottom:-3px;
+  background:#22c55e;
+  border:2px solid #fff;
+  z-index:3;
+}
+
+/* SELLER TEXT */
+
+.seller-name{
+  font-size:13px;
+  font-weight:600;
+}
+
+.seller-rating{
+  font-size:12px;
+  color:#6b7280;
+  font-weight:400;
+}
+
+.rating-hidden{
+  color:#6b7280;
+  font-weight:600;
+}
+
+/* STARS */
+
+.stars{
+  display:inline-flex;
+  gap:2px;
+  font-size:14px;
+  line-height:1;
+}
+
+.star{ color:#9ca3af; }
+.star.filled{ color:currentColor; }
+
+.stars.r5{ color:#facc15; }
+.stars.r4{ color:#fbbf24; }
+.stars.r3{ color:#f59e0b; }
+.stars.r2{ color:#ef4444; }
+.stars.r1{ color:#991b1b; }
+
+/* HEART */
+
+.offer-heart{
+  position:absolute;
+  bottom:12px;
+  right:12px;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:rgba(255,255,255,0.9);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  z-index:5;
+  border:1px solid #e5e7eb;
+}
+
+.offer-heart svg{
+  width:18px;
+  height:18px;
+  fill:none;
+  stroke:#6b7280;
+  stroke-width:2;
+}
+
+.offer-heart.active svg{
+  fill:#ef4444;
+  stroke:#ef4444;
+}

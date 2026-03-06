@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<script>
+  document.titleKey = "page.title";
+</script>
+
+<title>TyPlace</title>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<link rel="stylesheet" href="/header.css">
+<link rel="stylesheet" href="/footer.css">
+
+<style>
+body{
+  margin:0;
+  background:#f6f7f9;
+  font-family:Inter, Arial, sans-serif;
+  color:#111827;
+}
+
+html, body {
+  height: 100%;
+}
+
+.page{
+  flex:1;
+  max-width:1000px;
+  margin:40px auto;
+  padding:0 16px 80px;
+}
+
+.card{
+  background:#ffffff;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  padding:32px;
+}
+
+h1{
+  font-size:28px;
+  font-weight:900;
+  margin-bottom:24px;
+}
+
+.section{
+  margin-bottom:26px;
+}
+
+.section:last-child{
+  margin-bottom:0;
+}
+
+.section-title{
+  font-size:16px;
+  font-weight:800;
+  margin-bottom:8px;
+}
+
+.section-text{
+  font-size:14px;
+  line-height:1.7;
+  color:#4b5563;
+  margin-bottom:6px;
+}
+
+.email{
+  display:inline-block;
+  font-weight:700;
+  color:#2563eb;
+  text-decoration:none;
+  margin-top:4px;
+}
+
+.email:hover{
+  text-decoration:underline;
+}
+
+.help-link{
+  color:#2563eb;
+  font-weight:600;
+  text-decoration:none;
+}
+
+.help-link:hover{
+  text-decoration:underline;
+}
+
+@media(max-width:600px){
+  h1{ font-size:22px; }
+  .card{ padding:20px; }
+}
+</style>
+</head>
+
+<body>
+
+<div id="header-container"></div>
+
+<main class="page">
+<div class="card">
+
+<h1 data-i18n="page.title"></h1>
+
+<div class="section">
+  <div class="section-title" data-i18n="page.legal.title"></div>
+  <div class="section-text" data-i18n="page.legal.text"></div>
+  <a href="mailto:legal@typlace.com" class="email">
+    legal@typlace.com
+  </a>
+</div>
+
+<div class="section">
+  <div class="section-title" data-i18n="page.finance.title"></div>
+  <div class="section-text" data-i18n="page.finance.text"></div>
+  <a href="mailto:finance@typlace.com" class="email">
+    finance@typlace.com
+  </a>
+</div>
+
+<div class="section">
+  <div class="section-title" data-i18n="page.partners.title"></div>
+  <div class="section-text" data-i18n="page.partners.text"></div>
+  <a href="mailto:partners@typlace.com" class="email">
+    partners@typlace.com
+  </a>
+</div>
+
+<div class="section">
+  <div class="section-title" data-i18n="page.support.title"></div>
+  <div class="section-text">
+    <span data-i18n="page.support.text1"></span>
+    <a href="/help.html" class="help-link" data-i18n="page.support.link"></a>.
+  </div>
+</div>
+
+</div>
+</main>
+
+<div id="footer-container"></div>
+
+<script src="/i18n.js"></script>
+<script src="/header.js"></script>
+<script src="/footer.js"></script>
+
+</body>
+</html>

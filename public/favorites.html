@@ -20,14 +20,11 @@
 
   <div class="container">
 
-    <h2 style="margin:10px 0 20px;">Избранные</h2>
+<h2 style="margin:10px 0 20px;" data-i18n="common.favorites"></h2>
 
     <div id="offersList" class="offers-list"></div>
 
-    <div id="empty" class="empty" style="display:none;">
-      У тебя пока нет избранных предложений
-    </div>
-
+<div id="empty" class="empty" style="display:none;"></div>
   </div>
 </div>
 </main>
@@ -36,9 +33,11 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
+<script src="/i18n.js"></script>
 <script src="/header.js"></script>
 <script src="/tp-money.js"></script>
 <script src="/offer-title.js"></script>
+<script src="/offer-card.js"></script>
 <script src="/footer.js"></script>
 
 <script>
@@ -49,9 +48,17 @@ function getFavs(){
 }
 
 function toggleFavorite(id){
+
+  const lang = localStorage.getItem("tp_lang") || "ru";
+
   let favs = getFavs();
-  if(favs.includes(id)) favs = favs.filter(x => x !== id);
-  else favs.push(id);
+
+const index = favs.findIndex(f => typeof f === "object" && f.id === id && f.lang === lang);
+
+  if(index >= 0){
+    favs.splice(index,1);
+  }
+
   localStorage.setItem("tp_favorites", JSON.stringify(favs));
 }
 
@@ -93,121 +100,106 @@ function timeOnSite(createdAt){
 /* ================= RENDER ================= */
 const list = document.getElementById("offersList");
 const empty = document.getElementById("empty");
-
+function renderEmptyText(){
+  empty.textContent = window.tpI18n?.t("common.no_favorites") || "";
+}
 function renderOffer(o){
-  const card = document.createElement("div");
-  card.className = "offer-card";
-  card.style.position = "relative";
-  card.style.cursor = "pointer";
 
-  const offerImage = o.imageUrl || o.imageDataUrl || "/img/offer-default.png";
+  const card = window.tpOfferCard.createOfferCard(o,{
+    showHeart: true,
+    heartActive: true,
 
-  const avatar =
-    o.seller?.avatarUrl ||
-    o.seller?.avatarDataUrl ||
-    "/img/avatar-default.svg";
+    onHeartClick: (offer, cardEl) => {
 
-  const online = o.seller?.online === true;
-  const rating = o.seller?.rating || 0;
-  const reviews = o.seller?.reviewsCount || 0;
-  const onSiteText = timeOnSite(o.seller?.createdAt);
+      toggleFavorite(offer.id);
+      cardEl.remove();
 
-const title = buildOfferTitle(o);
+if(!list.children.length){
+  renderEmptyText();
+  empty.style.display = "block";
+}
 
-  card.innerHTML = `
-    <div class="offer-heart active" title="Убрать из избранного">
-      <svg viewBox="0 0 24 24">
-        <path d="M12 21s-7-4.35-10-8.5C-1.5 7.5 3 3 7.5 6.5
-                 9.5 8 12 10.5 12 10.5S14.5 8 16.5 6.5
-                 C21 3 25.5 7.5 22 12.5
-                 19 16.65 12 21 12 21z"/>
-      </svg>
-    </div>
+    },
 
-    <div class="offer-image">
-      <img src="${offerImage}" onerror="this.src='/img/offer-default.png'">
-    </div>
-
-    <div class="offer-body">
-      <div class="offer-title">${title}</div>
-
-      <div class="offer-price" data-price="${o.price}">—</div>
-
-      <div class="offer-seller">
-        <div class="seller-avatar">
-          <img src="${avatar}" onerror="this.src='/img/avatar-default.svg'">
-          <span class="seller-status" style="background:${online ? "#22c55e" : "#9ca3af"}"></span>
-        </div>
-
-        <div>
-          <div class="seller-name">${o.seller?.username || "Продавец"}</div>
-
-          <div class="seller-rating">
-            ${
-              reviews === 0
-                ? `<span class="no-reviews">Нет отзывов</span>`
-                : `${renderStars(rating)}
-                   <span style="margin-left:6px;color:#6b7280;font-weight:600;">
-                     ${reviews}
-                   </span>`
-            }
-          </div>
-
-          <div style="font-size:12px;color:#6b7280;margin-top:2px;">${onSiteText}</div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Переход в оффер
-  card.addEventListener("click", ()=>{
-    location.href = "/offer.html?id=" + encodeURIComponent(o.id);
-  });
-
-  // Удаление из избранных (сердце)
-  const heart = card.querySelector(".offer-heart");
-  heart.addEventListener("click", (e)=>{
-    e.stopPropagation();
-    toggleFavorite(o.id);
-    card.remove();
-
-    if(!getFavs().length){
-      empty.style.display = "block";
+    onClick: (offer)=>{
+      location.href = "/offer.html?id=" + encodeURIComponent(offer.id);
     }
+
   });
 
   list.appendChild(card);
+
 }
 
 /* ================= CURRENCY ================= */
 async function updatePrices(){
-  const els = document.querySelectorAll(".offer-price");
-  for(const el of els){
-    const base = Number(el.dataset.price);
-    if(!base) continue;
-    el.textContent = await tpMoney.formatPrice(base);
-  }
+  window.tpOfferCard.updatePrices(document);
 }
 window.addEventListener("tp:currency-change", updatePrices);
 
 /* ================= INIT ================= */
 async function init(){
-  const favs = getFavs();
 
-  if(!favs.length){
-    empty.style.display = "block";
-    return;
-  }
+list.innerHTML = "";
+empty.style.display = "none";
 
-  for(const id of favs){
-    const offer = await loadOffer(id);
-    if(offer) renderOffer(offer);
-  }
+const lang = localStorage.getItem("tp_lang") || "ru";
 
-  updatePrices();
+const favs = getFavs()
+  .filter(f => typeof f === "object" && f.lang === lang)
+  .map(f => f.id);
+
+if(!favs.length){
+  renderEmptyText();
+  empty.style.display = "block";
+  return;
 }
 
-init();
+const loadedOffers = await Promise.all(favs.map(loadOffer));
+
+const validOffers = loadedOffers.filter(o => o && !o.deleted);
+
+if (!validOffers.length) {
+  renderEmptyText();
+  empty.style.display = "block";
+  return;
+}
+
+validOffers.forEach(o => {
+  renderOffer(o);
+});
+
+await updatePrices();
+
+if (window.tpI18n?.apply) {
+  window.tpI18n.apply(document);
+}
+}
+
+async function start(){
+  if(window.tpI18n?.load){
+    const lang = localStorage.getItem("tp_lang") || "ru";
+    await window.tpI18n.load(lang);
+  }
+
+  init();
+}
+
+start();
+
+window.addEventListener("tp:lang-change", async () => {
+  list.innerHTML = "";
+  empty.style.display = "none";
+
+  requestAnimationFrame(async () => {
+    await init();
+
+    if (window.tpI18n?.apply) {
+      window.tpI18n.apply(document);
+    }
+  });
+});
+
 </script>
 
 </body>

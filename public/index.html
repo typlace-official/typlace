@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>TyPlace</title>
 
   <link rel="stylesheet" href="/header.css">
@@ -110,6 +110,53 @@
         display:none;
       }
     }
+    @media (max-width: 768px){
+
+  .page{
+    display: block;
+    padding:16px 12px 40px;
+  }
+
+  .letter-block{
+    margin-bottom:32px;
+  }
+
+  .letter-title{
+    font-size:16px;
+  }
+
+  .games-grid{
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+  }
+
+  .game-icon{
+    width:100%;
+    height:auto;
+  }
+
+  .game-icon img{
+    width:64px;
+    height:64px;
+  }
+
+  .game-card span{
+    font-size:11px;
+  }
+}
+html, body{
+  overflow-x: hidden;
+}
+
+.page{
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.content{
+  min-width: 0;
+}
+img{ max-width:100%; }
   </style>
 </head>
 
@@ -134,10 +181,12 @@
   <div id="footer-container"></div>
 
 <script src="/socket.io/socket.io.js"></script>
+
+<script src="/i18n.js"></script>
+
 <script src="/header.js"></script>
 <script src="/games.list.js"></script>
 <script src="/footer.js"></script>
-
   <script>
 
     const games = window.GAMES_LIST || [];

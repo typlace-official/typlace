@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Вход / Регистрация — TyPlace</title>
+<title data-i18n="page.title"></title>
 <link rel="stylesheet" href="/header.css">
 <link rel="stylesheet" href="/footer.css">
 
@@ -58,16 +58,16 @@
     .title { font-size: 18px; font-weight: 800; margin: 2px 0 14px; }
 
     label { display:block; font-size: 13px; color:#333; margin: 10px 0 6px; }
-    input {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 12px 12px;
-      border: 1px solid #dcdcdc;
-      border-radius: 10px;
-      outline: none;
-      font-size: 14px;
-      background: #fff;
-    }
+input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 12px;
+  border: 1px solid #dcdcdc;
+  border-radius: 10px;
+  outline: none;
+  font-size: 16px;
+  background: #fff;
+}
     input:focus { border-color: #1E50D4; box-shadow: 0 0 0 3px rgba(30,80,212,0.12); }
 
     .btn {
@@ -97,7 +97,7 @@
       color: #1E50D4;
       cursor: pointer;
       text-decoration: none;
-      font-weight: 700;
+      font-weight: 400;
     }
 
     /* ===== modal POP (code) ===== */
@@ -191,8 +191,50 @@
       .modal { width: 100%; }
       .code-cell { width: 42px; height: 50px; }
     }
-    
+    .captcha-wrap{
+  margin-top:16px;
+  display:flex;
+  justify-content:center;
+}
+
+.captcha-wrap iframe{
+  border-radius:10px;
+}
+.terms{
+  margin-top:14px;
+  font-size:13px;
+  line-height:1.45;
+}
+
+.terms-label{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  cursor:pointer;
+}
+
+.terms-label input{
+  width:16px;
+  height:16px;
+  margin-top:3px;
+  flex-shrink:0;
+}
+
+.terms-text{
+  color:#374151;
+}
+
+.terms-text a{
+  color:#1E50D4;
+  font-weight:400;
+  text-decoration:none;
+}
+
+.terms-text a:hover{
+  text-decoration:underline;
+}
   </style>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 
 <body>
@@ -204,40 +246,76 @@
     <div class="auth-wrap">
       <div class="card">
         <div class="tabs">
-          <div class="tab active" id="tabLogin">Вход</div>
-          <div class="tab" id="tabRegister">Регистрация</div>
+<div class="tab active" id="tabLogin" data-i18n="page.tabs.login"></div>
+<div class="tab" id="tabRegister" data-i18n="page.tabs.register"></div>
         </div>
 
         <div class="content">
           <!-- LOGIN FORM -->
           <div id="loginPane">
-            <div class="title">Вход</div>
+            <div class="title" data-i18n="page.login.title"></div>
 
-            <label for="loginEmail">Адрес электронной почты</label>
-            <input id="loginEmail" type="email" placeholder="example@gmail.com" autocomplete="email"/>
+<label for="loginEmail" data-i18n="page.email"></label>
+<input id="loginEmail" type="email" data-i18n-placeholder="page.enter_email" autocomplete="email"/>
 
-            <button class="btn" type="button" id="loginSendBtn">Получить код</button>
+<div class="captcha-wrap">
+<div class="cf-turnstile"
+     id="captchaLogin"
+     data-sitekey="0x4AAAAAAClwUY3L9pkup7mR">
+</div>
+</div>
+
+<button class="btn" type="button" id="loginSendBtn" data-i18n="page.get_code"></button>
 
             <div class="subline">
-              <span>Нет аккаунта? <a class="link" href="#" id="goRegisterLink">Регистрация</a></span>
+              <span>
+<span data-i18n="page.no_account"></span>
+<a class="link" href="#" id="goRegisterLink" data-i18n="page.tabs.register"></a>
+</span>
               <!-- пароля нет => "забыли пароль" не нужно -->
             </div>
           </div>
 
           <!-- REGISTER FORM -->
           <div id="registerPane" style="display:none;">
-            <div class="title">Регистрация</div>
+            <div class="title" data-i18n="page.register.title"></div>
 
-            <label for="regNick">Никнейм</label>
-            <input id="regNick" type="text" placeholder="Придумайте ник" autocomplete="nickname" />
+            <label for="regNick" data-i18n="page.nickname"></label>
+            <input
+  id="regNick"
+  type="text"
+  maxlength="20"
+  data-i18n-placeholder="page.enter_nickname"
+  autocomplete="nickname"
+/>
+<label for="regEmail" data-i18n="page.email"></label>
+<input id="regEmail" type="email" data-i18n-placeholder="page.enter_email" autocomplete="email" />
+<div class="terms">
+  <label class="terms-label">
+    <input type="checkbox" id="acceptTerms">
 
-            <label for="regEmail">Адрес электронной почты</label>
-            <input id="regEmail" type="email" placeholder="example@gmail.com" autocomplete="email" />
-
-            <button class="btn" type="button" id="regSendBtn">Получить код</button>
+<span class="terms-text">
+<span data-i18n="page.terms.accept"></span>
+<a href="/terms.html" target="_blank" data-i18n="page.terms.terms"></a>,
+<a href="/rules.html" target="_blank" data-i18n="page.terms.rules"></a>
+<span data-i18n="page.common.and"></span>
+<a href="/privacy.html" target="_blank" data-i18n="page.terms.privacy"></a>
+</span>
+  </label>
+</div>
+<div class="captcha-wrap">
+<div class="cf-turnstile"
+     id="captchaRegister"
+     data-sitekey="0x4AAAAAAClwUY3L9pkup7mR">
+</div>
+</div>
+<button class="btn" type="button" id="regSendBtn" data-i18n="page.get_code"></button>
 
             <div class="subline">
-              <span>Уже есть аккаунт? <a class="link" href="#" id="goLoginLink">Вход</a></span>
+              <span>
+<span data-i18n="page.have_account"></span>
+<a class="link" href="#" id="goLoginLink" data-i18n="page.tabs.login"></a>
+</span>
             </div>
           </div>
         </div>
@@ -249,13 +327,13 @@
   <div class="modal-backdrop" id="modalBackdrop">
     <div class="modal" role="dialog" aria-modal="true">
       <div class="modal-head">
-        <b id="modalTitle">Подтверждение</b>
+        <b id="modalTitle" data-i18n="page.modal.title"></b>
         <button class="xbtn" id="modalCloseBtn" aria-label="Закрыть">×</button>
       </div>
 
       <div class="modal-body">
         <div style="font-size:15px;font-weight:800;display:flex;align-items:center;gap:10px;">
-          <span>🔑</span><span>Введите код из почты</span>
+          <span>🔑</span><span data-i18n="page.modal.enter_code"></span>
         </div>
         <div class="hint" id="modalHint">Мы отправили письмо на …</div>
 
@@ -271,8 +349,8 @@
         <div class="error" id="modalError"></div>
 
         <div class="modal-actions">
-          <button class="btn2" type="button" id="resendBtn">Отправить повторно</button>
-          <button class="btn2 btnPrimary" type="button" id="verifyBtn">Подтвердить</button>
+          <button class="btn2" type="button" id="resendBtn" data-i18n="page.modal.resend"></button>
+          <button class="btn2 btnPrimary" type="button" id="verifyBtn" data-i18n="page.modal.confirm"></button>
         </div>
 
         <div class="hint" id="timerHint" style="margin-top:10px;"></div>
@@ -285,6 +363,7 @@
 <div id="footer-container"></div>
 
 <script src="/games.list.js"></script>
+<script src="/i18n.js"></script>
 <script src="/header.js"></script>
 <script src="/footer.js"></script>
 
@@ -305,7 +384,9 @@
     const loginEmail = document.getElementById("loginEmail");
     const regEmail = document.getElementById("regEmail");
     const regNick = document.getElementById("regNick");
-
+regNick.addEventListener("input", () => {
+  regNick.value = regNick.value.replace(/[^A-Za-z0-9_.]/g, "");
+});
     const loginSendBtn = document.getElementById("loginSendBtn");
     const regSendBtn = document.getElementById("regSendBtn");
 
@@ -439,17 +520,60 @@
     }
 
     // ====== API ======
-    async function requestCode(email, mode, username) {
-      const body = { email, mode };
-      if (mode === "register") body.username = username;
+async function requestCode(email, mode, username) {
 
-      const r = await fetch("/auth/request-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-      return r.json();
-    }
+  const body = { email, mode };
+
+let tsToken = "dev";
+
+if (mode === "login") {
+  tsToken = window.turnstile.getResponse(
+    document.getElementById("captchaLogin")
+  );
+} else {
+  tsToken = window.turnstile.getResponse(
+    document.getElementById("captchaRegister")
+  );
+}
+
+if (!tsToken) {
+  return {
+    success: false,
+    message: "Подтвердите что вы не робот."
+  };
+}
+
+body["cf-turnstile-response"] = tsToken;
+
+if (mode === "register") {
+  body.username = username;
+}
+
+  const r = await fetch("/auth/request-code", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+
+  const data = await r.json();
+
+  // если ошибка — сбросить капчу
+if (!data.success) {
+
+  if (mode === "login") {
+    window.turnstile.reset(
+      document.getElementById("captchaLogin")
+    );
+  } else {
+    window.turnstile.reset(
+      document.getElementById("captchaRegister")
+    );
+  }
+
+}
+
+  return data;
+}
 
     async function verifyCode(email, mode, code) {
       const r = await fetch("/auth/verify-code", {
@@ -490,13 +614,38 @@
     });
 
     regSendBtn.addEventListener("click", async () => {
-      const email = String(regEmail.value || "").trim().toLowerCase();
-      const nick = String(regNick.value || "").trim();
+      const acceptTerms = document.getElementById("acceptTerms");
 
-      if (!nick) return alert("Введите ник.");
-      if (nick.length < 3) return alert("Ник минимум 3 символа.");
-      if (!email) return alert("Введите email.");
+if (!acceptTerms.checked) {
+  return alert("Необходимо принять Пользовательское соглашение.");
+}
+const email = String(regEmail.value || "").trim().toLowerCase();
+const nick = String(regNick.value || "").trim();
 
+if (!nick) return alert("Введите ник.");
+if (!email) return alert("Введите email.");
+
+// проверка символов
+if (!/^[A-Za-z0-9_.]{1,20}$/.test(nick)) {
+  return alert("Ник может содержать только буквы, цифры, _ и . (до 20 символов)");
+}
+
+// нельзя только символы
+if (/^[_.]+$/.test(nick)) {
+  return alert("Ник должен содержать хотя бы одну букву или цифру.");
+}
+
+const reserved = [
+  "admin",
+  "support",
+  "moderator",
+  "system",
+  "typlace"
+];
+
+if (reserved.includes(nick.toLowerCase())) {
+  return alert("Этот ник зарезервирован.");
+}
       regSendBtn.disabled = true;
       try {
         const d = await requestCode(email, "register", nick);

@@ -1,0 +1,24 @@
+{
+  "title": "Contacts",
+
+  "legal": {
+    "title": "Legal Inquiries",
+    "text": "For government authorities, rights holders and official legal requests."
+  },
+
+  "finance": {
+    "title": "Financial Relations",
+    "text": "For banks and payment systems regarding cooperation and financial matters."
+  },
+
+  "partners": {
+    "title": "Business Partnerships",
+    "text": "Partnership and commercial cooperation proposals."
+  },
+
+  "support": {
+    "title": "User Support",
+    "text1": "For orders, accounts and disputes please use the",
+    "link": "Help Center"
+  }
+}

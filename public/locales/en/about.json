@@ -1,0 +1,53 @@
+{
+  "title": "About TyPlace",
+
+  "meta": {
+    "updated": "Current version: specify date",
+    "operator": "Platform operator: specify legal entity",
+    "country": "Country of registration: Ukraine"
+  },
+
+  "section1": {
+    "title": "1. General Information",
+    "p1": "TyPlace is an online platform (marketplace) designed to facilitate transactions between users for the sale and purchase of digital goods and services.",
+    "p2": "The platform provides technical infrastructure for listing offers, user communication, and secure transaction tools (escrow)."
+  },
+
+  "section2": {
+    "title": "2. Platform Status",
+    "p1": "TyPlace acts as an information intermediary and is not a seller of digital goods or services. Transactions are concluded directly between users.",
+    "p2": "The platform operator does not acquire ownership of the transaction item and is not a party to the sale contract."
+  },
+
+  "section3": {
+    "title": "3. Legal Information",
+    "l1": "Full legal name: specify",
+    "l2": "Registration form: Sole Proprietor / LLC / other",
+    "l3": "Registration number: specify",
+    "l4": "Country of registration: Ukraine",
+    "l5": "Registered address: specify",
+    "l6": "Legal inquiries email: legal@typlace.com"
+  },
+
+  "section4": {
+    "title": "4. Control and Security",
+    "p1": "The platform applies measures to prevent fraud, including:",
+    "l1": "secure transaction system (escrow);",
+    "l2": "verification and moderation procedures;",
+    "l3": "dispute resolution mechanisms;",
+    "l4": "anti-fraud systems."
+  },
+
+  "section5": {
+    "title": "5. International Nature",
+    "p1": "The platform may be used by users from different countries. Users are responsible for complying with the laws of their jurisdiction."
+  },
+
+  "section6": {
+    "title": "6. Related Documents",
+    "l1": "User Agreement",
+    "l2": "Privacy Policy",
+    "l3": "Cookie Policy",
+    "l4": "Platform Rules"
+  }
+}

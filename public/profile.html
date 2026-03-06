@@ -6,8 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- HEADER CSS -->
-  <link rel="stylesheet" href="/header.css">
-  <link rel="stylesheet" href="/footer.css">
+<link rel="stylesheet" href="/header.css">
+<link rel="stylesheet" href="/footer.css">
+<link rel="stylesheet" href="/game.css">
 
   <style>
     :root{
@@ -169,7 +170,387 @@
 .user-id.copied{
   color:#16a34a; /* зелёный при копировании */
 }
+.profile-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:18px;
+}
 
+.profile-menu-btn{
+  background:none;
+  border:none;
+  cursor:pointer;
+  color:#6b7280;
+  padding:6px;
+  border-radius:8px;
+}
+
+.profile-menu-btn:hover{
+  background:#f3f4f6;
+}
+
+.profile-menu-item{
+  padding:14px 16px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.profile-menu-item:hover{
+  background:#f3f4f6;
+}
+
+.logout-item{
+  color:#b91c1c;
+}
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.4);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:2000;
+}
+
+.modal.active{
+  display:flex;
+}
+
+.modal-inner{
+  background:#fff;
+  border-radius:16px;
+  width:320px;
+  padding:20px;
+  box-shadow:0 15px 40px rgba(0,0,0,.15);
+}
+
+.modal-title{
+  font-size:16px;
+  font-weight:800;
+  margin-bottom:16px;
+}
+
+.modal-item{
+  padding:12px 0;
+  font-weight:600;
+  cursor:pointer;
+  border-bottom:1px solid #f1f5f9;
+}
+
+.modal-item:last-child{
+  border-bottom:none;
+}
+
+.modal-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 0;
+}
+/* ===== PROFILE MENU UI ===== */
+.menu-top{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  padding:14px 14px 6px;
+}
+
+.menu-avatar-wrap{
+  width:74px;
+  height:74px;
+  border-radius:50%;
+  overflow:hidden;
+  cursor:pointer;
+  background:#e5e7eb;
+  flex-shrink:0;
+}
+
+.menu-avatar{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.menu-change-photo{
+  text-align:center;
+  padding:8px 14px 12px;
+  font-weight:700;
+  color:var(--blue);
+  cursor:pointer;
+}
+
+.menu-item{
+  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  cursor:pointer;
+  font-weight:700;
+  border-top:1px solid #f1f5f9;
+}
+
+.menu-item:hover{ background:#f3f4f6; }
+
+.menu-arrow{ color:#9ca3af; font-size:18px; }
+
+.menu-screen-head{
+  position:relative;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-bottom:1px solid #eee;
+}
+.menu-screen-head .menu-title{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:17px;
+  font-weight:700;
+}
+
+.menu-back:hover{ background:#f3f4f6; }
+
+.menu-title{
+  font-weight:900;
+}
+
+.menu-screen-body{
+  padding:14px 16px 16px;
+}
+
+.menu-row{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:12px 0;
+  border-bottom:1px solid #f1f5f9;
+}
+
+.menu-row-label{ color:#6b7280; font-weight:700; }
+.menu-row-value{ font-weight:800; }
+
+.menu-btn{
+  margin-top:14px;
+  width:100%;
+  padding:12px 12px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:#fff;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.menu-btn:hover{ background:#f3f4f6; }
+
+.menu-hint{
+  margin-top:10px;
+  font-size:12px;
+  color:#6b7280;
+  font-weight:600;
+}
+
+.menu-toggle{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:14px 0;
+  border-bottom:1px solid #f1f5f9;
+  font-weight:700;
+}
+/* ================= PROFILE MODAL FIX ================= */
+
+.profile-menu{
+  position:fixed;
+  inset:0;
+  z-index:5000;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+
+  background:rgba(0,0,0,.45);
+
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s ease;
+}
+
+.profile-menu.active{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.profile-menu-inner{
+  background:#fff;
+  width:100%;
+  max-width:420px;
+  max-height:90vh;
+  overflow-y:auto;
+
+  border-radius:18px;
+  box-shadow:0 30px 80px rgba(0,0,0,.25);
+
+  transform:scale(.95);
+  transition:transform .2s ease;
+}
+
+.profile-menu.active .profile-menu-inner{
+  transform:scale(1);
+}
+
+/* ===== MOBILE FULLSCREEN ===== */
+
+@media(max-width:640px){
+
+  .profile-menu{
+    background:#fff;
+    align-items:stretch;
+  }
+
+  .profile-menu-inner{
+    width:100%;
+    height:100%;
+    max-width:none;
+    max-height:none;
+    border-radius:0;
+    box-shadow:none;
+    transform:none;
+  }
+
+}
+@media(max-width:640px){
+
+  .menu-top{
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    padding-top:40px;
+    position:relative;
+  }
+
+  .menu-close{
+    position:absolute;
+    top:14px;
+    right:14px;
+  }
+
+  .menu-avatar-wrap{
+    width:96px;
+    height:96px;
+  }
+
+  .menu-change-photo{
+    padding-top:6px;
+    padding-bottom:20px;
+  }
+
+}
+.mobile-avatar-block{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:28px 16px 10px;
+}
+/* ===== MOBILE PROFILE FIX ===== */
+
+@media(max-width:640px){
+
+  .profile-menu{
+    background:#fff;
+    align-items:stretch;
+  }
+
+  .profile-menu-inner{
+    width:100%;
+    height:100%;
+    border-radius:0;
+    box-shadow:none;
+  }
+
+  /* HEADER */
+  .mobile-head{
+    position:relative;
+    height:56px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-bottom:1px solid #eee;
+  }
+
+  .mobile-head .menu-title{
+    font-size:17px;
+    font-weight:700;
+  }
+
+  .big-avatar{
+    width:120px;
+    height:120px;
+  }
+
+  .menu-item{
+    height:56px;
+    display:flex;
+    align-items:center;
+    padding:0 16px;
+    font-size:16px;
+  }
+
+  .menu-item.logout-item{
+    color:#d12c2c;
+  }
+
+}
+
+.menu-input{
+  width:100%;
+  margin-top:14px;
+  padding:14px;
+  font-size:16px;
+  border-radius:12px;
+  border:1px solid #e5e7eb;
+  outline:none;
+  box-sizing:border-box;
+}
+
+.menu-input:focus{
+  border-color:#1E50D4;
+}
+
+/* ===== ICON BUTTONS (BACK + CLOSE) ===== */
+
+.menu-back,
+.menu-close{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  width:40px;
+  height:40px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  color:#6b7280;
+  background:none;
+  border:none;
+  cursor:pointer;
+  border-radius:50%;
+}
+
+.menu-back{ left:12px; }
+.menu-close{ right:12px; }
+
+.menu-back:active,
+.menu-close:active{
+  background:#f3f4f6;
+}
   </style>
 </head>
 
@@ -182,8 +563,17 @@
   <main class="page-content">
 
   <div class="container">
-    <h1>Профиль</h1>
+<div class="profile-header">
+  <h1 id="profileTitle" data-i18n="page.title"></h1>
 
+  <button class="profile-menu-btn" onclick="openProfileMenu()">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="5" r="2" fill="currentColor"/>
+      <circle cx="12" cy="12" r="2" fill="currentColor"/>
+      <circle cx="12" cy="19" r="2" fill="currentColor"/>
+    </svg>
+  </button>
+</div>
     <div class="profile-top">
       <img id="avatar" class="avatar" alt="avatar">
 
@@ -196,24 +586,130 @@
   <div id="since" class="since"></div>
 </div>
     </div>
-
     <div class="nav">
-      <a class="nav-item" href="/my-offers.html">Мои предложения</a>
-      <a class="nav-item" href="/purchases.html">Покупки</a>
-      <a class="nav-item" href="/sales.html">Продажи</a>
-      <a class="nav-item" href="/favorites.html">Избранные</a>
-      <a class="nav-item" href="/wallet.html">Кошелёк</a>
-      <a class="nav-item" href="/settings.html">Настройки</a>
+
+<a class="nav-item" href="/my-offers.html" data-i18n="page.nav.myOffers"></a>
+<a class="nav-item" href="/purchases.html" data-i18n="page.nav.purchases"></a>
+<a class="nav-item" href="/sales.html" data-i18n="page.nav.sales"></a>
+<a class="nav-item" href="/favorites.html" data-i18n="page.nav.favorites"></a>
+<a class="nav-item" href="/wallet.html" data-i18n="page.nav.wallet"></a>
     </div>
 
   </div>
+<section id="externalOffers" style="max-width:960px;margin:20px auto;display:none;">
+  <h2 id="externalOffersTitle" style="margin:10px 0 20px;">Предложения</h2>
+  <div id="offersList" class="offers-list"></div>
+</section>
 </main>
  <div id="footer-container"></div>
+<div id="profileMenu" class="profile-menu">
+  <div class="profile-menu-inner" id="menuRoot">
+
+    <!-- MAIN SCREEN -->
+    <div id="menuMain">
+
+<div class="menu-screen-head mobile-head">
+  <div class="menu-title">Профиль</div>
+  <button class="menu-close" onclick="closeProfileMenu()">✕</button>
+</div>
+
+<div class="mobile-avatar-block">
+  <div class="menu-avatar-wrap big-avatar" onclick="editAvatar()">
+    <img id="menuAvatar" class="menu-avatar" src="/img/avatar-default.svg">
+  </div>
+
+<div class="menu-change-photo" onclick="editAvatar()"
+     data-i18n="page.menu.changePhoto">
+</div>
+</div>
+
+      <div class="menu-item" onclick="openNickScreen()">
+        <span id="menuUsername">User</span>
+        <span class="menu-arrow">›</span>
+      </div>
+
+      <div class="menu-item" onclick="openNotifyScreen()">
+        <span data-i18n="page.menu.notifications">Уведомления</span>
+        <span class="menu-arrow">›</span>
+      </div>
+
+      <div class="menu-item logout-item" onclick="logout()">
+        <span data-i18n="page.menu.logout">Выйти</span>
+      </div>
+    </div>
+
+    <!-- NICK SCREEN -->
+    <div id="menuNick" style="display:none;">
+      <div class="menu-screen-head">
+        <button class="menu-back" onclick="backToMain()">‹</button>
+        <div class="menu-title" data-i18n="page.menu.profile">Профиль</div>
+        <button class="menu-close" onclick="closeProfileMenu()">✕</button>
+      </div>
+
+<div class="menu-screen-body">
+
+  <div class="menu-hint">
+    Ник можно менять раз в 30 дней
+  </div>
+
+  <input
+    id="nickInput"
+    class="menu-input"
+    type="text"
+    maxlength="20"
+  />
+
+  <button class="menu-btn" onclick="saveNickFromMenu()">
+    Сохранить
+  </button>
+
+</div>
+    </div>
+
+    <!-- NOTIFY SCREEN -->
+    <div id="menuNotify" style="display:none;">
+      <div class="menu-screen-head">
+        <button class="menu-back" onclick="backToMain()">‹</button>
+        <div class="menu-title" data-i18n="page.menu.notifications">Уведомления</div>
+        <button class="menu-close" onclick="closeProfileMenu()">✕</button>
+      </div>
+
+      <div class="menu-screen-body">
+        <div class="menu-toggle">
+          <span>Email</span>
+          <label class="switch">
+            <input type="checkbox" id="notifyEmail">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="menu-toggle">
+          <span>Telegram</span>
+          <label class="switch">
+            <input type="checkbox" id="notifyTelegram">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <button class="menu-btn" onclick="saveNotifyFromMenu()">
+          <span data-i18n="page.menu.save">Сохранить</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
+<script src="/i18n.js"></script>
 <script src="/header.js"></script>
 <script src="/footer.js"></script>
+<script src="/tp-money.js"></script>
+<script src="/offer-title.js"></script>
+<script src="/offer-card.js"></script>
+
+
 
   <!-- PAGE SCRIPT -->
   <script>
@@ -235,6 +731,16 @@
     function goLogin(){
       location.href = "/auth.html?mode=login";
     }
+function formatReviewsCount(n){
+  const abs = Math.abs(Number(n) || 0);
+  const lastTwo = abs % 100;
+  const last = abs % 10;
+
+  if (lastTwo >= 11 && lastTwo <= 14) return n + " отзывов";
+  if (last === 1) return n + " отзыв";
+  if (last >= 2 && last <= 4) return n + " отзыва";
+  return n + " отзывов";
+}
 
     function renderStars(avg){
       const rounded = Math.round(avg);
@@ -263,6 +769,7 @@ async function init(){
 
   const params = new URLSearchParams(location.search);
   const externalId = params.get("id");
+  const profileTitle = document.getElementById("profileTitle");
 
   let user;
   let isExternal = false;
@@ -279,7 +786,49 @@ async function init(){
     }
 
     user = data.user;
-    isExternal = true;
+    currentUser = user;
+profileTitle.textContent = tpI18n.t("page.externalTitle");
+document.title = "Профиль пользователя — TyPlace";
+    // ===== ПОКАЗАТЬ ПРЕДЛОЖЕНИЯ =====
+if (data.offers && data.offers.length) {
+const titleEl = document.getElementById("externalOffersTitle");
+titleEl.textContent =
+  tpI18n.t("page.offers") + " (" + data.offers.length + ")";
+  const wrap = document.getElementById("externalOffers");
+
+  wrap.style.display = "block";
+
+const list = document.getElementById("offersList");
+
+for (const offer of data.offers) {
+  const card = tpOfferCard.createOfferCard(offer, {
+  showHeart: true,
+  heartActive: JSON.parse(localStorage.getItem("tp_favorites") || "[]").includes(offer.id),
+  onHeartClick: (o, cardEl, heartEl) => {
+    let favs = JSON.parse(localStorage.getItem("tp_favorites") || "[]");
+    if (favs.includes(o.id)) {
+      favs = favs.filter(x => x !== o.id);
+      heartEl.classList.remove("active");
+    } else {
+      favs.push(o.id);
+      heartEl.classList.add("active");
+    }
+    localStorage.setItem("tp_favorites", JSON.stringify(favs));
+  }
+});
+
+  list.appendChild(card);
+}
+
+tpOfferCard.updatePrices(list);
+
+}
+
+isExternal = true;
+
+const nav = document.querySelector(".nav");
+if (nav) nav.style.display = "none";
+
 
   } else {
     // 👉 если свой профиль
@@ -290,62 +839,265 @@ async function init(){
     if(!me.success) return goLogin();
 
     user = me.user;
+    currentUser = user;
+profileTitle.textContent = tpI18n.t("page.myTitle");
+document.title = "Мой профиль — TyPlace";
   }
 
   // ===== USERNAME =====
-  document.getElementById("username").textContent = user.username;
+document.getElementById("username").textContent = user.username;
 
+document.getElementById("avatar").src =
+  user.avatarUrl || user.avatarDataUrl || DEFAULT_AVATAR;
+
+syncMenuUser();
+loadNotifyToMenu();
   // ===== USER ID =====
   if(user.userId){
     const idEl = document.getElementById("userId");
     idEl.textContent = "ID " + user.userId;
 
     // копирование ТОЛЬКО для своего профиля
-    if (!isExternal) {
-      idEl.onclick = async () => {
-        try{
-          await navigator.clipboard.writeText(user.userId);
-          idEl.classList.add("copied");
-          setTimeout(()=>{
-            idEl.classList.remove("copied");
-          }, 1200);
-        }catch(e){}
-      };
-    } else {
-      idEl.style.cursor = "default";
-      idEl.title = "";
-    }
-  }
+idEl.onclick = async () => {
+  try{
+    await navigator.clipboard.writeText(user.userId);
+    idEl.classList.add("copied");
+    setTimeout(()=>{
+      idEl.classList.remove("copied");
+    }, 1200);
+  }catch(e){}
+};
 
-  // ===== AVATAR =====
-  document.getElementById("avatar").src =
-    user.avatarUrl || user.avatarDataUrl || DEFAULT_AVATAR;
+  }
 
   // ===== SINCE =====
   if(user.createdAt){
     const date = new Date(user.createdAt);
-    const formatted = date.toLocaleDateString("ru-RU", {
-      day: "numeric",
-      month: "long",
-      year: "numeric"
-    });
-    document.getElementById("since").textContent =
-      `На TyPlace с ${formatted}`;
+const localeMap = {
+  ru: "ru-RU",
+  uk: "uk-UA",
+  en: "en-US"
+};
+
+const formatted = date.toLocaleDateString(
+  localeMap[tpI18n.currentLang] || "ru-RU",
+  {
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  }
+);
+document.getElementById("since").textContent =
+  tpI18n.t("page.since") + " " + formatted;
   }
 
-  // ===== ОТЗЫВЫ =====
-  const ratingLink = document.getElementById("ratingLink");
+// ===== ОТЗЫВЫ =====
+const ratingLink = document.getElementById("ratingLink");
 
-  if (user.userId) {
-    ratingLink.onclick = ()=>{
-      location.href = `/reviews.html?id=${user.userId}`;
-    };
-  }
+if (user.userId) {
+
+  const res = await fetch(`/api/users/${user.userId}/reviews-by-id`);
+  const data = await res.json();
+
+  const reviews = data.success ? data.reviews : [];
+  const count = reviews.length;
+
+  ratingLink.onclick = ()=>{
+    location.href = `/reviews.html?id=${user.userId}`;
+  };
+
+if(count === 0){
+ratingLink.innerHTML =
+  `<span class="rating-count">${tpI18n.t("page.noReviews")}</span>`;
+}
+else if(count < 10){
+  ratingLink.innerHTML =
+    `<span class="rating-count">${formatReviewsCount(count)}</span>`;
+}
+else{
+  const avg =
+    reviews.reduce((s,r)=>s+(Number(r.rating)||0),0)/count;
+
+  ratingLink.innerHTML =
+    `${renderStars(avg)}
+     <span class="rating-count">${formatReviewsCount(count)}</span>`;
+}
 
 }
 
+}
+async function updatePrices(){
+  const els = document.querySelectorAll(".offer-price");
+  for(const el of els){
+    const base = Number(el.dataset.price);
+    if(!base) continue;
+    el.textContent = await tpMoney.formatPrice(base);
+  }
+}
 
-    init();
-  </script>
+window.addEventListener("tp:currency-change", updatePrices);
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await window.tpI18n.load(window.tpI18n.currentLang);
+  init();
+});
+
+window.addEventListener("tp:lang-change", async () => {
+  await window.tpI18n.load(window.tpI18n.currentLang);
+  init();
+});
+function openProfileMenu(){
+  document.getElementById("profileMenu").classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeProfileMenu(){
+  document.getElementById("profileMenu").classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+document.addEventListener("click",(e)=>{
+  const menu = document.getElementById("profileMenu");
+  if(e.target === menu){
+    closeProfileMenu();
+  }
+});
+
+function logout(){
+  localStorage.removeItem(TOKEN_KEY);
+  location.href="/auth.html?mode=login";
+}
+
+async function editName(){
+  const current = document.getElementById("username").textContent;
+  const newName = prompt("Введите новый ник (3–20 символов):", current);
+  if(!newName) return;
+
+  if(newName.length < 3 || newName.length > 20){
+    alert("Ник должен быть от 3 до 20 символов");
+    return;
+  }
+
+  const res = await fetch("/profile",{
+    method:"PUT",
+    headers:{
+      "Content-Type":"application/json",
+      Authorization:"Bearer " + getToken()
+    },
+    body:JSON.stringify({ username:newName })
+  }).then(r=>r.json());
+
+if(res.success){
+  document.getElementById("username").textContent = res.user.username;
+  syncMenuUser();
+  backToMain();
+  closeProfileMenu();
+}
+}
+
+function editAvatar(){
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+
+  input.onchange = async () => {
+    const file = input.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+
+      const res = await fetch("/profile",{
+        method:"PUT",
+        headers:{
+          "Content-Type":"application/json",
+          Authorization:"Bearer " + getToken()
+        },
+        body:JSON.stringify({
+          avatarDataUrl: reader.result
+        })
+      }).then(r=>r.json());
+
+if(res.success){
+  document.getElementById("avatar").src = res.user.avatarDataUrl;
+  syncMenuUser();
+  backToMain();
+  closeProfileMenu();
+}
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  input.click();
+}
+function openNickScreen(){
+  document.getElementById("menuMain").style.display = "none";
+  document.getElementById("menuNick").style.display = "block";
+  document.getElementById("menuNotify").style.display = "none";
+
+  if(currentUser){
+    const input = document.getElementById("nickInput");
+    if(input){
+      input.value = currentUser.username || "";
+    }
+  }
+}
+function openNotifyScreen(){
+  document.getElementById("menuMain").style.display = "none";
+  document.getElementById("menuNick").style.display = "none";
+  document.getElementById("menuNotify").style.display = "block";
+}
+
+function backToMain(){
+  document.getElementById("menuMain").style.display = "block";
+  document.getElementById("menuNick").style.display = "none";
+  document.getElementById("menuNotify").style.display = "none";
+}
+
+// подтягиваем данные в меню (аватар + ник)
+function syncMenuUser(){
+  const u = document.getElementById("username")?.textContent || "User";
+  const ava = document.getElementById("avatar")?.src || "/img/avatar-default.svg";
+
+  const menuUsername = document.getElementById("menuUsername");
+  const nickCurrent = document.getElementById("nickCurrent");
+  const menuAvatar = document.getElementById("menuAvatar");
+
+  if(menuUsername) menuUsername.textContent = u;
+  if(nickCurrent) nickCurrent.textContent = u;
+  if(menuAvatar) menuAvatar.src = ava;
+}
+
+// уведомления: загрузка в меню
+async function loadNotifyToMenu(){
+  try{
+    const res = await fetch("/api/settings/notifications", {
+      headers:{ Authorization:"Bearer " + getToken() }
+    }).then(r=>r.json());
+
+    if(!res.success) return;
+
+    document.getElementById("notifyEmail").checked = !!res.notify.email;
+    document.getElementById("notifyTelegram").checked = !!res.notify.telegram;
+  }catch(e){}
+}
+
+async function saveNotifyFromMenu(){
+  await fetch("/api/settings/notifications",{
+    method:"PUT",
+    headers:{
+      "Content-Type":"application/json",
+      Authorization:"Bearer " + getToken()
+    },
+    body:JSON.stringify({
+      email: document.getElementById("notifyEmail").checked,
+      telegram: document.getElementById("notifyTelegram").checked
+    })
+  }).catch(()=>{});
+
+  backToMain();
+}
+</script>
 </body>
 </html>

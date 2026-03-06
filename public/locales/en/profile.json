@@ -1,0 +1,35 @@
+{
+  "title": "Profile",
+
+  "myTitle": "My Profile",
+  "externalTitle": "User Profile",
+
+  "nav": {
+    "myOffers": "My Offers",
+    "purchases": "Purchases",
+    "sales": "Sales",
+    "favorites": "Favorites",
+    "wallet": "Wallet"
+  },
+
+  "offers": "Offers",
+  "since": "On TyPlace since",
+  "noReviews": "No reviews",
+
+  "reviews": {
+    "one": "review",
+    "few": "reviews",
+    "many": "reviews"
+  },
+
+  "menu": {
+    "changePhoto": "Change photo",
+    "notifications": "Notifications",
+    "logout": "Log out",
+    "profile": "Profile",
+    "nickname": "Nickname",
+    "changeNick": "Change nickname",
+    "nickHint": "Nickname can be changed once every 30 days",
+    "save": "Save"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "title": "Профіль",
+
+  "myTitle": "Мій профіль",
+  "externalTitle": "Профіль користувача",
+
+  "nav": {
+    "myOffers": "Мої пропозиції",
+    "purchases": "Покупки",
+    "sales": "Продажі",
+    "favorites": "Обране",
+    "wallet": "Гаманець"
+  },
+
+  "offers": "Пропозиції",
+  "since": "На TyPlace з",
+  "noReviews": "Немає відгуків",
+
+  "reviews": {
+    "one": "відгук",
+    "few": "відгуки",
+    "many": "відгуків"
+  },
+
+  "menu": {
+    "changePhoto": "Змінити фото",
+    "notifications": "Сповіщення",
+    "logout": "Вийти",
+    "profile": "Профіль",
+    "nickname": "Нікнейм",
+    "changeNick": "Змінити нік",
+    "nickHint": "Нік можна змінювати раз на 30 днів",
+    "save": "Зберегти"
+  }
+}

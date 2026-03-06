@@ -1,0 +1,44 @@
+{
+  "title": "Cookie Policy — TyPlace",
+  "heading": "Cookie Policy",
+
+  "section1": {
+    "title": "1. General Provisions",
+    "p1": "This Cookie Policy regulates the use of cookies and similar technologies on the TyPlace platform.",
+    "p2": "By using the website, the User agrees to the use of cookies in accordance with this Policy."
+  },
+
+  "section2": {
+    "title": "2. What Cookies Are Used",
+    "required": "<strong>Essential cookies</strong> — necessary for proper website operation, security, user authentication, and service functionality.",
+    "functional": "<strong>Functional cookies</strong> — allow saving selected language, currency, and user preferences.",
+    "analytics": "<strong>Analytical cookies</strong> — used to analyze traffic and improve platform performance (with user consent).",
+    "technical": "<strong>Technical cookies</strong> — ensure the operation of chats, escrow system, anti-fraud mechanisms, and other internal processes."
+  },
+
+  "section3": {
+    "title": "3. Purpose of Use",
+    "li1": "ensuring user account security;",
+    "li2": "processing payments and operating the escrow mechanism;",
+    "li3": "saving user preferences;",
+    "li4": "improving platform performance and stability;",
+    "li5": "analyzing website usage (with user consent)."
+  },
+
+  "section4": {
+    "title": "4. Third-Party Services",
+    "p1": "The platform may use third-party analytics services and payment systems that may set their own cookies in accordance with their privacy policies.",
+    "p2": "TyPlace does not control the use of cookies by third-party services."
+  },
+
+  "section5": {
+    "title": "5. Managing Cookies",
+    "p1": "Users can manage cookies through their browser settings. Users may also choose cookie types through the consent banner on the website.",
+    "p2": "Disabling essential cookies may result in improper platform operation."
+  },
+
+  "section6": {
+    "title": "6. Policy Changes",
+    "p1": "The platform reserves the right to modify this Policy. The current version is always published on this page."
+  }
+}

@@ -8,8 +8,35 @@
 <link rel="stylesheet" href="/footer.css">
 
 <style>
-body{margin:0;background:#f6f7f9;font-family:Inter,Arial,sans-serif;color:#111}
-.page{max-width:980px;margin:24px auto;padding:0 16px}
+html, body{
+  height:100%;
+}
+
+body{
+  margin:0;
+  font-family:Inter,Arial,sans-serif;
+  background:#f6f7f9;
+  color:#111;
+
+  display:flex;
+  flex-direction:column;
+}
+
+.page-content{
+  flex:1;
+}
+
+
+.page{
+  max-width:1000px;
+  margin:24px auto;
+  padding:0 16px;
+
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+
 .card{background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.08);padding:18px;margin-bottom:16px}
 .row{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
 .img{width:260px;max-width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#e5e7eb}
@@ -23,16 +50,417 @@ body{margin:0;background:#f6f7f9;font-family:Inter,Arial,sans-serif;color:#111}
 .btnBlue{background:#1E50D4;color:#fff}
 .btnGray{background:#eee;color:#111}
 .chat{border:1px solid #e2e6f0;border-radius:12px;padding:10px;background:#fafbff}
-.messages{height:260px;overflow:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
-.msg{max-width:78%;padding:8px 12px;border-radius:12px;font-size:14px}
-.me{background:#1E50D4;color:#fff;align-self:flex-end}
-.other{background:#e9ecf5;color:#111;align-self:flex-start}
-.system{background:#f1f1f1;color:#555;font-style:italic;align-self:center}
 .send{display:flex;gap:8px}
 .send input{flex:1;padding:10px;border-radius:10px;border:1px solid #ccc}
 .send button{padding:10px 14px;border-radius:10px;border:1px solid #ccc;background:#fff;cursor:pointer}
 .send input:disabled{background:#eee}
 .send button:disabled{opacity:.6}
+.order-card{
+  background:#fff;
+  border-radius:16px;
+  box-shadow:0 8px 30px rgba(0,0,0,.08);
+  padding:20px;
+  margin-bottom:20px;
+  position:relative;
+}
+
+.order-badge{
+  position:absolute;
+  top:16px;
+  right:16px;
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  color:#fff;
+}
+
+.order-badge.pending{ background:#f59e0b; }
+.order-badge.completed{ background:#16a34a; }
+.order-badge.refunded{ background:#dc2626; }
+
+.order-top{
+  display:flex;
+  gap:20px;
+  flex-wrap:wrap;
+}
+
+.order-image{
+  width:260px;
+  aspect-ratio:4/3;
+  border-radius:14px;
+  overflow:hidden;
+  background:#f3f4f6;
+}
+
+.order-image img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.order-info{
+  flex:1;
+  min-width:260px;
+  padding-right:120px;
+}
+
+.order-title{
+  font-size:20px;
+  font-weight:700;
+  line-height:1.35;
+  word-break:break-word;
+
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+.order-price{
+  font-size:24px;
+  font-weight:900;
+  margin-top:10px;
+}
+
+.order-number{
+  margin-top:8px;
+  font-size:13px;
+  color:#9ca3af;
+  font-weight:500;
+}
+
+.order-date{
+  font-size:13px;
+  color:#9ca3af;
+}
+
+.order-params{
+  margin-top:20px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  font-size:14px;
+}
+
+.order-params div{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.order-params span:first-child{
+  color:#6b7280;
+}
+
+.order-desc-section{
+  margin-top:20px;
+  padding-right:90px;
+}
+
+
+.order-desc{
+  margin-top:6px;
+  line-height:1.6;
+  word-break:break-word;
+
+  display:-webkit-box;
+  -webkit-line-clamp:4;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+.expand-btn{
+  display:none;
+  background:none;
+  border:none;
+  color:#2563eb;
+  font-weight:600;
+  margin-top:6px;
+  cursor:pointer;
+}
+
+/* CHAT */
+
+.order-chat-card{
+  background:#fff;
+  border-radius:16px;
+  border:1px solid #e5e7eb;
+
+  display:flex;
+  flex-direction:column;
+  margin-bottom:32px;
+
+  height:520px;        /* ← фиксированная высота */
+  max-height:70vh;     /* ← адаптивно на маленьких экранах */
+}
+
+.chat-title{
+  padding:14px 18px;
+  font-weight:900;
+  border-bottom:1px solid #eee;
+}
+
+.messages{
+  flex:1;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:none;
+  padding:20px 24px;
+  background:#fff;
+}
+
+.messages::-webkit-scrollbar{
+  display:none;
+}
+
+.date-divider{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:18px 0;
+  font-size:12px;
+  color:#888;
+  font-weight:600;
+}
+
+.date-divider::before,
+.date-divider::after{
+  content:"";
+  flex:1;
+  height:1px;
+  background:#e5e7eb;
+  margin:0 12px;
+}
+
+.msg{
+  display:flex;
+  margin-bottom:14px;
+}
+
+.msg.me{
+  justify-content:flex-end;
+}
+
+.msg-body{
+  max-width:55%;
+  padding:10px 14px;
+  border-radius:18px;
+  font-size:14px;
+  line-height:1.4;
+  word-break:break-word;
+}
+
+.msg.me .msg-body{
+  background:#2563eb;
+  color:#fff;
+  border-bottom-right-radius:6px;
+}
+
+.msg.other .msg-body{
+  background:#f3f4f6;
+  border-bottom-left-radius:6px;
+}
+
+.msg-time{
+  font-size:11px;
+  opacity:.6;
+  margin-top:6px;
+  display:block;
+}
+
+.composer{
+  display:flex;
+  gap:10px;
+  padding:14px;
+  border-top:1px solid #eee;
+  background:#fff;
+}
+
+.composer input{
+  flex:1;
+  border:1px solid #ddd;
+  border-radius:12px;
+  padding:10px 12px;
+}
+
+.send-btn{
+  background:#1E50D4;
+  border:none;
+  border-radius:12px;
+  padding:10px 16px;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+
+@media(max-width:768px){
+  .order-top{
+    flex-direction:column;
+  }
+  .order-image{
+    width:100%;
+  }
+  .order-params{
+    grid-template-columns:1fr;
+  }
+}
+.mini-btn{
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  background:#fff;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:16px;
+}
+
+.mini-btn:hover{
+  background:#f5f5f5;
+}
+.right-top{
+  padding:14px 18px;
+  border-bottom:1px solid #eee;
+  display:flex;
+  align-items:center;
+}
+
+.right-title{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  min-width:0;
+}
+
+.chat-ava{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  background:#e9e9e9;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  color:#777;
+}
+
+.chat-ava img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.name{
+  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.sub{
+  font-size:12px;
+  color:#777;
+  margin-top:2px;
+}
+.order-meta{
+  font-size:14px;
+  color:#6b7280;
+  font-weight:600;
+  margin-top:6px;
+}
+/* ===== REVIEW STARS ===== */
+
+.review-stars-input{
+  display:flex;
+  gap:6px;
+  font-size:36px;            /* крупнее */
+  line-height:1;
+  cursor:pointer;
+  margin:10px 0 16px;
+}
+
+.review-stars-input .star{
+  color:#d1d5db;
+  padding:8px;
+  border-radius:12px;
+}
+
+.review-stars-input.r5{ color:#facc15; }
+.review-stars-input.r4{ color:#fbbf24; }
+.review-stars-input.r3{ color:#f59e0b; }
+.review-stars-input.r2{ color:#ef4444; }
+.review-stars-input.r1{ color:#991b1b; }
+
+.review-stars-input .star.filled{
+  color:currentColor;
+}
+.review-title{
+  font-size:16px;
+  font-weight:500;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:#9ca3af;
+  margin-bottom:18px;
+}
+.review-textarea{
+  width:100%;
+  margin-top:8px;
+  padding:14px 16px;
+
+  border-radius:14px;
+  border:1px solid #e5e7eb;
+  background:#fff;
+
+  font-family: Inter, Arial, sans-serif;
+  font-size:15px;
+  font-weight:400;
+  line-height:1.6;
+
+  resize:vertical;
+  min-height:110px;
+
+  outline:none;
+  transition:.15s ease;
+}
+
+.review-textarea:focus{
+  border-color:#2563eb;
+  box-shadow:0 0 0 3px rgba(37,99,235,.12);
+}
+.review-error{
+  margin-top:6px;
+  font-size:13px;
+  color:#dc2626;
+  font-weight:500;
+  min-height:18px;
+}
+.review-textarea-wrap{
+  position:relative;
+}
+
+.review-counter{
+  position:absolute;
+  right:14px;
+  bottom:10px;
+
+  font-size:12px;
+  color:#9ca3af;
+  font-weight:500;
+  pointer-events:none;
+  transition:.2s ease;
+}
+
+.review-counter.warn{
+  color:#6b7280;
+}
+
+.review-counter.limit{
+  color:#dc2626;
+}
 </style>
 </head>
 <body>
@@ -40,63 +468,103 @@ body{margin:0;background:#f6f7f9;font-family:Inter,Arial,sans-serif;color:#111}
 <div id="header-container"></div>
 
 <main class="page-content">
+  <div class="page">
 
-<div class="page">
+<!-- ORDER CARD -->
+<div class="order-card">
 
-  <div class="card">
-    <div class="row">
-      <div class="img"><img id="offerImg" src="/img/offer-default.png"></div>
-      <div style="flex:1;min-width:260px">
-        <div class="badge" id="statusBadge">—</div>
-        <h1 class="h1" id="title">Загрузка…</h1>
-        <div class="muted" id="sub">—</div>
-        <div class="price" id="price">—</div>
-        <div class="actions" id="actions"></div>
-      </div>
+  <div class="order-badge" id="statusBadge">—</div>
+
+  <div class="order-top">
+    <div class="order-image">
+      <img id="offerImg" src="/img/offer-default.png">
     </div>
 
-    <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
+    <div class="order-info">
 
-    <div class="muted"><b>Описание:</b></div>
-    <div id="desc" style="margin-top:6px;line-height:1.55;color:#333">—</div>
+      <div class="order-title" id="title">Загрузка…</div>
+      <button id="expandTitleBtn" class="expand-btn">Показать полностью</button>
+
+<div class="order-price" id="price">—</div>
+
+<div class="order-meta" id="orderGameLine"></div>
+
+<div class="order-number" id="orderNumber">—</div>
+
+      <div class="order-date" id="orderDate">—</div>
+<div class="actions" id="actions" style="margin-top:14px;"></div>
+
+    </div>
   </div>
 
-  <div class="card">
-    <div style="font-weight:900;margin-bottom:10px">Чат по заказу</div>
+  <!-- PARAMETERS -->
+  <div class="order-params" id="orderParams"></div>
 
-    <div class="chat">
-      <div class="messages" id="messages"></div>
-      <div class="send">
-        <input id="msgInput" placeholder="Написать сообщение…">
-        <button id="sendBtn">→</button>
-      </div>
+  <!-- DESCRIPTION -->
+  <div class="order-desc-section" id="descSection">
+    <div class="section-title">Описание</div>
+    <div class="order-desc" id="desc"></div>
+    <button id="expandDescBtn" class="expand-btn">Показать полностью</button>
+  </div>
+
+</div>
+
+
+<!-- CHAT -->
+<div class="order-chat-card">
+
+<div class="right-top">
+  <div class="right-title">
+    <div class="chat-ava" id="chatAva">?</div>
+    <div style="min-width:0;">
+      <div class="name" id="chatName">—</div>
+      <div class="sub" id="chatSub">—</div>
     </div>
   </div>
 </div>
+
+  <div class="messages" id="messages"></div>
+
+<div class="composer" id="composer">
+  <input type="file" id="filePicker" accept="image/*,video/*" multiple style="display:none;" />
+  <button class="mini-btn" id="attachBtn" title="Прикрепить">＋</button>
+  <input type="text" id="msgInput" placeholder="Написать сообщение..." />
+  <button class="send-btn" id="sendBtn">Отправить</button>
+</div>
+
+</div> <!-- закрываем order-chat-card -->
+
 <div class="card" id="reviewBlock" style="display:none;">
-  <div style="font-weight:900;margin-bottom:10px">⭐ Оставить отзыв</div>
+<div class="review-title">
+  ОСТАВИТЬ ОТЗЫВ
+</div>
 
-  <select id="reviewRating"
-    style="width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;">
-    <option value="5">★★★★★ Отлично</option>
-    <option value="4">★★★★☆ Хорошо</option>
-    <option value="3">★★★☆☆ Нормально</option>
-    <option value="2">★★☆☆☆ Плохо</option>
-    <option value="1">★☆☆☆☆ Очень плохо</option>
-  </select>
 
+<div id="reviewStars" class="review-stars-input"></div>
+<input type="hidden" id="reviewRating" value="0">
+<div id="reviewError" class="review-error"></div>
+
+<div class="review-textarea-wrap">
   <textarea
     id="reviewText"
-    placeholder="Опишите опыт (необязательно)"
-    style="width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid #ccc;min-height:80px;"
+    class="review-textarea"
+    maxlength="100"
   ></textarea>
 
-  <button
-    id="sendReviewBtn"
-    class="btn btnBlue"
-    style="margin-top:10px;">
-    Отправить отзыв
-  </button>
+  <div class="review-counter">
+    <span id="reviewCount">0</span> / 100
+  </div>
+</div>
+
+
+<button
+  id="sendReviewBtn"
+  class="btn btnBlue"
+  style="margin-top:12px;">
+  Опубликовать
+</button>
+
+</div>
 </div>
 </main>
 
@@ -116,15 +584,15 @@ if(!orderId){
 }
 
 const token = localStorage.getItem("tp_token");
-const myEmail = localStorage.getItem("email");
+const myEmail = localStorage.getItem("tp_user_email");
 
 let chatId = null;
 let role = null;
 
 function statusText(s){
-  if(s==="pending") return "⏳ В процессе";
-  if(s==="completed") return "✅ Завершён";
-  if(s==="refunded") return "↩️ Возврат";
+  if(s==="pending") return "В процессе";
+  if(s==="completed") return "Завершён";
+  if(s==="refunded") return "Возврат";
   return s;
 }
 
@@ -146,12 +614,33 @@ async function loadOrder(){
   const o = data.order;
   role = o.role;
   chatId = o.chatId;
+  await loadChatHeader();
+
 
   const offer = o.offer || {};
 title.textContent = buildOfferTitle(offer);
+const gameObj = (window.GAMES_LIST || []).find(g => g.id === offer.game);
+const gameTitle = gameObj ? gameObj.name : offer.game;
 
-  sub.textContent =
-  `Заказ ${o.orderNumber || "#" + o.id.slice(0,8)}`;
+const gameLine = [
+  gameTitle,
+  offer.mode
+].filter(Boolean).join(", ");
+
+document.getElementById("orderGameLine").textContent = gameLine || "";
+
+orderNumber.textContent =
+  "Заказ " + (o.orderNumber || "#" + o.id.slice(0,8));
+
+const created = new Date(o.createdAt || Date.now());
+
+orderDate.textContent =
+  created.toLocaleDateString("ru-RU", {
+    day:"numeric",
+    month:"short",
+    year:"numeric"
+  });
+
   const lang = localStorage.getItem("tp_lang") || "ru";
 const description =
   offer.description?.[lang] ||
@@ -159,7 +648,47 @@ const description =
   "";
 
 desc.textContent = description || "Описание не указано.";
-  statusBadge.textContent = statusText(o.status);
+statusBadge.textContent = statusText(o.status);
+statusBadge.className = "order-badge " + o.status;
+const actions = document.getElementById("actions");
+actions.innerHTML = "";
+
+// очищаем
+actions.innerHTML = "";
+
+// Кнопка подтверждения (только покупатель и только если не refunded)
+if(role === "buyer" && o.status === "pending"){
+  actions.innerHTML += `
+    <button class="btn btnBlue" onclick="confirmOrder()">
+      Подтвердить получение
+    </button>
+  `;
+}
+
+// Кнопка возврата (продавец, пока статус НЕ refunded)
+if(role === "seller" && o.status !== "refunded"){
+  actions.innerHTML += `
+    <button class="btn btnGray" onclick="refundOrder()">
+      Вернуть деньги
+    </button>
+  `;
+}
+
+function setupExpand(el, btn){
+
+  setTimeout(()=>{
+    if(el.scrollHeight > el.clientHeight){
+      btn.style.display = "inline-block";
+    }
+  },50);
+
+  btn.onclick = ()=>{
+    el.style.webkitLineClamp = "unset";
+    el.style.display = "block";
+    el.style.overflow = "visible";
+    btn.style.display = "none";
+  };
+}
   // ⭐ отзыв: только покупатель и только после завершения
 const reviewBlock = document.getElementById("reviewBlock");
 
@@ -176,8 +705,26 @@ if (reviewBlock) {
   }
 }
 
-// ===== PRICE FIX =====
-price.textContent = `${o.price} грн`;
+let displayPrice = o.price;
+
+// Если продавец — показываем его чистую сумму
+if(role === "seller"){
+  displayPrice = o.sellerAmount || o.price;
+}
+
+if (window.tpMoney) {
+  price.textContent = await window.tpMoney.formatPrice(displayPrice);
+} else {
+  const currency = localStorage.getItem("tp_currency") || "UAH";
+
+  const symbols = {
+    UAH: "₴",
+    USD: "$",
+    EUR: "€"
+  };
+
+  price.textContent = displayPrice + " " + (symbols[currency] || "");
+}
 
 // ===== IMAGE FIX =====
 if (offer.imageUrl) {
@@ -192,21 +739,66 @@ offerImg.onerror = () => {
   offerImg.src = "/img/offer-default.png";
 };
 
-  actions.innerHTML = "";
-  if(o.status==="pending"){
-    if(role==="buyer"){
-      actions.innerHTML = `<button class="btn btnBlue" onclick="confirmOrder()">Подтвердить заказ</button>`;
-    }
-    if(role==="seller"){
-      actions.innerHTML = `<button class="btn btnGray" onclick="refundOrder()">Возврат</button>`;
-    }
-  } else {
-    msgInput.disabled = true;
-    sendBtn.disabled = true;
-    msgInput.placeholder = "Чат закрыт";
-  }
 
   loadMessages();
+setupExpand(title, expandTitleBtn);
+setupExpand(desc, expandDescBtn);
+
+initReviewStars();   // ← ДОБАВЬ СЮДА
+
+}
+async function loadChatHeader(){
+
+  if(!chatId) return;
+
+  const res = await fetch(`/api/chats/${chatId}`,{
+    headers:{
+      Authorization:"Bearer " + token
+    }
+  });
+
+  const data = await res.json();
+  if(!data.success) return;
+
+  const user = data.chat?.otherUser;
+  if(!user) return;
+
+  const avatar =
+    user.avatarUrl ||
+    user.avatarDataUrl ||
+    "/img/avatar-default.svg";
+
+  document.getElementById("chatAva").innerHTML =
+    `<img src="${avatar}">`;
+
+  document.getElementById("chatName").textContent =
+    user.username || "Пользователь";
+
+  document.getElementById("chatSub").textContent =
+    user.online ? "В сети" : "Не в сети";
+}
+
+function formatDateDivider(date){
+  const today = new Date();
+  const d = new Date(date);
+
+  const isToday = d.toDateString() === today.toDateString();
+
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  const isYesterday = d.toDateString() === yesterday.toDateString();
+
+  if(isToday) return "Сегодня";
+  if(isYesterday) return "Вчера";
+
+  const options = { day:'numeric', month:'long' };
+
+  if(d.getFullYear() !== today.getFullYear()){
+    options.year = 'numeric';
+  }
+
+  return d.toLocaleDateString("ru-RU", options);
 }
 
 async function loadMessages(){
@@ -215,18 +807,53 @@ async function loadMessages(){
   const res = await fetch(`/api/chats/${chatId}/messages`,{
     headers:{ Authorization:"Bearer "+token }
   });
+
   const data = await res.json();
   if(!data.success) return;
 
   messages.innerHTML = "";
+
+  let lastDate = null;
+
   data.messages.forEach(m=>{
+
+    const messageDate = new Date(m.createdAt);
+    const currentDateString = messageDate.toDateString();
+
+    if(lastDate !== currentDateString){
+const divider = document.createElement("div");
+divider.className = "date-divider";
+divider.dataset.date = currentDateString;
+divider.textContent = formatDateDivider(messageDate);
+      messages.appendChild(divider);
+      lastDate = currentDateString;
+    }
+
     const div = document.createElement("div");
-    div.className =
-      m.fromEmail==="system" ? "msg system" :
-      m.fromEmail===myEmail ? "msg me" : "msg other";
-    div.textContent = m.text;
+    div.className = "msg " + (m.fromEmail===myEmail ? "me" : "other");
+
+    const body = document.createElement("div");
+    body.className = "msg-body";
+
+    const textDiv = document.createElement("div");
+    textDiv.textContent = m.text;
+
+    const timeSpan = document.createElement("span");
+    timeSpan.className = "msg-time";
+    timeSpan.textContent =
+      messageDate.toLocaleTimeString("ru-RU", {
+        hour:"2-digit",
+        minute:"2-digit",
+        hour12:false
+      });
+
+    body.appendChild(textDiv);
+    body.appendChild(timeSpan);
+    div.appendChild(body);
+
     messages.appendChild(div);
   });
+
   messages.scrollTop = messages.scrollHeight;
 }
 
@@ -234,7 +861,7 @@ async function sendMsg(){
   const text = msgInput.value.trim();
   if(!text || !chatId || msgInput.disabled) return;
 
-  await fetch(`/api/chats/${chatId}/messages`,{
+  const res = await fetch(`/api/chats/${chatId}/messages`,{
     method:"POST",
     headers:{
       "Content-Type":"application/json",
@@ -243,13 +870,32 @@ async function sendMsg(){
     body:JSON.stringify({ text })
   });
 
+  const data = await res.json();
+  if(!data.success) return;
+
+  const div = document.createElement("div");
+  div.className = "msg me";
+
+  div.innerHTML = `
+    <div class="msg-body">
+      <div>${text}</div>
+      <span class="msg-time">
+        ${new Date().toLocaleTimeString("ru-RU", {
+          hour:"2-digit",
+          minute:"2-digit"
+        })}
+      </span>
+    </div>
+  `;
+
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+
   msgInput.value="";
-  loadMessages();
 }
 
 async function confirmOrder(){
-  if(!confirm("Подтвердить заказ? Деньги будут переведены продавцу.")) return;
-  actions.innerHTML = "";
+if(!confirm("Подтвердить получение? Деньги будут переведены продавцу.")) return;
 
   const r = await fetch(`/api/orders/${orderId}/confirm`,{
     method:"POST",
@@ -261,8 +907,7 @@ async function confirmOrder(){
 }
 
 async function refundOrder(){
-  if(!confirm("Сделать возврат? Деньги вернутся покупателю.")) return;
-  actions.innerHTML = "";
+if(!confirm("Вернуть деньги покупателю?")) return;
 
   const r = await fetch(`/api/orders/${orderId}/refund`,{
     method:"POST",
@@ -279,7 +924,18 @@ const reviewBtn = document.getElementById("sendReviewBtn");
 
 if (reviewBtn) {
   reviewBtn.addEventListener("click", async () => {
-    const rating = document.getElementById("reviewRating").value;
+
+    const rating = Number(document.getElementById("reviewRating").value);
+    const errorEl = document.getElementById("reviewError");
+
+    if (rating === 0) {
+      errorEl.textContent = "Поставьте оценку";
+      return;
+    }
+
+    errorEl.textContent = "";
+    reviewBtn.disabled = true;
+
     const text = document.getElementById("reviewText").value;
 
     const res = await fetch("/api/reviews", {
@@ -299,14 +955,128 @@ if (reviewBtn) {
 
     if (!data.success) {
       alert(data.message || "Ошибка при отправке отзыва");
+      reviewBtn.disabled = false;
       return;
     }
 
-    alert("Отзыв добавлен");
-loadOrder();
+    document.getElementById("reviewText").value = "";
+    loadOrder();
   });
 }
-setInterval(loadMessages, 2500);
+
+const socket = io();
+
+socket.on("chat:new-message", (m) => {
+  if(!chatId) return;
+  if(m.chatId !== chatId) return;
+  if(m.fromEmail === myEmail) return;
+
+  const messageDate = new Date(m.createdAt);
+  const messageDateString = messageDate.toDateString();
+
+const dividers = messages.querySelectorAll(".date-divider");
+const lastDivider = dividers.length ? dividers[dividers.length - 1] : null;
+
+let lastDividerDate = null;
+
+if(lastDivider){
+  lastDividerDate = lastDivider.dataset.date;
+}
+
+  if(lastDividerDate !== messageDateString){
+    const divider = document.createElement("div");
+    divider.className = "date-divider";
+    divider.dataset.date = messageDateString;
+    divider.textContent = formatDateDivider(messageDate);
+    messages.appendChild(divider);
+  }
+
+  const div = document.createElement("div");
+  div.className = "msg other";
+
+  div.innerHTML = `
+    <div class="msg-body">
+      <div>${m.text}</div>
+      <span class="msg-time">
+        ${messageDate.toLocaleTimeString("ru-RU", {
+          hour:"2-digit",
+          minute:"2-digit",
+          hour12:false
+        })}
+      </span>
+    </div>
+  `;
+
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+});
+
+function initReviewStars(){
+  const container = document.getElementById("reviewStars");
+  const input = document.getElementById("reviewRating");
+
+  if(!container) return;
+
+  container.innerHTML = "";
+
+  for(let i=1;i<=5;i++){
+    const star = document.createElement("span");
+    star.className = "star";
+    star.textContent = "★";
+    star.dataset.value = i;
+
+    star.onclick = ()=>{
+      input.value = i;
+      renderStarsInput(i);
+    };
+
+    container.appendChild(star);
+  }
+
+renderStarsInput(Number(input.value) || 0);
+
+}
+function renderStarsInput(val){
+  val = Number(val);
+
+  const container = document.getElementById("reviewStars");
+
+  container.classList.remove("r1","r2","r3","r4","r5");
+
+  if(val > 0){
+    container.classList.add("r" + val);
+  }
+
+  container.querySelectorAll(".star").forEach(star=>{
+    star.classList.toggle(
+      "filled",
+      Number(star.dataset.value) <= val
+    );
+  });
+  document.getElementById("reviewError").textContent = "";
+}
+const reviewText = document.getElementById("reviewText");
+const reviewCount = document.getElementById("reviewCount");
+const reviewCounter = document.querySelector(".review-counter");
+
+if(reviewText){
+  reviewText.addEventListener("input", () => {
+
+    const length = reviewText.value.length;
+    reviewCount.textContent = length;
+
+    reviewCounter.classList.remove("warn","limit");
+
+    if(length >= 80 && length < 100){
+      reviewCounter.classList.add("warn");
+    }
+
+    if(length >= 100){
+      reviewCounter.classList.add("limit");
+    }
+
+  });
+}
 loadOrder();
 </script>
 </body>

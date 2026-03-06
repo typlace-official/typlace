@@ -110,7 +110,9 @@ body{
   border-radius: 999px;
 
   background: var(--chip);
-  color: var(--text);
+
+  color:#3b82f6;   /* 🔵 голубой текст */
+
   font-size: 14px;
   font-weight: 600;
 
@@ -122,9 +124,9 @@ body{
 }
 .mode-pill:hover{ background: var(--chipHover); }
 .mode-pill.active{
-  background: var(--chipActive);
-  color: var(--chipActiveText);
-  border-color: var(--chipActive);
+  background:#3b82f6;
+  border-color:#3b82f6;
+  color:#fff;
 }
 
 /* arrows */
@@ -173,7 +175,7 @@ body{
   width:100%;
   box-sizing:border-box;
   padding: 12px 38px 12px 12px;
-  border-radius: 12px;
+  border-radius: 5px;
   border: 1px solid var(--line);
   background:#fff;
   font-size: 14px;
@@ -220,7 +222,7 @@ body{
   align-items:center;
   gap: 8px;
   padding: 0 12px;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid var(--line);
   background:#fff;
   cursor:pointer;
@@ -245,36 +247,35 @@ body{
 .sort-chip.disabled:hover{ background:#fff; }
 
 .sell-btn{
-  height: 40px;
-  padding: 0 18px;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-  background: var(--btnBg);
-  color: var(--btnText);
-  font-weight: 700;
-  cursor:pointer;
-  user-select:none;
-}
-.sell-btn:hover{ background: var(--btnHover); }
+  height:40px;
+  padding:0 18px;
+  border-radius:5px;
 
+  background:#fff;
+  border:1px solid #e5e7eb;   /* серый бордер */
+  color:#3b82f6;              /* синий текст */
+
+  font-weight:700;
+  cursor:pointer;
+}
+
+.sell-btn:hover{
+  background:#f0f7ff;
+  border-color:#3b82f6;
+}
 /* ===== Empty ===== */
 .empty{
-  margin-top: 18px;
-  padding: 26px 14px;
-  border: 1px dashed #d1d5db;
-  border-radius: 14px;
-  background: #fff;
-  color: var(--muted);
+  margin-top: 20px;
   text-align:center;
+  color: var(--muted);
   font-size: 14px;
 }
 
 /* ===== OFFERS ===== */
 .offers-list{
-  margin-top: 20px; /* ← вот это добавили */
+  margin-top: 20px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 18px;
+  gap:16px;
 }
 
 .offer-card{
@@ -305,33 +306,36 @@ body{
 
 
 .offer-body{
-  padding:12px;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  flex:1;
+  gap:4px;
 }
 
 .offer-title{
   font-size:14px;
   font-weight:700;
-  line-height:1.3;
+  line-height:1.35;
 
-  display: -webkit-box;
-  -webkit-line-clamp: 2;     /* максимум 2 строки */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  display:-webkit-box;
+  -webkit-line-clamp:3;
+  -webkit-box-orient:vertical;
 
-  min-height: 36px;         /* одинаковая высота карточек */
+  overflow:hidden;
+
+  word-break:break-word;
+  overflow-wrap:anywhere;
 }
 
-.offer-price{ font-size:18px; font-weight:800; margin:6px 0; }
-
-.offer-seller{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin-top: auto;
+.offer-price{
+  font-size:18px;
+  font-weight:900;
+  margin:6px 0 8px;
+  letter-spacing:0.2px;
 }
+
+
 
 .seller-avatar{
   position: relative;
@@ -361,8 +365,21 @@ body{
   z-index: 3;
 }
 
-.seller-name{ font-size:13px; font-weight:600; }
-.seller-rating{ font-size:12px; color:#6b7280; }
+.seller-name{
+  font-size:13px;
+  font-weight:600;
+  color:#374151;
+
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+
+  max-width:120px;
+}
+.seller-rating{
+  font-size:12px;
+  color:#9ca3af;
+}
 .rating-hidden{ color:#6b7280; font-weight:600; }
 
 /* stars */
@@ -378,18 +395,22 @@ body{
 /* heart */
 .offer-heart{
   position:absolute;
-  top:auto;
-  bottom:12px;
-  right:12px;
-  width:34px;
-  height:34px;
+  bottom:10px;
+  right:10px;
+
+  width:32px;
+  height:32px;
+
   border-radius:50%;
-  background:rgba(255,255,255,0.9);
+  background:rgba(255,255,255,0.95);
+
   display:flex;
   align-items:center;
   justify-content:center;
+
   cursor:pointer;
   z-index:5;
+
   border:1px solid #e5e7eb;
 }
 .offer-heart svg{
@@ -461,7 +482,253 @@ input[type="number"]{
   line-height: 1.1;
 }
 #extraFilters{
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 6px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  width:100%;
+}
+.offer-seller{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  margin-top:auto;
+  padding-right:40px; /* 🔥 место под сердечко */
+}
+
+.offer-seller > div{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:2px;
+}
+/* ===== OFFERS GRID ===== */
+
+.offers-list{
+  display:grid;
+  gap:16px;
+}
+
+/* 📱 Mobile — 2 колонки */
+@media(max-width:640px){
+  .offers-list{
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+  }
+}
+
+/* 💻 Desktop — как было */
+@media(min-width:641px){
+  .offers-list{
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  }
+}
+@media(max-width:640px){
+
+  .offer-title{
+    font-size:13px;
+  }
+
+}
+/* 📱 Скрываем "На сайте" в карточках на мобиле */
+@media (max-width:640px){
+  .seller-since{
+    display:none;
+  }
+}
+@media (max-width:640px){
+  .scroll-arrow{
+    display:none !important;
+  }
+
+  .modes{
+    padding: 6px 14px; /* убираем 40px под стрелки */
+  }
+}
+@media (max-width:640px){
+
+  .breadcrumb{
+    padding-left: 0;
+    margin-top: 8px;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+
+  .crumb-icon{
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    object-fit: contain;     /* логотипы не режем */
+    background: #fff;        /* чтобы PNG смотрелся ровно */
+    border: 1px solid #e5e7eb;
+  }
+
+  .crumb-game,
+  .crumb-mode{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* ✅ одна строка и ... */
+    max-width: 100%;
+  }
+
+  .crumb-game{
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  .crumb-mode{
+    font-size: 16px;
+    font-weight: 700;
+    opacity: .75;
+  }
+}
+@media (max-width:640px){
+
+  .scroll-arrow{ display:none !important; }
+
+  .modes{ padding: 6px 12px; } /* было 40px под стрелки */
+
+  .mode-pill{
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
+/* ===== MOBILE FILTER STRUCTURE ===== */
+
+.mobile-controls{
+  display:flex;
+  gap:8px;
+  width:100%;
+  justify-content:flex-start;
+}
+
+.mobile-search-row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+.filters-panel{
+  display:none;
+}
+
+@media (min-width:641px){
+  .filters-panel{
+    display:flex !important;
+    gap:10px;
+    align-items:center;
+    flex-wrap:nowrap;        /* 🔥 запрещаем перенос */
+  }
+
+  .filters-panel select{
+    width:auto;              /* 🔥 ширина по контенту */
+    min-width:160px;         /* минимальная ширина */
+  }
+}
+@media (min-width:641px){
+  #filterToggle{
+    display:none;
+  }
+}
+@media (min-width:641px){
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+
+  .mobile-controls{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    width:auto;
+  }
+
+  .mobile-search-row{
+    margin-left:auto;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .mobile-search-row .search{
+    min-width:280px;
+  }
+
+}
+@media (max-width:640px){
+
+  .filters-panel{
+    display:none;
+    width:100%;
+  }
+
+  .filters-panel.show{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    width:100%;
+    align-items:flex-start;   /* прижимаем влево */
+  }
+
+  .filters-panel select{
+    width:280px;              /* 🔥 аккуратная ширина */
+    max-width:100%;
+  }
+
+}
+
+.offers-count{
+  font-size:12px;
+  color:#9ca3af;
+  font-weight:500;
+  width:100%;
+  margin-top:10px;
+}
+
+@media (max-width:640px){
+
+  .topbar{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+.mobile-controls{
+  justify-content:flex-start;
+}
+
+  .mobile-search-row .search{
+    flex:1;
+  }
+
+  .sell-btn{
+    flex-shrink:0;
+  }
+
+}
+.sort-chip.active{
+  background:#3b82f6;
+  border-color:#3b82f6;
+  color:#fff;
+}
+.filter-icon{
+  width:16px;
+  height:16px;
+  stroke:currentColor;
+  stroke-width:2;
+  fill:none;
+}
+/* ===== MOBILE FIX SELLER NAME ===== */
+@media (max-width:640px){
+
+  .seller-name{
+    max-width:10ch;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
 }

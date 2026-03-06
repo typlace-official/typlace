@@ -1,0 +1,99 @@
+{
+  "sale": "Продажа",
+  "rent": "Аренда",
+
+  "vc_yes": "Есть VC",
+  "vc_no": "Нет VC",
+
+  "other_amount": "Другое количество",
+
+  "country": {
+    "eu": "Европа",
+    "us": "Америка",
+    "ru": "Россия",
+    "ua_cis": "Украина + СНГ",
+    "other": "Другие страны",
+    "other_region": "Другие регионы"
+  },
+
+  "search_placeholder": "Поиск",
+  "help": "Помощь",
+  "chats": "Чаты",
+  "profile": "Профиль",
+  "login": "Вход",
+  "signup": "Регистрация",
+
+  "price": "Цена",
+  "filters": "Фильтры",
+  "amount": "Количество",
+  "search_by_name": "Поиск по названию",
+  "sell": "Продать",
+
+"offers_found_one": "Найдено {{count}} объявление",
+"offers_found_few": "Найдено {{count}} объявления",
+"offers_found_many": "Найдено {{count}} объявлений",
+
+"no_reviews": "Нет отзывов",
+
+"reviews_count": {
+  "one": "{{count}} отзыв",
+  "few": "{{count}} отзыва",
+  "many": "{{count}} отзывов"
+},
+
+"home": "Главная",
+"favorites": "Избранное",
+"no_favorites": "У тебя пока нет избранных предложений",
+
+  "from": "От",
+  "to": "До",
+
+  "category_placeholder": "Категория",
+  "choose_category": "Выберите категорию",
+
+  "empty": "Пока нет объявлений",
+
+  "back": "Назад",
+  "photo_product": "Фото товара",
+  "add_photo": "Добавить фото",
+  "availability": "Наличие",
+
+  "language": "Язык",
+  "offer_language": "Язык объявления",
+  "ad_language": "Язык объявления",
+
+  "create_offer": "Создать объявление",
+  "edit_offer": "Редактировать объявление",
+  "save_changes": "Сохранить изменения",
+  "delete_offer": "Удалить объявление",
+
+  "invalid_price": "Укажите корректную цену",
+  "enter_title": "Введите название на выбранном языке",
+  "enter_description": "Введите описание на выбранном языке",
+
+  "offer_deleted": "Объявление удалено",
+  "offer_not_found": "Оффер не найден",
+
+  "buyer_pays": "Покупатель заплатит",
+
+  "title": "Название",
+  "description": "Описание",
+
+  "lang_ru": "Русский",
+  "lang_uk": "Украинский",
+  "lang_en": "English",
+
+  "footer": {
+    "copyLine1": "© 2026 TyPlace — маркетплейс цифровых товаров и услуг.",
+    "copyLine2": "Все права защищены.",
+    "links": {
+      "rules": "Правила платформы",
+      "terms": "Пользовательское соглашение",
+      "privacy": "Политика конфиденциальности",
+      "cookies": "Политика cookie",
+      "about": "О компании",
+      "help": "Центр помощи",
+      "contacts": "Контакты"
+    }
+  }
+}

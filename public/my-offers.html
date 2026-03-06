@@ -58,10 +58,16 @@ body{
 }
 
 .offer-meta{
-  font-size:13px;
+  font-size:12px;
   color:#6b7280;
-  margin-top:6px;
-  font-weight:700;
+  margin-top:4px;
+  font-weight:500;
+
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+
+  max-width:100%;
 }
 
 .offer-actions{
@@ -96,12 +102,88 @@ body{
 }
 
 .empty{
-  padding:30px;
   text-align:center;
-  background:#fff;
-  border-radius:14px;
+  color:#9ca3af;
+  font-size:14px;
+  margin-top:40px;
+}
+.offer-body{
+  position:relative;
+}
+
+.offer-menu{
+  position:absolute;
+  top:8px;
+  right:8px;
+
+  width:28px;
+  height:28px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size:18px;
   font-weight:700;
-  color:#6b7280;
+
+  border-radius:8px;
+  cursor:pointer;
+
+  background:rgba(255,255,255,0.9);
+  backdrop-filter:blur(4px);
+
+  color:#111;
+}
+
+.offer-menu:hover{
+  background:#fff;
+}
+
+.offers-list:has(.empty){
+  display:block;
+}
+.offer-dropdown{
+  position:absolute;
+  top:40px;
+  right:8px;
+
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+
+  box-shadow:0 10px 25px rgba(0,0,0,0.08);
+
+  display:none;
+  flex-direction:column;
+
+  min-width:160px;
+  overflow:hidden;
+  z-index:20;
+}
+
+.offer-dropdown button{
+  padding:10px 14px;
+  border:none;
+  background:#fff;
+  text-align:left;
+  font-size:13px;
+  cursor:pointer;
+}
+
+.offer-dropdown button:hover{
+  background:#f3f4f6;
+}
+
+.offer-dropdown.show{
+  display:flex;
+}
+.offer-body{
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  flex:1;
+
+  gap:4px;
 }
 </style>
 </head>
@@ -116,10 +198,11 @@ body{
   <div class="head">
     <div class="title">Мои предложения</div>
 
-    <div class="tabs">
-      <button class="tab" id="tab-active" onclick="setTab('active')">Активные</button>
-      <button class="tab" id="tab-inactive" onclick="setTab('inactive')">Неактивные</button>
-    </div>
+<div class="tabs">
+  <button class="tab" id="tab-active" onclick="setTab('active')">Активные</button>
+  <button class="tab" id="tab-inactive" onclick="setTab('inactive')">Неактивные</button>
+  <button class="tab" id="tab-closed" onclick="setTab('closed')">Проданные</button>
+</div>
   </div>
 
   <div id="list" class="offers-list"></div>
@@ -130,6 +213,7 @@ body{
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
+<script src="/i18n.js"></script>
 <script src="/header.js"></script>
 <script src="/tp-money.js"></script>
 <script src="/offer-title.js"></script>
@@ -150,7 +234,13 @@ function formatDate(ts){
     month:"long"
   });
 }
+function formatMode(mode){
+  if(!mode) return "";
 
+  return mode
+    .replace(/_/g," ")
+    .replace(/\b\w/g,l=>l.toUpperCase());
+}
 function setTab(tab){
   currentTab = tab;
 
@@ -178,23 +268,28 @@ function render(){
 
   const now = Date.now();
 
-  const filtered = allOffers.filter(o=>{
-    if(currentTab === "active"){
-      return o.status === "active" && o.activeUntil > now;
-    }
+const filtered = allOffers.filter(o=>{
 
-    if(currentTab === "inactive"){
-      return (
-        o.status !== "active" ||
-        (o.activeUntil && o.activeUntil <= now)
-      );
-    }
-  });
-
-  if(!filtered.length){
-    list.innerHTML = `<div class="empty">Нет предложений</div>`;
-    return;
+  if(currentTab === "active"){
+    return o.status === "active" && o.activeUntil > now;
   }
+
+  if(currentTab === "inactive"){
+    return o.status === "inactive";
+  }
+
+  if(currentTab === "closed"){
+    return o.status === "closed";
+  }
+
+});
+
+if(!filtered.length){
+  list.innerHTML = `
+    <div class="empty">Нет предложений</div>
+  `;
+  return;
+}
 
   filtered.forEach(renderCard);
   updatePrices();
@@ -217,7 +312,7 @@ const gameTitle = gameObj ? gameObj.name : o.game;
 
 const gameLine = [
   gameTitle,
-  o.mode
+  formatMode(o.mode)
 ]
   .filter(Boolean)
   .join(", ");
@@ -230,43 +325,32 @@ const gameLine = [
     </div>`;
   }
 
-  let actions = "";
 
-  if(currentTab === "inactive"){
-  actions = `
-    <div class="offer-actions">
-      <button class="btn-primary" onclick="activate('${o.id}',event)">Активировать</button>
-      <button class="btn-secondary" onclick="edit('${o.id}',event)">Редактировать</button>
-    </div>
-  `;
-} else {
-  actions = `
-    <div class="offer-actions">
-      <button class="btn-secondary" onclick="edit('${o.id}',event)">Редактировать</button>
-      <button class="btn-danger" onclick="deactivate('${o.id}',event)">
-  Деактивировать
-</button>
-    </div>
-  `;
-}
 
-  card.innerHTML = `
-    <div class="offer-image">
-      <img src="${image}" onerror="this.src='/img/offer-default.png'">
-    </div>
+card.innerHTML = `
+<div class="offer-image">
 
-    <div class="offer-body">
-      <div class="offer-title">${title}</div>
+  <img src="${image}" onerror="this.src='/img/offer-default.png'">
 
-<div class="offer-price" data-price="${o.price}">—</div>
+  <div class="offer-menu" onclick="toggleMenu('${o.id}', event)">⋯</div>
 
-<div class="offer-meta">
-  ${gameLine}
+  <div class="offer-dropdown" id="menu-${o.id}"></div>
+
 </div>
-      ${meta}
-      ${actions}
+  <div class="offer-body">
+    <div class="offer-title">${title}</div>
+
+    <div class="offer-price" data-price="${o.price}">—</div>
+
+    <div class="offer-meta">
+      ${gameLine}
     </div>
-  `;
+
+    ${meta}
+
+
+  </div>
+`;
 
   list.appendChild(card);
 }
@@ -334,6 +418,73 @@ async function updatePrices(){
 }
 
 window.addEventListener("tp:currency-change", updatePrices);
+function cloneOffer(id, e){
+  e.stopPropagation();
+
+  fetch("/api/offers/" + id + "/clone", {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  })
+  .then(r => r.json())
+  .then(d => {
+    if(d.success){
+      location.reload();
+    } else {
+      alert(d.message || "Ошибка");
+    }
+  });
+}
+function toggleMenu(id,e){
+  e.stopPropagation();
+
+  const menu = document.getElementById("menu-"+id);
+  if(!menu) return;
+
+  const isOpen = menu.classList.contains("show");
+
+  // закрываем все меню
+  document.querySelectorAll(".offer-dropdown").forEach(m=>{
+    m.classList.remove("show");
+  });
+
+  // если было закрыто — открываем
+  if(!isOpen){
+
+    const offer = allOffers.find(o=>o.id===id);
+    if(!offer) return;
+
+    menu.innerHTML="";
+
+    if(currentTab==="active"){
+      menu.innerHTML=`
+        <button onclick="edit('${id}',event)">Редактировать</button>
+        <button onclick="deactivate('${id}',event)">Снять с продажи</button>
+      `;
+    }
+
+    if(currentTab==="inactive"){
+      menu.innerHTML=`
+        <button onclick="activate('${id}',event)">Активировать</button>
+        <button onclick="edit('${id}',event)">Редактировать</button>
+      `;
+    }
+
+    if(currentTab==="closed"){
+      menu.innerHTML=`
+        <button onclick="cloneOffer('${id}',event)">Продать снова</button>
+      `;
+    }
+
+    menu.classList.add("show");
+  }
+}
+document.addEventListener("click",()=>{
+  document.querySelectorAll(".offer-dropdown").forEach(m=>{
+    m.classList.remove("show");
+  });
+});
 </script>
 </body>
 </html>

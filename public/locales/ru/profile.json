@@ -1,0 +1,35 @@
+{
+  "title": "Профиль",
+
+  "myTitle": "Мой профиль",
+  "externalTitle": "Профиль пользователя",
+
+  "nav": {
+    "myOffers": "Мои предложения",
+    "purchases": "Покупки",
+    "sales": "Продажи",
+    "favorites": "Избранные",
+    "wallet": "Кошелёк"
+  },
+
+  "offers": "Предложения",
+  "since": "На TyPlace с",
+  "noReviews": "Нет отзывов",
+
+  "reviews": {
+    "one": "отзыв",
+    "few": "отзыва",
+    "many": "отзывов"
+  },
+
+  "menu": {
+    "changePhoto": "Изменить фото",
+    "notifications": "Уведомления",
+    "logout": "Выйти",
+    "profile": "Профиль",
+    "nickname": "Никнейм",
+    "changeNick": "Изменить ник",
+    "nickHint": "Ник можно менять раз в 30 дней",
+    "save": "Сохранить"
+  }
+}
