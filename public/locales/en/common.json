@@ -2,79 +2,120 @@
   "sale": "Sale",
   "rent": "Rent",
 
-  "vc_yes": "With VC",
+  "vc_yes": "Has VC",
   "vc_no": "No VC",
 
   "other_amount": "Other amount",
 
   "country": {
     "eu": "Europe",
-    "us": "United States",
+    "us": "America",
     "ru": "Russia",
     "ua_cis": "Ukraine + CIS",
     "other": "Other countries",
     "other_region": "Other regions"
   },
 
+    "badges": {
+      "admin": "Admin",
+      "super_admin": "Super Admin",
+      "moderator": "Moderator",
+      "support": "Support",
+      "resolution": "Resolution",
+      "official": "Official"
+    },
+
   "search_placeholder": "Search",
-"help": "Help",
-"chats": "Chats",
-"profile": "Profile",
-"home": "Home",
-"favorites": "Favorites",
-"no_favorites": "You don't have any favorite listings yet",
-"login": "Login",
-"signup": "Sign up",
+  "help": "Help",
+  "chats": "Chats",
+  "profile": "Profile",
+  "login": "Log in",
+  "signup": "Sign up",
 
   "price": "Price",
   "filters": "Filters",
   "amount": "Amount",
   "search_by_name": "Search by name",
   "sell": "Sell",
-    "offers_found_one": "{{count}} offer found",
-  "offers_found_many": "{{count}} offers found",
+
+  "offers_found_one": "Found {{count}} offer",
+  "offers_found_few": "Found {{count}} offers",
+  "offers_found_many": "Found {{count}} offers",
+
   "no_reviews": "No reviews",
-"reviews_count": {
-  "one": "{{count}} review",
-  "many": "{{count}} reviews"
-},
+
+  "reviews_count": {
+    "one": "{{count}} review",
+    "few": "{{count}} reviews",
+    "many": "{{count}} reviews"
+  },
+
+  "home": "Home",
+  "favorites": "Favorites",
+  "no_favorites": "You have no favorite offers yet",
+
   "from": "From",
   "to": "To",
 
   "category_placeholder": "Category",
-  "empty": "No listings yet",
-    "choose_category": "Choose a category",
+  "choose_category": "Choose a category",
+
+  "empty": "No offers yet",
+
   "back": "Back",
   "photo_product": "Product photo",
   "add_photo": "Add photo",
-  "availability": "Stock",
+  "availability": "Availability",
+
   "language": "Language",
-  "create_offer": "Create listing",
+  "offer_language": "Offer language",
+  "ad_language": "Offer language",
+
+  "create_offer": "Create offer",
+  "edit_offer": "Edit offer",
   "save_changes": "Save changes",
-  "delete_offer": "Delete listing",
-  "invalid_price": "Please enter a valid price",
-"enter_title": "Enter title in selected language",
-"enter_description": "Enter description in selected language",
-"offer_deleted": "Offer deleted",
-"offer_not_found": "Offer not found",
-"buyer_pays": "Buyer will pay",
-"edit_offer": "Edit offer",
-"ad_language": "Ad language",
-"title": "Title",
-"description": "Description",
-"lang_ru": "Russian",
-"lang_uk": "Ukrainian",
-"lang_en": "English",
+  "delete_offer": "Delete offer",
+
+  "invalid_price": "Enter a valid price",
+  "enter_title": "Enter a title in the selected language",
+  "enter_description": "Enter a description in the selected language",
+
+  "offer_deleted": "Offer deleted",
+  "offer_not_found": "Offer not found",
+
+  "buyer_pays": "Buyer pays",
+
+  "title": "Title",
+  "description": "Description",
+
+  "lang_ru": "Russian",
+  "lang_uk": "Ukrainian",
+  "lang_en": "English",
+
+  "system_messages": {
+    "label": "SYSTEM",
+    "fallback_user": "User",
+    "fallback_order": "Order",
+    "fallback_text": "System message",
+
+    "order_created": "Buyer {{actor}} placed order {{order}}. Funds are frozen.",
+    "order_confirmed": "Buyer {{actor}} confirmed receipt for order {{order}}. The deal is completed.",
+    "order_refunded": "Seller {{actor}} issued a refund for order {{order}}.",
+    "order_confirmed_admin": "Administrator confirmed order {{order}}. The deal is completed.",
+    "order_refunded_admin": "Administrator issued a refund for order {{order}}.",
+    "review_created": "Buyer {{actor}} left a review for order {{order}}."
+  },
+
   "footer": {
     "copyLine1": "© 2026 TyPlace — marketplace for digital goods and services.",
     "copyLine2": "All rights reserved.",
     "links": {
-      "rules": "Platform rules",
-      "terms": "User agreement",
-      "privacy": "Privacy policy",
-      "cookies": "Cookie policy",
-      "about": "About",
-      "help": "Help center",
+      "rules": "Platform Rules",
+      "terms": "User Agreement",
+      "privacy": "Privacy Policy",
+      "cookies": "Cookie Policy",
+      "about": "About Us",
+      "help": "Help Center",
       "contacts": "Contacts"
     }
   }

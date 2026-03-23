@@ -273,7 +273,14 @@ font-weight:700;
   gap:18px;
   align-items:stretch;
 }
+@media (max-width:640px){
 
+  .grid{
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+  }
+
+}
 .offer-card{
   background:#fff;
   border:1px solid #e5e7eb;
@@ -299,10 +306,10 @@ font-weight:700;
 }
 
 .offer-body{
-  padding:16px;
+  padding:14px;
   display:flex;
   flex-direction:column;
-  gap:12px;
+  gap:2px;
   flex:1;
 }
 
@@ -377,7 +384,7 @@ font-weight:700;
   -webkit-box-orient:vertical;
   overflow:hidden;
 
-  min-height:48px;
+  min-height:36px;
 
   word-break:break-word;
   overflow-wrap:anywhere;
@@ -386,7 +393,7 @@ font-weight:700;
 .review-dropdown{
   position:relative;
   min-width:240px;
-  z-index:1100;   /* ДОБАВИТЬ */
+  z-index:10;
 }
 
 .review-menu{
@@ -399,13 +406,13 @@ font-weight:700;
   border-radius:12px;
   margin-top:6px;
   display:none;
-  z-index:1200;   /* ДОБАВИТЬ */
+  z-index:20;
 }
 .review-dropdown.open .review-menu{
   display:block;
 }
 .review-more{
-  margin-top:6px;
+  margin-top:2px;
   font-size:14px;
   font-weight:600;
   color:#2563eb;
@@ -484,6 +491,46 @@ body.modal-open{
 .modal-close:hover{
   background:#f3f4f6;
 }
+
+@media (max-width:640px){
+
+  .review-user{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:6px;
+  }
+
+}
+@media (max-width:640px){
+
+  .avatar{
+    width:28px;
+    height:28px;
+  }
+
+}
+@media (max-width:640px){
+
+  .username{
+    font-size:14px;
+  }
+
+}
+@media (max-width:640px){
+
+  .text{
+    font-size:14px;
+    line-height:1.5;
+  }
+
+}
+@media (max-width:640px){
+
+  .review-more{
+    font-size:13px;
+  }
+
+}
   </style>
 </head>
 
@@ -497,25 +544,25 @@ body.modal-open{
     <div class="container">
       <div class="top">
         <div>
-          <h1 id="reviewsTitle">Отзывы</h1>
+          <h1 id="reviewsTitle" data-i18n="page.title"></h1>
 <div class="meta" id="titleRating"></div>
 
         </div>
 
 <div class="review-dropdown tp-pill-wrap">
-  <div class="review-selected tp-pill" id="reviewSelected">
-    Все отзывы
-    <svg class="tp-caret" viewBox="0 0 20 20" fill="none">
-      <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="2"/>
-    </svg>
-  </div>
+<div class="review-selected tp-pill" id="reviewSelected">
+  <span id="reviewSelectedText"></span>
+  <svg class="tp-caret" viewBox="0 0 20 20" fill="none">
+    <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="2"/>
+  </svg>
+</div>
 
   <div class="review-menu tp-panel" id="reviewMenu"></div>
 </div>
       </div>
 
       <div id="grid" class="grid"></div>
-      <div id="empty" class="empty" style="display:none;">Пока нет отзывов</div>
+      <div id="empty" class="empty" style="display:none;" data-i18n="page.empty"></div>
     </div>
   </div>
 
@@ -611,7 +658,7 @@ function makeFilters(){
   menu.innerHTML = "";
 
   const items = [
-    {id:"all", label:"Все отзывы"},
+    {id:"all", label: window.tpI18n.t("page.all")},
     {id:"5", stars:5},
     {id:"4", stars:4},
     {id:"3", stars:3},
@@ -634,7 +681,7 @@ function makeFilters(){
 
       if(item.id === "all"){
         selected.innerHTML = `
-          Все отзывы
+          ${window.tpI18n.t("page.all")}
           <svg class="tp-caret" viewBox="0 0 20 20" fill="none">
             <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="2"/>
           </svg>
@@ -746,13 +793,6 @@ function render(){
       </div>
 
       <div class="offer-body">
-        <div class="offer-title">
-          ${escapeHtml(x.offerTitle)}
-        </div>
-
-        <div class="offer-price" data-price="${x.price || 0}">
-          —
-        </div>
 
         <div class="review-user">
           <div class="review-user-left">
@@ -773,13 +813,13 @@ function render(){
           ${date || ""}
         </div>
 
-        <div class="text">
-          ${x.text ? escapeHtml(x.text) : ""}
-        </div>
+<div class="text">
+  ${x.text ? escapeHtml(x.text) : ""}
+</div>
 
-        <div class="review-more is-hidden">
-          Показать полностью
-        </div>
+<div class="review-more is-hidden">
+  ${window.tpI18n.t("page.show_more")}
+</div>
 
       </div>
     `;
@@ -815,7 +855,9 @@ function render(){
 
   });
 
-  updatePrices();
+updatePrices();
+
+window.tpI18n.apply();
 }
 
 
@@ -832,14 +874,7 @@ function render(){
       return escapeHtml(str);
     }
 function formatReviewsCount(n){
-  const abs = Math.abs(n);
-  const lastTwo = abs % 100;
-  const last = abs % 10;
-
-  if(lastTwo > 10 && lastTwo < 20) return n + " отзывов";
-  if(last > 1 && last < 5) return n + " отзыва";
-  if(last === 1) return n + " отзыв";
-  return n + " отзывов";
+  return window.tpI18n.pluralKey("page.count", n);
 }
 // Закрытие dropdown при клике вне (один раз)
 document.addEventListener("click", (e)=>{
@@ -864,8 +899,11 @@ async function updatePrices(){
 
 window.addEventListener("tp:currency-change", updatePrices);
 
-    async function init(){
-      makeFilters();
+async function init(){
+  makeFilters();
+
+  document.getElementById("reviewSelectedText").textContent =
+    window.tpI18n.t("page.all");
 const reviewsTitle = document.getElementById("reviewsTitle");
 
 // Проверяем: это свои отзывы или чужие
@@ -878,19 +916,19 @@ if (token) {
   const meData = await meRes.json().catch(()=>({}));
 
   if (meData.success && meData.user?.userId === userId) {
-    reviewsTitle.textContent = "Мои отзывы";
-    document.title = "Мои отзывы — TyPlace";
+    reviewsTitle.textContent = window.tpI18n.t("page.my");
+    document.title = window.tpI18n.t("page.my") + " — TyPlace";
   } else {
-    reviewsTitle.textContent = "Отзывы пользователя";
-    document.title = "Отзывы пользователя — TyPlace";
+    reviewsTitle.textContent = window.tpI18n.t("page.user");
+    document.title = window.tpI18n.t("page.user") + " — TyPlace";
   }
 } else {
-  reviewsTitle.textContent = "Отзывы пользователя";
-  document.title = "Отзывы пользователя — TyPlace";
+  reviewsTitle.textContent = window.tpI18n.t("page.user");
+  document.title = window.tpI18n.t("page.user") + " — TyPlace";
 }
 if(!userId){
   empty.style.display = "block";
-  empty.textContent = "Не указан пользователь.";
+  empty.textContent = window.tpI18n.t("page.no_user");
   return;
 }
 
@@ -904,7 +942,10 @@ const res = await fetch(`/api/users/${encodeURIComponent(userId)}/reviews-by-id`
       render();
     }
 
-    init();
+document.addEventListener("DOMContentLoaded", async () => {
+  await window.tpI18n.load(window.tpI18n.currentLang);
+  init();
+});
 function openFullReview(data){
   const review = typeof data === "string" ? JSON.parse(data) : data;
 
@@ -958,6 +999,17 @@ document.addEventListener("keydown", (e)=>{
   if(e.key === "Escape" && reviewModal.classList.contains("open")){
     closeReviewModal();
   }
+});
+window.addEventListener("tp:lang-change", () => {
+
+  document.getElementById("reviewSelectedText").textContent =
+    window.tpI18n.t("page.all");
+
+  makeFilters();
+  computeHeader();
+  render();
+
+  window.tpI18n.apply();
 });
   </script>
 

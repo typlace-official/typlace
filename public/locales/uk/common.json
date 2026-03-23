@@ -16,58 +16,97 @@
     "other_region": "Інші регіони"
   },
 
-"search_placeholder": "Пошук",
-"help": "Допомога",
-"chats": "Чати",
-"profile": "Профіль",
-"home": "Головна",
-"favorites": "Обране",
-"no_favorites": "У тебе поки немає обраних пропозицій",
-"login": "Вхід",
-"signup": "Реєстрація",
+    "badges": {
+      "admin": "Адмін",
+      "super_admin": "Супер-адмін",
+      "moderator": "Модератор",
+      "support": "Підтримка",
+      "resolution": "Арбітраж",
+      "official": "Офіційний"
+    },
+
+  "search_placeholder": "Пошук",
+  "help": "Допомога",
+  "chats": "Чати",
+  "profile": "Профіль",
+  "login": "Вхід",
+  "signup": "Реєстрація",
 
   "price": "Ціна",
   "filters": "Фільтри",
   "amount": "Кількість",
   "search_by_name": "Пошук за назвою",
   "sell": "Продати",
-    "offers_found_one": "Знайдено {{count}} оголошення",
+
+  "offers_found_one": "Знайдено {{count}} оголошення",
   "offers_found_few": "Знайдено {{count}} оголошення",
   "offers_found_many": "Знайдено {{count}} оголошень",
-  "no_reviews": "Немає відгуків",
-"reviews_count": {
-  "one": "{{count}} відгук",
-  "few": "{{count}} відгуки",
-  "many": "{{count}} відгуків"
-},
+
+  "no_reviews": "Без відгуків",
+
+  "reviews_count": {
+    "one": "{{count}} відгук",
+    "few": "{{count}} відгуки",
+    "many": "{{count}} відгуків"
+  },
+
+  "home": "Головна",
+  "favorites": "Обране",
+  "no_favorites": "У тебе поки немає обраних пропозицій",
+
   "from": "Від",
   "to": "До",
 
   "category_placeholder": "Категорія",
+  "choose_category": "Оберіть категорію",
+
   "empty": "Поки немає оголошень",
-    "choose_category": "Оберіть категорію",
+
   "back": "Назад",
   "photo_product": "Фото товару",
   "add_photo": "Додати фото",
   "availability": "Наявність",
+
   "language": "Мова",
+  "offer_language": "Мова оголошення",
+  "ad_language": "Мова оголошення",
+
   "create_offer": "Створити оголошення",
+  "edit_offer": "Редагувати оголошення",
   "save_changes": "Зберегти зміни",
   "delete_offer": "Видалити оголошення",
+
   "invalid_price": "Вкажіть коректну ціну",
-"enter_title": "Введіть назву обраною мовою",
-"enter_description": "Введіть опис обраною мовою",
-"offer_deleted": "Оголошення видалено",
-"offer_not_found": "Оголошення не знайдено",
-"buyer_pays": "Покупець сплатить",
-"edit_offer": "Редагувати оголошення",
-"ad_language": "Мова оголошення",
-"title": "Назва",
-"description": "Опис",
-"lang_ru": "Російська",
-"lang_uk": "Українська",
-"lang_en": "Англійська",
- "footer": {
+  "enter_title": "Введіть назву обраною мовою",
+  "enter_description": "Введіть опис обраною мовою",
+
+  "offer_deleted": "Оголошення видалено",
+  "offer_not_found": "Оголошення не знайдено",
+
+  "buyer_pays": "Покупець сплатить",
+
+  "title": "Назва",
+  "description": "Опис",
+
+  "lang_ru": "Російська",
+  "lang_uk": "Українська",
+  "lang_en": "Англійська",
+
+  "system_messages": {
+    "label": "SYSTEM",
+    "fallback_user": "Користувач",
+    "fallback_order": "Замовлення",
+    "fallback_text": "Системне повідомлення",
+
+    "order_created": "Покупець {{actor}} оформив замовлення {{order}}. Кошти заморожено.",
+    "order_confirmed": "Покупець {{actor}} підтвердив отримання за замовленням {{order}}. Угоду завершено.",
+    "order_refunded": "Продавець {{actor}} зробив повернення за замовленням {{order}}.",
+    "order_confirmed_admin": "Адміністратор підтвердив замовлення {{order}}. Угоду завершено.",
+    "order_refunded_admin": "Адміністратор зробив повернення за замовленням {{order}}.",
+    "review_created": "Покупець {{actor}} залишив відгук за замовленням {{order}}."
+  },
+
+  "footer": {
     "copyLine1": "© 2026 TyPlace — маркетплейс цифрових товарів і послуг.",
     "copyLine2": "Усі права захищені.",
     "links": {

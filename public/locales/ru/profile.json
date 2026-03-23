@@ -1,8 +1,9 @@
 {
   "title": "Профиль",
-
   "myTitle": "Мой профиль",
   "externalTitle": "Профиль пользователя",
+  "docTitleMy": "Мой профиль — TyPlace",
+  "docTitleExternal": "Профиль пользователя — TyPlace",
 
   "nav": {
     "myOffers": "Мои предложения",
@@ -15,6 +16,7 @@
   "offers": "Предложения",
   "since": "На TyPlace с",
   "noReviews": "Нет отзывов",
+  "copyId": "Нажмите, чтобы скопировать ID",
 
   "reviews": {
     "one": "отзыв",
@@ -30,6 +32,21 @@
     "nickname": "Никнейм",
     "changeNick": "Изменить ник",
     "nickHint": "Ник можно менять раз в 30 дней",
+    "nickHintNext": "Следующая смена ника доступна {{date}}",
+    "email": "Email",
+    "telegram": "Telegram",
     "save": "Сохранить"
+  },
+
+  "alerts": {
+    "userNotFound": "Пользователь не найден",
+    "enterNickname": "Введите ник",
+    "nickTooShort": "Ник должен быть минимум 3 символа",
+    "nickTooLong": "Ник должен быть максимум 20 символов",
+    "nickWaitUntil": "Ник можно изменить снова {{date}}",
+    "nickSaveError": "Не удалось сохранить ник",
+    "avatarSaveError": "Не удалось обновить фото",
+    "onlyImages": "Можно загрузить только изображение",
+    "notifySaveError": "Не удалось сохранить уведомления"
   }
 }

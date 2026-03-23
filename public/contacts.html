@@ -21,8 +21,8 @@ body{
   color:#111827;
 }
 
-html, body {
-  height: 100%;
+html, body{
+  height:100%;
 }
 
 .page{
@@ -68,7 +68,9 @@ h1{
 
 .email{
   display:inline-block;
-  font-weight:700;
+  font-size:14px;
+  font-weight:400;
+  line-height:1.7;
   color:#2563eb;
   text-decoration:none;
   margin-top:4px;
@@ -79,8 +81,10 @@ h1{
 }
 
 .help-link{
+  font-size:14px;
+  font-weight:400;
+  line-height:1.7;
   color:#2563eb;
-  font-weight:600;
   text-decoration:none;
 }
 
@@ -89,8 +93,13 @@ h1{
 }
 
 @media(max-width:600px){
-  h1{ font-size:22px; }
-  .card{ padding:20px; }
+  h1{
+    font-size:22px;
+  }
+
+  .card{
+    padding:20px;
+  }
 }
 </style>
 </head>
@@ -100,43 +109,43 @@ h1{
 <div id="header-container"></div>
 
 <main class="page">
-<div class="card">
+  <div class="card">
 
-<h1 data-i18n="page.title"></h1>
+    <h1 data-i18n="page.title"></h1>
 
-<div class="section">
-  <div class="section-title" data-i18n="page.legal.title"></div>
-  <div class="section-text" data-i18n="page.legal.text"></div>
-  <a href="mailto:legal@typlace.com" class="email">
-    legal@typlace.com
-  </a>
-</div>
+    <div class="section">
+      <div class="section-title" data-i18n="page.legal.title"></div>
+      <div class="section-text" data-i18n="page.legal.text"></div>
+      <a href="mailto:business@typlace.com" class="email">
+        business@typlace.com
+      </a>
+    </div>
 
-<div class="section">
-  <div class="section-title" data-i18n="page.finance.title"></div>
-  <div class="section-text" data-i18n="page.finance.text"></div>
-  <a href="mailto:finance@typlace.com" class="email">
-    finance@typlace.com
-  </a>
-</div>
+    <div class="section">
+      <div class="section-title" data-i18n="page.finance.title"></div>
+      <div class="section-text" data-i18n="page.finance.text"></div>
+      <a href="mailto:business@typlace.com" class="email">
+        business@typlace.com
+      </a>
+    </div>
 
-<div class="section">
-  <div class="section-title" data-i18n="page.partners.title"></div>
-  <div class="section-text" data-i18n="page.partners.text"></div>
-  <a href="mailto:partners@typlace.com" class="email">
-    partners@typlace.com
-  </a>
-</div>
+    <div class="section">
+      <div class="section-title" data-i18n="page.partners.title"></div>
+      <div class="section-text" data-i18n="page.partners.text"></div>
+      <a href="mailto:business@typlace.com" class="email">
+        business@typlace.com
+      </a>
+    </div>
 
-<div class="section">
-  <div class="section-title" data-i18n="page.support.title"></div>
-  <div class="section-text">
-    <span data-i18n="page.support.text1"></span>
-    <a href="/help.html" class="help-link" data-i18n="page.support.link"></a>.
+    <div class="section">
+      <div class="section-title" data-i18n="page.support.title"></div>
+      <div class="section-text">
+        <span data-i18n="page.support.text1"></span>
+        <a href="/help.html" class="help-link" data-i18n="page.support.link"></a>.
+      </div>
+    </div>
+
   </div>
-</div>
-
-</div>
 </main>
 
 <div id="footer-container"></div>

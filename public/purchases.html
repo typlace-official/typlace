@@ -225,7 +225,13 @@ function renderList(){
   filtered.forEach(renderPurchase);
   updatePrices();
 }
+function formatMode(mode){
+  if(!mode) return "";
 
+  return mode
+    .replace(/_/g," ")
+    .replace(/\b\w/g,l=>l.toUpperCase());
+}
 function renderPurchase(p){
   const offer = p.offer || {};
 
@@ -252,7 +258,7 @@ const gameTitle = gameObj ? gameObj.name : offer.game;
 
 const gameLine = [
   gameTitle,
-  offer.mode
+  formatMode(offer.mode)
 ].filter(Boolean).join(", ");
 
   const orderNumber = p.orderNumber || p.id;

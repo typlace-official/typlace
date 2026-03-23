@@ -1,0 +1,90 @@
+{
+  "title": "Create a ticket",
+
+  "category": "Category",
+  "chooseCategory": "Choose a category",
+
+  "categories": {
+    "order": "Order issue",
+    "finance": "Payments and withdrawals",
+    "account": "Account issue",
+    "report": "Report a user",
+    "report_offer": "Report a listing",
+    "bug": "Report a bug",
+    "other": "Other"
+  },
+
+  "topics": {
+    "seller_not_complete": "Seller is not completing the order",
+    "wrong_item": "I received the wrong item",
+    "cancel_order": "I want to cancel the order",
+    "buyer_not_confirm": "Buyer is not confirming the order",
+    "delivery_problem": "Item delivery problem",
+
+    "deposit_problem": "Deposit issue",
+    "withdraw_problem": "Withdrawal issue",
+    "payment_failed": "Payment failed",
+
+    "account_hacked": "My account was hacked",
+    "restore_access": "Restore access to my account",
+    "appeal_ban": "Appeal account ban",
+
+    "rule_violation": "Rule violation",
+    "scam": "Scam",
+    "insults": "Insults",
+    "spam": "Spam",
+
+    "fake_description": "Fake or incorrect description",
+    "wrong_category": "Wrong listing category",
+    "prohibited_item": "Prohibited item",
+    "price_manipulation": "Price manipulation",
+
+    "page_bug": "Page bug",
+    "chat_bug": "Chat bug",
+    "filters_bug": "Filters bug",
+
+    "general_question": "General question",
+    "site_suggestion": "Website suggestion",
+    "not_in_list": "Issue not listed",
+
+    "other": "Other"
+  },
+
+  "role": "Who are you?",
+  "choose": "Choose",
+
+  "roleBuyer": "I am a buyer",
+  "roleSeller": "I am a seller",
+
+  "subject": "Ticket subject",
+  "chooseSubject": "Choose a subject",
+  "selectRoleFirst": "Choose your role first",
+
+  "orderId": "Order number",
+
+  "userId": "User ID",
+  "enterUserId": "Enter user ID",
+
+  "offerId": "Listing ID",
+  "enterOfferId": "Enter listing ID",
+
+  "description": "Ticket description",
+
+  "addFiles": "Add files",
+  "send": "Send ticket",
+
+  "file": "photo",
+
+  "counter": "{{current}} / {{max}}",
+
+  "errors": {
+    "orderNotFound": "Order not found",
+    "enterUserId": "Enter user ID",
+    "userNotFound": "User not found",
+    "enterOfferId": "Enter listing ID",
+    "offerNotFound": "Listing not found",
+    "configLoad": "Failed to load configuration",
+    "maxFiles": "Maximum 10 files",
+    "maxLength": "Maximum {{count}} characters"
+  }
+}

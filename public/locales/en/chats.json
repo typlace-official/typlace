@@ -1,0 +1,11 @@
+{
+  "title": "Chats",
+  "chatsEmpty": "Chat list is empty",
+  "pickChat": "Select a chat",
+  "writeMessage": "Write a message...",
+  "send": "Send",
+  "noMessages": "No messages",
+  "report": "Report",
+  "block": "Block",
+  "deleteChat": "Delete chat"
+}

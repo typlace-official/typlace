@@ -34,7 +34,12 @@ try {
 this.translations = { common, roblox, page };
 
 this.apply();
-  },
+},
+
+async setLang(lang) {
+  localStorage.setItem("tp_lang", lang);
+  await this.load(lang);
+},
 
 t(key, params = {}) {
   const parts = key.split(".");

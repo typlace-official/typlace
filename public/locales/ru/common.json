@@ -16,6 +16,16 @@
     "other_region": "Другие регионы"
   },
 
+
+    "badges": {
+      "admin": "Админ",
+      "super_admin": "Супер админ",
+      "moderator": "Модератор",
+      "support": "Поддержка",
+      "resolution": "Арбитраж",
+      "official": "Официальный"
+    },
+
   "search_placeholder": "Поиск",
   "help": "Помощь",
   "chats": "Чаты",
@@ -79,11 +89,25 @@
   "title": "Название",
   "description": "Описание",
 
-  "lang_ru": "Русский",
-  "lang_uk": "Украинский",
-  "lang_en": "English",
+"lang_ru": "Русский",
+"lang_uk": "Украинский",
+"lang_en": "English",
 
-  "footer": {
+"system_messages": {
+  "label": "SYSTEM",
+  "fallback_user": "Пользователь",
+  "fallback_order": "Заказ",
+  "fallback_text": "Системное сообщение",
+
+  "order_created": "Покупатель {{actor}} оформил заказ {{order}}. Средства заморожены.",
+  "order_confirmed": "Покупатель {{actor}} подтвердил получение по заказу {{order}}. Сделка завершена.",
+  "order_refunded": "Продавец {{actor}} сделал возврат по заказу {{order}}.",
+  "order_confirmed_admin": "Администратор подтвердил заказ {{order}}. Сделка завершена.",
+  "order_refunded_admin": "Администратор сделал возврат по заказу {{order}}.",
+  "review_created": "Покупатель {{actor}} оставил отзыв по заказу {{order}}."
+},
+
+"footer": {
     "copyLine1": "© 2026 TyPlace — маркетплейс цифровых товаров и услуг.",
     "copyLine2": "Все права защищены.",
     "links": {

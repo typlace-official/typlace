@@ -1,0 +1,90 @@
+{
+  "title": "Создать обращение",
+
+  "category": "Категория",
+  "chooseCategory": "Выберите категорию",
+
+  "categories": {
+    "order": "Проблема с заказом",
+    "finance": "Платежи и вывод",
+    "account": "Проблема с аккаунтом",
+    "report": "Пожаловаться на пользователя",
+    "report_offer": "Пожаловаться на объявление",
+    "bug": "Сообщить об ошибке",
+    "other": "Другое"
+  },
+
+  "topics": {
+    "seller_not_complete": "Продавец не выполняет заказ",
+    "wrong_item": "Получил не тот товар",
+    "cancel_order": "Хочу отменить заказ",
+    "buyer_not_confirm": "Покупатель не подтверждает заказ",
+    "delivery_problem": "Проблема с передачей товара",
+
+    "deposit_problem": "Проблема с пополнением",
+    "withdraw_problem": "Проблема с выводом",
+    "payment_failed": "Платеж не проходит",
+
+    "account_hacked": "Мой аккаунт взломан",
+    "restore_access": "Восстановить доступ к аккаунту",
+    "appeal_ban": "Оспорить блокировку аккаунта",
+
+    "rule_violation": "Нарушение правил",
+    "scam": "Мошенничество",
+    "insults": "Оскорбления",
+    "spam": "Спам",
+
+    "fake_description": "Фейковое или неверное описание",
+    "wrong_category": "Неверная категория объявления",
+    "prohibited_item": "Запрещённый товар",
+    "price_manipulation": "Манипуляция ценой",
+
+    "page_bug": "Ошибка на странице",
+    "chat_bug": "Ошибка в чате",
+    "filters_bug": "Ошибка в фильтрах",
+
+    "general_question": "Общий вопрос",
+    "site_suggestion": "Предложение по сайту",
+    "not_in_list": "Проблема не из списка",
+
+    "other": "Другое"
+  },
+
+  "role": "Кто вы?",
+  "choose": "Выберите",
+
+  "roleBuyer": "Я покупатель",
+  "roleSeller": "Я продавец",
+
+  "subject": "Тема заявки",
+  "chooseSubject": "Выберите тему",
+  "selectRoleFirst": "Сначала выберите роль",
+
+  "orderId": "Номер заказа",
+
+  "userId": "ID пользователя",
+  "enterUserId": "Введите ID пользователя",
+
+  "offerId": "ID объявления",
+  "enterOfferId": "Введите ID объявления",
+
+  "description": "Описание обращения",
+
+  "addFiles": "Добавить файлы",
+  "send": "Отправить обращение",
+
+  "file": "photo",
+
+  "counter": "{{current}} / {{max}}",
+
+  "errors": {
+    "orderNotFound": "Заказ не найден",
+    "enterUserId": "Введите ID пользователя",
+    "userNotFound": "Пользователь не найден",
+    "enterOfferId": "Введите ID объявления",
+    "offerNotFound": "Объявление не найдено",
+    "configLoad": "Ошибка загрузки конфигурации",
+    "maxFiles": "Максимум 10 файлов",
+    "maxLength": "Максимум {{count}} символов"
+  }
+}

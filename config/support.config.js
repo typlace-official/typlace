@@ -1,53 +1,81 @@
-// server/config/support.config.js
-
 module.exports = {
   order: {
-    label: "Проблема с заказом",
-    topics: [
-      "Заказ не выполнен",
-      "Продавец не отвечает",
-      "Хочу отменить заказ",
-      "Деньги списались, заказ не создан"
-    ]
+    labelKey: "page.categories.order",
+
+    roles: {
+      buyer: [
+        "page.topics.seller_not_complete",
+        "page.topics.wrong_item",
+        "page.topics.cancel_order",
+        "page.topics.other"
+      ],
+
+      seller: [
+        "page.topics.buyer_not_confirm",
+        "page.topics.delivery_problem",
+        "page.topics.other"
+      ]
+    }
   },
 
   finance: {
-    label: "Проблема с финансами",
+    labelKey: "page.categories.finance",
     topics: [
-      "Пополнение не пришло",
-      "Ошибка при выводе",
-      "Неверная комиссия",
-      "Возврат средств"
+      "page.topics.deposit_problem",
+      "page.topics.withdraw_problem",
+      "page.topics.payment_failed",
+      "page.topics.other"
     ]
   },
 
   account: {
-    label: "Проблема с аккаунтом",
+    labelKey: "page.categories.account",
     topics: [
-      "Не могу войти",
-      "Блокировка аккаунта",
-      "Смена почты",
-      "Подозрение на взлом"
+      "page.topics.account_hacked",
+      "page.topics.restore_access",
+      "page.topics.appeal_ban",
+      "page.topics.other"
     ]
   },
 
   report: {
-    label: "Пожаловаться на пользователя",
+    labelKey: "page.categories.report",
     topics: [
-      "Мошенничество",
-      "Оскорбления",
-      "Спам",
-      "Обман в сделке"
+      "page.topics.rule_violation",
+      "page.topics.scam",
+      "page.topics.insults",
+      "page.topics.spam",
+      "page.topics.other"
+    ]
+  },
+
+  report_offer: {
+    labelKey: "page.categories.report_offer",
+    topics: [
+      "page.topics.fake_description",
+      "page.topics.wrong_category",
+      "page.topics.prohibited_item",
+      "page.topics.price_manipulation",
+      "page.topics.other"
     ]
   },
 
   bug: {
-    label: "Сообщить об ошибке",
+    labelKey: "page.categories.bug",
     topics: [
-      "Баг в чате",
-      "Баг в фильтрах",
-      "Ошибка отображения",
-      "Другое"
+      "page.topics.page_bug",
+      "page.topics.chat_bug",
+      "page.topics.filters_bug",
+      "page.topics.other"
+    ]
+  },
+
+  other: {
+    labelKey: "page.categories.other",
+    topics: [
+      "page.topics.general_question",
+      "page.topics.site_suggestion",
+      "page.topics.not_in_list"
     ]
   }
 };

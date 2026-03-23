@@ -1,8 +1,9 @@
 {
   "title": "Profile",
-
   "myTitle": "My Profile",
   "externalTitle": "User Profile",
+  "docTitleMy": "My Profile — TyPlace",
+  "docTitleExternal": "User Profile — TyPlace",
 
   "nav": {
     "myOffers": "My Offers",
@@ -15,6 +16,7 @@
   "offers": "Offers",
   "since": "On TyPlace since",
   "noReviews": "No reviews",
+  "copyId": "Click to copy ID",
 
   "reviews": {
     "one": "review",
@@ -23,13 +25,28 @@
   },
 
   "menu": {
-    "changePhoto": "Change photo",
+    "changePhoto": "Change Photo",
     "notifications": "Notifications",
-    "logout": "Log out",
+    "logout": "Log Out",
     "profile": "Profile",
     "nickname": "Nickname",
-    "changeNick": "Change nickname",
-    "nickHint": "Nickname can be changed once every 30 days",
+    "changeNick": "Change Nickname",
+    "nickHint": "You can change your nickname once every 30 days",
+    "nickHintNext": "Your next nickname change will be available on {{date}}",
+    "email": "Email",
+    "telegram": "Telegram",
     "save": "Save"
+  },
+
+  "alerts": {
+    "userNotFound": "User not found",
+    "enterNickname": "Enter a nickname",
+    "nickTooShort": "Nickname must be at least 3 characters long",
+    "nickTooLong": "Nickname must be no more than 20 characters long",
+    "nickWaitUntil": "You can change your nickname again on {{date}}",
+    "nickSaveError": "Failed to save nickname",
+    "avatarSaveError": "Failed to update photo",
+    "onlyImages": "Only image files can be uploaded",
+    "notifySaveError": "Failed to save notifications"
   }
 }

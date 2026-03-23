@@ -1,4 +1,3 @@
-// offer-card.js
 (function () {
   function renderStars(avg){
     const rounded = Math.round(avg || 0);
@@ -10,7 +9,7 @@
 
     let html = `<span class="stars ${cls}">`;
     for(let i=1;i<=5;i++){
-      html += `<span class="star ${i<=rounded?"filled":""}">★</span>`;
+      html += `<span class="star ${i<=rounded ? "filled" : ""}">★</span>`;
     }
     html += `</span>`;
     return html;
@@ -22,26 +21,30 @@
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
+
     if (minutes < 60) return `на сайте ${minutes} мин`;
     if (hours < 24) return `на сайте ${hours} ч`;
     return `на сайте ${days} дн`;
   }
-function formatReviewsCount(n){
-  if (window.tpI18n?.pluralKey) {
-    return window.tpI18n.pluralKey("common.reviews_count", n);
-  }
-  return n + " reviews";
-}
 
-  // opts:
-  // { showHeart?: boolean, heartActive?: boolean, onHeartClick?: (o, card)=>void, onClick?: (o)=>void, showAmountBadge?: boolean }
+  function formatReviewsCount(n){
+    if (window.tpI18n?.pluralKey) {
+      return window.tpI18n.pluralKey("common.reviews_count", n);
+    }
+    return n + " reviews";
+  }
+
+  function getCurrentLang() {
+    const lang = (localStorage.getItem("tp_lang") || "ru").trim().toLowerCase();
+    return ["ru", "uk", "en"].includes(lang) ? lang : "ru";
+  }
+
   function createOfferCard(o, opts = {}) {
     const {
       showHeart = false,
       heartActive = false,
       onHeartClick = null,
-      onClick = null,
-      showAmountBadge = false,
+      onClick = null
     } = opts;
 
     const card = document.createElement("div");
@@ -52,7 +55,6 @@ function formatReviewsCount(n){
     const offerImage =
       o.imageUrl || o.imageDataUrl || o.image || "/img/offer-default.png";
 
-    // seller может отсутствовать (профиль отдаёт сырые offers) → делаем безопасно
     const seller = o.seller || {};
     const avatar =
       seller.avatarUrl || seller.avatarDataUrl || "/img/avatar-default.svg";
@@ -62,17 +64,18 @@ function formatReviewsCount(n){
     const reviews = seller.reviewsCount || 0;
     const onSiteText = timeOnSite(seller.createdAt);
 
-    // buildOfferTitle должен быть подключён ДО offer-card.js
+    const currentLang = getCurrentLang();
+
     const title = (typeof window.buildOfferTitle === "function")
       ? window.buildOfferTitle(o)
-      : (o.title?.ru || o.title?.en || o.mode || "Предложение");
-
-    const amountBadge =
-      showAmountBadge &&
-      (o.stock || o.amount) &&
-      Number(o.stock || o.amount) > 1
-        ? `<div class="offer-amount-badge">×${o.stock || o.amount}</div>`
-        : "";
+      : (
+          o.title?.[currentLang] ||
+          o.title?.ru ||
+          o.title?.uk ||
+          o.title?.en ||
+          o.mode ||
+          "Предложение"
+        );
 
     card.innerHTML = `
       ${showHeart ? `
@@ -87,7 +90,6 @@ function formatReviewsCount(n){
       ` : ""}
 
       <div class="offer-image">
-        ${amountBadge}
         <img src="${offerImage}" onerror="this.src='/img/offer-default.png'">
       </div>
 
@@ -102,87 +104,86 @@ function formatReviewsCount(n){
           </div>
 
           <div>
-<div class="seller-name seller-profile-link"
-     data-user-id="${seller.userId || seller.id || seller._id || ""}">
-  ${o.sellerName || seller.username || "Продавец"}
-</div>
+            <div class="seller-name seller-profile-link"
+                 data-user-id="${seller.userId || seller.id || seller._id || ""}">
+              ${o.sellerName || seller.username || "Продавец"}
+            </div>
 
-<div class="seller-rating"
-     data-user-id="${seller.userId || seller.id || seller._id || ""}">
+            <div class="seller-rating"
+                 data-user-id="${seller.userId || seller.id || seller._id || ""}">
 
-  ${
-reviews === 0
-  ? `<span class="no-reviews">${window.tpI18n?.t("common.no_reviews") || "No reviews"}</span>`
-  : reviews < 10
-    ? `<span style="color:#6b7280;font-weight:600;">
-         ${formatReviewsCount(reviews)}
-       </span>`
-    : `${renderStars(rating)}
-       <span style="color:#6b7280;font-weight:600;">
-         ${formatReviewsCount(reviews)}
-       </span>`
-  }
-</div>
+              ${
+                reviews === 0
+                  ? `<span class="no-reviews">${window.tpI18n?.t("common.no_reviews") || "No reviews"}</span>`
+                  : reviews < 10
+                    ? `<span style="color:#6b7280;font-weight:600;">
+                         ${formatReviewsCount(reviews)}
+                       </span>`
+                    : `${renderStars(rating)}
+                       <span style="color:#6b7280;font-weight:600;">
+                         ${formatReviewsCount(reviews)}
+                       </span>`
+              }
+            </div>
 
-${seller.createdAt ? `
-  <div class="seller-profile-link seller-since"
-       data-user-id="${seller.userId || seller.id || seller._id || ""}"
-       style="font-size:12px;color:#6b7280;margin-top:2px;cursor:pointer;">
-    ${onSiteText}
-  </div>
-` : ``}
+            ${seller.createdAt ? `
+              <div class="seller-profile-link seller-since"
+                   data-user-id="${seller.userId || seller.id || seller._id || ""}"
+                   style="font-size:12px;color:#6b7280;margin-top:2px;cursor:pointer;">
+                ${onSiteText}
+              </div>
+            ` : ``}
           </div>
         </div>
       </div>
     `;
 
-// ===== AVATAR CLICK =====
-const avatarBlock = card.querySelector(".seller-avatar");
+    const avatarBlock = card.querySelector(".seller-avatar");
 
-if (avatarBlock) {
-  avatarBlock.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const id = seller.userId || seller.id || seller._id;
-    if (!id) return;
+    if (avatarBlock) {
+      avatarBlock.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const id = seller.userId || seller.id || seller._id;
+        if (!id) return;
 
-    const myId = localStorage.getItem("tp_user_id");
+        const myId = localStorage.getItem("tp_user_id");
 
-    if (id === myId) {
-      location.href = "/profile.html";
-    } else {
-      location.href = "/profile.html?id=" + encodeURIComponent(id);
+        if (id === myId) {
+          location.href = "/profile.html";
+        } else {
+          location.href = "/profile.html?id=" + encodeURIComponent(id);
+        }
+      });
     }
-  });
-}
-const profileLinks = card.querySelectorAll(".seller-profile-link");
 
-profileLinks.forEach(link => {
-  link.addEventListener("click", (e) => {
-    e.stopPropagation();
+    const profileLinks = card.querySelectorAll(".seller-profile-link");
 
-    const id = link.dataset.userId;
-    if (!id) return;
+    profileLinks.forEach(link => {
+      link.addEventListener("click", (e) => {
+        e.stopPropagation();
 
-    const myId = localStorage.getItem("tp_user_id");
+        const id = link.dataset.userId;
+        if (!id) return;
 
-    if (id === myId) {
-      location.href = "/profile.html";
-    } else {
-      location.href = "/profile.html?id=" + encodeURIComponent(id);
+        const myId = localStorage.getItem("tp_user_id");
+
+        if (id === myId) {
+          location.href = "/profile.html";
+        } else {
+          location.href = "/profile.html?id=" + encodeURIComponent(id);
+        }
+      });
+    });
+
+    const ratingBlock = card.querySelector(".seller-rating");
+    if (ratingBlock) {
+      ratingBlock.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const id = ratingBlock.dataset.userId;
+        if (!id) return;
+        location.href = "/reviews.html?id=" + encodeURIComponent(id);
+      });
     }
-  });
-});
-
-// ===== REVIEWS CLICK =====
-const ratingBlock = card.querySelector(".seller-rating");
-if (ratingBlock) {
-  ratingBlock.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const id = ratingBlock.dataset.userId;
-    if (!id) return;
-    location.href = "/reviews.html?id=" + encodeURIComponent(id);
-  });
-}
 
     card.addEventListener("click", () => {
       if (typeof onClick === "function") onClick(o);
@@ -203,15 +204,23 @@ if (ratingBlock) {
   }
 
   async function updatePrices(root = document){
+    if (!root) root = document;
     if (!window.tpMoney || typeof window.tpMoney.formatPrice !== "function") return;
+
     const els = root.querySelectorAll(".offer-price");
+
     for (const el of els) {
       const base = Number(el.dataset.price);
-      if(!base) continue;
-      el.textContent = await window.tpMoney.formatPrice(base);
+
+      if (!Number.isFinite(base)) continue;
+
+      try {
+        el.textContent = await window.tpMoney.formatPrice(base);
+      } catch (e) {
+        el.textContent = `${base}`;
+      }
     }
   }
 
-  // ✅ делаем доступным везде
   window.tpOfferCard = { createOfferCard, updatePrices };
 })();

@@ -60,8 +60,8 @@ body{
 
   display:flex;
   flex-direction:column;
-
-  height:600px;
+  height:100%;
+  min-height:500px;
   overflow:hidden; /* важно */
 }
 
@@ -122,11 +122,11 @@ body{
   gap:18px;
   padding:24px;
   overflow-y:auto;
+  min-height:0;
 
   scrollbar-width:none;
   -ms-overflow-style:none;
 }
-
 
 .messages::-webkit-scrollbar{
   display:none;               /* Chrome */
@@ -151,9 +151,9 @@ body{
 }
 
 .message-content{
-  max-width:80%;
+  max-width:75%;
+  display:inline-block;
 }
-
 .msg-name{
   font-size:13px;
   font-weight:600;
@@ -167,6 +167,7 @@ body{
   font-size:14px;
   line-height:1.6;
   word-break:break-word;
+  display:inline-block;
 }
 
 .message.user{
@@ -186,9 +187,12 @@ body{
   margin-top:6px;
 }
 .chat-input{
-  position:relative;   /* 🔥 добавить */
+  position:relative;
   padding:16px 24px;
   background:#fff;
+
+  display:flex;
+  flex-direction:column;
 }
 
 .chat-input textarea{
@@ -223,35 +227,19 @@ body{
   box-shadow:none;
 }
 
-.chat-input button{
-  height:44px;               /* 👈 одинаковая высота */
-  padding:0 20px;
-
-  border:none;
-  background:#2563eb;
-  color:#fff;
-  border-radius:10px;
-  font-weight:600;
-  cursor:pointer;
-
-  transition:background 0.2s; /* без подпрыгивания */
-}
-
-.chat-input button:hover{
-  background:#1e40af;
-}
-
-
 .ticket-status.waiting{
-  background:#f59e0b;
+  background:#16a34a; /* зелёный */
+  color:#fff;
 }
 
 .ticket-status.in_progress{
-  background:#1d4ed8;   /* чуть глубже чем 2563eb */
+  background:#f59e0b; /* оранжевый */
+  color:#fff;
 }
 
 .ticket-status.resolved{
-  background:#374151;   /* более серьёзный серый */
+  background:#6b7280; /* серый */
+  color:#fff;
 }
 
 .sidebar-card{
@@ -376,26 +364,12 @@ body{
   display:none;
 }
 
-/* Вложения внутри сообщения */
 .msg-attachments{
   margin-top:10px;
   display:flex;
-  flex-wrap:wrap;
+  flex-direction:column;
   gap:8px;
-}
-
-.file-link{
-  background:#f3f4f6;
-  border:1px solid #e5e7eb;
-  color:#111827;
-
-  padding:8px 12px;
-  border-radius:12px;
-
-  max-width:160px;
-  margin-top:0;
-
-  cursor:pointer; /* ← ВОТ ЭТО ДОБАВЬ */
+  max-width:260px;
 }
 
 /* Чтобы текст не вылазил */
@@ -473,12 +447,6 @@ body{
   transition:0.2s;
 }
 
-.file-link:hover{
-  background:#eef2ff;
-  border-color:#c7d2fe;
-  color:#2563eb;
-}
-
 .file-link-name{
   overflow:hidden;
   text-overflow:ellipsis;
@@ -496,6 +464,99 @@ body{
 .file-remove:hover{
   color:#ef4444;
 }
+@media (max-width:900px){
+
+.page{
+  margin:16px auto;
+}
+
+.support-layout{
+  flex-direction:column;
+  gap:14px;
+  align-items:stretch;
+}
+
+/* SIDEBAR */
+.ticket-sidebar{
+  width:100%;
+}
+
+/* CHAT */
+.chat-section{
+  width:100%;
+  height:62vh;
+  height:62svh;
+  min-height:62vh;
+  min-height:62svh;
+  max-height:62vh;
+  max-height:62svh;
+}
+
+/* MESSAGES */
+.messages{
+  padding:16px;
+}
+
+.message-content{
+  max-width:85%;
+}
+
+.msg-avatar{
+  width:34px;
+  height:34px;
+}
+
+.message{
+  font-size:13px;
+  padding:12px 14px;
+}
+
+.msg-name{
+  font-size:12px;
+}
+
+.msg-time{
+  font-size:10px;
+}
+
+/* INPUT */
+.chat-input{
+  padding:12px 16px;
+}
+
+.chat-input-row{
+  gap:8px;
+}
+
+.chat-input textarea{
+  font-size:16px;
+}
+
+.chat-input button{
+  padding:0 14px;
+}
+
+.attach-icon-btn{
+  width:40px;
+  height:40px;
+}
+
+}
+.page-content{
+  padding-bottom:90px;
+}
+.send-btn{
+  width:44px;
+  height:44px;
+  background:#1e8bd4;
+  border:none;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+
 </style>
 </head>
 
@@ -507,7 +568,7 @@ body{
 <div class="support-nav">
   <a href="/help.html">Главная</a>
   <span>/</span>
-  <a href="/support-history.html">История обращений</a>
+  <a href="/support-history.html" id="breadcrumbBackLink">История обращений</a>
   <span>/</span>
   <span class="current" id="breadcrumbTicket"></span>
 </div>
@@ -523,7 +584,7 @@ body{
 <div class="chat-input-row">
 
   <label class="attach-icon-btn">
-    <input type="file" id="chatAttachmentsInput" multiple accept="image/*" hidden>
+<input type="file" id="chatAttachmentsInput" multiple accept="image/*" hidden>
     +
   </label>
 
@@ -532,7 +593,12 @@ body{
     id="chatText"
   ></textarea>
 
-  <button type="button" id="chatSendBtn">Отправить</button>
+<button class="send-btn" id="chatSendBtn">
+<svg width="20" height="20" viewBox="0 0 24 24">
+<path fill="white"
+d="M2 21L23 12L2 3L2 10L17 12L2 14Z"/>
+</svg>
+</button>
 
 </div>
 
@@ -576,10 +642,9 @@ body{
 </div>
 </main>
 
-<div id="footer-container"></div>
-
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
+<script src="/i18n.js"></script>
 <script src="/header.js"></script>
 <script src="/footer.js"></script>
 
@@ -587,6 +652,7 @@ body{
 const token = localStorage.getItem("tp_token");
 if(!token){
   location.href = "/auth.html?mode=login";
+  throw new Error("No token");
 }
 
 const socket = io();
@@ -594,18 +660,75 @@ socket.on("connect", () => {
   socket.emit("auth", { token });
 });
 
+const ADMIN_PANEL_ROLES = new Set(["admin", "super_admin"]);
+function handleAuthStatus(status){
+  if (status === 401) {
+    localStorage.removeItem("tp_token");
+    localStorage.removeItem("tp_user_email");
+    localStorage.removeItem("tp_user_id");
+    location.href = "/auth.html?mode=login";
+    return true;
+  }
 
+  if (status === 403) {
+    localStorage.removeItem("tp_token");
+    localStorage.removeItem("tp_user_email");
+    localStorage.removeItem("tp_user_id");
+    location.href = "/banned.html";
+    return true;
+  }
+
+  return false;
+}
 const params = new URLSearchParams(window.location.search);
 const ticketId = params.get("id");
 
 if(!ticketId){
   location.href = "/support-history.html";
+  throw new Error("No ticket id");
 }
 
 const breadcrumb = document.getElementById("breadcrumbTicket");
 const messagesEl = document.getElementById("messages");
 const sidebarEl = document.getElementById("sidebar");
 let currentUserRole = "user";
+let currentUserEmail = "";
+
+async function loadMe(){
+  const r = await fetch("/auth/me", {
+    headers:{ Authorization:"Bearer " + token }
+  });
+
+  if (handleAuthStatus(r.status)) {
+    return false;
+  }
+
+  const d = await r.json().catch(() => ({}));
+
+if(!d.success){
+  localStorage.removeItem("tp_token");
+  localStorage.removeItem("tp_user_email");
+  localStorage.removeItem("tp_user_id");
+  location.href = "/auth.html?mode=login";
+  return false;
+}
+
+currentUserEmail = d.user.email || "";
+currentUserRole = d.user.role || "user";
+
+if (
+  currentUserRole === "support" ||
+  currentUserRole === "resolution" ||
+  currentUserRole === "admin" ||
+  currentUserRole === "super_admin"
+) {
+  breadcrumbBackLink.href = "/support-admin.html";
+  breadcrumbBackLink.textContent = "Панель поддержки";
+}
+
+return true;
+}
+
 const chatText = document.getElementById("chatText");
 const chatAttachmentsInput = document.getElementById("chatAttachmentsInput");
 
@@ -613,20 +736,34 @@ const chatSendBtn = document.getElementById("chatSendBtn");
 const chatPreview = document.getElementById("chatAttachmentsPreview");
 
 let selectedChatFiles = [];
+let isSendingMessage = false;
 
 
 
 chatAttachmentsInput.onchange = () => {
+
   const files = Array.from(chatAttachmentsInput.files);
 
-  if(selectedChatFiles.length + files.length > 3){
-    alert("Максимум 3 файла");
+  const spaceLeft = 2 - selectedChatFiles.length;
+
+  if(spaceLeft <= 0){
     chatAttachmentsInput.value = "";
     return;
   }
 
-  files.forEach(f => selectedChatFiles.push(f));
+files.slice(0, spaceLeft).forEach(file=>{
+
+  if(file.size > 5 * 1024 * 1024){
+    alert("Максимальный размер файла 5MB");
+    return;
+  }
+
+  selectedChatFiles.push(file);
+
+});
+
   chatAttachmentsInput.value = "";
+
   renderChatFiles();
 };
 
@@ -670,6 +807,17 @@ function renderChatFiles(){
 
     chatPreview.appendChild(fileLink);
   });
+const attachBtn = document.querySelector(".attach-icon-btn");
+
+if(selectedChatFiles.length >= 2){
+  chatAttachmentsInput.disabled = true;
+  attachBtn.style.opacity = "0.5";
+  attachBtn.style.pointerEvents = "none";
+} else {
+  chatAttachmentsInput.disabled = false;
+  attachBtn.style.opacity = "1";
+  attachBtn.style.pointerEvents = "auto";
+}
 }
 
 function formatDate(ts){
@@ -693,30 +841,21 @@ async function loadTicket(){
     }
   });
 
-  const d = await r.json();
+  if (handleAuthStatus(r.status)) {
+    return;
+  }
+
+  const d = await r.json().catch(() => ({}));
 
   if(!d.success){
-    alert("Ошибка загрузки");
+    alert(d.message || "Ошибка загрузки");
     return;
   }
 
   const t = d.ticket;
-  let priorityBadge = "";
-
-if(t.priority === "high"){
-  priorityBadge = `<span style="
-    background:#fee2e2;
-    color:#991b1b;
-    padding:4px 10px;
-    border-radius:999px;
-    font-size:12px;
-    font-weight:700;
-    margin-left:10px;
-  ">Высокий приоритет</span>`;
-}
   const msgs = d.messages || [];
 
-currentUserRole = d.userRole || "user";
+  currentUserRole = d.userRole || currentUserRole || "user";
 
   // Заголовок
   const short = t.shortId || t.id;
@@ -749,7 +888,7 @@ name.textContent = m.from === "user"
 
   const text = document.createElement("div");
   text.className = "message " + (m.from === "user" ? "user" : "support");
-  text.innerHTML = esc(m.text);
+text.innerHTML = esc(m.text).replace(/\n/g, "<br>");
 if(m.attachments && m.attachments.length > 0){
 
 const attachmentsBlock = document.createElement("div");
@@ -800,14 +939,53 @@ content.appendChild(time);
 });
 
   messagesEl.scrollTop = messagesEl.scrollHeight;
+
 // Блокируем ввод если обращение решено
 const chatInput = document.querySelector(".chat-input");
 
-if(t.status === "resolved"){
-  chatInput.style.display = "none";
-} else {
-  chatInput.style.display = "flex";
-}
+const canAssignToMe =
+  t.status !== "resolved" &&
+  !t.assignedTo &&
+  (
+    currentUserRole === "support" ||
+    currentUserRole === "admin" ||
+    currentUserRole === "super_admin"
+  );
+
+const canWrite =
+  t.status !== "resolved" &&
+  (
+    ADMIN_PANEL_ROLES.has(currentUserRole) ||
+    currentUserRole === "user" ||
+    (
+      currentUserRole === "support" &&
+      (!t.assignedTo || t.assignedTo === currentUserEmail)
+    ) ||
+    (
+      currentUserRole === "resolution" &&
+      t.assignedTo === currentUserEmail
+    )
+  );
+
+chatInput.style.display = canWrite ? "flex" : "none";
+
+const canCloseAsStaff =
+  t.status !== "resolved" &&
+  (
+    ADMIN_PANEL_ROLES.has(currentUserRole) ||
+    (
+      (currentUserRole === "support" || currentUserRole === "resolution") &&
+      t.assignedTo === currentUserEmail
+    )
+  );
+
+const canCloseAsUser =
+  t.status === "in_progress" && currentUserRole === "user";
+
+const canReopenAsUser =
+  t.status === "resolved" &&
+  currentUserRole === "user" &&
+  Number(t.reopenCount || 0) < 1;
 
   // Sidebar
 sidebarEl.innerHTML = `
@@ -829,11 +1007,14 @@ sidebarEl.innerHTML = `
   <div class="sidebar-section">
     <div class="sidebar-label">Детали обращения</div>
 
-    <div class="sidebar-meta">
-      <div><b>Категория:</b> ${esc(t.categoryLabel || t.category)}</div>
-      <div><b>Тема:</b> ${esc(t.subject)}</div>
-      ${t.orderId ? `<div><b>Номер заказа:</b> ${esc(t.orderId)}</div>` : ""}
-    </div>
+<div class="sidebar-meta">
+  <div><b>Категория:</b> ${esc(t.categoryLabel || t.category)}</div>
+  <div><b>Тема:</b> ${esc(t.subject)}</div>
+  ${t.orderId ? `<div><b>Номер заказа:</b> ${esc(t.orderId)}</div>` : ""}
+  ${t.userId ? `<div><b>ID пользователя:</b> ${esc(t.userId)}</div>` : ""}
+  ${t.offerId ? `<div><b>ID объявления:</b> ${esc(t.offerId)}</div>` : ""}
+  ${t.priority === "high" ? `<div><b>Приоритет:</b> Высокий</div>` : ""}
+</div>
   </div>
 
   ${
@@ -850,17 +1031,44 @@ sidebarEl.innerHTML = `
       : ""
   }
 
-  ${
-    (t.status !== "resolved" && currentUserRole === "support")
-      ? `<button class="close-ticket-btn" onclick="closeTicket()">Отметить как решено</button>`
-      : ""
-  }
+${
+  canAssignToMe
+    ? `<button class="close-ticket-btn" onclick="assignTicket()">Взять тикет</button>`
+    : ""
+}
 
-  ${
-    (t.status === "in_progress" && currentUserRole === "user")
-      ? `<button class="close-ticket-btn" onclick="closeTicket()">Закрыть обращение</button>`
-      : ""
-  }
+${
+  canCloseAsStaff
+    ? `<button class="close-ticket-btn" onclick="closeTicket()">Отметить как решено</button>`
+    : ""
+}
+
+${
+  canCloseAsUser
+    ? `<button class="close-ticket-btn" onclick="closeTicket()">Закрыть обращение</button>`
+    : ""
+}
+
+${
+  canReopenAsUser
+    ? `<button class="close-ticket-btn" onclick="reopenTicket()">Переоткрыть обращение</button>`
+    : ""
+}
+
+${
+  (
+    currentUserRole === "support" ||
+    currentUserRole === "resolution" ||
+    currentUserRole === "admin" ||
+    currentUserRole === "super_admin"
+  )
+    ? `
+      <a href="/support-admin.html" class="close-ticket-btn" style="text-decoration:none;text-align:center;">
+        К списку тикетов
+      </a>
+    `
+    : ""
+}
 
 </div>
 `;
@@ -869,46 +1077,85 @@ sidebarEl.innerHTML = `
 function getStatusText(status){
   if(status === "waiting") return "Ожидает ответа";
   if(status === "in_progress") return "В процессе";
-  if(status === "resolved") return "Решена";
+  if(status === "resolved") return "Решено";
   return status;
 }
-async function sendMessage(){
 
+async function sendMessage(){
   const text = chatText.value.trim();
 
-  if(!text && selectedChatFiles.length === 0) return;
+  if (!text && selectedChatFiles.length === 0) return;
 
-  const formData = new FormData();
-  formData.append("text", text);
-
-  selectedChatFiles.forEach(file=>{
-    formData.append("attachments", file);
-  });
-
-  const r = await fetch("/api/support/tickets/" + ticketId + "/message",{
-    method:"POST",
-    headers:{
-      Authorization:"Bearer " + token
-    },
-    body: formData
-  });
-
-  const d = await r.json().catch(()=>null);
-
-  if(d && d.success === false){
-    alert(d.message || "Ошибка");
+  if (text.length > 2000) {
+    alert("Сообщение слишком длинное");
     return;
   }
 
-  chatText.value = "";
-  selectedChatFiles = [];
-  renderChatFiles();
+  if (isSendingMessage) return;
+  isSendingMessage = true;
+  chatSendBtn.disabled = true;
 
-  await loadTicket();   // ← ВОТ ЭТО ДОБАВЬ
+  try{
+    const formData = new FormData();
+    formData.append("text", text);
+
+    selectedChatFiles.forEach(file => {
+      formData.append("attachments", file);
+    });
+
+    const r = await fetch("/api/support/tickets/" + ticketId + "/message",{
+      method:"POST",
+      headers:{
+        Authorization:"Bearer " + token
+      },
+      body: formData
+    });
+
+    if (handleAuthStatus(r.status)) {
+      return;
+    }
+
+    const d = await r.json().catch(() => null);
+
+    if (d && d.success === false) {
+      alert(d.message || "Ошибка");
+      return;
+    }
+
+    chatText.value = "";
+    selectedChatFiles = [];
+    renderChatFiles();
+
+    await loadTicket();
+  } finally {
+    isSendingMessage = false;
+    chatSendBtn.disabled = false;
+  }
+}
+
+async function assignTicket(){
+  const r = await fetch("/api/support/tickets/" + ticketId + "/assign",{
+    method:"POST",
+    headers:{
+      Authorization:"Bearer " + token
+    }
+  });
+
+  if (handleAuthStatus(r.status)) {
+    return;
+  }
+
+  const d = await r.json().catch(() => null);
+
+  if(!d || !d.success){
+    alert((d && d.message) || "Не удалось взять тикет");
+    return;
+  }
+
+  await loadTicket();
 }
 
 async function closeTicket(){
-
   if(!confirm("Закрыть обращение?")) return;
 
   const r = await fetch("/api/support/tickets/" + ticketId + "/close",{
@@ -918,28 +1165,42 @@ async function closeTicket(){
     }
   });
 
-  const data = await r.json();
-
-  if(!data.success){
-    alert(data.message || "Ошибка закрытия");
+  if (handleAuthStatus(r.status)) {
     return;
   }
 
-  loadTicket();
+  const data = await r.json().catch(() => null);
+
+  if(!data || !data.success){
+    alert((data && data.message) || "Ошибка закрытия");
+    return;
+  }
+
+  await loadTicket();
 }
 
 async function reopenTicket(){
-
   if(!confirm("Переоткрыть обращение?")) return;
 
-  await fetch("/api/support/tickets/" + ticketId + "/reopen",{
+  const r = await fetch("/api/support/tickets/" + ticketId + "/reopen",{
     method:"POST",
     headers:{
       Authorization:"Bearer " + token
     }
   });
 
-  loadTicket();
+  if (handleAuthStatus(r.status)) {
+    return;
+  }
+
+  const d = await r.json().catch(() => null);
+
+  if(!d || !d.success){
+    alert((d && d.message) || "Ошибка переоткрытия");
+    return;
+  }
+
+  await loadTicket();
 }
 
 chatSendBtn.addEventListener("click", sendMessage);
@@ -951,15 +1212,11 @@ chatText.addEventListener("keydown", e=>{
   }
 });
 
-document.querySelector(".chat-input textarea")
-  .addEventListener("keydown", e=>{
-    if(e.key === "Enter" && !e.shiftKey){
-      e.preventDefault();
-      sendMessage();
-    }
+loadMe().then((ok) => {
+  if (!ok) return;
+  loadTicket();
 });
 
-loadTicket();
 socket.on("new-support-message", (data) => {
   if(data.ticketId === ticketId){
     loadTicket();

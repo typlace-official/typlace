@@ -76,6 +76,8 @@ body{
   font-size:18px;
   font-weight:600;
   opacity:.7;
+  white-space:normal;
+  word-break:keep-all;
 }
 
 /* FORM */
@@ -131,13 +133,16 @@ label{
 }
 
 /* INPUTS */
-input, select{
+input,
+select,
+textarea{
   width:100%;
   padding:12px;
-  border-radius:12px;
+  border-radius:5px;
   border:1px solid #e5e7eb;
   font-size:14px;
   box-sizing:border-box;
+  background:#fff;
 }
 
 input::-webkit-outer-spin-button,
@@ -158,16 +163,15 @@ input::-webkit-inner-spin-button{
 .btn{
   margin-top:20px;
   width:100%;
-  height:46px;
-  border-radius:14px;
+  height:48px;              /* было 52 */
+  border-radius:5px;       /* было 16 */
   border:none;
-  background:linear-gradient(135deg,#2563eb,#3b82f6);
+  background:#3b82f6;       /* убираем градиент */
   color:#fff;
-  font-size:15px;
-  font-weight:700;
+  font-size:15px;           /* было 16 */
+  font-weight:600;
   cursor:pointer;
 }
-
 
 .field-full{
   width:100%;
@@ -232,7 +236,7 @@ textarea:focus{
 }
 .tp-gallery{
   width:100%;
-  aspect-ratio:4/3;      /* 👈 4:3 как ты хотел */
+  aspect-ratio:16/9;
   background:#fff;
   border-radius:16px;
   overflow:hidden;
@@ -247,7 +251,7 @@ textarea:focus{
   }
 
 .tp-gallery__slide img{
-  aspect-ratio:4/3;
+  aspect-ratio:16/9;
   object-fit:cover;
 }
 
@@ -371,13 +375,16 @@ textarea:focus{
   }
 
   /* Инпуты меньше и аккуратнее */
-  input,
-  select,
-  textarea{
-    padding:10px 14px;
-    border-radius:14px;
-    font-size:16px;
-  }
+input,
+select,
+textarea{
+  padding:10px 14px;
+  border-radius:5px;
+  font-size:16px;
+  border:1px solid #e5e7eb;
+  box-sizing:border-box;
+  background:#fff;
+}
 
   textarea{
     height:140px !important;
@@ -390,9 +397,9 @@ textarea:focus{
 
   /* Кнопка аккуратнее */
   .btn{
-    height:52px;
-    border-radius:16px;
-    font-size:16px;
+    height:48px;
+    border-radius:5px;
+    font-size:15px;
   }
 
 }
@@ -401,8 +408,8 @@ textarea:focus{
 .price-group input{
   height:42px;
   font-size:16px;
-  font-weight:600;
-  border-radius:12px;
+  font-weight:400;
+  border-radius:5px;
 }
 
 @media (max-width:768px){
@@ -434,6 +441,217 @@ textarea:focus{
   color:#ef4444;
   margin-top:6px;
 }
+.tp-gallery{
+  touch-action: pan-y;
+}
+@media (max-width:768px){
+
+  #header-container .tp-header,
+  #header-container .tp-header-mobile{
+    display:none !important;
+  }
+
+  body{
+    padding-top:0 !important;
+  }
+
+}
+.back-btn{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  border:none;
+  background:#e3e5e9;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+
+.back-btn svg{
+  width:22px;
+  height:22px;
+  stroke:#000000;
+  stroke-width:2.5;
+  fill:none;
+}
+@media (max-width:768px){
+
+  .crumb-mode{
+    max-width:110px;
+  }
+
+}
+@media (max-width:768px){
+
+  .breadcrumb{
+    flex-wrap:wrap;
+  }
+
+  .crumb-mode{
+    font-size:16px;
+    line-height:1.2;
+  }
+
+}
+.lang-rules-hint{
+  margin-top:8px;
+  padding:10px 12px;
+  border-radius:8px;
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+  font-size:13px;
+  line-height:1.45;
+  color:#475569;
+}
+
+.lang-rules-hint strong{
+  color:#111827;
+}
+.lang-rules-box{
+  margin-top:8px;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  background:#f8fafc;
+  overflow:hidden;
+}
+
+.lang-rules-toggle{
+  width:100%;
+  border:none;
+  background:transparent;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:11px 12px;
+  cursor:pointer;
+  text-align:left;
+}
+
+.lang-rules-toggle-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+
+.lang-rules-info-icon{
+  width:18px;
+  height:18px;
+  stroke:#6b7280;
+  fill:none;
+  stroke-width:2;
+  flex-shrink:0;
+}
+
+.lang-rules-caret{
+  width:18px;
+  height:18px;
+  stroke:#6b7280;
+  fill:none;
+  stroke-width:2;
+  transition:transform .2s ease;
+  flex-shrink:0;
+}
+
+.lang-rules-toggle.open .lang-rules-caret{
+  transform:rotate(180deg);
+}
+
+.lang-rules-hint{
+  padding:0 12px 12px;
+  font-size:13px;
+  line-height:1.5;
+  color:#475569;
+}
+
+.lang-rules-hint strong{
+  color:#111827;
+}
+.home-note{
+  margin-top:10px;
+  font-size:13px;
+  color:#9ca3af;
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+}
+
+.home-note-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  margin-top:1px;
+}
+
+.home-note-icon svg{
+  width:16px;
+  height:16px;
+  stroke:currentColor;
+  fill:none;
+  stroke-width:2;
+}
+
+.home-note-text{
+  font-weight:500;
+  line-height:1.45;
+}
+
+.offer-lang-note{
+  margin-bottom:16px;
+}
+
+.tp-toast{
+  position:fixed;
+  left:50%;
+  bottom:90px;
+  transform:translateX(-50%) translateY(20px);
+  min-width:220px;
+  max-width:min(92vw, 420px);
+  padding:14px 16px;
+  border-radius:14px;
+  color:#fff;
+  font-size:14px;
+  font-weight:600;
+  line-height:1.4;
+  box-shadow:0 12px 30px rgba(0,0,0,.18);
+  opacity:0;
+  pointer-events:none;
+  z-index:3000;
+  transition:opacity .22s ease, transform .22s ease;
+  text-align:center;
+}
+
+.tp-toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
+.tp-toast.success{
+  background:#16a34a;
+}
+
+.tp-toast.error{
+  background:#ef4444;
+}
+
+.tp-toast.info{
+  background:#374151;
+}
+
+@media (max-width:768px){
+  .tp-toast{
+    bottom:100px;
+    font-size:13px;
+    padding:13px 14px;
+    border-radius:12px;
+  }
+}
+body.keyboard-open #footer-container{
+  display:none !important;
+}
 </style>
 </head>
 
@@ -449,8 +667,10 @@ textarea:focus{
 
 <!-- TOP -->
 <div class="top-row">
-<button class="back-pill" id="backBtn">
-  ← <span data-i18n="common.back"></span>
+<button class="back-btn" id="backBtn" aria-label="Back">
+<svg viewBox="0 0 24 24">
+<path d="M15 6L9 12L15 18"/>
+</svg>
 </button>
 
   <div class="breadcrumb">
@@ -485,6 +705,18 @@ textarea:focus{
 <div class="form-group" id="langSelectGroup" style="max-width:220px;">
   <label data-i18n="common.ad_language"></label>
 <select id="langSelect"></select>
+</div>
+
+<div class="home-note offer-lang-note">
+  <span class="home-note-icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9"></circle>
+      <line x1="12" y1="10" x2="12" y2="16"></line>
+      <circle cx="12" cy="7" r="1"></circle>
+    </svg>
+  </span>
+
+  <span class="home-note-text" id="langRulesHint"></span>
 </div>
 
 <div id="titleDescBlock">
@@ -536,10 +768,12 @@ textarea:focus{
   <label data-i18n="common.price"></label>
     <div style="position:relative;">
 <input id="priceInput"
-         type="text"
-         inputmode="numeric"
-         placeholder=""
-         style="padding-right:44px;">
+       type="text"
+       inputmode="decimal"
+       autocomplete="off"
+       spellcheck="false"
+       placeholder=""
+       style="padding-right:44px;">
   <span id="priceCurrency"
         style="
           position:absolute;
@@ -576,7 +810,7 @@ textarea:focus{
 </div>
 </main>
 
-<div id="footer-container"></div>
+
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
@@ -589,18 +823,18 @@ textarea:focus{
 <script type="module">
 const langSelect = document.getElementById("langSelect");
 
-const savedLang = localStorage.getItem("offer_lang") || "ru";
-function fillOfferLangSelect(){
+const savedLang = getInterfaceLang();
 
-  const current = localStorage.getItem("offer_lang") || "ru";
-
+function fillOfferLangSelect(selectedLang = getInterfaceLang()) {
   langSelect.innerHTML = `
     <option value="ru">${window.tpI18n.t("common.lang_ru")}</option>
     <option value="uk">${window.tpI18n.t("common.lang_uk")}</option>
     <option value="en">${window.tpI18n.t("common.lang_en")}</option>
   `;
 
-  langSelect.value = current;
+  langSelect.value = ["ru", "uk", "en"].includes(selectedLang)
+    ? selectedLang
+    : "ru";
 }
 
 // показать нужные блоки текста
@@ -620,10 +854,110 @@ function updateOfferFieldLabels(lang){
   document.querySelectorAll(".offer-desc-label").forEach(el => el.textContent = descText);
 }
 
+function getInterfaceLang(){
+  const lang = (localStorage.getItem("tp_lang") || "ru").trim().toLowerCase();
+  return ["ru", "uk", "en"].includes(lang) ? lang : "ru";
+}
+
+function getRequiredOfferLangs(){
+  const interfaceLang = getInterfaceLang();
+
+  const rules =
+    GAME.offerLanguages?.requiredByInterface || {
+      ru: ["ru", "uk"],
+      uk: ["uk", "ru"],
+      en: ["en"]
+    };
+
+  return rules[interfaceLang] || rules.ru || ["ru", "uk"];
+}
+
+function switchOfferEditorLang(lang){
+  langSelect.value = lang;
+  applyLangBlocks(lang);
+  updateOfferFieldLabels(lang);
+}
+
+function getLangName(lang){
+  const uiLang = getInterfaceLang();
+
+  if (uiLang === "uk") {
+    if (lang === "ru") return "російською";
+    if (lang === "uk") return "українською";
+    if (lang === "en") return "англійською";
+  }
+
+  if (uiLang === "en") {
+    if (lang === "ru") return "Russian";
+    if (lang === "uk") return "Ukrainian";
+    if (lang === "en") return "English";
+  }
+
+  if (lang === "ru") return "на русском";
+  if (lang === "uk") return "на украинском";
+  if (lang === "en") return "на английском";
+
+  return lang;
+}
+
+function getTitleErrorText(lang){
+  const uiLang = getInterfaceLang();
+
+  if (uiLang === "uk") {
+    return `Заповніть назву ${getLangName(lang)}`;
+  }
+
+  if (uiLang === "en") {
+    return `Fill in the title in ${getLangName(lang)}`;
+  }
+
+  return `Заполните название ${getLangName(lang)}`;
+}
+
+function getDescErrorText(lang){
+  const uiLang = getInterfaceLang();
+
+  if (uiLang === "uk") {
+    return `Заповніть опис ${getLangName(lang)}`;
+  }
+
+  if (uiLang === "en") {
+    return `Fill in the description in ${getLangName(lang)}`;
+  }
+
+  return `Заполните описание ${getLangName(lang)}`;
+}
+
+function updateLangRulesHint(){
+  const box = document.getElementById("langRulesHint");
+  if (!box) return;
+
+  const interfaceLang = getInterfaceLang();
+
+  if (interfaceLang === "ru") {
+    box.innerHTML = `
+      Заполните объявление на <strong>русском</strong> и <strong>украинском</strong>.
+      <strong>Английский</strong> можно добавить дополнительно.
+    `;
+    return;
+  }
+
+  if (interfaceLang === "uk") {
+    box.innerHTML = `
+      Заповніть оголошення <strong>українською</strong> та <strong>російською</strong>.
+      <strong>Англійську</strong> можна додати додатково.
+    `;
+    return;
+  }
+
+  box.innerHTML = `
+    Fill in the listing in <strong>English</strong>.
+    <strong>Russian</strong> and <strong>Ukrainian</strong> can be added optionally.
+  `;
+}
+
 langSelect.addEventListener("change", () => {
   const lang = langSelect.value;
-  localStorage.setItem("offer_lang", lang);
-
   applyLangBlocks(lang);
   updateOfferFieldLabels(lang);
 });
@@ -651,7 +985,9 @@ if(!gameId || !window.GAMES[gameId]){
 
 const GAME = window.GAMES[gameId];
 const activeMode = mode || GAME.defaultMode;
-let priceEUR = null;
+const modeCfg = GAME.modes?.[activeMode] || {};
+
+let priceBase = null;
 const extraFieldsWrap = document.getElementById("extraFields");
 const categoryGroup = document.getElementById("categoryGroup");
 const categoryInput = document.getElementById("categoryInput");
@@ -688,10 +1024,10 @@ if (Array.isArray(modeCfg.categories) && modeCfg.categories.length) {
   categoryGroup.style.display = "none";
 }
 
-  const filters = modeCfg.filters;
-  if (!filters) return;
+const fieldsConfig = modeCfg.createFields || modeCfg.filters;
+if (!fieldsConfig) return;
 
-Object.entries(filters).forEach(([key, field]) => {
+Object.entries(fieldsConfig).forEach(([key, field]) => {
 
   // ❌ create-странице не нужен range
   if (field.type === "range") return;
@@ -736,7 +1072,9 @@ Object.entries(filters).forEach(([key, field]) => {
       }
     });
 
-    if (field.showIf) wrap.style.display = "none";
+  if (field.showIf || field.showIfValue) {
+  wrap.style.display = "none";
+}
 
     wrap.appendChild(select);
     extraFieldsWrap.appendChild(wrap);
@@ -745,104 +1083,139 @@ Object.entries(filters).forEach(([key, field]) => {
 
 });
 }
+
+function matchesShowIf(showIf, values) {
+  return Object.entries(showIf).every(([dep, cond]) =>
+    Array.isArray(cond)
+      ? cond.includes(values[dep])
+      : values[dep] === cond
+  );
+}
+
+function matchesShowIfValue(showIfValue, values) {
+  return Object.entries(showIfValue).some(([dep, cond]) =>
+    Array.isArray(cond)
+      ? cond.includes(values[dep])
+      : values[dep] === cond
+  );
+}
+
 function updateVisibilityByConfig() {
   const values = {};
 
   extraFieldsWrap.querySelectorAll("[data-key]").forEach(wrap => {
     const key = wrap.dataset.key;
-    const input = wrap.querySelector("select, input");
+    const input = wrap.querySelector("select, input, textarea");
     if (input) values[key] = input.value;
   });
 
+  const fieldsConfig =
+    GAME.modes[activeMode]?.createFields ||
+    GAME.modes[activeMode]?.filters ||
+    {};
+
   extraFieldsWrap.querySelectorAll("[data-key]").forEach(wrap => {
     const key = wrap.dataset.key;
-    const field = GAME.modes[activeMode]?.filters?.[key];
+    const field = fieldsConfig[key];
     if (!field) return;
 
-    let visible = true;
+    const checks = [];
 
     if (field.showIf) {
-      visible = Object.entries(field.showIf).every(([dep, cond]) =>
-        Array.isArray(cond)
-          ? cond.includes(values[dep])
-          : values[dep] === cond
-      );
+      checks.push(matchesShowIf(field.showIf, values));
     }
-if (field.showIfValue) {
-  const matches = Object.entries(field.showIfValue).some(([dep, cond]) =>
-    Array.isArray(cond)
-      ? cond.includes(values[dep])
-      : values[dep] === cond
-  );
 
-  if (matches) visible = true;
-}
+    if (field.showIfValue) {
+      checks.push(matchesShowIfValue(field.showIfValue, values));
+    }
+
+    const visible = checks.length ? checks.some(Boolean) : true;
+
     wrap.style.display = visible ? "" : "none";
 
     if (!visible) {
-      wrap.querySelectorAll("input, select").forEach(i => i.value = "");
+      wrap.querySelectorAll("input, select, textarea").forEach(i => {
+        i.value = "";
+      });
     }
   });
 }
+
 /* ===== PRICE PREVIEW (LIKE FUNPAY) ===== */
 
-const MARKETPLACE_FEE_PERCENT = 10; // ⚠️ ДОЛЖНО СОВПАДАТЬ С СЕРВЕРОМ
+let marketplaceFeePercent = 10;
+
+const MIN_OFFER_PRICE = 10;
+const MAX_OFFER_PRICE = 100000;
 
 const priceInput = document.getElementById("priceInput");
 const pricePreview = document.getElementById("pricePreview");
+
+async function loadPlatformSettings(){
+  try {
+    const res = await fetch("/api/public/platform-settings", { cache: "no-cache" });
+    const data = await res.json();
+
+    if (data?.success) {
+      marketplaceFeePercent = Number(data.settings?.marketplaceFeePercent ?? 10);
+    }
+  } catch (e) {
+    console.error("Не удалось загрузить настройки платформы", e);
+  }
+}
 
 function round2(n){
   return Math.round(n * 100) / 100;
 }
 
 function calcGrossFromNet(net){
-  return round2(net * (1 + MARKETPLACE_FEE_PERCENT / 100));
+  return round2(net * (1 + marketplaceFeePercent / 100));
 }
+
 async function updatePricePreview(){
-  const raw = priceInput.value.replace(",", ".").trim();
+  const raw = priceInput.value.replace(/,/g, ".").trim();
   const value = Number(raw);
 
   if (!value || value <= 0){
     pricePreview.style.display = "none";
-    priceEUR = null;
+    priceBase = null;
     return;
   }
 
   const cur = localStorage.getItem("tp_currency") || "UAH";
-  const ratesData = await tpMoney.getRates();
-  const rates = ratesData.rates;
 
-  // 🔹 перевод в EUR (ЦЕНА ПРОДАВЦА)
-  let eur =
-    cur === "EUR" ? value :
-    cur === "USD" ? value / rates.USD :
-    value / rates.UAH;
+  // what seller enters -> convert to base currency (UAH)
+  const base = await tpMoney.convertToBase(value, cur);
+  priceBase = base;
 
-  eur = Math.round(eur * 100) / 100;
-  priceEUR = eur; // ✅ ВАЖНО
+  const grossBase = calcGrossFromNet(base);
 
-  const grossEUR = Math.round(eur * 1.1 * 100) / 100;
+  const uahVal = await tpMoney.convertFromBase(grossBase, "UAH");
+  const usdVal = await tpMoney.convertFromBase(grossBase, "USD");
+  const eurVal = await tpMoney.convertFromBase(grossBase, "EUR");
 
-  const eurVal = grossEUR;
-  const usdVal = Math.round(grossEUR * rates.USD * 100) / 100;
-  const uahVal = Math.round(grossEUR * rates.UAH);
+  const currentVal =
+    cur === "UAH" ? uahVal :
+    cur === "USD" ? usdVal :
+    eurVal;
 
-  const symbols = { EUR:"€", USD:"$", UAH:"₴" };
+  const symbols = { EUR: "€", USD: "$", UAH: "₴" };
 
   pricePreview.innerHTML = `
     <div>${window.tpI18n.t("common.buyer_pays")}</div>
-    <div><b>≈ ${
-      cur==="EUR"?eurVal:cur==="USD"?usdVal:uahVal
-    } ${symbols[cur]}</b></div>
-    ${cur!=="EUR"?`<div>≈ ${eurVal} €</div>`:""}
-    ${cur!=="USD"?`<div>≈ ${usdVal} $</div>`:""}
-    ${cur!=="UAH"?`<div>≈ ${uahVal.toLocaleString("ru-RU")} грн</div>`:""}
+    <div><b>${currentVal} ${symbols[cur]}</b></div>
+    ${cur !== "UAH" ? `<div>≈ ${Math.round(uahVal).toLocaleString("ru-RU")} грн</div>` : ""}
+    ${cur !== "USD" ? `<div>≈ ${usdVal} $</div>` : ""}
+    ${cur !== "EUR" ? `<div>≈ ${eurVal} €</div>` : ""}
   `;
 
   pricePreview.style.display = "block";
 }
 
-priceInput.addEventListener("input", updatePricePreview);
+priceInput.addEventListener("input", () => {
+  priceInput.value = sanitizePriceValue(priceInput.value);
+  updatePricePreview();
+});
 
 // breadcrumb
 document.getElementById("crumbIcon").src = GAME.icon;
@@ -853,16 +1226,16 @@ document.getElementById("crumbGame").textContent = GAME.title;
 const titleDescBlock = document.getElementById("titleDescBlock");
 const langSelectGroup = document.getElementById("langSelectGroup");
 
-
-
-// ВЕЗДЕ, КРОМЕ ROBUX (работаем по ID)
-if (activeMode !== "robux") {
+function syncTextFieldsVisibility() {
+  // Поля названия и описания показываем всегда
   titleDescBlock.style.display = "";
+
+  // Выбор языка тоже показываем всегда,
+  // иначе в других режимах нельзя будет переключать язык текста
   langSelectGroup.style.display = "";
-} else {
-  titleDescBlock.style.display = "none";
-  langSelectGroup.style.display = "none";
 }
+
+syncTextFieldsVisibility();
 
 // ===== SMART CREATE GALLERY =====
 
@@ -1010,27 +1383,54 @@ createGallery.appendChild(track);
 const counter = document.createElement("div");
 counter.className = "tp-gallery__counter";
 createGallery.appendChild(counter);
-// ===== TOUCH SWIPE =====
+// ===== DRAG SWIPE (как в offer.html) =====
+
 let startX = 0;
+let isDragging = false;
 let currentTranslate = 0;
+let prevTranslate = 0;
+
+function setPosition(){
+  track.style.transform = `translateX(${currentTranslate}px)`;
+}
+
+function animate(){
+  setPosition();
+  if(isDragging) requestAnimationFrame(animate);
+}
 
 track.addEventListener("touchstart", e => {
   startX = e.touches[0].clientX;
+  isDragging = true;
+  track.style.transition = "none";
+  requestAnimationFrame(animate);
 });
 
-track.addEventListener("touchend", e => {
-  const endX = e.changedTouches[0].clientX;
-  const diff = endX - startX;
+track.addEventListener("touchmove", e => {
 
-  if (diff < -50 && currentIndex < totalSlides - 1) {
-    currentIndex++;
-  }
+  if(!isDragging) return;
 
-  if (diff > 50 && currentIndex > 0) {
-    currentIndex--;
-  }
+  e.preventDefault();
+
+  const x = e.touches[0].clientX;
+  const diff = x - startX;
+
+  currentTranslate = prevTranslate + diff;
+
+});
+
+track.addEventListener("touchend", () => {
+
+  isDragging = false;
+
+  const moved = currentTranslate - prevTranslate;
+  const width = createGallery.clientWidth;
+
+  if (moved < -80 && currentIndex < totalSlides - 1) currentIndex++;
+  if (moved > 80 && currentIndex > 0) currentIndex--;
 
   updatePosition();
+
 });
   // ===== СЛАЙДЫ =====
   selectedFiles.forEach((file, i)=>{
@@ -1067,10 +1467,14 @@ removeBtn.onclick = (e)=>{
 
     const plus = document.createElement("div");
     plus.className = "tp-gallery__plus";
-    plus.innerHTML = `
-      <div class="tp-gallery__plus-icon">+</div>
-      <div>Добавить фото</div>
-    `;
+plus.innerHTML = `
+  <div class="tp-gallery__plus-icon">+</div>
+  <div data-i18n="common.add_photo"></div>
+`;
+
+if (window.tpI18n?.apply) {
+  window.tpI18n.apply(plus);
+}
     plus.onclick = openPicker;
 
     plusSlide.appendChild(plus);
@@ -1098,7 +1502,11 @@ nextBtn.onclick = (e)=>{
 };
 
 function updatePosition(skipAnimation = false){
+
   const width = createGallery.offsetWidth;
+
+  currentTranslate = -currentIndex * width;
+  prevTranslate = currentTranslate;
 
   if (skipAnimation) {
     track.style.transition = "none";
@@ -1106,7 +1514,7 @@ function updatePosition(skipAnimation = false){
     track.style.transition = "transform 0.35s ease";
   }
 
-  track.style.transform = `translateX(-${currentIndex * width}px)`;
+  track.style.transform = `translateX(${currentTranslate}px)`;
 
   if (skipAnimation) {
     requestAnimationFrame(() => {
@@ -1116,29 +1524,67 @@ function updatePosition(skipAnimation = false){
 
   prevBtn.style.display = currentIndex > 0 ? "flex" : "none";
   nextBtn.style.display = currentIndex < totalSlides - 1 ? "flex" : "none";
-if (realCount > 0) {
-  counter.style.display = "block";
 
-  // максимум 5
-  let displayIndex = currentIndex + 1;
+  if (realCount > 0) {
+    counter.style.display = "block";
 
-  if (displayIndex > 5) {
-    displayIndex = 5;
+    let displayIndex = currentIndex + 1;
+
+    if (displayIndex > 5) {
+      displayIndex = 5;
+    }
+
+    counter.textContent = `${displayIndex} / 5`;
+  } else {
+    counter.style.display = "none";
   }
 
-  counter.textContent = `${displayIndex} / 5`;
-} else {
-  counter.style.display = "none";
-}
 }
 
 updatePosition(true);
 
 }
 
-loadImagesFromStorage();
+if (!isEditMode) {
+  loadImagesFromStorage();
+}
+
 rebuildInput();
 renderGallery();
+
+function validateDynamicFields(){
+  const fieldsConfig =
+    GAME.modes[activeMode]?.createFields ||
+    GAME.modes[activeMode]?.filters ||
+    {};
+
+  let firstInvalidInput = null;
+
+  extraFieldsWrap.querySelectorAll("[data-key]").forEach(wrap => {
+    if (wrap.style.display === "none") return;
+
+    const key = wrap.dataset.key;
+    const field = fieldsConfig[key];
+    if (!field) return;
+
+    const isRequired = field.required !== false;
+    if (!isRequired) return;
+
+    const input = wrap.querySelector("input, select, textarea");
+    if (!input) return;
+
+    const value = String(input.value || "").trim();
+
+    if (!value) {
+      showError(input, "Заполните поле");
+      if (!firstInvalidInput) {
+        firstInvalidInput = input;
+      }
+    }
+  });
+
+  return firstInvalidInput;
+}
 
 // SUBMIT
 document.getElementById("offerForm").onsubmit = async e => {
@@ -1152,6 +1598,7 @@ document.getElementById("offerForm").onsubmit = async e => {
 clearAllErrors();
 
 let hasError = false;
+
 // получаем значения
 const titleRu = document.getElementById("titleRu").value.trim();
 const descRu  = document.getElementById("descRu").value.trim();
@@ -1160,53 +1607,88 @@ const descUk  = document.getElementById("descUk").value.trim();
 const titleEn = document.getElementById("titleEn").value.trim();
 const descEn  = document.getElementById("descEn").value.trim();
 
-const currentLang = langSelect.value || "ru";
-
-let requiredTitle = "";
-let requiredDesc = "";
-
-if (currentLang === "ru") {
-  requiredTitle = titleRu;
-  requiredDesc  = descRu;
-}
-if (currentLang === "uk") {
-  requiredTitle = titleUk;
-  requiredDesc  = descUk;
-}
-if (currentLang === "en") {
-  requiredTitle = titleEn;
-  requiredDesc  = descEn;
-}
+const hasCategories = Array.isArray(modeCfg.categories) && modeCfg.categories.length > 0;
 
 // категория
-if(categoryInput && !categoryInput.value){
+if (hasCategories && !categoryInput.value) {
   showError(categoryInput, "Укажите категорию");
   hasError = true;
 }
 
 // цена
-if(!priceEUR || priceEUR <= 0){
+if (!priceBase || priceBase <= 0) {
   showError(priceInput, "Укажите цену");
   hasError = true;
-}
-
-// название
-if(!requiredTitle){
-  const titleInput =
-    document.querySelector(".lang-" + currentLang + " input");
-  showError(titleInput, "Заполните название");
+} else if (priceBase < MIN_OFFER_PRICE) {
+  showError(priceInput, `Минимальная цена ${MIN_OFFER_PRICE} ₴`);
+  hasError = true;
+} else if (priceBase > MAX_OFFER_PRICE) {
+  showError(priceInput, `Максимальная цена ${MAX_OFFER_PRICE.toLocaleString("ru-RU")} ₴`);
   hasError = true;
 }
 
-// описание
-if(!requiredDesc){
-  const descInput =
-    document.querySelector(".lang-" + currentLang + " textarea");
-  showError(descInput, "Заполните описание");
+const firstInvalidDynamicInput = validateDynamicFields();
+
+if (firstInvalidDynamicInput) {
   hasError = true;
 }
 
-if(hasError) return;
+const langFields = {
+  ru: {
+    title: titleRu,
+    desc: descRu,
+    titleInput: document.getElementById("titleRu"),
+    descInput: document.getElementById("descRu")
+  },
+  uk: {
+    title: titleUk,
+    desc: descUk,
+    titleInput: document.getElementById("titleUk"),
+    descInput: document.getElementById("descUk")
+  },
+  en: {
+    title: titleEn,
+    desc: descEn,
+    titleInput: document.getElementById("titleEn"),
+    descInput: document.getElementById("descEn")
+  }
+};
+
+const requiredLangs = getRequiredOfferLangs();
+let firstInvalidLang = null;
+
+requiredLangs.forEach(lang => {
+  const fields = langFields[lang];
+  if (!fields) return;
+
+  if (!fields.title) {
+    showError(fields.titleInput, getTitleErrorText(lang));
+    hasError = true;
+    if (!firstInvalidLang) firstInvalidLang = lang;
+  }
+
+  if (!fields.desc) {
+    showError(fields.descInput, getDescErrorText(lang));
+    hasError = true;
+    if (!firstInvalidLang) firstInvalidLang = lang;
+  }
+});
+
+if (hasError) {
+  if (firstInvalidLang) {
+    switchOfferEditorLang(firstInvalidLang);
+  } else {
+    const firstInvalidDynamicInput = extraFieldsWrap.querySelector(".field-error");
+    if (firstInvalidDynamicInput) {
+      firstInvalidDynamicInput.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
+    }
+  }
+
+  return;
+}
 
 const extra = {};
 
@@ -1232,7 +1714,8 @@ const formData = new FormData();
 formData.append("game", gameId);
 formData.append("mode", mode || GAME.defaultMode);
 formData.append("category", categoryInput?.value || "");
-formData.append("price", priceEUR);
+formData.append("price", priceBase);
+formData.append("interfaceLang", localStorage.getItem("tp_lang") || "ru");
 
 formData.append("title_ru", titleRu);
 formData.append("desc_ru", descRu);
@@ -1245,9 +1728,62 @@ Array.from(imageInput.files).slice(0,5).forEach(file=>{
   formData.append("images", file);
 });
 // ✅ ДОБАВИТЬ ЭТО
+
+const baseExtraKeys = new Set([
+  "method",
+  "country",
+  "accountType",
+  "accountRegion",
+  "voiceChat"
+]);
+
 Object.entries(extra).forEach(([key, value]) => {
-  formData.append(key, value);
+  if (!baseExtraKeys.has(key)) {
+    formData.append(key, value);
+  }
 });
+
+if (extra.method) {
+  formData.append("method", extra.method);
+}
+
+if (extra.country) {
+  formData.append("country", extra.country);
+}
+
+if (extra.accountType) {
+  formData.append("accountType", extra.accountType);
+}
+
+if (extra.accountRegion) {
+  formData.append("accountRegion", extra.accountRegion);
+}
+
+if (extra.voiceChat) {
+  formData.append("voiceChat", extra.voiceChat);
+}
+
+let normalizedAmount = null;
+
+if (extra.method === "official_store") {
+  normalizedAmount =
+    extra.amount_official === "other"
+      ? Number(extra.amount_exact || 0)
+      : Number(extra.amount_official || 0);
+} else if (extra.method === "gift_card") {
+  normalizedAmount =
+    extra.amount_giftcard === "other"
+      ? Number(extra.amount_exact || 0)
+      : Number(extra.amount_giftcard || 0);
+} else if (extra.method === "premium") {
+  normalizedAmount = Number(extra.amount_premium || 0);
+} else if (extra.method === "gamepass" || extra.method === "private_server") {
+  normalizedAmount = Number(extra.amount_exact || 0);
+}
+
+if (Number.isFinite(normalizedAmount) && normalizedAmount > 0) {
+  formData.append("amount", normalizedAmount);
+}
 
 const url = isEditMode
   ? "/api/offers/" + editId
@@ -1267,8 +1803,7 @@ const res = await fetch(url, {
 
 const data = await res.json();
 
-if(data.success){
-
+if (data.success) {
   localStorage.removeItem(STORAGE_KEY);
   selectedFiles = [];
   currentIndex = 0;
@@ -1276,33 +1811,66 @@ if(data.success){
   rebuildInput();
   renderGallery();
 
-  alert(isEditMode ? "Изменения сохранены!" : "Объявление создано!");
-  location.href =
+sessionStorage.setItem(
+  "tp_toast",
+  JSON.stringify({
+    type: "success",
+    text: isEditMode ? "Изменения сохранены" : "Объявление создано"
+  })
+);
+
+location.href =
   `/game.html?game=${gameId}&mode=${encodeURIComponent(mode || GAME.defaultMode)}`;
+
+} else {
+  showToast(data.message || "Ошибка", "error");
 }
-else{
-    alert(data.message || "Ошибка");
-  }
 };
 function updateCurrencySymbol(){
   const cur = localStorage.getItem("tp_currency") || "UAH";
   const symbols = { EUR:"€", USD:"$", UAH:"₴" };
   document.getElementById("priceCurrency").textContent = symbols[cur];
 }
-function showError(input, message){
 
+function showError(input, message){
   input.classList.add("field-error");
 
   const parent = input.closest(".form-group");
   let error = parent.querySelector(".error-text");
 
-  if(!error){
+  if (!error) {
     error = document.createElement("div");
     error.className = "error-text";
-    parent.appendChild(error);
+
+    const counter = parent.querySelector(".char-counter");
+
+    if (counter) {
+      parent.insertBefore(error, counter);
+    } else {
+      parent.appendChild(error);
+    }
   }
 
   error.textContent = message;
+}
+
+const tpToast = document.getElementById("tpToast");
+let tpToastTimer = null;
+
+function showToast(message, type = "success", duration = 2200){
+  if (!tpToast) return;
+
+  tpToast.textContent = message;
+  tpToast.className = `tp-toast ${type}`;
+
+  requestAnimationFrame(() => {
+    tpToast.classList.add("show");
+  });
+
+  clearTimeout(tpToastTimer);
+  tpToastTimer = setTimeout(() => {
+    tpToast.classList.remove("show");
+  }, duration);
 }
 
 function clearAllErrors(){
@@ -1315,13 +1883,13 @@ function clearAllErrors(){
 updateCurrencySymbol();
 window.addEventListener("tp:currency-change", ()=>{
   updateCurrencySymbol();
-  updatePricePreview(); // priceEUR обновится внутри
+updatePricePreview(); // priceBase обновится внутри
 });
 // ===== EDIT MODE INIT =====
 if (isEditMode) {
-document.title = window.tpI18n.t("common.edit_offer") + " — TyPlace";
-document.getElementById("submitBtn").textContent =
-  window.tpI18n.t("common.save_changes");
+  document.title = window.tpI18n.t("common.edit_offer") + " — TyPlace";
+const submitBtn = document.getElementById("submitBtn");
+submitBtn.setAttribute("data-i18n", "common.save_changes");
 
   const deleteBtn = document.getElementById("deleteBtn");
   deleteBtn.style.display = "block";
@@ -1347,8 +1915,16 @@ document.getElementById("submitBtn").textContent =
       alert(data.message || "Ошибка удаления");
     }
   };
+}
 
-  loadOfferForEdit(editId);
+function setDynamicFieldValue(key, value){
+  const wrap = document.querySelector(`#extraFields [data-key="${key}"]`);
+  if (!wrap) return;
+
+  const input = wrap.querySelector("input, select, textarea");
+  if (!input) return;
+
+  input.value = value ?? "";
 }
 
 async function loadOfferForEdit(id){
@@ -1361,17 +1937,22 @@ async function loadOfferForEdit(id){
   });
 
   const data = await res.json();
-  if(!data.success){
-    alert(window.tpI18n.t("common.offer_not_found"));
-    return;
-  }
+if (!data.success || data.deleted || !data.offer) {
+  alert(window.tpI18n.t("common.offer_not_found"));
+  location.href = "/my-offers.html";
+  return;
+}
 
-  const o = data.offer;
+const o = data.offer;
 
-  // 💰 цена
-  priceEUR = o.priceNet || o.price;
-  document.getElementById("priceInput").value = priceEUR;
-  updatePricePreview();
+// 💰 цена
+priceBase = Number(o.priceNet || o.price || 0);
+
+const cur = localStorage.getItem("tp_currency") || "UAH";
+const inputValue = await tpMoney.convertFromBase(priceBase, cur);
+
+document.getElementById("priceInput").value = inputValue ? String(Math.round(inputValue)) : "";
+await updatePricePreview();
 
 // 🧩 категория
 if (o.category) {
@@ -1380,14 +1961,76 @@ if (o.category) {
   }, 0);
 }
 
-  // 📝 тексты
-  document.getElementById("titleRu").value = o.title?.ru || "";
-  document.getElementById("descRu").value  = o.description?.ru || "";
-  document.getElementById("titleUk").value = o.title?.uk || "";
-  document.getElementById("descUk").value  = o.description?.uk || "";
-  document.getElementById("titleEn").value = o.title?.en || "";
-  document.getElementById("descEn").value  = o.description?.en || "";
+setDynamicFieldValue("method", o.method || "");
+updateVisibilityByConfig();
 
+setDynamicFieldValue("country", o.country || "");
+setDynamicFieldValue("accountType", o.accountType || "");
+setDynamicFieldValue("accountRegion", o.accountRegion || "");
+setDynamicFieldValue(
+  "voiceChat",
+  o.voiceChat === true ? "yes" : o.voiceChat === false ? "no" : ""
+);
+
+if (o.mode === "robux" && o.amount) {
+  if (o.method === "official_store") {
+    const select = document.querySelector('#extraFields [data-key="amount_official"] select');
+    const optionExists = select
+      ? [...select.options].some(opt => opt.value === String(o.amount))
+      : false;
+
+    if (optionExists) {
+      setDynamicFieldValue("amount_official", String(o.amount));
+    } else {
+      setDynamicFieldValue("amount_official", "other");
+      updateVisibilityByConfig();
+      setDynamicFieldValue("amount_exact", String(o.amount));
+    }
+  }
+
+  if (o.method === "gift_card") {
+    const select = document.querySelector('#extraFields [data-key="amount_giftcard"] select');
+    const optionExists = select
+      ? [...select.options].some(opt => opt.value === String(o.amount))
+      : false;
+
+    if (optionExists) {
+      setDynamicFieldValue("amount_giftcard", String(o.amount));
+    } else {
+      setDynamicFieldValue("amount_giftcard", "other");
+      updateVisibilityByConfig();
+      setDynamicFieldValue("amount_exact", String(o.amount));
+    }
+  }
+
+  if (o.method === "premium") {
+    setDynamicFieldValue("amount_premium", String(o.amount));
+  }
+
+  if (o.method === "gamepass" || o.method === "private_server") {
+    setDynamicFieldValue("amount_exact", String(o.amount));
+  }
+}
+  const titleRuEl = document.getElementById("titleRu");
+const descRuEl = document.getElementById("descRu");
+const titleUkEl = document.getElementById("titleUk");
+const descUkEl = document.getElementById("descUk");
+const titleEnEl = document.getElementById("titleEn");
+const descEnEl = document.getElementById("descEn");
+
+titleRuEl.value = o.title?.ru || "";
+descRuEl.value  = o.description?.ru || "";
+titleUkEl.value = o.title?.uk || "";
+descUkEl.value  = o.description?.uk || "";
+titleEnEl.value = o.title?.en || "";
+descEnEl.value  = o.description?.en || "";
+
+document.getElementById("counterRu").textContent = `${titleRuEl.value.length} / 70`;
+document.getElementById("counterDescRu").textContent = `${descRuEl.value.length} / 1000`;
+document.getElementById("counterUk").textContent = `${titleUkEl.value.length} / 70`;
+document.getElementById("counterDescUk").textContent = `${descUkEl.value.length} / 1000`;
+document.getElementById("counterEn").textContent = `${titleEnEl.value.length} / 70`;
+document.getElementById("counterDescEn").textContent = `${descEnEl.value.length} / 1000`;
   // 🔧 extra поля
   if (o.extra) {
     Object.entries(o.extra).forEach(([key, value]) => {
@@ -1461,17 +2104,23 @@ function initDescCounter(textareaId, counterId){
 initDescCounter("descRu", "counterDescRu");
 initDescCounter("descUk", "counterDescUk");
 initDescCounter("descEn", "counterDescEn");
+
 window.addEventListener("DOMContentLoaded", async () => {
 
   const lang = localStorage.getItem("tp_lang") || "ru";
-if (window.tpI18n?.load) {
-  await window.tpI18n.load(lang);
-}
 
-fillOfferLangSelect();
-const currentOfferLang = langSelect.value || savedLang || "ru";
-applyLangBlocks(currentOfferLang);
-updateOfferFieldLabels(currentOfferLang);
+  if (window.tpI18n?.load) {
+    await window.tpI18n.load(lang);
+  }
+
+  await loadPlatformSettings();
+
+const interfaceLang = getInterfaceLang();
+
+fillOfferLangSelect(interfaceLang);
+applyLangBlocks(interfaceLang);
+updateOfferFieldLabels(interfaceLang);
+updateLangRulesHint();
 
 if (window.tpI18n?.apply) window.tpI18n.apply(document);
   if (!window.GAMES || !window.GAMES[gameId]) {
@@ -1483,8 +2132,14 @@ document.getElementById("crumbMode").textContent =
   (modeData?.labelKey && window.tpI18n?.t)
     ? window.tpI18n.t(modeData.labelKey)
     : activeMode;
+
 renderExtraFields(gameId, activeMode);
 updateVisibilityByConfig();
+
+if (isEditMode) {
+  await loadOfferForEdit(editId);
+}
+
 if (window.tpI18n?.apply) {
   window.tpI18n.apply(document);
 }
@@ -1492,6 +2147,14 @@ if (window.tpI18n?.apply) window.tpI18n.apply(document);
 // 👇 ВОТ ЭТУ СТРОКУ ДОБАВЬ
 extraFieldsWrap.addEventListener("change", updateVisibilityByConfig);
 window.addEventListener("tp:lang-change", async (e) => {
+const savedExtraValues = {};
+extraFieldsWrap.querySelectorAll("[data-key]").forEach(wrap => {
+  const key = wrap.dataset.key;
+  const input = wrap.querySelector("select, input, textarea");
+  if (input) savedExtraValues[key] = input.value;
+});
+
+const savedCategory = categoryInput.value;
 
   const lang = e.detail?.lang || localStorage.getItem("tp_lang") || "ru";
 
@@ -1499,9 +2162,10 @@ window.addEventListener("tp:lang-change", async (e) => {
     await window.tpI18n.load(lang);
   }
 
-fillOfferLangSelect(); // ← ВОТ ЭТА СТРОКА ОБЯЗАТЕЛЬНА
-applyLangBlocks(langSelect.value || savedLang || "ru");
-updateOfferFieldLabels(langSelect.value || "ru");
+fillOfferLangSelect(lang);
+applyLangBlocks(lang);
+updateOfferFieldLabels(lang);
+updateLangRulesHint();
 
   if (window.tpI18n?.apply) {
     window.tpI18n.apply(document);
@@ -1513,10 +2177,77 @@ updateOfferFieldLabels(langSelect.value || "ru");
     (modeData?.labelKey && window.tpI18n?.t)
       ? window.tpI18n.t(modeData.labelKey)
       : activeMode;
+renderExtraFields(gameId, activeMode);
 
+Object.entries(savedExtraValues).forEach(([key, value]) => {
+  setDynamicFieldValue(key, value);
+});
+
+categoryInput.value = savedCategory;
+updateVisibilityByConfig();
+setupKeyboardFooterHide();
 });
 });
+
+function setupKeyboardFooterHide(){
+  const KEYBOARD_THRESHOLD = 160;
+
+  function isKeyboardOpen(){
+    if (!window.visualViewport) return false;
+
+    const viewportHeight = window.visualViewport.height;
+    const diff = window.innerHeight - viewportHeight;
+
+    return diff > KEYBOARD_THRESHOLD;
+  }
+
+  function updateKeyboardState(){
+    document.body.classList.toggle("keyboard-open", isKeyboardOpen());
+  }
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", updateKeyboardState);
+    window.visualViewport.addEventListener("scroll", updateKeyboardState);
+  }
+
+  window.addEventListener("focusin", updateKeyboardState);
+  window.addEventListener("focusout", () => {
+    setTimeout(updateKeyboardState, 80);
+  });
+
+  window.addEventListener("orientationchange", () => {
+    setTimeout(updateKeyboardState, 120);
+  });
+
+  updateKeyboardState();
+}
+function sanitizePriceValue(value){
+  let v = String(value || "")
+    .replace(/,/g, ".")
+    .replace(/[^\d.]/g, "");
+
+  const firstDotIndex = v.indexOf(".");
+
+  if (firstDotIndex !== -1) {
+    v =
+      v.slice(0, firstDotIndex + 1) +
+      v.slice(firstDotIndex + 1).replace(/\./g, "");
+  }
+
+  const parts = v.split(".");
+  let intPart = parts[0] || "";
+  const hasDot = v.includes(".");
+  let decPart = parts[1] || "";
+
+  intPart = intPart.replace(/^0+(?=\d)/, "");
+
+  if (hasDot) {
+    return `${intPart || "0"}.${decPart.slice(0, 2)}`;
+  }
+
+  return intPart;
+}
 </script>
-
+<div id="tpToast" class="tp-toast"></div>
 </body>
 </html>

@@ -5,58 +5,111 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Заказ — TyPlace</title>
 <link rel="stylesheet" href="/header.css">
+<link rel="stylesheet" href="/gallery.css">
 <link rel="stylesheet" href="/footer.css">
-
+<link rel="stylesheet" href="/badges.css">
 <style>
-html, body{
+:root{
+  --page-bg:#f6f7f9;
+  --card-bg:#ffffff;
+  --line:#e5e7eb;
+  --line-soft:#eeeeee;
+  --text:#111111;
+  --muted:#6b7280;
+  --primary:#1E50D4;
+  --primary-chat:#1e8bd4;
+  --system-bg:#ecfdf3;
+  --system-line:#bbf7d0;
+  --system-text:#14532d;
+  --system-badge-bg:#dcfce7;
+  --system-badge-text:#166534;
+  --resolution-bg:#f5f3ff;
+--resolution-line:#ddd6fe;
+--resolution-text:#5b21b6;
+--resolution-name:#4c1d95;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html,
+body{
   height:100%;
 }
 
 body{
   margin:0;
-  font-family:Inter,Arial,sans-serif;
-  background:#f6f7f9;
-  color:#111;
-
+  font-family:Inter, Arial, sans-serif;
+  background:var(--page-bg);
+  color:var(--text);
   display:flex;
   flex-direction:column;
 }
 
 .page-content{
-  flex:1;
+  flex:1 1 auto;
 }
 
-
 .page{
+  width:100%;
   max-width:1000px;
   margin:24px auto;
   padding:0 16px;
-
-  flex:1;
   display:flex;
   flex-direction:column;
 }
 
-.card{background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.08);padding:18px;margin-bottom:16px}
-.row{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
-.img{width:260px;max-width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#e5e7eb}
-.img img{width:100%;height:100%;object-fit:cover;display:block}
-.h1{font-size:22px;font-weight:900;margin:0}
-.muted{color:#555;font-size:13px}
-.price{font-size:22px;font-weight:900;color:#1E50D4;margin-top:8px}
-.badge{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:800;font-size:12px;background:#eef2ff;color:#1E50D4}
-.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-.btn{padding:10px 14px;border-radius:12px;border:none;cursor:pointer;font-weight:800}
-.btnBlue{background:#1E50D4;color:#fff}
-.btnGray{background:#eee;color:#111}
-.chat{border:1px solid #e2e6f0;border-radius:12px;padding:10px;background:#fafbff}
-.send{display:flex;gap:8px}
-.send input{flex:1;padding:10px;border-radius:10px;border:1px solid #ccc}
-.send button{padding:10px 14px;border-radius:10px;border:1px solid #ccc;background:#fff;cursor:pointer}
-.send input:disabled{background:#eee}
-.send button:disabled{opacity:.6}
+/* ===== COMMON ===== */
+
+.card{
+  background:var(--card-bg);
+  border-radius:16px;
+  box-shadow:0 8px 30px rgba(0,0,0,.08);
+  padding:18px;
+  margin-bottom:16px;
+}
+
+.btn{
+  padding:10px 16px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:#f3f4f6;
+  color:var(--text);
+  font-weight:600;
+  cursor:pointer;
+  transition:.15s ease;
+}
+
+.btn:hover{
+  background:#e5e7eb;
+}
+
+.btnBlue{
+  background:var(--primary);
+  color:#fff;
+  border-color:var(--primary);
+}
+
+.btnBlue:hover{
+  background:#1847c3;
+}
+
+.btnGray{
+  background:#f3f4f6;
+  color:var(--text);
+}
+
+.section-title{
+  font-size:16px;
+  font-weight:800;
+  color:var(--text);
+}
+
+/* ===== ORDER CARD ===== */
+
 .order-card{
-  background:#fff;
+  background:var(--card-bg);
   border-radius:16px;
   box-shadow:0 8px 30px rgba(0,0,0,.08);
   padding:20px;
@@ -66,8 +119,9 @@ body{
 
 .order-badge{
   position:absolute;
-  top:16px;
-  right:16px;
+  top:12px;
+  right:12px;
+  z-index:20;
   padding:6px 12px;
   border-radius:999px;
   font-size:12px;
@@ -83,24 +137,15 @@ body{
   display:flex;
   gap:20px;
   flex-wrap:wrap;
+  align-items:flex-start;
 }
 
-.order-image{
-  width:260px;
-  aspect-ratio:4/3;
-  border-radius:14px;
-  overflow:hidden;
-  background:#f3f4f6;
-}
-
-.order-image img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
+.tp-gallery{
+  position:relative;
 }
 
 .order-info{
-  flex:1;
+  flex:1 1 320px;
   min-width:260px;
   padding-right:120px;
 }
@@ -110,7 +155,6 @@ body{
   font-weight:700;
   line-height:1.35;
   word-break:break-word;
-
   display:-webkit-box;
   -webkit-line-clamp:2;
   -webkit-box-orient:vertical;
@@ -121,6 +165,13 @@ body{
   font-size:24px;
   font-weight:900;
   margin-top:10px;
+  margin-bottom:6px;
+}
+
+.order-meta{
+  font-size:13px;
+  color:var(--muted);
+  font-weight:600;
 }
 
 .order-number{
@@ -133,6 +184,14 @@ body{
 .order-date{
   font-size:13px;
   color:#9ca3af;
+  white-space:pre-line;
+}
+
+.actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:14px;
 }
 
 .order-params{
@@ -150,7 +209,7 @@ body{
 }
 
 .order-params span:first-child{
-  color:#6b7280;
+  color:var(--muted);
 }
 
 .order-desc-section{
@@ -158,12 +217,10 @@ body{
   padding-right:90px;
 }
 
-
 .order-desc{
   margin-top:6px;
   line-height:1.6;
   word-break:break-word;
-
   display:-webkit-box;
   -webkit-line-clamp:4;
   -webkit-box-orient:vertical;
@@ -177,32 +234,197 @@ body{
   color:#2563eb;
   font-weight:600;
   margin-top:6px;
+  padding:0;
   cursor:pointer;
 }
 
-/* CHAT */
+/* ===== CHAT ===== */
 
 .order-chat-card{
-  background:#fff;
+  background:var(--card-bg);
   border-radius:16px;
-  border:1px solid #e5e7eb;
-
+  border:1px solid var(--line);
   display:flex;
   flex-direction:column;
-  margin-bottom:32px;
-
-  height:520px;        /* ← фиксированная высота */
-  max-height:70vh;     /* ← адаптивно на маленьких экранах */
+  overflow:hidden;
+  min-height:520px;
+  height:min(72vh, 760px);
 }
 
-.chat-title{
+.right-top{
+  flex:0 0 auto;
   padding:14px 18px;
-  font-weight:900;
-  border-bottom:1px solid #eee;
+  border-bottom:1px solid var(--line-soft);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  background:#fff;
+}
+
+.right-title{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  min-width:0;
+  flex:1 1 auto;
+}
+
+.right-user-meta{
+  flex:1 1 auto;
+  min-width:0;
+}
+
+.chat-ava{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:#e9e9e9;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  color:#777;
+  flex:0 0 auto;
+}
+
+.chat-ava img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.name{
+  display:flex;
+  align-items:center;
+  min-width:0;
+  max-width:100%;
+  font-weight:800;
+  overflow:hidden;
+}
+
+.sub{
+  font-size:12px;
+  color:#777;
+  margin-top:2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.name .tp-name-with-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  max-width:100%;
+  min-width:0;
+  vertical-align:middle;
+}
+
+.name .tp-name-text{
+  display:block;
+  min-width:0;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.name .tp-badge{
+  flex:0 0 auto;
+}
+
+.chat-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:0 0 auto;
+}
+
+.chat-notify-btn,
+.chat-report-btn{
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
+  box-shadow:none;
+}
+
+.chat-notify-btn{
+  color:#f4b400;
+}
+
+.chat-report-btn{
+  color:#4b5563;
+}
+
+.chat-notify-btn svg{
+  display:block;
+  width:24px;
+  height:24px;
+}
+
+.chat-report-btn svg{
+  display:block;
+  width:20px;
+  height:20px;
+}
+
+.chat-notify-btn:hover,
+.chat-notify-btn:focus,
+.chat-notify-btn:focus-visible,
+.chat-notify-btn:active,
+.chat-report-btn:hover,
+.chat-report-btn:focus,
+.chat-report-btn:focus-visible,
+.chat-report-btn:active{
+  background:transparent;
+  outline:none;
+  box-shadow:none;
+}
+
+.notify-slash{
+  position:absolute;
+  width:16px;
+  height:2px;
+  border-radius:999px;
+  background:currentColor;
+  transform:rotate(-45deg) scaleX(0);
+  transition:transform .18s ease;
+  pointer-events:none;
+}
+
+.chat-notify-btn.is-muted{
+  color:#dc2626;
+}
+
+.chat-notify-btn.is-muted .notify-slash{
+  transform:rotate(-45deg) scaleX(1);
+}
+
+.chat-notify-btn.tp-bell-pop{
+  animation:tpBellPop .22s ease;
+}
+
+@keyframes tpBellPop{
+  0%{ transform:scale(1); }
+  50%{ transform:scale(.86); }
+  100%{ transform:scale(1); }
 }
 
 .messages{
-  flex:1;
+  flex:1 1 auto;
+  min-height:0;
   overflow-y:auto;
   overflow-x:hidden;
   scrollbar-width:none;
@@ -229,155 +451,282 @@ body{
   content:"";
   flex:1;
   height:1px;
-  background:#e5e7eb;
+  background:var(--line);
   margin:0 12px;
 }
 
 .msg{
   display:flex;
-  margin-bottom:14px;
+  margin-bottom:12px;
+  align-items:flex-end;
 }
 
 .msg.me{
   justify-content:flex-end;
 }
 
-.msg-body{
-  max-width:55%;
-  padding:10px 14px;
-  border-radius:18px;
-  font-size:14px;
-  line-height:1.4;
-  word-break:break-word;
+.msg.other{
+  justify-content:flex-start;
 }
 
-.msg.me .msg-body{
+.msg-body{
+  position:relative;
+  display:inline-block;
+  word-break:break-word;
+  overflow-wrap:anywhere;
+}
+
+.msg-body--text{
+  max-width:min(72%, 360px);
+  padding:10px 12px 18px;
+  border-radius:18px;
+}
+
+.msg.me .msg-body--text{
   background:#2563eb;
   color:#fff;
   border-bottom-right-radius:6px;
 }
 
-.msg.other .msg-body{
+.msg.other .msg-body--text{
   background:#f3f4f6;
+  color:#111;
   border-bottom-left-radius:6px;
+}
+
+.msg-text{
+  font-size:14px;
+  line-height:1.4;
+  white-space:pre-wrap;
+  padding-right:48px;
+}
+
+.msg-body--media{
+  padding:0;
+  background:transparent !important;
+  border-radius:18px;
+  overflow:hidden;
+  max-width:min(320px, 72vw);
+}
+
+.msg-media{
+  margin:0;
+  display:block;
+  position:relative;
+}
+
+.msg-media img{
+  display:block;
+  width:100%;
+  max-width:100%;
+  height:auto;
+  max-height:420px;
+  border-radius:18px;
+  border:1px solid rgba(0,0,0,.08);
 }
 
 .msg-time{
   font-size:11px;
-  opacity:.6;
-  margin-top:6px;
-  display:block;
+  line-height:1;
+}
+
+.msg-body--text .msg-time{
+  position:absolute;
+  right:12px;
+  bottom:7px;
+  opacity:.7;
+}
+
+.msg.me .msg-body--text .msg-time{
+  color:rgba(255,255,255,.9);
+}
+
+.msg.other .msg-body--text .msg-time{
+  color:#6b7280;
+}
+
+.msg-body--media .msg-time{
+  position:absolute;
+  right:8px;
+  bottom:8px;
+  margin:0;
+  padding:3px 6px;
+  border-radius:10px;
+  background:rgba(0,0,0,.45);
+  color:#fff;
+  opacity:1;
+}
+
+.attachments-preview{
+  display:flex;
+  gap:8px;
+  padding:10px 14px;
+  flex-wrap:wrap;
+  background:#fff;
+  border-top:1px solid var(--line-soft);
+}
+
+.preview-item{
+  position:relative;
+}
+
+.preview-item img{
+  width:70px;
+  height:70px;
+  object-fit:cover;
+  border-radius:10px;
+}
+
+.preview-remove{
+  position:absolute;
+  top:-6px;
+  right:-6px;
+  width:20px;
+  height:20px;
+  background:#000;
+  color:#fff;
+  border-radius:50%;
+  font-size:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
 }
 
 .composer{
   display:flex;
   gap:10px;
   padding:14px;
-  border-top:1px solid #eee;
+  border-top:1px solid var(--line-soft);
   background:#fff;
+  position:sticky;
+  bottom:0;
 }
 
 .composer input{
-  flex:1;
+  flex:1 1 auto;
+  min-width:0;
   border:1px solid #ddd;
   border-radius:12px;
-  padding:10px 12px;
+  padding:12px 14px;
+  font-size:16px;
+  background:#fafafa;
 }
 
-.send-btn{
-  background:#1E50D4;
-  border:none;
-  border-radius:12px;
-  padding:10px 16px;
-  color:#fff;
-  font-weight:700;
-  cursor:pointer;
+.composer input:focus{
+  outline:none;
+  border-color:#ddd;
+  box-shadow:none;
 }
 
-@media(max-width:768px){
-  .order-top{
-    flex-direction:column;
-  }
-  .order-image{
-    width:100%;
-  }
-  .order-params{
-    grid-template-columns:1fr;
-  }
-}
 .mini-btn{
-  width:36px;
-  height:36px;
-  border-radius:10px;
+  width:44px;
+  height:44px;
+  flex:0 0 44px;
+  border-radius:12px;
   border:1px solid #ddd;
   background:#fff;
   cursor:pointer;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:16px;
+  font-size:24px;
+  line-height:1;
 }
 
 .mini-btn:hover{
   background:#f5f5f5;
 }
-.right-top{
-  padding:14px 18px;
-  border-bottom:1px solid #eee;
-  display:flex;
-  align-items:center;
-}
 
-.right-title{
-  display:flex;
-  gap:10px;
-  align-items:center;
-  min-width:0;
-}
-
-.chat-ava{
-  width:38px;
-  height:38px;
-  border-radius:50%;
-  background:#e9e9e9;
-  overflow:hidden;
+.send-btn{
+  width:44px;
+  height:44px;
+  flex:0 0 44px;
+  border:none;
+  border-radius:12px;
+  background:var(--primary-chat);
   display:flex;
   align-items:center;
   justify-content:center;
-  font-weight:700;
-  color:#777;
+  cursor:pointer;
 }
 
-.chat-ava img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
+.send-btn:hover{
+  opacity:.92;
 }
 
-.name{
+/* ===== SYSTEM MESSAGE ===== */
+
+.msg-system{
+  justify-content:center;
+  margin:14px 0;
+}
+
+.msg-body--system{
+  position:relative;
+  max-width:min(88%, 560px);
+  background:var(--system-bg);
+  border:1px solid var(--system-line);
+  color:var(--system-text);
+  border-radius:16px;
+  padding:12px 14px 22px;
+  text-align:left;
+}
+
+.msg-system-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:22px;
+  padding:0 10px;
+  border-radius:999px;
+  background:var(--system-badge-bg);
+  color:var(--system-badge-text);
+  font-size:11px;
   font-weight:800;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  margin-bottom:8px;
 }
 
-.sub{
-  font-size:12px;
-  color:#777;
-  margin-top:2px;
-}
-.order-meta{
+.msg-system-text{
   font-size:14px;
-  color:#6b7280;
-  font-weight:600;
-  margin-top:6px;
+  line-height:1.45;
 }
-/* ===== REVIEW STARS ===== */
+
+.msg-time--system{
+  position:absolute;
+  right:12px;
+  bottom:8px;
+  color:var(--system-badge-text);
+  opacity:.75;
+}
+
+.tp-system-link{
+  color:var(--system-badge-text);
+  font-weight:700;
+  text-decoration:underline;
+}
+
+.tp-system-link:hover{
+  opacity:.85;
+}
+
+/* ===== REVIEW ===== */
+
+.review-title{
+  font-size:16px;
+  font-weight:500;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:#9ca3af;
+  margin-bottom:18px;
+}
 
 .review-stars-input{
   display:flex;
   gap:6px;
-  font-size:36px;            /* крупнее */
+  font-size:36px;
   line-height:1;
   cursor:pointer;
   margin:10px 0 16px;
@@ -398,31 +747,24 @@ body{
 .review-stars-input .star.filled{
   color:currentColor;
 }
-.review-title{
-  font-size:16px;
-  font-weight:500;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  color:#9ca3af;
-  margin-bottom:18px;
+
+.review-textarea-wrap{
+  position:relative;
 }
+
 .review-textarea{
   width:100%;
   margin-top:8px;
   padding:14px 16px;
-
   border-radius:14px;
-  border:1px solid #e5e7eb;
+  border:1px solid var(--line);
   background:#fff;
-
-  font-family: Inter, Arial, sans-serif;
+  font-family:Inter, Arial, sans-serif;
   font-size:15px;
   font-weight:400;
   line-height:1.6;
-
   resize:vertical;
   min-height:110px;
-
   outline:none;
   transition:.15s ease;
 }
@@ -431,6 +773,7 @@ body{
   border-color:#2563eb;
   box-shadow:0 0 0 3px rgba(37,99,235,.12);
 }
+
 .review-error{
   margin-top:6px;
   font-size:13px;
@@ -438,15 +781,11 @@ body{
   font-weight:500;
   min-height:18px;
 }
-.review-textarea-wrap{
-  position:relative;
-}
 
 .review-counter{
   position:absolute;
   right:14px;
   bottom:10px;
-
   font-size:12px;
   color:#9ca3af;
   font-weight:500;
@@ -461,6 +800,306 @@ body{
 .review-counter.limit{
   color:#dc2626;
 }
+
+/* ===== TABLET ===== */
+
+@media (max-width:768px){
+  .page{
+    margin:0;
+    padding:0 0 calc(80px + env(safe-area-inset-bottom));
+  }
+
+  .order-card{
+    background:transparent;
+    border-radius:0;
+    box-shadow:none;
+    padding:0 16px 24px;
+    margin-bottom:16px;
+  }
+
+  .order-top{
+    flex-direction:column;
+  }
+
+  .order-info{
+    width:100%;
+    min-width:0;
+    padding-right:0;
+  }
+
+  .order-params{
+    grid-template-columns:1fr;
+  }
+
+  .order-desc-section{
+    padding-right:0;
+  }
+
+  .tp-gallery{
+    width:100vw;
+    height:45vh;
+    margin-left:calc(50% - 50vw);
+    border-radius:0;
+    overflow:hidden;
+  }
+
+  .tp-gallery__arrow{
+    display:none !important;
+  }
+
+.order-chat-card{
+  margin:0 16px;
+  height:64svh;
+  min-height:64svh;
+  max-height:64svh;
+  border-radius:16px;
+}
+
+  .messages{
+    flex:1 1 auto;
+    min-height:0;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding:16px;
+  }
+
+  .attachments-preview{
+    flex:0 0 auto;
+  }
+
+  .composer{
+    flex:0 0 auto;
+  }
+
+  .msg-body--text{
+    max-width:82%;
+  }
+
+  .msg-body--media{
+    max-width:min(78vw, 320px);
+  }
+
+  .msg-text{
+    padding-right:44px;
+  }
+
+  .chat-notify-btn,
+  .chat-report-btn{
+    width:40px;
+    height:40px;
+  }
+
+  .chat-notify-btn svg{
+    width:26px;
+    height:26px;
+  }
+
+  .chat-report-btn svg{
+    width:22px;
+    height:22px;
+  }
+}
+
+@media (max-width:640px){
+  .page{
+    padding-bottom:calc(88px + env(safe-area-inset-bottom));
+  }
+
+  .order-card{
+    padding:0 12px 20px;
+  }
+
+  .order-chat-card{
+    width:100vw;
+    margin-left:calc(50% - 50vw);
+    margin-right:0;
+    border-radius:0;
+    border-left:none;
+    border-right:none;
+    height:64svh;
+    min-height:64svh;
+    max-height:64svh;
+  }
+
+  .right-top{
+    flex:0 0 auto;
+    padding:14px 12px;
+  }
+
+  .messages{
+    flex:1 1 auto;
+    min-height:0;
+    overflow-y:auto;
+    overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    padding:14px 12px;
+  }
+
+  .composer{
+    flex:0 0 auto;
+    gap:8px;
+    padding:10px 12px;
+    padding-bottom:calc(10px + env(safe-area-inset-bottom));
+  }
+
+  .mini-btn{
+    width:40px;
+    height:40px;
+    flex:0 0 40px;
+    border-radius:12px;
+    font-size:22px;
+  }
+
+  .send-btn{
+    width:40px;
+    height:40px;
+    flex:0 0 40px;
+    border-radius:12px;
+  }
+
+  .composer input{
+    height:40px;
+    padding:0 12px;
+    font-size:15px;
+    border-radius:12px;
+  }
+
+  .msg-media img{
+    max-height:340px;
+  }
+
+  .msg-body--system{
+    max-width:94%;
+  }
+}
+.attachments-preview:empty{
+  display:none;
+}
+.order-desc-section .section-title{
+  font-size:16px;
+  font-weight:400;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:#9ca3af;
+}
+/* ===== RESOLUTION MESSAGE ===== */
+
+.msg-resolution{
+  justify-content:flex-start;
+}
+
+.msg-resolution-wrap{
+  max-width:min(78%, 420px);
+}
+
+.msg-resolution-head{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:0 0 6px 2px;
+  min-width:0;
+  max-width:100%;
+}
+
+.msg-resolution-name{
+  font-size:13px;
+  font-weight:800;
+  color:var(--resolution-name);
+  min-width:0;
+  max-width:100%;
+}
+
+.msg-resolution .msg-body--text{
+  background:var(--resolution-bg);
+  border:1px solid var(--resolution-line);
+  color:var(--resolution-text);
+  border-bottom-left-radius:6px;
+}
+
+.msg-resolution .msg-time{
+  color:var(--resolution-text);
+  opacity:.75;
+}
+
+.msg-resolution .tp-name-with-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+  max-width:100%;
+}
+
+.msg-resolution .tp-name-text{
+  min-width:0;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+/* ===== RESOLUTION DECISION PANEL ===== */
+
+.resolution-decision{
+  margin-top:14px;
+  padding:14px;
+  border:1px solid var(--resolution-line);
+  background:#faf7ff;
+  border-radius:14px;
+}
+
+.resolution-decision-title{
+  font-size:13px;
+  font-weight:800;
+  color:var(--resolution-name);
+  margin-bottom:8px;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+
+.resolution-decision-text{
+  width:100%;
+  min-height:96px;
+  resize:vertical;
+  border:1px solid #d8d4fe;
+  border-radius:12px;
+  padding:12px 14px;
+  font:inherit;
+  line-height:1.5;
+  background:#fff;
+  color:#111;
+  outline:none;
+}
+
+.resolution-decision-text:focus{
+  border-color:#8b5cf6;
+  box-shadow:0 0 0 3px rgba(139,92,246,.12);
+}
+
+.resolution-decision-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+
+.btnResolutionConfirm{
+  background:#16a34a;
+  border-color:#16a34a;
+  color:#fff;
+}
+
+.btnResolutionConfirm:hover{
+  background:#15803d;
+}
+
+.btnResolutionRefund{
+  background:#dc2626;
+  border-color:#dc2626;
+  color:#fff;
+}
+
+.btnResolutionRefund:hover{
+  background:#b91c1c;
+}
 </style>
 </head>
 <body>
@@ -473,11 +1112,21 @@ body{
 <!-- ORDER CARD -->
 <div class="order-card">
 
-  <div class="order-badge" id="statusBadge">—</div>
-
   <div class="order-top">
-    <div class="order-image">
-      <img id="offerImg" src="/img/offer-default.png">
+    <div class="tp-gallery" id="gallery">
+
+      <div class="order-badge" id="statusBadge">—</div>
+
+      <button class="tp-gallery__arrow tp-gallery__arrow--left" id="galPrev">‹</button>
+
+      <div class="tp-gallery__track" id="galTrack"></div>
+
+      <button class="tp-gallery__arrow tp-gallery__arrow--right" id="galNext">›</button>
+
+      <div class="tp-gallery__dots" id="galDots"></div>
+
+      <div class="tp-gallery__counter" id="galleryCounter"></div>
+
     </div>
 
     <div class="order-info">
@@ -493,7 +1142,37 @@ body{
 
       <div class="order-date" id="orderDate">—</div>
 <div class="actions" id="actions" style="margin-top:14px;"></div>
+<div
+  class="resolution-decision"
+  id="resolutionDecisionBox"
+  style="display:none;"
+>
+  <div class="resolution-decision-title">Решение арбитража</div>
 
+  <textarea
+    id="resolutionDecisionText"
+    class="resolution-decision-text"
+    placeholder="Напишите итоговое решение по спору"
+  ></textarea>
+
+  <div class="resolution-decision-actions">
+    <button
+      type="button"
+      id="resolutionConfirmBtn"
+      class="btn btnResolutionConfirm"
+    >
+      Подтвердить заказ
+    </button>
+
+    <button
+      type="button"
+      id="resolutionRefundBtn"
+      class="btn btnResolutionRefund"
+    >
+      Сделать возврат
+    </button>
+  </div>
+</div>
     </div>
   </div>
 
@@ -502,7 +1181,7 @@ body{
 
   <!-- DESCRIPTION -->
   <div class="order-desc-section" id="descSection">
-    <div class="section-title">Описание</div>
+    <div class="section-title">ОПИСАНИЕ</div>
     <div class="order-desc" id="desc"></div>
     <button id="expandDescBtn" class="expand-btn">Показать полностью</button>
   </div>
@@ -511,25 +1190,60 @@ body{
 
 
 <!-- CHAT -->
-<div class="order-chat-card">
+<div class="order-chat-card" id="orderChatCard">
 
-<div class="right-top">
-  <div class="right-title">
-    <div class="chat-ava" id="chatAva">?</div>
-    <div style="min-width:0;">
-      <div class="name" id="chatName">—</div>
-      <div class="sub" id="chatSub">—</div>
+  <div class="right-top">
+    <div class="right-title">
+      <div class="chat-ava" id="chatAva">?</div>
+
+      <div class="right-user-meta">
+        <div class="name" id="chatName">—</div>
+        <div class="sub" id="chatSub">—</div>
+      </div>
+    </div>
+
+    <div class="chat-actions" id="chatActions" style="display:none;">
+      <button
+        class="chat-notify-btn"
+        id="chatNotifyBtn"
+        type="button"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M15 17H9"></path>
+          <path d="M18 16V11C18 7.69 15.31 5 12 5C8.69 5 6 7.69 6 11V16L4.5 17.5V18H19.5V17.5L18 16Z"></path>
+          <path d="M10 20C10.4 20.6 11.1 21 12 21C12.9 21 13.6 20.6 14 20"></path>
+        </svg>
+        <span class="notify-slash"></span>
+      </button>
+
+      <button
+        class="chat-report-btn"
+        id="chatReportBtn"
+        type="button"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M6 3a1 1 0 0 1 1 1v1h9.382c1.59 0 2.345 1.936 1.18 3.003L16 9.586l1.562 1.562C18.728 12.314 17.973 14 16.382 14H7v6a1 1 0 1 1-2 0V4a1 1 0 0 1 1-1z"/>
+        </svg>
+      </button>
     </div>
   </div>
-</div>
 
-  <div class="messages" id="messages"></div>
+<div class="messages" id="messages"></div>
 
 <div class="composer" id="composer">
-  <input type="file" id="filePicker" accept="image/*,video/*" multiple style="display:none;" />
+  <input type="file" id="filePicker" accept="image/*" style="display:none;" />
   <button class="mini-btn" id="attachBtn" title="Прикрепить">＋</button>
-  <input type="text" id="msgInput" placeholder="Написать сообщение..." />
-  <button class="send-btn" id="sendBtn">Отправить</button>
+  <input
+  type="text"
+  id="msgInput"
+  data-i18n-placeholder="page.chat.writeMessage"
+/>
+  <button class="send-btn" id="sendBtn">
+<svg width="20" height="20" viewBox="0 0 24 24">
+<path fill="white"
+d="M2 21L23 12L2 3L2 10L17 12L2 14Z"/>
+</svg>
+</button>
 </div>
 
 </div> <!-- закрываем order-chat-card -->
@@ -573,8 +1287,13 @@ body{
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
 <script src="/header.js"></script>
+<script src="/i18n.js"></script>
 <script src="/offer-title.js"></script>
+<script src="/tp-money.js"></script>
+<script src="/gallery.js"></script>
 <script src="/footer.js"></script>
+<script src="/badges.js"></script>
+<script src="/chat-system.js"></script>
 
 <script>
 const orderId = new URLSearchParams(location.search).get("id");
@@ -584,23 +1303,158 @@ if(!orderId){
 }
 
 const token = localStorage.getItem("tp_token");
-const myEmail = localStorage.getItem("tp_user_email");
+let myEmail = localStorage.getItem("tp_user_email") || "";
+let meLoaded = Boolean(myEmail);
+const orderChatCard = document.getElementById("orderChatCard");
+const titleEl = document.getElementById("title");
+const priceEl = document.getElementById("price");
+const orderNumberEl = document.getElementById("orderNumber");
+const orderDateEl = document.getElementById("orderDate");
+const orderGameLineEl = document.getElementById("orderGameLine");
+const statusBadgeEl = document.getElementById("statusBadge");
+const descEl = document.getElementById("desc");
+const expandTitleBtnEl = document.getElementById("expandTitleBtn");
+const expandDescBtnEl = document.getElementById("expandDescBtn");
+const msgInputEl = document.getElementById("msgInput");
+const filePickerEl = document.getElementById("filePicker");
+const attachBtnEl = document.getElementById("attachBtn");
+const sendBtnEl = document.getElementById("sendBtn");
+const reviewBlockEl = document.getElementById("reviewBlock");
+const composerEl = document.getElementById("composer");
+const resolutionDecisionBoxEl = document.getElementById("resolutionDecisionBox");
+const resolutionDecisionTextEl = document.getElementById("resolutionDecisionText");
+const resolutionConfirmBtnEl = document.getElementById("resolutionConfirmBtn");
+const resolutionRefundBtnEl = document.getElementById("resolutionRefundBtn");
+
+async function ensureUserEmail(force = false){
+  if (meLoaded && myEmail && !force) {
+    return myEmail;
+  }
+
+  const res = await fetch("/auth/me", {
+    headers:{ Authorization:"Bearer " + token }
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!data.success || !data.user?.email) {
+    location.href = "/auth.html?mode=login";
+    throw new Error("Unauthorized");
+  }
+
+  myEmail = data.user.email;
+  localStorage.setItem("tp_user_email", myEmail);
+  meLoaded = true;
+
+  return myEmail;
+}
 
 let chatId = null;
-let role = null;
+let role = null;              // buyer | seller | staff
+let viewerRole = "user";      // user | resolution | super_admin ...
+let canUseOrderChat = false;
+let canWriteResolutionChat = false;
+let currentOrder = null;
+
+function isParticipantRole(){
+  return role === "buyer" || role === "seller";
+}
+
+function isResolutionWriter(){
+  return canWriteResolutionChat && (
+    viewerRole === "resolution" ||
+    viewerRole === "super_admin"
+  );
+}
+
+const DEFAULT_AVATAR = "/img/avatar-default.svg";
+const MUTED_CHATS_KEY = "tp_muted_chats";
+const i18nReady = window.tpI18n?.load
+  ? window.tpI18n.load(window.tpI18n.currentLang)
+  : Promise.resolve();
+
+function pageT(key, params = {}){
+  return window.tpI18n?.t
+    ? window.tpI18n.t(`page.${key}`, params)
+    : key;
+}
+
+function getMutedChats(){
+  try{
+    const raw = JSON.parse(localStorage.getItem(MUTED_CHATS_KEY) || "[]");
+    return Array.isArray(raw) ? raw : [];
+  }catch{
+    return [];
+  }
+}
+
+function setMutedChats(list){
+  localStorage.setItem(MUTED_CHATS_KEY, JSON.stringify(list));
+}
+
+function isChatMuted(id){
+  if(!id) return false;
+  return getMutedChats().includes(id);
+}
+
+function toggleMutedChat(id){
+  if(!id) return false;
+
+  const muted = getMutedChats();
+
+  if(muted.includes(id)){
+    setMutedChats(muted.filter(x => x !== id));
+    return false;
+  }
+
+  muted.push(id);
+  setMutedChats(muted);
+  return true;
+}
+
+function updateChatNotifyButton(){
+  const btn = document.getElementById("chatNotifyBtn");
+  if(!btn) return;
+
+  const muted = isChatMuted(chatId);
+
+  btn.classList.toggle("is-muted", muted);
+  btn.title = muted ? pageT("chat.unmute") : pageT("chat.mute");
+  btn.setAttribute("aria-label", muted ? pageT("chat.unmute") : pageT("chat.mute"));
+}
+
+function updateChatActionLabels(){
+  const reportBtn = document.getElementById("chatReportBtn");
+  if(reportBtn){
+    reportBtn.title = pageT("chat.report");
+    reportBtn.setAttribute("aria-label", pageT("chat.report"));
+  }
+
+  updateChatNotifyButton();
+}
 
 function statusText(s){
   if(s==="pending") return "В процессе";
-  if(s==="completed") return "Завершён";
+  if(s==="completed") return "Завершено";
   if(s==="refunded") return "Возврат";
   return s;
 }
+function formatMode(mode){
+  if(!mode) return "";
+
+  return mode
+    .replace(/_/g," ")
+    .replace(/\b\w/g,l=>l.toUpperCase());
+}
 
 async function loadOrder(){
+  await i18nReady;
   if(!token){
     location.href="/auth.html?mode=login";
     return;
   }
+
+await ensureUserEmail(true);
 
   const res = await fetch("/api/orders/"+orderId,{
     headers:{ Authorization:"Bearer "+token }
@@ -611,35 +1465,99 @@ async function loadOrder(){
     return;
   }
 
-  const o = data.order;
-  role = o.role;
-  chatId = o.chatId;
+const o = data.order;
+currentOrder = o;
+role = o.role || null;
+viewerRole = o.viewerRole || "user";
+chatId = o.chatId || null;
+canUseOrderChat = Boolean(o.canUseOrderChat);
+canWriteResolutionChat = Boolean(o.canWriteResolutionChat);
+
+if (orderChatCard) {
+  orderChatCard.style.display = canUseOrderChat ? "flex" : "none";
+}
+
+const canSendMessages = isParticipantRole() || isResolutionWriter();
+
+if (composerEl) {
+  composerEl.style.display = canSendMessages ? "flex" : "none";
+}
+
+if (attachBtnEl) {
+  attachBtnEl.style.display = isParticipantRole() ? "flex" : "none";
+}
+
+if (msgInputEl) {
+  msgInputEl.placeholder = isResolutionWriter()
+    ? "Напишите сообщение от лица арбитража"
+    : pageT("chat.writeMessage");
+}
+
+if (canUseOrderChat) {
   await loadChatHeader();
+}
 
+const liveOffer = o.offer || null;
+const snapshot = o.offerSnapshot || {};
 
-  const offer = o.offer || {};
-title.textContent = buildOfferTitle(offer);
+const offer = {
+  ...(liveOffer || {}),
+  ...snapshot
+};
+
+if (!offer.images || !offer.images.length) {
+  offer.images = offer.imageUrl ? [offer.imageUrl] : [];
+}
+
+titleEl.textContent = buildOfferTitle(offer);
 const gameObj = (window.GAMES_LIST || []).find(g => g.id === offer.game);
 const gameTitle = gameObj ? gameObj.name : offer.game;
 
 const gameLine = [
   gameTitle,
-  offer.mode
+  formatMode(offer.mode)
 ].filter(Boolean).join(", ");
 
-document.getElementById("orderGameLine").textContent = gameLine || "";
+orderGameLineEl.textContent = gameLine || "";
 
-orderNumber.textContent =
+orderNumberEl.textContent =
   "Заказ " + (o.orderNumber || "#" + o.id.slice(0,8));
 
 const created = new Date(o.createdAt || Date.now());
 
-orderDate.textContent =
+let dateText =
+  "Создан: " +
   created.toLocaleDateString("ru-RU", {
     day:"numeric",
     month:"short",
     year:"numeric"
   });
+
+if(o.status === "completed" && o.completedAt){
+  const completed = new Date(o.completedAt);
+
+  dateText +=
+    "\nЗавершён: " +
+    completed.toLocaleDateString("ru-RU", {
+      day:"numeric",
+      month:"short",
+      year:"numeric"
+    });
+}
+
+if(o.status === "refunded" && o.refundedAt){
+  const refunded = new Date(o.refundedAt);
+
+  dateText +=
+    "\nВозврат: " +
+    refunded.toLocaleDateString("ru-RU", {
+      day:"numeric",
+      month:"short",
+      year:"numeric"
+    });
+}
+
+orderDateEl.textContent = dateText;
 
   const lang = localStorage.getItem("tp_lang") || "ru";
 const description =
@@ -647,16 +1565,14 @@ const description =
   offer.description?.ru ||
   "";
 
-desc.textContent = description || "Описание не указано.";
-statusBadge.textContent = statusText(o.status);
-statusBadge.className = "order-badge " + o.status;
+descEl.textContent = description || "Описание не указано.";
+statusBadgeEl.textContent = statusText(o.status);
+statusBadgeEl.className = "order-badge " + o.status;
+
 const actions = document.getElementById("actions");
 actions.innerHTML = "";
 
-// очищаем
-actions.innerHTML = "";
-
-// Кнопка подтверждения (только покупатель и только если не refunded)
+// buyer
 if(role === "buyer" && o.status === "pending"){
   actions.innerHTML += `
     <button class="btn btnBlue" onclick="confirmOrder()">
@@ -665,13 +1581,27 @@ if(role === "buyer" && o.status === "pending"){
   `;
 }
 
-// Кнопка возврата (продавец, пока статус НЕ refunded)
-if(role === "seller" && o.status !== "refunded"){
+// seller
+if(role === "seller" && o.status === "pending"){
   actions.innerHTML += `
     <button class="btn btnGray" onclick="refundOrder()">
       Вернуть деньги
     </button>
   `;
+}
+
+// resolution / super_admin
+const canResolveNow =
+  isResolutionWriter() &&
+  o.status === "pending" &&
+  (o.disputeStatus === "requested" || o.disputeStatus === "in_review");
+
+if (resolutionDecisionBoxEl) {
+  resolutionDecisionBoxEl.style.display = canResolveNow ? "block" : "none";
+
+  if (!canResolveNow) {
+    resolutionDecisionTextEl.value = "";
+  }
 }
 
 function setupExpand(el, btn){
@@ -690,18 +1620,19 @@ function setupExpand(el, btn){
   };
 }
   // ⭐ отзыв: только покупатель и только после завершения
-const reviewBlock = document.getElementById("reviewBlock");
-
-if (reviewBlock) {
+if (reviewBlockEl) {
   if (o.status === "completed" && role === "buyer") {
-  const check = await fetch(`/api/users/${o.sellerEmail}/reviews`);
-  const rdata = await check.json();
+    if (!o.sellerEmail) {
+      reviewBlockEl.style.display = "none";
+    } else {
+      const check = await fetch(`/api/users/${encodeURIComponent(o.sellerEmail)}/reviews`);
+      const rdata = await check.json();
 
-  const already = rdata.reviews?.some(r => r.orderId === o.id);
-
-  reviewBlock.style.display = already ? "none" : "block";
-} else {
-    reviewBlock.style.display = "none";
+      const already = rdata.reviews?.some(r => r.orderId === o.id);
+      reviewBlockEl.style.display = already ? "none" : "block";
+    }
+  } else {
+    reviewBlockEl.style.display = "none";
   }
 }
 
@@ -713,7 +1644,7 @@ if(role === "seller"){
 }
 
 if (window.tpMoney) {
-  price.textContent = await window.tpMoney.formatPrice(displayPrice);
+priceEl.textContent = await window.tpMoney.formatPrice(displayPrice);
 } else {
   const currency = localStorage.getItem("tp_currency") || "UAH";
 
@@ -723,59 +1654,237 @@ if (window.tpMoney) {
     EUR: "€"
   };
 
-  price.textContent = displayPrice + " " + (symbols[currency] || "");
+priceEl.textContent = displayPrice + " " + (symbols[currency] || "");
 }
 
-// ===== IMAGE FIX =====
-if (offer.imageUrl) {
-  offerImg.src = offer.imageUrl;
-} else if (Array.isArray(offer.images) && offer.images.length > 0) {
-  offerImg.src = offer.images[0];
-} else {
-  offerImg.src = "/img/offer-default.png";
+initGallery({
+  images: offer.images || [offer.imageUrl],
+  trackId: "galTrack",
+  prevId: "galPrev",
+  nextId: "galNext",
+  galleryId: "gallery"
+});
+
+if (canUseOrderChat) {
+  await loadMessages();
 }
 
-offerImg.onerror = () => {
-  offerImg.src = "/img/offer-default.png";
-};
-
-
-  loadMessages();
-setupExpand(title, expandTitleBtn);
-setupExpand(desc, expandDescBtn);
+filePickerEl.value = "";
+setupExpand(titleEl, expandTitleBtnEl);
+setupExpand(descEl, expandDescBtnEl);
 
 initReviewStars();   // ← ДОБАВЬ СЮДА
 
 }
-async function loadChatHeader(){
 
+function getLastSeenText(lastSeen){
+  if(!lastSeen) return pageT("chat.offline");
+
+  const diff = Date.now() - lastSeen;
+  const minutes = Math.floor(diff / 60000);
+
+  if(minutes < 1) return pageT("chat.justNow");
+  if(minutes < 60) return pageT("chat.minutesAgo", { count: minutes });
+
+  const hours = Math.floor(minutes / 60);
+  if(hours < 24) return pageT("chat.hoursAgo", { count: hours });
+
+  const days = Math.floor(hours / 24);
+  return pageT("chat.daysAgo", { count: days });
+}
+
+function formatMessageTime(createdAt){
+  return new Date(createdAt).toLocaleTimeString("ru-RU", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+}
+
+function renderMessageBody(m){
+  const text = String(m.text || "").trim();
+  const media = Array.isArray(m.media) ? m.media : [];
+
+  const hasText = Boolean(text);
+  const hasMedia = media.length > 0;
+
+  const safeText = window.tpBadges?.escapeHtml
+    ? window.tpBadges.escapeHtml(text)
+    : text;
+
+  if (hasMedia && !hasText) {
+    return `
+      <div class="msg-body msg-body--media">
+        <div class="msg-media">
+          ${media.map(url => `<img src="${url}" alt="">`).join("")}
+        </div>
+        <span class="msg-time">${formatMessageTime(m.createdAt)}</span>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="msg-body msg-body--text">
+      ${hasText ? `<div class="msg-text">${safeText}</div>` : ""}
+      ${hasMedia ? `
+        <div class="msg-media" style="margin-top:8px;">
+          ${media.map(url => `<img src="${url}" alt="">`).join("")}
+        </div>
+      ` : ""}
+      <span class="msg-time">${formatMessageTime(m.createdAt)}</span>
+    </div>
+  `;
+}
+
+function isResolutionMessage(m){
+  return (
+    m?.messageType === "resolution" ||
+    m?.kind === "resolution" ||
+    m?.fromRole === "resolution"
+  );
+}
+
+function getResolutionName(m){
+  return (
+    m?.fromUsername ||
+    m?.username ||
+    m?.authorName ||
+    "Сотрудник"
+  );
+}
+
+function renderResolutionMessageItem(m){
+  const text = String(m.text || "").trim();
+  const media = Array.isArray(m.media) ? m.media : [];
+
+  const safeText = window.tpBadges?.escapeHtml
+    ? window.tpBadges.escapeHtml(text)
+    : text;
+
+  const nameHtml = window.tpBadges?.renderNameWithBadge
+    ? window.tpBadges.renderNameWithBadge(getResolutionName(m), "resolution")
+    : `
+      <span class="tp-name-with-badge">
+        <span class="tp-name-text">${getResolutionName(m)}</span>
+        <span class="tp-badge tp-badge--resolution">Арбитраж</span>
+      </span>
+    `;
+
+  return `
+    <div class="msg msg-resolution" data-msg-id="${m.id}">
+      <div class="msg-resolution-wrap">
+        <div class="msg-resolution-head">
+          <div class="msg-resolution-name">${nameHtml}</div>
+        </div>
+
+        <div class="msg-body msg-body--text">
+          ${text ? `<div class="msg-text">${safeText}</div>` : ""}
+          ${media.length ? `
+            <div class="msg-media" style="margin-top:8px;">
+              ${media.map(url => `<img src="${url}" alt="">`).join("")}
+            </div>
+          ` : ""}
+          <span class="msg-time">${formatMessageTime(m.createdAt)}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderMessageItem(m){
+  if (window.tpChatSystem?.isSystemMessage?.(m)) {
+    return window.tpChatSystem.renderSystemMessage(m);
+  }
+
+  if (isResolutionMessage(m)) {
+    return renderResolutionMessageItem(m);
+  }
+
+  return `
+    <div class="msg ${m.fromEmail === myEmail ? "me" : "other"}" data-msg-id="${m.id}">
+      ${renderMessageBody(m)}
+    </div>
+  `;
+}
+
+function appendMessageToOrderChat(m){
+  const box = document.getElementById("messages");
+
+  if (box.querySelector(`[data-msg-id="${m.id}"]`)) return;
+
+  const messageDate = new Date(m.createdAt);
+  const messageDateString = messageDate.toDateString();
+
+  const dividers = box.querySelectorAll(".date-divider");
+  const lastDivider = dividers.length ? dividers[dividers.length - 1] : null;
+  const lastDividerDate = lastDivider ? lastDivider.dataset.date : null;
+
+  if (lastDividerDate !== messageDateString) {
+    const divider = document.createElement("div");
+    divider.className = "date-divider";
+    divider.dataset.date = messageDateString;
+    divider.textContent = formatDateDivider(messageDate);
+    box.appendChild(divider);
+  }
+
+  box.insertAdjacentHTML("beforeend", renderMessageItem(m));
+}
+
+async function loadChatHeader(){
   if(!chatId) return;
 
+  await i18nReady;
+
+  const actions = document.getElementById("chatActions");
+
+  // Для арбитража / staff не пытаемся показывать "другого пользователя",
+  // потому что chat route возвращает otherUser корректно только для участника чата.
+  if(!isParticipantRole()){
+    document.getElementById("chatAva").innerHTML =
+      `<img src="${DEFAULT_AVATAR}" alt="">`;
+
+    document.getElementById("chatName").textContent = "Чат заказа";
+    document.getElementById("chatSub").textContent = isResolutionWriter()
+      ? "Арбитражный чат"
+      : "Просмотр сообщений";
+
+    if(actions) actions.style.display = "none";
+    return;
+  }
+
   const res = await fetch(`/api/chats/${chatId}`,{
-    headers:{
-      Authorization:"Bearer " + token
-    }
+    headers:{ Authorization:"Bearer " + token }
   });
 
   const data = await res.json();
   if(!data.success) return;
 
   const user = data.chat?.otherUser;
-  if(!user) return;
+
+  if(!user){
+    if(actions) actions.style.display = "none";
+    return;
+  }
+
+  if(actions) actions.style.display = "flex";
 
   const avatar =
     user.avatarUrl ||
     user.avatarDataUrl ||
-    "/img/avatar-default.svg";
+    DEFAULT_AVATAR;
 
-  document.getElementById("chatAva").innerHTML =
-    `<img src="${avatar}">`;
+  document.getElementById("chatAva").innerHTML = `<img src="${avatar}" alt="">`;
 
-  document.getElementById("chatName").textContent =
-    user.username || "Пользователь";
+  window.tpBadges.applyNameWithBadge(
+    document.getElementById("chatName"),
+    user.username || "Пользователь",
+    user.role || "user"
+  );
 
   document.getElementById("chatSub").textContent =
-    user.online ? "В сети" : "Не в сети";
+    user.online ? pageT("chat.online") : getLastSeenText(user.lastSeen);
+
+  updateChatActionLabels();
 }
 
 function formatDateDivider(date){
@@ -804,94 +1913,99 @@ function formatDateDivider(date){
 async function loadMessages(){
   if(!chatId) return;
 
+  await ensureUserEmail();
+
   const res = await fetch(`/api/chats/${chatId}/messages`,{
-    headers:{ Authorization:"Bearer "+token }
+    headers:{ Authorization:"Bearer " + token }
   });
 
   const data = await res.json();
   if(!data.success) return;
 
-  messages.innerHTML = "";
+  const box = document.getElementById("messages");
+  box.innerHTML = "";
 
-  let lastDate = null;
-
-  data.messages.forEach(m=>{
-
-    const messageDate = new Date(m.createdAt);
-    const currentDateString = messageDate.toDateString();
-
-    if(lastDate !== currentDateString){
-const divider = document.createElement("div");
-divider.className = "date-divider";
-divider.dataset.date = currentDateString;
-divider.textContent = formatDateDivider(messageDate);
-      messages.appendChild(divider);
-      lastDate = currentDateString;
-    }
-
-    const div = document.createElement("div");
-    div.className = "msg " + (m.fromEmail===myEmail ? "me" : "other");
-
-    const body = document.createElement("div");
-    body.className = "msg-body";
-
-    const textDiv = document.createElement("div");
-    textDiv.textContent = m.text;
-
-    const timeSpan = document.createElement("span");
-    timeSpan.className = "msg-time";
-    timeSpan.textContent =
-      messageDate.toLocaleTimeString("ru-RU", {
-        hour:"2-digit",
-        minute:"2-digit",
-        hour12:false
-      });
-
-    body.appendChild(textDiv);
-    body.appendChild(timeSpan);
-    div.appendChild(body);
-
-    messages.appendChild(div);
+  data.messages.forEach(m => {
+    appendMessageToOrderChat(m);
   });
 
-  messages.scrollTop = messages.scrollHeight;
+  box.scrollTop = box.scrollHeight;
+
+if (isParticipantRole()) {
+  fetch(`/api/chats/${chatId}/read`, {
+    method:"POST",
+    headers:{ Authorization:"Bearer " + token }
+  }).catch(()=>{});
+}
 }
 
 async function sendMsg(){
-  const text = msgInput.value.trim();
-  if(!text || !chatId || msgInput.disabled) return;
+  if(!chatId) return;
 
-  const res = await fetch(`/api/chats/${chatId}/messages`,{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      Authorization:"Bearer "+token
-    },
-    body:JSON.stringify({ text })
-  });
+  const canSendMessages = isParticipantRole() || isResolutionWriter();
+  if(!canSendMessages) return;
 
-  const data = await res.json();
-  if(!data.success) return;
+  const input = document.getElementById("msgInput");
+  const sendBtn = document.getElementById("sendBtn");
+  const attachBtn = document.getElementById("attachBtn");
 
-  const div = document.createElement("div");
-  div.className = "msg me";
+  const text = input.value.trim();
+  if(!text) return;
 
-  div.innerHTML = `
-    <div class="msg-body">
-      <div>${text}</div>
-      <span class="msg-time">
-        ${new Date().toLocaleTimeString("ru-RU", {
-          hour:"2-digit",
-          minute:"2-digit"
-        })}
-      </span>
-    </div>
-  `;
+  sendBtn.disabled = true;
+  attachBtn.disabled = true;
+  input.disabled = true;
 
-  messages.appendChild(div);
-  messages.scrollTop = messages.scrollHeight;
+  try{
+    const isResolution = isResolutionWriter();
 
-  msgInput.value="";
+    const res = await fetch(
+      isResolution
+        ? `/api/orders/${orderId}/resolution-message`
+        : `/api/chats/${chatId}/messages`,
+      {
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          Authorization:"Bearer " + token
+        },
+        body: JSON.stringify(
+          isResolution
+            ? { text, media: [] }
+            : { text }
+        )
+      }
+    );
+
+    const data = await res.json();
+
+    if(!data.success){
+      alert(data.message || "Ошибка отправки сообщения");
+      return;
+    }
+
+    if(data.message){
+      appendMessageToOrderChat(data.message);
+    }
+
+    input.value = "";
+
+    const box = document.getElementById("messages");
+    box.scrollTop = box.scrollHeight;
+
+    if(isParticipantRole()){
+      fetch(`/api/chats/${chatId}/read`, {
+        method:"POST",
+        headers:{ Authorization:"Bearer " + token }
+      }).catch(()=>{});
+    }
+
+  } finally {
+    sendBtn.disabled = false;
+    attachBtn.disabled = false;
+    input.disabled = false;
+    input.focus();
+  }
 }
 
 async function confirmOrder(){
@@ -918,8 +2032,121 @@ if(!confirm("Вернуть деньги покупателю?")) return;
   loadOrder();
 }
 
-sendBtn.onclick = sendMsg;
-msgInput.addEventListener("keydown",e=>{ if(e.key==="Enter") sendMsg(); });
+async function sendResolutionDecision(decision){
+  if(!isResolutionWriter()) return;
+  if(!currentOrder) return;
+
+  const text = String(resolutionDecisionTextEl?.value || "").trim();
+
+  if(!text){
+    alert("Напишите текст решения");
+    resolutionDecisionTextEl?.focus();
+    return;
+  }
+
+  const isConfirm = decision === "confirm";
+
+  const ok = confirm(
+    isConfirm
+      ? "Подтвердить заказ решением арбитража?"
+      : "Сделать возврат решением арбитража?"
+  );
+
+  if(!ok) return;
+
+  if(resolutionConfirmBtnEl) resolutionConfirmBtnEl.disabled = true;
+  if(resolutionRefundBtnEl) resolutionRefundBtnEl.disabled = true;
+
+  try{
+    const res = await fetch(`/api/orders/${orderId}/resolution-decision`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({
+        decision,
+        text
+      })
+    });
+
+    const data = await res.json();
+
+    if(!data.success){
+      alert(data.message || "Ошибка решения по спору");
+      return;
+    }
+
+    if(resolutionDecisionTextEl){
+      resolutionDecisionTextEl.value = "";
+    }
+
+    await loadOrder();
+  } finally {
+    if(resolutionConfirmBtnEl) resolutionConfirmBtnEl.disabled = false;
+    if(resolutionRefundBtnEl) resolutionRefundBtnEl.disabled = false;
+  }
+}
+
+sendBtnEl.onclick = sendMsg;
+
+attachBtnEl.onclick = () => {
+  if (!chatId) return;
+  if (!isParticipantRole()) return;
+  filePickerEl.click();
+};
+
+filePickerEl.addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file || !chatId) return;
+  if (!isParticipantRole()) {
+  filePickerEl.value = "";
+  return;
+}
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`/api/chats/${chatId}/files`, {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer " + token
+    },
+    body: formData
+  });
+
+  const data = await res.json();
+
+  if (!data.success) {
+    alert(data.message || "Ошибка отправки файла");
+    filePickerEl.value = "";
+    return;
+  }
+
+  if (data.message) {
+    appendMessageToOrderChat(data.message);
+
+    const box = document.getElementById("messages");
+    box.scrollTop = box.scrollHeight;
+  }
+
+if (isParticipantRole()) {
+  fetch(`/api/chats/${chatId}/read`, {
+    method:"POST",
+    headers:{ Authorization:"Bearer " + token }
+  }).catch(()=>{});
+}
+
+  filePickerEl.value = "";
+});
+
+msgInputEl.addEventListener("keydown", (e) => {
+  if(e.key === "Enter"){
+    e.preventDefault();
+    sendMsg();
+  }
+});
+
 const reviewBtn = document.getElementById("sendReviewBtn");
 
 if (reviewBtn) {
@@ -964,51 +2191,61 @@ if (reviewBtn) {
   });
 }
 
-const socket = io();
+window.addEventListener("tp:new-message", async (e) => {
+  const m = e.detail;
 
-socket.on("chat:new-message", (m) => {
-  if(!chatId) return;
+  if(!m || !chatId) return;
   if(m.chatId !== chatId) return;
-  if(m.fromEmail === myEmail) return;
 
-  const messageDate = new Date(m.createdAt);
-  const messageDateString = messageDate.toDateString();
+  await ensureUserEmail();
 
-const dividers = messages.querySelectorAll(".date-divider");
-const lastDivider = dividers.length ? dividers[dividers.length - 1] : null;
-
-let lastDividerDate = null;
-
-if(lastDivider){
-  lastDividerDate = lastDivider.dataset.date;
-}
-
-  if(lastDividerDate !== messageDateString){
-    const divider = document.createElement("div");
-    divider.className = "date-divider";
-    divider.dataset.date = messageDateString;
-    divider.textContent = formatDateDivider(messageDate);
-    messages.appendChild(divider);
+  if (window.tpChatSystem?.isSystemMessage?.(m)) {
+    await loadOrder();
+    return;
   }
 
-  const div = document.createElement("div");
-  div.className = "msg other";
+  if(m.fromEmail === myEmail) return;
 
-  div.innerHTML = `
-    <div class="msg-body">
-      <div>${m.text}</div>
-      <span class="msg-time">
-        ${messageDate.toLocaleTimeString("ru-RU", {
-          hour:"2-digit",
-          minute:"2-digit",
-          hour12:false
-        })}
-      </span>
-    </div>
-  `;
+  appendMessageToOrderChat(m);
 
-  messages.appendChild(div);
-  messages.scrollTop = messages.scrollHeight;
+  const box = document.getElementById("messages");
+  box.scrollTop = box.scrollHeight;
+
+  if (isParticipantRole()) {
+    fetch(`/api/chats/${chatId}/read`, {
+      method:"POST",
+      headers:{ Authorization:"Bearer " + token }
+    }).catch(()=>{});
+  }
+});
+
+document.getElementById("chatNotifyBtn")?.addEventListener("click", async () => {
+  if(!chatId) return;
+
+  await i18nReady;
+
+  toggleMutedChat(chatId);
+  updateChatNotifyButton();
+
+  const btn = document.getElementById("chatNotifyBtn");
+  btn.classList.remove("tp-bell-pop");
+  void btn.offsetWidth;
+  btn.classList.add("tp-bell-pop");
+});
+
+document.getElementById("chatReportBtn")?.addEventListener("click", () => {
+  if(!orderId) return;
+
+  location.href =
+    `/support-create.html?category=order&orderId=${encodeURIComponent(orderId)}&chatId=${encodeURIComponent(chatId || "")}`;
+});
+
+resolutionConfirmBtnEl?.addEventListener("click", () => {
+  sendResolutionDecision("confirm");
+});
+
+resolutionRefundBtnEl?.addEventListener("click", () => {
+  sendResolutionDecision("refund");
 });
 
 function initReviewStars(){

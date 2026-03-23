@@ -157,6 +157,91 @@ html, body{
   min-width: 0;
 }
 img{ max-width:100%; }
+/* ===== HOME ===== */
+
+.section-title{
+  font-size:20px;
+  font-weight:800;
+  margin-bottom:18px;
+}
+
+.games-home{
+  display:flex;
+  gap:20px;
+}
+
+.game-home-card{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:2px;
+  cursor:pointer;
+}
+
+.game-home-icon{
+  width:96px;
+  height:96px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.game-home-icon img{
+  width:72px;
+  height:72px;
+  border-radius:18px;
+}
+
+.game-home-card span{
+  font-size:14px;
+  font-weight:500;
+  margin-top:-2px;
+}
+
+.home-note{
+  margin-top:26px;
+  font-size:13px;
+  color:#9ca3af;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.home-note-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+}
+
+.home-note-icon svg{
+  width:16px;
+  height:16px;
+  stroke:currentColor;
+  fill:none;
+  stroke-width:2;
+}
+
+.home-note-text{
+  font-weight:500;
+  line-height:1.4;
+}
+.section-title{
+  font-size:20px;
+  font-weight:800;
+  margin-bottom:18px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.section-icon svg{
+  width:20px;
+  height:20px;
+  stroke:#1E50D4;
+  fill:none;
+  stroke-width:1.6;
+}
   </style>
 </head>
 
@@ -169,12 +254,36 @@ img{ max-width:100%; }
   <main class="page-content">
   <div class="page">
 
-    <!-- ALPHABET -->
-    <div class="alphabet" id="alphabet"></div>
+<div class="content">
 
-    <!-- CONTENT -->
-    <div class="content" id="content"></div>
+<h2 class="section-title">
 
+<span class="section-icon">
+<svg viewBox="0 0 24 24">
+<path d="M7 7h10v10H7z"/>
+<path d="M3 3h6v6H3z"/>
+<path d="M15 15h6v6h-6z"/>
+</svg>
+</span>
+
+<span data-i18n="page.games"></span>
+
+</h2>
+<div class="games-home" id="gamesHome"></div>
+
+<div class="home-note">
+  <span class="home-note-icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9"></circle>
+      <line x1="12" y1="10" x2="12" y2="16"></line>
+      <circle cx="12" cy="7" r="1"></circle>
+    </svg>
+  </span>
+
+<span class="home-note-text" data-i18n="page.categories_coming"></span>
+</div>
+
+</div>
   </div>
   </main>
 
@@ -185,91 +294,36 @@ img{ max-width:100%; }
 <script src="/i18n.js"></script>
 
 <script src="/header.js"></script>
-<script src="/games.list.js"></script>
+<script type="module" src="/games/index.js"></script>
 <script src="/footer.js"></script>
   <script>
+document.addEventListener("DOMContentLoaded", () => {
 
-    const games = window.GAMES_LIST || [];
-games.sort((a,b)=>a.name.localeCompare(b.name));
+  const container = document.getElementById("gamesHome");
 
-    const alphabetEl = document.getElementById("alphabet");
-    const contentEl  = document.getElementById("content");
+  const games = window.GAMES || {};
 
-    let currentLetter = "";
-    const letterMap = {};
+  Object.entries(games).forEach(([id, game]) => {
 
-    games.forEach(game=>{
-      const letter = game.name[0].toUpperCase();
+    const card = document.createElement("div");
+    card.className = "game-home-card";
 
-      if(letter !== currentLetter){
-        currentLetter = letter;
+    card.onclick = () => {
+      location.href = "/game.html?game=" + id;
+    };
 
-        // alphabet
-        const a = document.createElement("div");
-        a.textContent = letter;
-        a.dataset.letter = letter;
-        a.onclick = ()=>{
-          document.getElementById("letter-"+letter)
-            .scrollIntoView({behavior:"smooth", block:"start"});
-        };
-        alphabetEl.appendChild(a);
-        letterMap[letter] = a;
+    card.innerHTML = `
+      <div class="game-home-icon">
+        <img src="${game.icon}" alt="${game.title}">
+      </div>
+      <span>${game.title}</span>
+    `;
 
-        // block
-        const block = document.createElement("div");
-        block.className = "letter-block";
-        block.id = "letter-"+letter;
-        block.dataset.letter = letter;
-        block.innerHTML = `
-          <div class="letter-title">${letter}</div>
-          <div class="games-grid" id="grid-${letter}"></div>
-        `;
-        contentEl.appendChild(block);
-      }
+    container.appendChild(card);
 
-      const grid = document.getElementById("grid-"+currentLetter);
+  });
 
-      const card = document.createElement("div");
-card.className = "game-card";
-card.innerHTML = `
-  <div class="game-icon">
-    <img src="/img/games/${game.file}" alt="${game.name}">
-  </div>
-  <span>${game.name}</span>
-`;
-
-card.addEventListener("click", () => {
-  location.href = `/game.html?game=${game.id}`;
 });
-
-grid.appendChild(card);
-    });
-
-    /* ===== scroll spy ===== */
-    const blocks = document.querySelectorAll(".letter-block");
-
-    function updateAlphabet(){
-      let active = null;
-
-      blocks.forEach(block=>{
-        const rect = block.getBoundingClientRect();
-        if(rect.top <= 140){
-          active = block.dataset.letter;
-        }
-      });
-
-      if(active){
-        document.querySelectorAll(".alphabet div")
-          .forEach(el=>el.classList.remove("active"));
-
-        if(letterMap[active]){
-          letterMap[active].classList.add("active");
-        }
-      }
-    }
-
-    window.addEventListener("scroll", updateAlphabet);
-    updateAlphabet();
   </script>
 
 </body>

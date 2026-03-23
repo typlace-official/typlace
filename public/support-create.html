@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Создать обращение — TyPlace</title>
+<title data-i18n="page.title"></title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="/header.css">
@@ -34,6 +34,12 @@
   gap:18px;
 }
 
+#formFields{
+  display:none;
+  flex-direction:column;
+  gap:18px;
+}
+
 h1{
   font-size:24px;
   margin:20px 0 24px 0;
@@ -44,7 +50,15 @@ h1{
       flex-direction:column;
       gap:6px;
     }
+.field-row{
+  display:flex;
+  gap:12px;
+}
 
+.field-row .field{
+  flex:1;
+  min-width:0;
+}
     .label{
       font-size:13px;
       font-weight:800;
@@ -53,9 +67,9 @@ h1{
 
     .input, .select, .textarea{
       border:1px solid #e5e7eb;
-      border-radius:12px;
+      border-radius:5px;
       padding:12px;
-      font-size:14px;
+      font-size:16px;
       font-weight:500;
       outline:none;
       background:#fff;
@@ -73,7 +87,7 @@ h1{
     .btn{
       margin-top:10px;
       border:none;
-      border-radius:12px;
+      border-radius:5px;
       padding:14px;
       font-size:15px;
       font-weight:900;
@@ -115,18 +129,17 @@ h1{
 .attach-btn{
   display:inline-flex;
   align-items:center;
-  gap:6px;
+  gap:8px;
 
-  width:auto;              /* 👈 ВАЖНО */
-  align-self:flex-start;   /* 👈 НЕ растягивается */
+  width:auto;
+  align-self:flex-start;
 
   background:#f3f4f6;
   border:1px solid #e5e7eb;
-  border-radius:8px;
+  border-radius:5px;
 
-  padding:6px 10px;        /* 👈 меньше воздуха */
-  font-size:14px;
-  font-weight:600;
+  padding:10px 16px;
+  font-size:16px;
 
   cursor:pointer;
   transition:0.2s;
@@ -137,8 +150,8 @@ h1{
 }
 
 .attach-icon{
-  width:18px;
-  height:18px;
+  width:20px;
+  height:20px;
 }
 
 .attachments-preview{
@@ -155,7 +168,7 @@ h1{
 
   background:#f9fafb;
   border:1px solid #e5e7eb;
-  border-radius:10px;
+  border-radius:5px;
 
   padding:8px 12px;
   min-width:240px;
@@ -199,7 +212,7 @@ h1{
   resize:none;
 
   font-family: Inter, Arial, sans-serif; /* чтобы точно такой же */
-  font-size:14px;
+  font-size:16px;
   font-weight:400;   /* 👈 обычный текст */
   line-height:1.6;
 }
@@ -227,7 +240,7 @@ h1{
 
   background:#f9fafb;
   border:1px solid #e5e7eb;
-  border-radius:12px;
+  border-radius:5px;
 
   padding:10px 14px;
 
@@ -261,6 +274,24 @@ h1{
 .file-remove:hover{
   color:#ef4444;
 }
+@media (max-width:640px){
+
+.form{
+  background:transparent;
+  border:none;
+  border-radius:0;
+  padding:0;
+}
+
+.page{
+  margin:16px auto;
+}
+
+.field-row{
+  flex-direction:column;
+}
+
+}
 
   </style>
 </head>
@@ -272,44 +303,53 @@ h1{
 <main class="page-content">
 
 <div class="support-nav">
-  <a href="/help.html">Главная</a>
+<a href="/help.html" data-i18n="common.home"></a>
   <span>/</span>
-  <span class="current">Создать обращение</span>
+<span class="current" data-i18n="page.title"></span>
 </div>
 
 <div class="page">
-  <h1>Создать обращение</h1>
+<h1 data-i18n="page.title"></h1>
 
-  <form class="form" id="supportForm">
-
-    <div class="field">
-      <div class="label">Категория</div>
-      <select class="select" name="category" required>
-        <option value="">Выберите категорию</option>
-        <option value="order">Проблема с заказом</option>
-        <option value="finance">Проблема с финансами</option>
-        <option value="account">Проблема с аккаунтом</option>
-        <option value="report">Пожаловаться на пользователя</option>
-        <option value="bug">Сообщить об ошибке (Баг)</option>
-      </select>
-    </div>
-
+<form class="form" id="supportForm">
+<div class="field">
+<div class="label" data-i18n="page.category"></div>
+<select class="select" name="category" required></select>
+</div>
+<div id="formFields">
+<div class="field-row">
+<div class="field" id="roleField" style="display:none;">
+<div class="label" data-i18n="page.role"></div>
+  <select class="select" id="roleSelect">
+<option value="" data-i18n="page.choose"></option>
+<option value="buyer" data-i18n="page.roleBuyer"></option>
+<option value="seller" data-i18n="page.roleSeller"></option>
+  </select>
+</div>
 <div class="field" id="subjectField" style="display:none;">
-  <div class="label">Тема заявки</div>
+<div class="label" data-i18n="page.subject"></div>
   <select class="select" name="subject" id="subjectSelect"></select>
 </div>
 
 <div class="field" id="orderField" style="display:none;">
-  <div class="label">Номер заказа</div>
-<input 
-  class="input" 
-  name="orderId"
-/>
-
+<div class="label" data-i18n="page.orderId"></div>
+  <input class="input" name="orderId"/>
+  <div id="orderError" class="textarea-error"></div>
+</div>
+<div class="field" id="reportUserField" style="display:none;">
+<div class="label" data-i18n="page.userId"></div>
+<input class="input" name="userId" data-i18n-placeholder="page.enterUserId"/>
+  <div id="userError" class="textarea-error"></div>
+</div>
+<div class="field" id="reportOfferField" style="display:none;">
+  <div class="label" data-i18n="page.offerId"></div>
+  <input class="input" name="offerId" data-i18n-placeholder="page.enterOfferId"/>
+  <div id="offerError" class="textarea-error"></div>
+</div>
 </div>
 
 <div class="field">
-  <div class="label">Описание проблемы</div>
+<div class="label" data-i18n="page.description"></div>
 
 <textarea 
   class="textarea" 
@@ -345,17 +385,15 @@ h1{
       stroke-linecap="round"
       stroke-linejoin="round"/>
   </svg>
-  Добавить файлы
+<span data-i18n="page.addFiles"></span>
 </button>
 
   <div id="attachmentsPreview" class="attachments-preview"></div>
 
 </div>
 
-    <button type="submit" class="btn">
-      Отправить обращение
-    </button>
-
+<button type="submit" class="btn" data-i18n="page.send"></button>
+</div>
   </form>
 </div>
 <div id="imageModal" style="
@@ -403,9 +441,56 @@ if(!token){
 const form = document.getElementById("supportForm");
 const categorySelect = form.querySelector("[name='category']");
 const subjectField = document.getElementById("subjectField");
+const roleField = document.getElementById("roleField");
+const roleSelect = document.getElementById("roleSelect");
 const subjectSelect = document.getElementById("subjectSelect");
 const orderField = document.getElementById("orderField");
+const reportUserField = document.getElementById("reportUserField");
+const reportOfferField = document.getElementById("reportOfferField");
+const formFields = document.getElementById("formFields");
 let SUPPORT_CONFIG = null;
+
+function normalizePrefixedId(value, prefix){
+  let v = String(value || "")
+    .toUpperCase()
+    .replace(/\s+/g, "")
+    .replace(/[^A-Z0-9:]/g, "");
+
+  if (!v) return "";
+
+  if (/^\d+$/.test(v)) {
+    return prefix + ":" + v.slice(0, 8);
+  }
+
+  if (v === prefix) {
+    return prefix + ":";
+  }
+
+  if (v.startsWith(prefix) && !v.startsWith(prefix + ":")) {
+    v = prefix + ":" + v.slice(prefix.length).replace(/:/g, "");
+  }
+
+  if (!v.startsWith(prefix + ":")) {
+    const digits = v.replace(/\D/g, "");
+    return digits ? (prefix + ":" + digits.slice(0, 8)) : "";
+  }
+
+  const parts = v.split(":");
+  const digits = (parts[1] || "").replace(/\D/g, "").slice(0, 8);
+
+  return prefix + ":" + digits;
+}
+
+const params = new URLSearchParams(window.location.search);
+
+const prefillCategory = String(
+  params.get("category") || params.get("type") || ""
+).trim();
+
+const prefillUserId = String(params.get("userId") || "").trim();
+const prefillOfferId = String(params.get("offerId") || "").trim();
+const prefillOrderId = String(params.get("orderId") || "").trim();
+const prefillChatId = String(params.get("chatId") || "").trim();
 
 // 1️⃣ Загружаем конфиг с сервера
 async function loadConfig(){
@@ -413,23 +498,82 @@ async function loadConfig(){
     headers:{ Authorization:"Bearer " + token }
   });
 
-  const d = await r.json();
-  if(!d.success){
-    alert("Ошибка загрузки конфигурации");
-    return;
-  }
+const d = await r.json();
 
-  SUPPORT_CONFIG = d.config;
+if(!d.success){
+alert(tpI18n.t("page.errors.configLoad"));
+  return;
+}
+
+SUPPORT_CONFIG = d.config;
 
   // очищаем категории
-  categorySelect.innerHTML = `<option value="">Выберите категорию</option>`;
+categorySelect.innerHTML = "";
 
-  Object.entries(SUPPORT_CONFIG).forEach(([key, value])=>{
-    const option = document.createElement("option");
-    option.value = key;
-    option.textContent = value.label;
-    categorySelect.appendChild(option);
-  });
+const placeholder = document.createElement("option");
+placeholder.value = "";
+placeholder.textContent = tpI18n.t("page.chooseCategory");
+categorySelect.appendChild(placeholder);
+
+Object.entries(SUPPORT_CONFIG).forEach(([key, value]) => {
+
+  const option = document.createElement("option");
+  option.value = key;
+  option.textContent = tpI18n.t(value.labelKey);
+
+  categorySelect.appendChild(option);
+
+});
+
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await tpI18n.load(tpI18n.currentLang);
+  await loadConfig();
+  await applyPrefillFromUrl();
+  tpI18n.apply();
+
+  validateMessage();
+  autoResize(messageInput);
+});
+
+async function applyPrefillFromUrl(){
+  if (!SUPPORT_CONFIG) return;
+
+  const orderInput = form.querySelector("[name='orderId']");
+  const userInput = form.querySelector("[name='userId']");
+  const offerInput = form.querySelector("[name='offerId']");
+
+  if (prefillCategory && SUPPORT_CONFIG[prefillCategory]) {
+    categorySelect.value = prefillCategory;
+    categorySelect.dispatchEvent(new Event("change"));
+  }
+
+  if (prefillOrderId && orderInput) {
+    orderInput.value = prefillOrderId;
+  }
+
+  if (prefillUserId && userInput) {
+    userInput.value = normalizePrefixedId(prefillUserId, "UID");
+  }
+
+  if (prefillOfferId && offerInput) {
+    offerInput.value = normalizePrefixedId(prefillOfferId, "OID");
+  }
+
+  if (prefillCategory === "report" && prefillChatId && !prefillUserId) {
+    try {
+      const r = await fetch("/api/chats/" + prefillChatId, {
+        headers:{ Authorization:"Bearer " + token }
+      });
+
+      const d = await r.json();
+
+      if (d.success && d.chat?.otherUser?.userId && userInput) {
+        userInput.value = normalizePrefixedId(d.chat.otherUser.userId, "UID");
+      }
+    } catch(e){}
+  }
 }
 
 // 2️⃣ Отправка формы
@@ -441,7 +585,7 @@ form.onsubmit = async (e)=>{
   formData.delete("attachments");
 
 if(selectedFiles.length > 10){
-    alert("Максимум 10 файлов");
+alert(tpI18n.t("page.errors.maxFiles"));
     return;
   }
 
@@ -457,58 +601,170 @@ if(selectedFiles.length > 10){
     body: formData
   });
 
-  const d = await r.json();
+const d = await r.json();
 
-  if(!d.success){
-    alert(d.message || "Ошибка");
+const orderError = document.getElementById("orderError");
+const userError = document.getElementById("userError");
+const offerError = document.getElementById("offerError");
+
+if(orderError) orderError.textContent = "";
+if(userError) userError.textContent = "";
+if(offerError) offerError.textContent = "";
+
+if(!d.success){
+
+  if(d.message === "Заказ не найден"){
+    if(orderError) orderError.textContent = tpI18n.t("page.errors.orderNotFound");
     return;
   }
+
+  if(d.message === "Введите ID пользователя"){
+    if(userError) userError.textContent = tpI18n.t("page.errors.enterUserId");
+    return;
+  }
+
+  if(d.message === "Пользователь не найден"){
+    if(userError) userError.textContent = tpI18n.t("page.errors.userNotFound");
+    return;
+  }
+
+  if(d.message === "Введите ID объявления"){
+    if(offerError) offerError.textContent = tpI18n.t("page.errors.enterOfferId");
+    return;
+  }
+
+  if(d.message === "Объявление не найдено"){
+    if(offerError) offerError.textContent = tpI18n.t("page.errors.offerNotFound");
+    return;
+  }
+
+  alert(d.message || tpI18n.t("common.error"));
+  return;
+}
+
 selectedFiles = [];
 preview.innerHTML = "";
-input.value = "";
+document.getElementById("attachmentsInput").value = "";
 
 const newId = d.ticket.id;
 
-// сразу перекидываем на конкретный тикет
+sessionStorage.removeItem("tp_support_category");
 location.href = "/support-ticket.html?id=" + newId;
 
 };
 
-loadConfig();
 categorySelect.addEventListener("change", ()=>{
-// показываем поле номера заказа только для проблем с заказом
-if(categorySelect.value === "order"){
-  orderField.style.display = "flex";
+
+roleSelect.value = "";
+
+subjectSelect.value = "";
+if(categorySelect.value){
+  formFields.style.display = "flex";
 }else{
-  orderField.style.display = "none";
+  formFields.style.display = "none";
 }
-  subjectSelect.innerHTML = "";
 
-  if(
-    !SUPPORT_CONFIG ||
-    !SUPPORT_CONFIG[categorySelect.value] ||
-    !SUPPORT_CONFIG[categorySelect.value].topics ||
-    SUPPORT_CONFIG[categorySelect.value].topics.length === 0
-  ){
-    subjectField.style.display = "none";
-    subjectSelect.required = false;
-    return;
-  }
+subjectSelect.innerHTML = "";
 
-  subjectField.style.display = "flex";
+roleField.style.display = "none";
+subjectField.style.display = "none";
+orderField.style.display = "none";
+reportUserField.style.display = "none";
+reportOfferField.style.display = "none";
+
+/* ===== ПРОБЛЕМА С ЗАКАЗОМ ===== */
+
+if(categorySelect.value === "order"){
+
+  roleField.style.display = "flex";
+  orderField.style.display = "none";
+
+subjectSelect.innerHTML =
+  `<option value="">${tpI18n.t("page.selectRoleFirst")}</option>`;
   subjectSelect.required = true;
 
-  const defaultOption = document.createElement("option");
-  defaultOption.value = "";
-  defaultOption.textContent = "Выберите тему";
-  subjectSelect.appendChild(defaultOption);
+  return;
+}
 
-  SUPPORT_CONFIG[categorySelect.value].topics.forEach(topic=>{
-    const option = document.createElement("option");
-    option.value = topic;
-    option.textContent = topic;
-    subjectSelect.appendChild(option);
-  });
+if(categorySelect.value === "report"){
+  reportUserField.style.display = "flex";
+}
+
+if(categorySelect.value === "report_offer"){
+  reportOfferField.style.display = "flex";
+}
+
+/* ===== ДРУГИЕ КАТЕГОРИИ ===== */
+
+if(
+  !SUPPORT_CONFIG ||
+  !SUPPORT_CONFIG[categorySelect.value] ||
+  !SUPPORT_CONFIG[categorySelect.value].topics ||
+  SUPPORT_CONFIG[categorySelect.value].topics.length === 0
+){
+  subjectField.style.display = "none";
+  subjectSelect.required = false;
+  return;
+}
+
+subjectField.style.display = "flex";
+subjectSelect.required = true;
+
+const defaultOption = document.createElement("option");
+defaultOption.value = "";
+defaultOption.textContent = tpI18n.t("page.chooseSubject");
+subjectSelect.appendChild(defaultOption);
+
+SUPPORT_CONFIG[categorySelect.value].topics.forEach(topic=>{
+  const option = document.createElement("option");
+  option.value = topic;
+  option.textContent = tpI18n.t(topic);
+  subjectSelect.appendChild(option);
+});
+
+});
+roleSelect.addEventListener("change", ()=>{
+
+if(!roleSelect.value){
+
+  subjectField.style.display = "none";
+  orderField.style.display = "none";
+  subjectSelect.innerHTML = "";
+
+  return;
+}
+
+orderField.style.display = "flex";
+
+subjectSelect.innerHTML = "";
+
+const defaultOption = document.createElement("option");
+defaultOption.value = "";
+defaultOption.textContent = tpI18n.t("page.chooseSubject");
+subjectSelect.appendChild(defaultOption);
+
+subjectField.style.display = "flex";
+subjectSelect.required = true;
+
+const category = categorySelect.value;
+
+if(!SUPPORT_CONFIG || !SUPPORT_CONFIG[category]) return;
+
+const roles = SUPPORT_CONFIG[category]?.roles;
+
+if(!roles) return;
+
+const topics = roles[roleSelect.value];
+
+if(!topics) return;
+
+topics.forEach(topic=>{
+  const option = document.createElement("option");
+  option.value = topic;
+  option.textContent = tpI18n.t(topic);
+  subjectSelect.appendChild(option);
+});
+
 });
 const input = document.getElementById("attachmentsInput");
 const btn = document.getElementById("attachBtn");
@@ -522,9 +778,9 @@ input.onchange = () => {
   const files = Array.from(input.files);
 
 if(selectedFiles.length + files.length > 10){
-    alert("Максимум 10 файлов");
-    return;
-  }
+  alert(tpI18n.t("page.errors.maxFiles"));
+  return;
+}
 
   files.forEach(file => {
     selectedFiles.push(file);
@@ -539,8 +795,7 @@ function renderFiles(){
   selectedFiles.forEach((file, index) => {
 
     const extension = file.name.split(".").pop();
-    const shortName = "photo." + extension;
-
+const shortName = tpI18n.t("page.file") + "." + extension;
     const chip = document.createElement("div");
     chip.className = "file-link";
 
@@ -591,11 +846,11 @@ const MAX_LENGTH = 10000;
 
 function validateMessage(){
   const length = messageInput.value.length;
-
-  messageCounter.textContent = `${length} / ${MAX_LENGTH}`;
-
+messageCounter.textContent =
+  tpI18n.t("page.counter", { current:length, max:MAX_LENGTH });
   if(length > MAX_LENGTH){
-    messageError.textContent = `Максимум ${MAX_LENGTH} символов`;
+messageError.textContent =
+  tpI18n.t("page.errors.maxLength", {count: MAX_LENGTH});
     messageInput.classList.add("invalid");
     submitBtn.disabled = true;
     submitBtn.style.opacity = ".6";
@@ -612,8 +867,6 @@ messageInput.addEventListener("input", () => {
   validateMessage();
 });
 
-// при загрузке
-validateMessage();
 const imageModal = document.getElementById("imageModal");
 const imageModalImg = document.getElementById("imageModalImg");
 const imageModalClose = document.getElementById("imageModalClose");
@@ -635,6 +888,102 @@ imageModal.onclick = (e) => {
     closeImageModal();
   }
 };
+/* ===== ОГРАНИЧЕНИЕ ID ПОЛЬЗОВАТЕЛЯ ===== */
+
+const reportUserInput = form.querySelector("[name='userId']");
+const reportOfferInput = form.querySelector("[name='offerId']");
+
+if(reportUserInput){
+  reportUserInput.addEventListener("input", () => {
+    reportUserInput.value = normalizePrefixedId(reportUserInput.value, "UID");
+  });
+
+  reportUserInput.addEventListener("blur", () => {
+    reportUserInput.value = normalizePrefixedId(reportUserInput.value, "UID");
+  });
+}
+
+if(reportOfferInput){
+  reportOfferInput.addEventListener("input", () => {
+    reportOfferInput.value = normalizePrefixedId(reportOfferInput.value, "OID");
+  });
+
+  reportOfferInput.addEventListener("blur", () => {
+    reportOfferInput.value = normalizePrefixedId(reportOfferInput.value, "OID");
+  });
+}
+
+
+/* ===== ОГРАНИЧЕНИЕ НОМЕРА ЗАКАЗА ===== */
+
+const orderInput = form.querySelector("[name='orderId']");
+
+if(orderInput){
+  orderInput.addEventListener("input", () => {
+
+    let value = orderInput.value
+      .toUpperCase()
+      .replace(/[^A-Z0-9#]/g,""); // только латиница и цифры
+
+    if(value && value[0] !== "#"){
+      value = "#" + value.replace("#","");
+    }
+
+    orderInput.value = value.slice(0,8); // максимум 8 символов
+
+  });
+}
+
+const userInput = form.querySelector("[name='userId']");
+const offerInput = form.querySelector("[name='offerId']");
+const orderInputClear = form.querySelector("[name='orderId']");
+
+if(userInput){
+  userInput.addEventListener("input", ()=>{
+    const userErrorEl = document.getElementById("userError");
+    if(userErrorEl) userErrorEl.textContent = "";
+  });
+}
+
+if(offerInput){
+  offerInput.addEventListener("input", ()=>{
+    const offerErrorEl = document.getElementById("offerError");
+    if(offerErrorEl) offerErrorEl.textContent = "";
+  });
+}
+
+if(orderInputClear){
+  orderInputClear.addEventListener("input", ()=>{
+    const orderErrorEl = document.getElementById("orderError");
+    if(orderErrorEl) orderErrorEl.textContent = "";
+  });
+}
+
+window.addEventListener("tp:lang-change", async () => {
+  const currentCategory = categorySelect.value;
+  const currentRole = roleSelect.value;
+  const currentSubject = subjectSelect.value;
+
+  await loadConfig();
+
+  if (currentCategory && SUPPORT_CONFIG[currentCategory]) {
+    categorySelect.value = currentCategory;
+    categorySelect.dispatchEvent(new Event("change"));
+
+    if (currentCategory === "order" && currentRole) {
+      roleSelect.value = currentRole;
+      roleSelect.dispatchEvent(new Event("change"));
+    }
+
+    if (currentSubject) {
+      subjectSelect.value = currentSubject;
+    }
+  }
+
+  tpI18n.apply();
+  validateMessage();
+  autoResize(messageInput);
+});
 
 </script>
 

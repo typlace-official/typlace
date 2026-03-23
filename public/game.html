@@ -25,24 +25,9 @@
         <span class="crumb-mode" id="crumbMode"></span>
       </div>
 
-      <div class="modes-wrap">
-        <button class="scroll-arrow left hidden" id="arrowLeft" aria-label="Влево">
-          <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-
-        <div class="modes-viewport">
-          <div class="modes" id="modes">
-            <div class="modes-row"></div>
-            <div class="modes-row"></div>
-            <div class="modes-row"></div>
-            <div class="modes-row"></div>
-          </div>
-        </div>
-
-        <button class="scroll-arrow right hidden" id="arrowRight" aria-label="Вправо">
-          <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
-        </button>
-      </div>
+<div class="modes-wrap">
+  <div class="modes" id="modes"></div>
+</div>
 
 <div class="topbar">
 
@@ -143,7 +128,10 @@
   // ===== GAME FROM URL =====
   const urlParams = new URLSearchParams(location.search);
     const extraFilterValues = {};
-
+function getCurrentLang() {
+  const lang = localStorage.getItem("tp_lang") || "ru";
+  return ["ru", "uk", "en"].includes(lang) ? lang : "ru";
+}
     // 🔥 ВОССТАНАВЛЕНИЕ ФИЛЬТРОВ ИЗ URL
 urlParams.forEach((value, key) => {
   if (["game", "mode"].includes(key)) return;
@@ -197,8 +185,6 @@ crumbMode.textContent =
 
     // ===== Elements =====
     const modesEl = document.getElementById("modes");
-    const arrowLeft = document.getElementById("arrowLeft");
-    const arrowRight = document.getElementById("arrowRight");
     // ===== FILTERS =====
 const methodSelect = document.getElementById("methodSelect");
 const subcatSelect = document.getElementById("subcatSelect");
@@ -301,30 +287,33 @@ categories.forEach(cat => {
 });
   }
 }
+
 function renderModes(){
-  const rows = modesEl.querySelectorAll(".modes-row");
-  rows.forEach(r => r.innerHTML = "");
+  modesEl.innerHTML = "";
 
-  MODES.forEach(([modeId, modeData], index)=>{
-
+  MODES.forEach(([modeId, modeData]) => {
     const label =
       modeData.labelKey && window.tpI18n?.t
         ? window.tpI18n.t(modeData.labelKey)
         : modeId;
 
-    const pill = document.createElement("div");
+    const pill = document.createElement("button");
+    pill.type = "button";
     pill.className = "mode-pill" + (modeId === currentMode ? " active" : "");
     pill.textContent = label;
 
     pill.onclick = () => {
-
       for (const k in extraFilterValues) delete extraFilterValues[k];
+
+      selectedCategory = null;
+      subcatSelect.value = "";
 
       localStorage.setItem("tp_last_mode_" + GAME_ID, modeId);
       currentMode = modeId;
 
       const url = new URL(window.location);
       url.searchParams.set("mode", modeId);
+      url.searchParams.delete("category");
       history.replaceState({}, "", url);
 
       selectedSearch = "";
@@ -342,44 +331,10 @@ function renderModes(){
       loadOffers();
     };
 
-    rows[index % 4].appendChild(pill);
+    modesEl.appendChild(pill);
   });
-
-  requestAnimationFrame(updateArrows);
 }
 
-    // ===== Arrows =====
-    function updateArrows(){
-      const el = modesEl;
-      const hasOverflow = el.scrollWidth > el.clientWidth + 5;
-
-      if (!hasOverflow){
-        arrowLeft.classList.add("hidden");
-        arrowRight.classList.add("hidden");
-        return;
-      }
-
-      const x = el.scrollLeft;
-      const maxScroll = el.scrollWidth - el.clientWidth;
-
-      if (x <= 2) arrowLeft.classList.add("hidden");
-      else arrowLeft.classList.remove("hidden");
-
-      if (x >= maxScroll - 2) arrowRight.classList.add("hidden");
-      else arrowRight.classList.remove("hidden");
-    }
-
-    arrowLeft.onclick = ()=> {
-      modesEl.scrollBy({ left: -420, behavior: "smooth" });
-      setTimeout(updateArrows, 220);
-    };
-    arrowRight.onclick = ()=> {
-      modesEl.scrollBy({ left: 420, behavior: "smooth" });
-      setTimeout(updateArrows, 220);
-    };
-
-    modesEl.addEventListener("scroll", updateArrows);
-    window.addEventListener("resize", updateArrows);
 const extraFiltersWrap = document.getElementById("extraFilters");
 function renderExtraFilters() {
   const t = (key, fallback="") => (window.tpI18n?.t ? window.tpI18n.t(key) : (fallback || key || ""));
@@ -575,11 +530,7 @@ async function loadOffers() {
 params.set("game", GAME_ID);
 params.set("mode", currentMode);
 
-let currentLang = localStorage.getItem("tp_lang") || "ru";
-if (currentLang === "ua") {
-  currentLang = "uk";
-}
-
+const currentLang = getCurrentLang();
 params.set("lang", currentLang);
 
   // 🔹 extra filters
@@ -632,21 +583,17 @@ function getFavorites(){
 }
 
 function isFavorite(id){
+  const lang = getCurrentLang();
 
-let lang = localStorage.getItem("tp_lang") || "ru";
-if (lang === "ua") {
-  lang = "uk";
-}
   return getFavorites().some(f => {
-    if(typeof f === "string") return f === id;
+    if (typeof f === "string") return f === id;
     return f.id === id && f.lang === lang;
   });
-
 }
 
 function toggleFavorite(id){
 
-  const lang = localStorage.getItem("tp_lang") || "ru";
+const lang = getCurrentLang();
 
   let favs = getFavorites();
 
@@ -661,22 +608,73 @@ const index = favs.findIndex(f => typeof f === "object" && f.id === id && f.lang
 
 }
 
-function renderOffers(offers){
+function getPluralForm(n, one, few, many) {
+  const abs = Math.abs(Number(n) || 0);
+  const lastTwo = abs % 100;
+  const last = abs % 10;
 
-  const lang = localStorage.getItem("tp_lang") || "ru";
+  if (lastTwo >= 11 && lastTwo <= 14) return many;
+  if (last === 1) return one;
+  if (last >= 2 && last <= 4) return few;
+  return many;
+}
 
-  // 🔥 фильтруем по языку
-  const visibleOffers = offers.filter(o => {
-    return o.title && o.title[lang] && o.title[lang].trim();
+function hasActiveOffersFilters() {
+  const hasSearch = Boolean(String(selectedSearch || "").trim());
+  const hasCategory = Boolean(String(selectedCategory || "").trim());
+
+  const hasExtraFilters = Object.values(extraFilterValues).some(value => {
+    return value !== null && value !== undefined && String(value).trim() !== "";
   });
 
-  const countEl = document.getElementById("offersCount");
+  return hasSearch || hasCategory || hasExtraFilters;
+}
 
-  if (countEl) {
-    const n = visibleOffers.length;
-    const text = window.tpI18n.pluralKey("common.offers_found", n);
-    countEl.textContent = text;
+function buildOffersCountText(count) {
+  const lang = getCurrentLang();
+  const safeCount = Math.max(0, Number(count) || 0);
+  const prefix = hasActiveOffersFilters();
+
+  if (lang === "en") {
+    return prefix
+      ? `Found ${safeCount} ${safeCount === 1 ? "offer" : "offers"}`
+      : `Total ${safeCount} ${safeCount === 1 ? "offer" : "offers"}`;
   }
+
+  if (lang === "uk") {
+    const word = getPluralForm(safeCount, "оголошення", "оголошення", "оголошень");
+    return prefix
+      ? `Знайдено ${safeCount} ${word}`
+      : `Усього ${safeCount} ${word}`;
+  }
+
+  const word = getPluralForm(safeCount, "объявление", "объявления", "объявлений");
+  return prefix
+    ? `Найдено ${safeCount} ${word}`
+    : `Всего ${safeCount} ${word}`;
+}
+
+function renderOffers(offers){
+
+  const lang = getCurrentLang();
+
+  const visibleOffers = offers.filter(o => {
+    const modeConfig = window.GAMES?.[o.game]?.modes?.[o.mode];
+
+    // если у режима описание/ручной title не нужен — оффер показываем
+    if (modeConfig?.description === false) {
+      return true;
+    }
+
+    const titleValue = o.title?.[lang];
+    return typeof titleValue === "string" && titleValue.trim();
+  });
+
+const countEl = document.getElementById("offersCount");
+
+if (countEl) {
+  countEl.textContent = buildOffersCountText(visibleOffers.length);
+}
 
   const list = document.getElementById("offersList");
   list.innerHTML = "";
@@ -700,7 +698,6 @@ function renderOffers(offers){
         location.href = "/offer.html?id=" + encodeURIComponent(offer.id);
       },
 
-      showAmountBadge: true
     });
 
     list.appendChild(card);
@@ -792,5 +789,42 @@ window.addEventListener("tp:lang-change", async (e) => {
 });
 })();
   </script>
+  <div id="tpToast" class="tp-toast"></div>
+  <script>
+(function(){
+  const tpToast = document.getElementById("tpToast");
+  let tpToastTimer = null;
+
+  function showToast(message, type = "success", duration = 1800){
+    if (!tpToast) return;
+
+    tpToast.textContent = message;
+    tpToast.className = `tp-toast ${type}`;
+
+    requestAnimationFrame(() => {
+      tpToast.classList.add("show");
+    });
+
+    clearTimeout(tpToastTimer);
+    tpToastTimer = setTimeout(() => {
+      tpToast.classList.remove("show");
+    }, duration);
+  }
+
+  try {
+    const raw = sessionStorage.getItem("tp_toast");
+    if (!raw) return;
+
+    sessionStorage.removeItem("tp_toast");
+
+    const toast = JSON.parse(raw);
+    if (!toast?.text) return;
+
+    showToast(toast.text, toast.type || "success", 1800);
+  } catch (e) {
+    sessionStorage.removeItem("tp_toast");
+  }
+})();
+</script>
 </body>
 </html>

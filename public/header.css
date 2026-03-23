@@ -555,27 +555,33 @@ body{
 .tp-burger.is-active{
   color: var(--accent);
 }
+
+.tp-header{
+  display: block;
+}
+
 .tp-header-mobile,
 .tp-bottom-mobile{
   display: none;
 }
 
-/* ================= BREAKPOINT: PHONE ONLY ================= */
-@media (max-width: 640px){
-  .tp-header { display: none; }
-  .tp-header-mobile { display: block; }
-  .tp-bottom-mobile { display: flex; }
-}
+/* только реальные телефоны */
+@media (max-width: 640px) and (hover: none) and (pointer: coarse){
+  .tp-header{
+    display: none !important;
+  }
 
-/* ================= BREAKPOINT: TABLET + DESKTOP ================= */
-@media (min-width: 641px){
-  .tp-header { display: block; }
-  .tp-header-mobile { display: none; }
-  .tp-bottom-mobile { display: none; }
+  .tp-header-mobile{
+    display: block !important;
+  }
+
+  .tp-bottom-mobile{
+    display: flex !important;
+  }
 }
 
 /* ================= PHONE STYLES ================= */
-@media (max-width: 640px){
+@media (max-width: 640px) and (hover: none) and (pointer: coarse){
 
   .tp-header-mobile{
     position: fixed;
@@ -648,8 +654,10 @@ body{
   .tp-mobile-burger svg{ width: 26px; height: 26px; stroke: #111; stroke-width: 2; fill: none; }
 
 .tp-bottom-mobile{
-  will-change: transform;
-  transform: translateZ(0);
+  will-change: transform, opacity;
+  transform: translate3d(0,0,0);
+  opacity: 1;
+
   position: fixed;
   bottom: 0;
   left: 0;
@@ -664,6 +672,8 @@ body{
   display: flex;
   justify-content: space-around;
   align-items: center;
+
+  transition: transform .22s ease, opacity .22s ease;
 }
 
   /* ✅ только одна версия */
@@ -727,7 +737,7 @@ body{
 
 /* ✅ iOS fix только для телефона */
 @supports (-webkit-touch-callout: none) {
-  @media (max-width: 640px){
+  @media (max-width: 640px) and (hover: none) and (pointer: coarse){
     .tp-header-mobile,
     .tp-bottom-mobile {
       position: fixed !important;
@@ -741,8 +751,39 @@ body{
   }
 }
 
-@media (max-width: 640px){
+@media (max-width: 640px) and (hover: none) and (pointer: coarse){
   .tp-burger-panel{
     right: 12px;
   }
+}
+
+@media (max-width: 640px) and (hover: none) and (pointer: coarse){
+  body.tp-keyboard-open .tp-bottom-mobile{
+    display: none !important;
+  }
+}
+.tp-bottom-item{
+  position: relative;
+}
+
+.tp-bottom-badge{
+  position: absolute;
+  top: 2px;
+  right: 10px;
+
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
 }

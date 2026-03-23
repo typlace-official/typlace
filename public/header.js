@@ -56,7 +56,21 @@ function getLang(){
 
   function getCur(){ return localStorage.getItem(KEY_CUR) || ""; }
   function setCur(v){ localStorage.setItem(KEY_CUR, v); }
+const MUTED_CHATS_KEY = "tp_muted_chats";
 
+function getMutedChats(){
+  try{
+    const raw = JSON.parse(localStorage.getItem(MUTED_CHATS_KEY) || "[]");
+    return Array.isArray(raw) ? raw : [];
+  }catch{
+    return [];
+  }
+}
+
+function isChatMuted(chatId){
+  if(!chatId) return false;
+  return getMutedChats().includes(chatId);
+}
   function ensureCurrencyMatchesLang(lang){
     const allowed = (CURRENCIES_BY_LANG[lang] || []).map(x=>x.id);
     let cur = getCur();
@@ -80,7 +94,7 @@ function getLang(){
 
   function initHeader(){
     let scrollY = 0;
-    let lastUnreadCount = parseInt(localStorage.getItem("tp_last_unread") || "0");
+
 // ================= SOCKET.IO =================
 let socket = null;
 
@@ -92,44 +106,33 @@ if (isAuthed() && window.io) {
   reconnectionDelayMax: 2000
 });
 
-  socket.on("connect", async () => {
-    console.log("🟢 WebSocket connected");
+socket.on("connect", () => {
+  console.log("🟢 WebSocket connected");
 
-    // получаем email пользователя
-    const res = await fetch("/auth/me", {
-      headers:{
-        Authorization:"Bearer " + localStorage.getItem(TOKEN_KEY)
-      }
-    });
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (!token) return;
 
-    const data = await res.json();
-    if (data.success) {
-      socket.emit("auth", {
-  token: localStorage.getItem(TOKEN_KEY)
+  socket.emit("auth", { token });
 });
-    }
-  });
-let lastMessageId = null;
-socket.on("new-message", (message) => {
 
+let lastMessageId = null;
+
+socket.on("new-message", (message) => {
   if (!message || !message.chatId) return;
 
-  // 🚫 защита от повторов
   if (message.id === lastMessageId) return;
   lastMessageId = message.id;
 
-  const isInChat =
+  const isInActiveChat =
+    isChatsPage() &&
     window.tpActiveChatId === message.chatId &&
     document.visibilityState === "visible";
 
-  const myEmail = localStorage.getItem("tp_user_email");
-  const isMine = myEmail && message.fromEmail === myEmail;
-
-  if (!isMine) {
-    playMessageSound(isInChat);
+  if (shouldPlayMessageSound(message)) {
+    playMessageSound();
   }
 
-  if (!isInChat) {
+  if (!isInActiveChat) {
     updateUnreadCount();
   }
 
@@ -146,28 +149,63 @@ socket.on("new-message", (message) => {
     const elRegister = document.getElementById("tpRegister");
     const elProfile  = document.getElementById("tpProfile");
     const elChats    = document.getElementById("tpChats");
-    const elChatsBadge = document.getElementById("tpChatsBadge");
+    const elChatsBadges = [
+  document.getElementById("tpChatsBadge"),
+  document.getElementById("tpChatsBadgeMobile")
+].filter(Boolean);
     // ===== SOUNDS =====
 const soundMessage = new Audio("/sounds/message.mp3");
-const soundTick = new Audio("/sounds/tick.mp3");
-// 🔓 Просто preload без воспроизведения
 soundMessage.preload = "auto";
-soundTick.preload = "auto";
 soundMessage.volume = 0.8;
-soundTick.volume = 0.3;
 
-function playMessageSound(isInChat){
+function isChatsPage(){
+  return /\/chats(?:\.html)?$/i.test(location.pathname) || location.pathname.includes("chats");
+}
+
+function shouldPlayMessageSound(message){
+  if (!message || !message.chatId) return false;
+
+  const myEmail = localStorage.getItem("tp_user_email");
+  const isMine = myEmail && message.fromEmail === myEmail;
+  const muted = isChatMuted(message.chatId);
+
+  if (isMine) return false;
+  if (muted) return false;
+  if (isChatsPage()) return false;
+
+  return true;
+}
+
+function playMessageSound(){
   try{
-    if(isInChat){
-      soundTick.currentTime = 0;
-      soundTick.play();
-    }else{
-      soundMessage.currentTime = 0;
-      soundMessage.play();
-    }
+    soundMessage.currentTime = 0;
+    soundMessage.play();
   }catch(e){}
 }
     const elAvatar   = document.getElementById("tpAvatar");
+    window.addEventListener("tp:profile-updated", (e) => {
+  const user = e.detail?.user;
+  if (!user) return;
+
+  const avatarSrc =
+    user.avatarUrl ||
+    user.avatarDataUrl ||
+    DEFAULT_AVATAR;
+
+  if (elAvatar) {
+    elAvatar.src = avatarSrc;
+  }
+
+  if (user.email) {
+    localStorage.setItem("tp_user_email", user.email);
+  }
+
+  if (user.userId) {
+    localStorage.setItem("tp_user_id", user.userId);
+  }
+
+  localStorage.setItem("tp_avatar", avatarSrc);
+});
     const elProfileLabel = document.getElementById("tpProfileLabel");
 
 // DESKTOP
@@ -227,7 +265,10 @@ if (burgerLangToggle && burgerCurToggle) {
   btn.textContent = LANGS[id].label;
 
 btn.onclick = async () => {
+  const prevCur = getCur();
+
   setLang(id);
+  const newCur = ensureCurrencyMatchesLang(id);
 
   if (window.tpI18n?.load) {
     await window.tpI18n.load(id);
@@ -240,7 +281,17 @@ btn.onclick = async () => {
     })
   );
 
-    applyLangAndCurrency();
+  if (prevCur !== newCur) {
+    if (window.tpMoney?.emitCurrencyChanged) {
+      window.tpMoney.emitCurrencyChanged();
+    } else {
+      window.dispatchEvent(
+        new CustomEvent("tp:currency-change", {
+          detail: { currency: newCur }
+        })
+      );
+    }
+  }
 
   renderBurgerLists();
 };
@@ -260,13 +311,23 @@ const currentCur = ensureCurrencyMatchesLang(lang);
   btn.className = "tp-item";
   btn.textContent = x.label;
 
-  btn.onclick = () => {
-    setCur(x.id);
-    updateBurgerValues();
+btn.onclick = () => {
+  setCur(x.id);
+  updateBurgerValues();
 
-    burgerCurSub.classList.remove("open");
-    burgerCurToggle.classList.remove("open");
-  };
+  if (window.tpMoney?.emitCurrencyChanged) {
+    window.tpMoney.emitCurrencyChanged();
+  } else {
+    window.dispatchEvent(
+      new CustomEvent("tp:currency-change", {
+        detail: { currency: x.id }
+      })
+    );
+  }
+
+  burgerCurSub.classList.remove("open");
+  burgerCurToggle.classList.remove("open");
+};
 
   burgerCurSub.appendChild(btn);
 });
@@ -419,9 +480,10 @@ elProfile.style.display = "inline-flex";
 elChats.style.display   = "inline-flex";
 
 if(!authed){
-  elAvatar.src = DEFAULT_AVATAR;
+  if (elAvatar) {
+    elAvatar.src = DEFAULT_AVATAR;
+  }
 
-  // если не авторизован — клики ведут на логин
   elProfile.href = "/auth.html?mode=login";
   elChats.href   = "/auth.html?mode=login";
   return;
@@ -432,18 +494,26 @@ elProfile.href = "/profile.html";
 elChats.href   = "/chats.html";
 
   // 🔥 получаем реальные данные пользователя
-  const res = await fetch("/auth/me", {
-    headers:{
-      Authorization:"Bearer " + localStorage.getItem(TOKEN_KEY)
-    }
-  });
-
-  const data = await res.json();
-
-  if(!data.success){
-    elAvatar.src = DEFAULT_AVATAR;
-    return;
+const res = await fetch("/auth/me", {
+  headers:{
+    Authorization:"Bearer " + localStorage.getItem(TOKEN_KEY)
   }
+});
+
+if (res.status === 403) {
+  localStorage.removeItem(TOKEN_KEY);
+  window.location.href = "/banned.html";
+  return;
+}
+
+const data = await res.json();
+
+if(!data.success){
+  if (elAvatar) {
+    elAvatar.src = DEFAULT_AVATAR;
+  }
+  return;
+}
 
   const user = data.user;
   // 🔥 СОХРАНЯЕМ МОЙ USER ID
@@ -451,10 +521,12 @@ if (user.userId) {
   localStorage.setItem("tp_user_id", user.userId);
 }
 
+if (elAvatar) {
   elAvatar.src =
     user.avatarDataUrl ||
     user.avatarUrl ||
     DEFAULT_AVATAR;
+}
 // 🔥 СОХРАНЯЕМ ДЛЯ ЧАТОВ
 localStorage.setItem("tp_user_email", user.email);
 localStorage.setItem(
@@ -464,9 +536,62 @@ localStorage.setItem(
 
 }
 
+(function initKeyboardAwareBottomBar(){
+  const media = window.matchMedia("(max-width: 640px) and (hover: none) and (pointer: coarse)");
+  let typingFocused = false;
+
+  function isTypingElement(el){
+    if (!el) return false;
+    const tag = (el.tagName || "").toUpperCase();
+    return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
+  }
+
+  function updateKeyboardState(){
+    if (!media.matches) {
+      document.body.classList.remove("tp-keyboard-open");
+      return;
+    }
+
+    const vv = window.visualViewport;
+    const diff = vv ? (window.innerHeight - vv.height) : 0;
+
+    const keyboardOpen = typingFocused || diff > 120;
+
+    document.body.classList.toggle("tp-keyboard-open", keyboardOpen);
+  }
+
+  window.addEventListener("focusin", (e) => {
+    if (isTypingElement(e.target)) {
+      typingFocused = true;
+      updateKeyboardState();
+    }
+  });
+
+  window.addEventListener("focusout", () => {
+    setTimeout(() => {
+      typingFocused = isTypingElement(document.activeElement);
+      updateKeyboardState();
+    }, 120);
+  });
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", updateKeyboardState);
+    window.visualViewport.addEventListener("scroll", updateKeyboardState);
+  }
+
+  window.addEventListener("orientationchange", () => {
+    setTimeout(updateKeyboardState, 250);
+  });
+
+  updateKeyboardState();
+})();
+
 async function updateUnreadCount(){
   if (!isAuthed()) {
-    if (elChatsBadge) elChatsBadge.style.display = "none";
+    elChatsBadges.forEach(badge => {
+      badge.style.display = "none";
+      badge.textContent = "";
+    });
     return;
   }
 
@@ -478,34 +603,32 @@ async function updateUnreadCount(){
     });
 
     const data = await res.json();
-
     if (!data.success) return;
-    if (!elChatsBadge) return;
 
-    const count = data.count || 0;
+    const count = Number(data.count || 0);
+    const text = count > 99 ? "99+" : String(count);
 
-// 🔢 badge
-if (count > 0) {
-  elChatsBadge.textContent = count > 99 ? "99+" : count;
-  elChatsBadge.style.display = "flex";
-} else {
-  elChatsBadge.style.display = "none";
-}
-
-// 💾 запоминаем последнее значение
-lastUnreadCount = count;
-localStorage.setItem("tp_last_unread", count);
-
-
-    if (!elChatsBadge) return;
+    elChatsBadges.forEach(badge => {
+      if (count > 0) {
+        badge.textContent = text;
+        badge.style.display = "flex";
+      } else {
+        badge.textContent = "";
+        badge.style.display = "none";
+      }
+    });
 
   } catch(e){}
 }
-    function applyLangAndCurrency(){
-      const lang = getLang();
-      const cur = ensureCurrencyMatchesLang(lang);
 
-    }
+function applyLangAndCurrency(){
+  const lang = getLang();
+  ensureCurrencyMatchesLang(lang);
+
+  if (window.tpI18n?.apply) {
+    window.tpI18n.apply();
+  }
+}
 
     function escReg(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
     function highlight(t,q){
@@ -714,68 +837,18 @@ if (Math.abs(diff) > 10) {
   }, { passive: true });
 
 }
-if (window.visualViewport && sInputMobile) {
 
-  const headerMobile = document.querySelector(".tp-header-mobile");
-  const bottomNav = document.querySelector(".tp-bottom-mobile");
-
-  function updateViewport() {
-
-    const viewportHeight = window.visualViewport.height;
-    const windowHeight = window.innerHeight;
-
-    const keyboardOpen = viewportHeight < windowHeight - 120;
-
-    if (keyboardOpen) {
-
-      // скрываем нижний бар
-      if (bottomNav) bottomNav.style.display = "none";
-
-    } else {
-
-      // возвращаем
-      if (bottomNav) bottomNav.style.display = "flex";
-
-    }
   }
 
-  window.visualViewport.addEventListener("resize", updateViewport);
-  window.visualViewport.addEventListener("scroll", updateViewport);
+mountHeader();
 
-}
+// совместимость со старым кодом
+window.formatPrice = async function(baseAmount){
+  if (window.tpMoney && typeof window.tpMoney.formatPrice === "function") {
+    return await window.tpMoney.formatPrice(baseAmount);
   }
 
-  mountHeader();
-// ================== PRICE FORMATTER ==================
-let __ratesCache = null;
+  return String(baseAmount ?? "");
+};
 
-async function getRates(){
-  if (__ratesCache) return __ratesCache;
-
-  const res = await fetch("/api/rates");
-  const data = await res.json();
-
-  if (data.success) {
-    __ratesCache = data;
-    return data;
-  }
-  throw new Error("Rates not available");
-}
-
-// price — ВСЕГДА В EUR (как на сервере)
-window.formatPrice = async function(priceEUR){
-  const cur = localStorage.getItem("tp_currency") || "EUR";
-  const ratesData = await getRates();
-
-  const rate = ratesData.rates[cur] || 1;
-  const value = Math.round(priceEUR * rate * 100) / 100;
-
-  const symbols = {
-    EUR: "€",
-    USD: "$",
-    UAH: "₴"
-  };
-
-  return `${value} ${symbols[cur] || cur}`;
-}
 })();

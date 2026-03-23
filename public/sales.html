@@ -259,7 +259,13 @@
       filtered.forEach(renderSale);
       updatePrices();
     }
+function formatMode(mode){
+  if(!mode) return "";
 
+  return mode
+    .replace(/_/g," ")
+    .replace(/\b\w/g, l => l.toUpperCase());
+}
     function renderSale(s){
       const offer = s.offer || {};
 
@@ -289,7 +295,7 @@ const gameTitle = gameObj ? gameObj.name : offer.game;
 
 const gameLine = [
   gameTitle,
-  offer.mode
+  formatMode(offer.mode)
 ].filter(Boolean).join(", ");
 
       const orderNumber = s.orderNumber || "—";

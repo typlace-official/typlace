@@ -1,0 +1,13 @@
+{
+  "title": "User reviews",
+  "all": "All reviews",
+  "empty": "No reviews yet",
+  "show_more": "Show full",
+  "user": "User reviews",
+  "my": "My reviews",
+  "no_user": "User not specified",
+
+  "count_one": "{{count}} review",
+  "count_few": "{{count}} reviews",
+  "count_many": "{{count}} reviews"
+}

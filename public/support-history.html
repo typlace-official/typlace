@@ -132,12 +132,14 @@ h1{
       color:#b91c1c;
     }
 
-    .empty{
-      padding:20px;
-      text-align:center;
-      color:#6b7280;
-      font-weight:700;
-    }
+.empty{
+  padding:40px 20px;
+  text-align:center;
+  color:#9ca3af;   /* светло-серый */
+  font-weight:500; /* тоньше */
+  font-size:15px;
+}
+
 .support-nav{
   max-width:1100px;
   margin:20px auto 0 auto;
@@ -219,8 +221,8 @@ h1{
 .ticket-card{
   background:#fff;
   border:1px solid #e5e7eb;
-  border-radius:18px;
-  padding:18px;
+  border-radius:12px;
+  padding:16px;
   cursor:pointer;
   transition:all 0.2s ease;
 
@@ -229,10 +231,6 @@ h1{
   justify-content:space-between;
 
   min-height:160px;
-}
-
-.ticket-card:hover{
-  background:#f3f4f6;
 }
 
 
@@ -250,12 +248,19 @@ h1{
 .ticket-subject{
   font-size:15px;
   font-weight:700;
+
+  overflow:hidden;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
 }
 
 .ticket-bottom{
   display:flex;
   justify-content:space-between;
   align-items:center;
+  flex-wrap:wrap;
+  gap:4px;
   font-size:12px;
   color:#6b7280;
 }
@@ -269,7 +274,8 @@ h1{
 .ticket-top{
   display:flex;
   justify-content:space-between;
-  align-items:center;
+  align-items:flex-start;
+  gap:8px;
   margin-bottom:8px;
 }
 
@@ -329,10 +335,65 @@ h1{
   background:#f3f4f6;
 }
 
-.ticket-status.waiting{ background:#f59e0b; }
-.ticket-status.in_progress{ background:#1d4ed8; }
-.ticket-status.resolved{ background:#374151; }
+.ticket-status.waiting{
+  background:#16a34a; /* зелёный */
+  color:#fff;
+}
 
+.ticket-status.in_progress{
+  background:#f59e0b; /* оранжевый */
+  color:#fff;
+}
+
+.ticket-status.resolved{
+  background:#6b7280; /* серый */
+  color:#fff;
+}
+
+@media (max-width:640px){
+
+h1{
+  font-size:20px;
+  margin:16px 0 20px 0;
+}
+
+.page{
+  margin:16px auto;
+}
+
+.tickets{
+  grid-template-columns:1fr;
+  gap:12px;
+}
+
+.ticket-card{
+  padding:14px;
+  min-height:auto;
+}
+
+.ticket-top{
+  align-items:flex-start;
+  gap:6px;
+}
+
+.ticket-id{
+  font-size:13px;
+}
+
+.ticket-status{
+  font-size:11px;
+  padding:5px 8px;
+}
+
+.ticket-subject{
+  font-size:14px;
+}
+
+.ticket-bottom{
+  font-size:11px;
+}
+
+}
   </style>
 </head>
 
@@ -351,21 +412,21 @@ h1{
 
 <div style="margin-bottom:20px;">
 <select id="statusFilter" style="
-  height:40px;
-  border-radius:12px;
+  height:38px;
+  border-radius:10px;
   border:1px solid #e5e7eb;
   background:#fff;
-  padding:0 12px;
+  padding:0 10px;
   font-size:14px;
   font-weight:600;
   cursor:pointer;
   outline:none;
-  box-shadow:none;
+  max-width:180px;
 ">
     <option value="all">Статус</option>
     <option value="waiting">Ожидает ответа</option>
     <option value="in_progress">В процессе</option>
-    <option value="resolved">Решена</option>
+    <option value="resolved">Решено</option>
   </select>
 </div>
 
@@ -396,7 +457,7 @@ let currentFilter = "all";
 function getStatusText(status){
   if(status === "waiting") return "Ожидает ответа";
   if(status === "in_progress") return "В процессе";
-  if(status === "resolved") return "Решена";
+  if(status === "resolved") return "Решено";
   return status;
 }
 function formatDate(ts){
@@ -407,7 +468,7 @@ function formatDate(ts){
 
 async function loadTickets(){
 
-  const r = await fetch("/api/support/tickets",{
+const r = await fetch("/api/support/my",{
     headers:{ Authorization:"Bearer " + token }
   });
 

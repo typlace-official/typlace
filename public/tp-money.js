@@ -10,7 +10,7 @@
     const fresh = __ratesCache && (Date.now() - __ratesAt < CACHE_MS);
     if (fresh) return __ratesCache;
 
-    const res = await fetch("/api/rates", { cache:"no-store" });
+    const res = await fetch("/api/rates", { cache: "no-store" });
     const data = await res.json();
 
     if (data && data.success && data.rates) {
@@ -18,11 +18,12 @@
       __ratesAt = Date.now();
       return data;
     }
+
     throw new Error("Rates not available");
   }
 
   function getCur(){
-    return localStorage.getItem(KEY_CUR) || "EUR";
+    return localStorage.getItem(KEY_CUR) || "UAH";
   }
 
   function round2(n){
@@ -35,43 +36,81 @@
            cur === "UAH" ? "₴" : cur;
   }
 
-  // eur -> выбранная валюта пользователя
-  async function formatPrice(eur){
+  // base = UAH
+  function convertFromBaseRaw(amountBase, targetCur, rates){
+    const value = Number(amountBase) || 0;
+    const cur = targetCur || getCur();
+
+    if (cur === "UAH") {
+      return round2(value);
+    }
+
+    if (cur === "USD") {
+      // rates.USD = сколько USD в 1 UAH
+      return round2(value * Number(rates.USD || 0));
+    }
+
+    if (cur === "EUR") {
+      // rates.EUR = сколько EUR в 1 UAH
+      return round2(value * Number(rates.EUR || 0));
+    }
+
+    return round2(value);
+  }
+
+  async function formatPrice(amountBase){
     const cur = getCur();
     const ratesData = await getRates();
-    const rate = ratesData.rates[cur] || 1;
-
-    const value = round2(Number(eur) * rate);
+    const value = convertFromBaseRaw(amountBase, cur, ratesData.rates);
     return `${value} ${symbol(cur)}`;
   }
 
-  // удобно иногда получать просто число в валюте пользователя
-  async function convertFromEUR(eur){
-    const cur = getCur();
+  async function convertFromBase(amountBase, targetCur){
     const ratesData = await getRates();
-    const rate = ratesData.rates[cur] || 1;
-    return round2(Number(eur) * rate);
+    return convertFromBaseRaw(amountBase, targetCur || getCur(), ratesData.rates);
   }
 
-  // выбранная валюта -> EUR
-async function convertToEUR(amount){
-  const cur = getCur();
-  const ratesData = await getRates();
-  const rate = ratesData.rates[cur] || 1;
-  return round2(Number(amount) / rate);
-}
+  async function convertToBase(amount, sourceCur){
+    const cur = sourceCur || getCur();
+    const value = Number(amount) || 0;
+    const ratesData = await getRates();
+    const rates = ratesData.rates;
 
-  // событие для обновления страниц при смене валюты
+    if (cur === "UAH") {
+      return round2(value);
+    }
+
+    if (cur === "USD") {
+      // USD -> UAH
+      return round2(value / Number(rates.USD || 1));
+    }
+
+    if (cur === "EUR") {
+      // EUR -> UAH
+      return round2(value / Number(rates.EUR || 1));
+    }
+
+    return round2(value);
+  }
+
   function emitCurrencyChanged(){
-    window.dispatchEvent(new CustomEvent("tp:currency-change", { detail:{ currency:getCur() } }));
+    window.dispatchEvent(
+      new CustomEvent("tp:currency-change", {
+        detail: { currency: getCur() }
+      })
+    );
   }
 
-  // экспортируем в window
   window.tpMoney = {
-  getRates,
-  formatPrice,
-  convertFromEUR,
-  convertToEUR, // ← ВАЖНО
-  emitCurrencyChanged
-};
+    getRates,
+    formatPrice,
+    convertFromBase,
+    convertToBase,
+
+    // временные алиасы, чтобы старый код не сломался сразу
+    convertFromEUR: convertFromBase,
+    convertToEUR: convertToBase,
+
+    emitCurrencyChanged
+  };
 })();

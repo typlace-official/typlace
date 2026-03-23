@@ -2,11 +2,11 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Центр поддержки — TyPlace</title>
+  <title>TyPlace</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="/header.css">
-<link rel="stylesheet" href="/footer.css">
+  <link rel="stylesheet" href="/header.css">
+  <link rel="stylesheet" href="/footer.css">
 
   <style>
     body{
@@ -22,7 +22,6 @@
       padding:0 14px;
     }
 
-    /* центрируем блок с заголовком + кнопками */
     .center{
       display:flex;
       flex-direction:column;
@@ -32,12 +31,22 @@
     }
 
     .title{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
       font-size:26px;
       font-weight:900;
       margin:0;
     }
 
-    /* кнопки в ряд, по центру, на мобилке переносятся */
+    .help-title-svg{
+      width:26px;
+      height:26px;
+      color:#6b7280;
+      flex-shrink:0;
+    }
+
     .support-menu{
       display:flex;
       justify-content:center;
@@ -57,40 +66,89 @@
       cursor:pointer;
       text-align:center;
       transition:.15s;
+      color:#111827;
     }
 
     .menu-btn:hover{
       background:#f3f4f6;
     }
+
+    @media (max-width:640px){
+      .page{
+        margin:20px auto;
+        padding:0 12px;
+      }
+
+      .center{
+        gap:20px;
+      }
+
+      .title{
+        font-size:22px;
+        gap:8px;
+      }
+
+      .help-title-svg{
+        width:22px;
+        height:22px;
+      }
+
+      .support-menu{
+        flex-direction:column;
+        align-items:center;
+        gap:12px;
+      }
+
+      .menu-btn{
+        width:100%;
+        max-width:420px;
+        font-size:15px;
+        padding:18px 16px;
+      }
+    }
   </style>
 </head>
 
 <body>
-<div id="header-container"></div>
+  <div id="header-container"></div>
 
-<main class="page-content">
-  <div class="page">
+  <main class="page-content">
+    <div class="page">
+      <div class="center">
 
-    <div class="center">
-      <h1 class="title">Центр помощи</h1>
+        <h1 class="title">
+          <svg class="help-title-svg" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+            <path d="M9.5 9a2.5 2.5 0 114 2c-.8.8-1.5 1.2-1.5 2"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"/>
+            <circle cx="12" cy="17" r="1" fill="currentColor"/>
+          </svg>
 
-      <div class="support-menu">
-        <button class="menu-btn" onclick="location.href='/support-create.html'">
-          Создать обращение
-        </button>
+          <span data-i18n="page.title">Центр помощи</span>
+        </h1>
 
-        <button class="menu-btn" onclick="location.href='/support-history.html'">
-          История обращений
-        </button>
+        <div class="support-menu">
+          <button class="menu-btn" onclick="location.href='/support-create.html'">
+            <span data-i18n="page.create">Создать обращение</span>
+          </button>
 
-        <button class="menu-btn" onclick="location.href='/rules.html'">
-          Правила платформы
-        </button>
+          <button class="menu-btn" onclick="location.href='/support-history.html'">
+            <span data-i18n="page.history">История обращений</span>
+          </button>
+
+          <button class="menu-btn" onclick="location.href='/rules.html'">
+            <span data-i18n="page.rules">Правила платформы</span>
+          </button>
+        </div>
+
       </div>
     </div>
-  </div>
-</main>
-<div id="footer-container"></div>
+  </main>
+
+  <div id="footer-container"></div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/games.list.js"></script>
@@ -103,6 +161,18 @@
     if(!token){
       location.href = "/auth.html?mode=login";
     }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      if (window.tpI18n) {
+        await window.tpI18n.load(window.tpI18n.currentLang);
+      }
+    });
+
+    window.addEventListener("tp:lang-change", async () => {
+      if (window.tpI18n) {
+        await window.tpI18n.load(window.tpI18n.currentLang);
+      }
+    });
   </script>
 </body>
 </html>

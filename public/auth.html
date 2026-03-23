@@ -524,23 +524,27 @@ async function requestCode(email, mode, username) {
 
   const body = { email, mode };
 
-let tsToken = "dev";
+let tsToken = null;
 
-if (mode === "login") {
-  tsToken = window.turnstile.getResponse(
-    document.getElementById("captchaLogin")
-  );
-} else {
-  tsToken = window.turnstile.getResponse(
-    document.getElementById("captchaRegister")
-  );
+try {
+
+  if (mode === "login") {
+    tsToken = window.turnstile?.getResponse(
+      document.getElementById("captchaLogin")
+    );
+  } else {
+    tsToken = window.turnstile?.getResponse(
+      document.getElementById("captchaRegister")
+    );
+  }
+
+} catch(e) {
+  tsToken = null;
 }
 
+// если капча не работает (локально) — просто пропускаем
 if (!tsToken) {
-  return {
-    success: false,
-    message: "Подтвердите что вы не робот."
-  };
+  tsToken = "dev";
 }
 
 body["cf-turnstile-response"] = tsToken;

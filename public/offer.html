@@ -10,60 +10,31 @@
   <link rel="stylesheet" href="/offer-card.css">
   <link rel="stylesheet" href="/footer.css">
 
-
-
-  <style>
-html, body {
-  height: 100%;
+<style>
+html,
+body{
+  height:100%;
 }
 
-body {
-  display: flex;
-  flex-direction: column;
-}
-
-.page-content {
-  flex: 1;
-}
-  .section{
-  margin-top:16px;
-}
-
-.section-title{
-  font-size:14px;
-  font-weight:800;
-  margin-bottom:6px;
+body{
+  margin:0;
+  display:flex;
+  flex-direction:column;
+  font-family:Inter, Arial, sans-serif;
+  background:#f6f7f9;
   color:#111;
 }
 
-
-.offer-amount-badge{
-  position:absolute;
-  top:10px;
-  right:10px;   /* 🔥 ВАЖНО */
-  background:rgba(0,0,0,.75);
-  color:#fff;
-  padding:4px 10px;
-  border-radius:999px;
-  font-size:13px;
-  font-weight:800;
-  z-index:2;
+.page-content{
+  flex:1;
 }
-    body{
-      margin:0;
-      font-family: Inter, Arial, sans-serif;
-      background:#f6f7f9;
-      color:#111;
-    }
+
 .page{
   max-width:1200px;
   margin:24px auto;
   padding:0 16px;
 }
 
-.layout{
-  display:block;
-}
 .offer-page-card{
   max-width:800px;
   margin:0 auto;
@@ -73,43 +44,114 @@ body {
   padding:20px;
 }
 
+/* ===== GALLERY ===== */
+.tp-gallery{
+  position:relative;
+}
+
+.offer-amount-badge{
+  position:absolute;
+  top:10px;
+  right:10px;
+  z-index:2;
+  background:rgba(0,0,0,.75);
+  color:#fff;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:800;
+}
+
+.gallery-back-btn{
+  position:absolute;
+  top:12px;
+  left:12px;
+  z-index:20;
+  width:40px;
+  height:40px;
+  border:none;
+  border-radius:50%;
+  background:rgba(0,0,0,.55);
+  backdrop-filter:blur(8px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+
+.gallery-back-btn svg{
+  width:20px;
+  height:20px;
+  stroke:#fff;
+  stroke-width:2.6;
+  fill:none;
+}
+
+/* ===== TITLE / ID / FAVORITE ===== */
 .title{
-  font-size:22px;      /* чуть больше описания */
-  font-weight:600;     /* аккуратный semi-bold */
+  font-size:22px;
+  font-weight:600;
   line-height:1.35;
   color:#111827;
-
   display:-webkit-box;
   -webkit-line-clamp:2;
   -webkit-box-orient:vertical;
   overflow:hidden;
-
-  word-break: break-word;
-  overflow-wrap: anywhere;
+  word-break:break-word;
+  overflow-wrap:anywhere;
 }
 
-
-    .meta{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:8px;
-      font-size:14px;
-      margin-bottom:14px;
-    }
-.desc{
-  font-size:15px;
-  line-height:1.6;
-  color:#374151;
-  margin-bottom:16px;
-
-  display:-webkit-box;
-  -webkit-line-clamp:6;      /* 🔥 ограничиваем 6 строк */
-  -webkit-box-orient:vertical;
-  overflow:hidden;
-
-  word-break: break-word;
-  overflow-wrap: anywhere;
+.offer-public-id{
+  margin-top:6px;
+  display:inline-block;
+  font-size:13px;
+  font-weight:700;
+  color:#6b7280;
+  cursor:pointer;
+  user-select:none;
+  transition:color .2s ease;
 }
+
+.offer-public-id:hover{
+  color:#1E50D4;
+}
+
+.offer-public-id.copied{
+  color:#16a34a;
+}
+
+.offer-page-heart{
+  width:44px;
+  height:44px;
+  flex-shrink:0;
+  border-radius:50%;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.offer-page-heart svg{
+  width:22px;
+  height:22px;
+  fill:none;
+  stroke:#6b7280;
+  stroke-width:2;
+}
+
+.offer-page-heart.active svg{
+  fill:#ef4444;
+  stroke:#ef4444;
+}
+
+.offer-page-price{
+  font-size:28px;
+  font-weight:900;
+  margin:8px 0 12px;
+}
+
+/* ===== ACTION BUTTONS ===== */
 #actionButtons{
   display:flex;
   gap:10px;
@@ -137,133 +179,168 @@ body {
   color:#2F5BEA;
   border:1.5px solid #2F5BEA;
 }
-    .sellerTop{
-      display:flex;
-      gap:12px;
-      align-items:center;
-      margin-bottom:14px;
-    }
-    .avatar{
-      width:56px;
-      height:56px;
-      border-radius:50%;
-      background:#e5e7eb;
-      overflow:hidden;
-    }
-    .avatar img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-    }
-    .sellerName{ font-weight:800; }
-    .sellerSub{ font-size:13px;color:#555; }
 
-    .avatar{
-  position:relative;
+/* ===== SHARE / REPORT ===== */
+.offer-tools{
+  display:flex;
+  gap:10px;
+  margin-top:12px;
+  margin-bottom:18px;
+}
+
+.offer-tool-btn{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  height:46px;
+  border-radius:14px;
+  border:1px solid #e5e7eb;
+  background:#fff;
+  color:#4b5563;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  transition:background .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.offer-tool-btn:hover{
+  background:#f9fafb;
+  border-color:#d1d5db;
+}
+
+.offer-tool-btn svg{
+  width:18px;
+  height:18px;
+  stroke:currentColor;
+  fill:none;
+  stroke-width:2;
+  flex-shrink:0;
+}
+
+.offer-tool-btn.is-success{
+  color:#16a34a;
+  border-color:#bbf7d0;
+  background:#f0fdf4;
+}
+
+/* ===== SELLER ===== */
+.section{
+  margin-top:16px;
+}
+
+.section-title{
+  font-size:14px;
+  font-weight:800;
+  margin-bottom:6px;
+  color:#111;
+}
+
+.sellerTop{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  margin-bottom:6px;
 }
 
 .offer-page-avatar{
   width:56px;
   height:56px;
-  border-radius:50%;
-  overflow:hidden;
   position:relative;
+  flex-shrink:0;
+  overflow:visible;
 }
 
 .offer-page-avatar img{
   width:100%;
   height:100%;
   object-fit:cover;
+  border-radius:50%;
+  display:block;
 }
 
-.offer-page-card .seller-avatar img{
-  width:100%;
-  height:100%;
+.seller-status-dot{
+  position:absolute;
+  right:-3px;
+  bottom:-3px;
+  z-index:2;
+  width:18px;
+  height:18px;
   border-radius:50%;
-  object-fit:cover;
-  display:block;
+  background:#9ca3af;
+  border:2px solid #fff;
+  box-sizing:border-box;
+}
+
+.seller-status-dot.online{
+  background:#22c55e;
+}
+
+.seller-status-dot.offline{
+  background:#9ca3af;
 }
 
 .offer-page-card .seller-info{
   display:flex;
   flex-direction:column;
-  justify-content:center;
+  gap:3px;
 }
 
 .offer-page-card .seller-name{
-  font-weight:800;
-  font-size:15px;
+  font-size:16px;
+  font-weight:700;
+  color:#111827;
 }
 
-.offer-page-card .seller-rating{
-  font-size:14px;
-  font-weight:600;
-  line-height:18px;
-  min-height:18px;
-  display:flex;
-  align-items:center;
-  gap:6px;
+.offer-page-card .seller-rating,
+.offer-page-card .seller-on-site{
+  font-size:13px;
+  font-weight:500;
   color:#6b7280;
+  line-height:1.35;
+  min-height:auto;
+  display:block;
 }
 
 .offer-page-card .seller-last-seen{
-  font-size:13px;
-  margin-top:2px;
-  font-weight:600;
+  display:none !important;
 }
 
 .seller-name:hover,
-.seller-rating:hover {
-  opacity: 0.8;
+.seller-rating:hover{
+  opacity:.8;
 }
 
-.seller-last-seen.online{
-  color:#16a34a; /* зелёный */
+/* ===== DESCRIPTION ===== */
+.desc{
+  font-size:15px;
+  line-height:1.6;
+  color:#374151;
+  margin-bottom:16px;
+  display:-webkit-box;
+  -webkit-line-clamp:6;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  word-break:break-word;
+  overflow-wrap:anywhere;
 }
 
-.seller-last-seen.offline{
-  color:#6b7280; /* серый */
-}
-
-
-.seller-offers-link:hover{ opacity:.85; }
-
-
-
-.offer-page-heart{
-  width:44px;
-  height:44px;
-  border-radius:50%;
-  background:#fff;
-  border:1px solid #e5e7eb;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.offer-page-heart svg{
-  width:22px;
-  height:22px;
-  fill:none;
-  stroke:#6b7280;
-  stroke-width:2;
-}
-
-.offer-page-heart.active svg{
-  fill:#ef4444;
-  stroke:#ef4444;
-}
-
-.offer-page-price{
-  font-size:28px;
-  font-weight:900;
-  margin:8px 0 12px;
-}
+/* ===== MOBILE ===== */
 @media (max-width:768px){
+  .tp-header,
+  .tp-header-mobile{
+    display:none !important;
+  }
 
   .page{
     margin:0;
     padding:0;
+  }
+
+  .page-content{
+    margin-top:0;
+    padding-top:0;
   }
 
   .offer-page-card{
@@ -275,50 +352,9 @@ body {
 
   .tp-gallery{
     width:100vw;
+    height:45vh;
     margin-left:calc(50% - 50vw);
-    border-radius:0;
-  }
-
-}
-@media (max-width:768px){
-  .tp-gallery__arrow{
-    display:none !important;
-  }
-}
-
-@media (max-width:768px){
-
-  .offer-page-price{
-    font-size:26px;
-    margin-top:12px;
-  }
-
-}
-@media (max-width:768px){
-
-  .title{
-    font-size:20px;
-  }
-
-}
-@media (max-width:768px){
-
-  .offer-page-avatar{
-    width:48px;
-    height:48px;
-  }
-
-  .seller-name{
-    font-size:14px;
-  }
-
-}
-@media (max-width:768px){
-
-  .tp-gallery{
-    width:100vw;
-    height:45vh;              /* 👈 большая высота как OLX */
-    margin-left:calc(50% - 50vw);
+    margin-top:0;
     border-radius:0;
     overflow:hidden;
   }
@@ -329,93 +365,50 @@ body {
     object-fit:cover;
   }
 
-}
-.gallery-back-btn{
-  position:absolute;
-  top:16px;
-  left:16px;
+  .tp-gallery__arrow{
+    display:none !important;
+  }
 
-  width:42px;
-  height:42px;
-  border-radius:50%;
+  .title{
+    font-size:20px;
+  }
 
-  background:rgba(0,0,0,0.45);
-  backdrop-filter:blur(6px);
+  .offer-page-price{
+    font-size:26px;
+    margin-top:12px;
+  }
 
-  border:none;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  .offer-page-avatar{
+    width:48px;
+    height:48px;
+  }
 
-  cursor:pointer;
-  z-index:10;
-}
+  .seller-status-dot{
+    width:16px;
+    height:16px;
+    right:-2px;
+    bottom:-2px;
+  }
 
-.gallery-back-btn svg{
-  width:20px;
-  height:20px;
-  stroke:#fff;
-  stroke-width:2.6;
-  fill:none;
-}
-.tp-gallery{
-  position:relative;
-}
-.seller-info{
-  display:flex;
-  flex-direction:column;
-  gap:2px;
-}
+  .offer-tools{
+    gap:10px;
+    margin-top:12px;
+    margin-bottom:16px;
+  }
 
-.seller-name{
-  font-size:15px;
-  font-weight:600;
-  color:#111827;
+  .offer-tool-btn{
+    height:44px;
+    font-size:13px;
+    border-radius:12px;
+  }
 }
 
-.seller-rating,
-.seller-on-site,
-.seller-last-seen{
-  font-size:13px;
-  font-weight:400;
-  color:#6b7280;
-  line-height:1.35;
+@media (max-width:640px){
+  body{
+    padding-top:0 !important;
+  }
 }
-
-.seller-last-seen.online{
-  color:#16a34a;
-}
-
-.seller-last-seen.offline{
-  color:#6b7280;
-}
-/* ✅ SELLER META — финальный стиль (перебиваем старые жирные правила) */
-.offer-page-card .seller-info{
-  display:flex;
-  flex-direction:column;
-  gap:2px;
-}
-
-.offer-page-card .seller-name{
-  font-size:15px;
-  font-weight:600;
-  color:#111827;
-}
-
-.offer-page-card .seller-rating,
-.offer-page-card .seller-on-site,
-.offer-page-card .seller-last-seen{
-  font-size:13px;
-  font-weight:400;
-  color:#6b7280;
-  line-height:1.35;
-  min-height:auto;
-  display:block;
-}
-
-.offer-page-card .seller-last-seen.online{ color:#16a34a; }
-.offer-page-card .seller-last-seen.offline{ color:#6b7280; }
-  </style>
+</style>
 </head>
 
 <body>
@@ -429,24 +422,34 @@ body {
     <div class="offer-page-card">
 
       <!-- ГАЛЕРЕЯ -->
-      <div class="tp-gallery" id="gallery">
-        <button class="gallery-back-btn" onclick="history.back()" aria-label="Назад">
-  <svg viewBox="0 0 24 24">
-    <path d="M15 6L9 12L15 18"/>
-  </svg>
-</button>
-        <div class="offer-amount-badge" id="amountBadge" style="display:none;"></div>
+<div class="tp-gallery" id="gallery">
 
-        <button class="tp-gallery__arrow tp-gallery__arrow--left" id="galPrev" type="button">‹</button>
-        <div class="tp-gallery__track" id="galTrack"></div>
-        <button class="tp-gallery__arrow tp-gallery__arrow--right" id="galNext" type="button">›</button>
-        <div class="tp-gallery__dots" id="galDots"></div>
-      </div>
+  <button class="gallery-back-btn" onclick="history.back()" aria-label="Назад">
+    <svg viewBox="0 0 24 24">
+      <path d="M15 6L9 12L15 18"/>
+    </svg>
+  </button>
+
+  <div class="offer-amount-badge" id="amountBadge" style="display:none;"></div>
+
+  <button class="tp-gallery__arrow tp-gallery__arrow--left" id="galPrev">‹</button>
+
+  <div class="tp-gallery__track" id="galTrack"></div>
+
+  <button class="tp-gallery__arrow tp-gallery__arrow--right" id="galNext">›</button>
+
+  <div class="tp-gallery__dots" id="galDots"></div>
+
+  <!-- NEW -->
+  <div class="tp-gallery__counter" id="galleryCounter"></div>
+
+</div>
 
       <!-- ЗАГОЛОВОК -->
       <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:24px; margin-top:16px;">
         <div style="flex:1;">
           <div class="title" id="title">Загрузка…</div>
+          <div class="offer-public-id" id="offerPublicId" title="Нажмите, чтобы скопировать"></div>
         </div>
 
         <div id="favoriteBtn" class="offer-page-heart">
@@ -473,19 +476,39 @@ body {
     Написать продавцу
   </button>
 </div>
+<div class="offer-tools">
+  <button type="button" class="offer-tool-btn" id="shareOfferBtn">
+    <svg viewBox="0 0 24 24">
+      <path d="M8 12L16 7"></path>
+      <path d="M8 12L16 17"></path>
+      <circle cx="6" cy="12" r="2"></circle>
+      <circle cx="18" cy="6" r="2"></circle>
+      <circle cx="18" cy="18" r="2"></circle>
+    </svg>
+    <span id="shareOfferBtnText">Поделиться</span>
+  </button>
 
+  <button type="button" class="offer-tool-btn" id="reportOfferBtn">
+    <svg viewBox="0 0 24 24">
+      <path d="M12 9v4"></path>
+      <path d="M12 17h.01"></path>
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+    </svg>
+    <span id="reportOfferBtnText">Пожаловаться</span>
+  </button>
+</div>
       <!-- ПРОДАВЕЦ -->
       <div class="section">
         <div class="sellerTop">
           <div class="offer-page-avatar">
-            <img id="sellerAvatar" src="/img/avatar-default.svg">
-          </div>
+  <img id="sellerAvatar" src="/img/avatar-default.svg">
+  <span id="sellerStatusDot" class="seller-status-dot"></span>
+</div>
 
           <div class="seller-info">
             <div class="seller-name" id="sellerName">—</div>
             <div class="seller-rating" id="sellerRating"></div>
             <div class="seller-on-site" id="sellerOnSite"></div>
-            <div class="seller-last-seen" id="sellerLastSeen"></div>
           </div>
         </div>
       </div>
@@ -510,6 +533,7 @@ body {
 <script src="/games.list.js"></script>
 <script src="/i18n.js"></script>
 <script src="/header.js"></script>
+<script type="module" src="/games/index.js"></script>
 <script src="/tp-money.js"></script>
 <script src="/gallery.js"></script>
 <script src="/offer-title.js"></script>
@@ -517,16 +541,75 @@ body {
 <script src="/footer.js"></script>
 
 <script>
+function getCurrentPageLang(){
+  const lang = (localStorage.getItem("tp_lang") || "ru").trim().toLowerCase();
+  return ["ru", "uk", "en"].includes(lang) ? lang : "ru";
+}
+
 function getTextByLang(obj){
-  const lang = localStorage.getItem("tp_lang") || "ru";
-  return obj?.[lang] || obj?.ru || "";
+  const lang = getCurrentPageLang();
+  return obj?.[lang] || obj?.ru || obj?.uk || obj?.en || "";
+}
+
+function getOfferUiText(){
+  const lang = getCurrentPageLang();
+
+  if (lang === "uk") {
+    return {
+      share: "Поділитися",
+      shareDone: "Посилання скопійовано",
+      shareFail: "Не вдалося поділитися",
+      report: "Поскаржитися",
+      reportLogin: "Спочатку увійдіть в акаунт"
+    };
+  }
+
+  if (lang === "en") {
+    return {
+      share: "Share",
+      shareDone: "Link copied",
+      shareFail: "Unable to share",
+      report: "Report",
+      reportLogin: "Please log in first"
+    };
+  }
+
+  return {
+    share: "Поделиться",
+    shareDone: "Ссылка скопирована",
+    shareFail: "Не удалось поделиться",
+    report: "Пожаловаться",
+    reportLogin: "Сначала войдите в аккаунт"
+  };
 }
 </script>
 
 <script>
 const params = new URLSearchParams(location.search);
 const offerId = params.get("id");
-if(!offerId){ location.href="/roblox.html"; }
+
+const titleEl = document.getElementById("title");
+const descEl = document.getElementById("desc");
+const priceEl = document.getElementById("price");
+const sellerStatusDotEl = document.getElementById("sellerStatusDot");
+const sellerNameEl = document.getElementById("sellerName");
+const sellerAvatarEl = document.getElementById("sellerAvatar");
+const sellerRatingEl = document.getElementById("sellerRating");
+const sellerOnSiteEl = document.getElementById("sellerOnSite");
+const shareOfferBtn = document.getElementById("shareOfferBtn");
+const shareOfferBtnText = document.getElementById("shareOfferBtnText");
+const reportOfferBtn = document.getElementById("reportOfferBtn");
+const reportOfferBtnText = document.getElementById("reportOfferBtnText");
+
+const SUPPORT_CREATE_URL = "/support-create.html";
+
+let currentOffer = null;
+
+if (!offerId) {
+  history.back();
+  throw new Error("Offer ID not found");
+}
+
 function formatReviewsCount(n){
   const abs = Math.abs(Number(n) || 0);
   const lastTwo = abs % 100;
@@ -577,28 +660,36 @@ const res = await fetch(`/api/offers/${offerId}`, {
     : {}
 });
 
-  const data = await res.json();
-  if(!data.success){
-    alert("Оффер не найден");
-    return;
-  }
+const data = await res.json();
 
-  const o = data.offer;
+if (!data.success) {
+  alert("Оффер не найден");
+  return;
+}
+
+if (data.deleted || !data.offer) {
+  renderUnavailable("Предложение удалено");
+  return;
+}
+
+const o = data.offer;
+currentOffer = o;
+setupOfferToolTexts();
+
 let unavailableMessage = null;
 
 if (data.deleted === true) {
   unavailableMessage = "Предложение удалено";
-}
-else if (o.status === "closed") {
+} else if (o.status !== "active") {
   unavailableMessage = "Товар продан";
-}
-else if (data.blockedBySeller === true) {
+} else if (data.blockedBySeller === true) {
   unavailableMessage = "Временно недоступно";
 }
-// ❗ Сначала проверяем статус для ВСЕХ
-if(o.status !== "active"){
-  renderUnavailable("Товар продан");
+
+if (unavailableMessage) {
+  renderUnavailable(unavailableMessage);
 }
+
 if(token){
 
   const meRes = await fetch("/auth/me",{
@@ -608,7 +699,9 @@ if(token){
   const meData = await meRes.json();
 
   const isOwner = meData.success && meData.user.userId === o.seller.userId;
-
+if (reportOfferBtn) {
+  reportOfferBtn.style.display = isOwner ? "none" : "";
+}
 const actions = document.getElementById("actionButtons");
 
 if(isOwner){
@@ -685,26 +778,44 @@ if (buyBtn) {
 
 const qty = o.stock ?? o.amount;
 
-if (qty && Number(qty) > 1 && o.mode !== "Робуксы") {
+if (qty && Number(qty) > 1 && o.mode !== "robux") {
   amountBadge.textContent = `×${qty}`;
   amountBadge.style.display = "block";
 } else {
   amountBadge.style.display = "none";
 }
 
-  title.textContent = buildOfferTitle(o);
+titleEl.textContent = buildOfferTitle(o);
+  const offerPublicId = document.getElementById("offerPublicId");
+
+if (o.offerId) {
+  offerPublicId.textContent = "OID: " + o.offerId;
+
+  offerPublicId.onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(o.offerId);
+      offerPublicId.classList.add("copied");
+
+      setTimeout(() => {
+        offerPublicId.classList.remove("copied");
+      }, 1200);
+    } catch(e){}
+  };
+} else {
+  offerPublicId.textContent = "";
+}
   setupTitleExpand();
-  price.dataset.price = o.price;
+priceEl.dataset.price = o.price;
 await updatePrice();
 
 // seller
-sellerName.textContent = o.seller.username;
+sellerNameEl.textContent = o.seller.username;
 
 // 👉 Переход в профиль по ID
 if (o.seller.userId) {
 
-  sellerName.style.cursor = "pointer";
-  sellerAvatar.style.cursor = "pointer";
+sellerNameEl.style.cursor = "pointer";
+sellerAvatarEl.style.cursor = "pointer";
 
 async function goToSellerProfile() {
 
@@ -728,24 +839,21 @@ async function goToSellerProfile() {
   }
 }
 
-sellerName.onclick = goToSellerProfile;
-sellerAvatar.onclick = goToSellerProfile;
+sellerNameEl.onclick = goToSellerProfile;
+sellerAvatarEl.onclick = goToSellerProfile;
 
 }
 // ===== seller rating (оставляем твою систему, но нормальный вид) =====
 const count = Number(o.seller.reviewsCount || 0);
 
 if (count === 0) {
-  sellerRating.textContent = "Нет отзывов";
+sellerRatingEl.textContent = "Нет отзывов";
 } else {
-  sellerRating.innerHTML = `
-    ${renderStars(o.seller.rating)}
-    <span style="margin-left:6px;">${formatReviewsCount(count)}</span>
-  `;
+sellerRatingEl.innerHTML = `
+  ${renderStars(o.seller.rating)}
+  <span style="margin-left:6px;">${formatReviewsCount(count)}</span>
+`;
 }
-
-// ===== "На сайте X" =====
-const sellerOnSite = document.getElementById("sellerOnSite");
 
 function parseDateToMs(v){
   if(!v) return 0;
@@ -759,16 +867,78 @@ function parseDateToMs(v){
 
 function formatOnSite(ms){
   const diff = Date.now() - ms;
-  if(diff <= 0) return "";
+  if (diff <= 0) return "";
 
-  const days = Math.floor(diff / 86400000);
-  const months = Math.floor(days / 30);
-  const years = Math.floor(days / 365);
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+  const week = 7 * day;
+  const month = 30 * day;
+  const year = 365 * day;
 
-  if(years >= 1) return `На сайте ${years} ${years===1?"год":(years<5?"года":"лет")}`;
-  if(months >= 1) return `На сайте ${months} ${months===1?"месяц":(months<5?"месяца":"месяцев")}`;
-  if(days >= 1) return `На сайте ${days} ${days===1?"день":(days<5?"дня":"дней")}`;
-  return "На сайте недавно";
+  const minutes = Math.floor(diff / minute);
+  const hours = Math.floor(diff / hour);
+  const days = Math.floor(diff / day);
+  const weeks = Math.floor(diff / week);
+  const months = Math.floor(diff / month);
+  const years = Math.floor(diff / year);
+
+if (minutes < 1) return "На TyPlace меньше минуты";
+if (minutes < 60) return `На TyPlace уже ${minutes} ${getMinutesWord(minutes)}`;
+if (hours < 24) return `На TyPlace уже ${hours} ${getHoursWord(hours)}`;
+if (days < 7) return `На TyPlace уже ${days} ${getDaysWord(days)}`;
+if (weeks < 5) return `На TyPlace уже ${weeks} ${getWeeksWord(weeks)}`;
+if (months < 12) return `На TyPlace уже ${months} ${getMonthsWord(months)}`;
+
+return `На TyPlace уже ${years} ${getYearsWord(years)}`;
+}
+
+function getMinutesWord(n){
+  const d10 = n % 10;
+  const d100 = n % 100;
+  if (d10 === 1 && d100 !== 11) return "минуту";
+  if (d10 >= 2 && d10 <= 4 && !(d100 >= 12 && d100 <= 14)) return "минуты";
+  return "минут";
+}
+
+function getHoursWord(n){
+  const d10 = n % 10;
+  const d100 = n % 100;
+  if (d10 === 1 && d100 !== 11) return "час";
+  if (d10 >= 2 && d10 <= 4 && !(d100 >= 12 && d100 <= 14)) return "часа";
+  return "часов";
+}
+
+function getDaysWord(n){
+  const d10 = n % 10;
+  const d100 = n % 100;
+  if (d10 === 1 && d100 !== 11) return "день";
+  if (d10 >= 2 && d10 <= 4 && !(d100 >= 12 && d100 <= 14)) return "дня";
+  return "дней";
+}
+
+function getWeeksWord(n){
+  const d10 = n % 10;
+  const d100 = n % 100;
+  if (d10 === 1 && d100 !== 11) return "неделю";
+  if (d10 >= 2 && d10 <= 4 && !(d100 >= 12 && d100 <= 14)) return "недели";
+  return "недель";
+}
+
+function getMonthsWord(n){
+  const d10 = n % 10;
+  const d100 = n % 100;
+  if (d10 === 1 && d100 !== 11) return "месяц";
+  if (d10 >= 2 && d10 <= 4 && !(d100 >= 12 && d100 <= 14)) return "месяца";
+  return "месяцев";
+}
+
+function getYearsWord(n){
+  const d10 = n % 10;
+  const d100 = n % 100;
+  if (d10 === 1 && d100 !== 11) return "год";
+  if (d10 >= 2 && d10 <= 4 && !(d100 >= 12 && d100 <= 14)) return "года";
+  return "лет";
 }
 
 // пробуем найти дату регистрации в разных возможных полях (на всякий)
@@ -779,51 +949,24 @@ const regMs =
   parseDateToMs(o.seller.createdAtMs);
 
 if (regMs) {
-  sellerOnSite.textContent = formatOnSite(regMs);
-  sellerOnSite.style.display = "block";
+sellerOnSiteEl.textContent = formatOnSite(regMs);
+sellerOnSiteEl.style.display = "block";
 } else {
-  sellerOnSite.textContent = "";
-  sellerOnSite.style.display = "none";
+sellerOnSiteEl.textContent = "";
+sellerOnSiteEl.style.display = "none";
 }
-const sellerLastSeen = document.getElementById("sellerLastSeen");
 
-// по умолчанию скрываем
-sellerLastSeen.textContent = "";
-sellerLastSeen.style.display = "none";
-sellerLastSeen.classList.remove("online", "offline");
+sellerStatusDotEl.classList.remove("online", "offline");
 
 if (o.seller.online === true) {
-
-  sellerLastSeen.textContent = "В сети";
-  sellerLastSeen.classList.add("online");
-  sellerLastSeen.style.display = "block";
-
-} else if (o.seller.lastSeen) {
-
-  const diff = Date.now() - o.seller.lastSeen;
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  const weeks = Math.floor(days / 7);
-  const months = Math.floor(days / 30);
-
-  let text = "";
-
-  if (minutes < 1) text = "Был(а) недавно";
-  else if (minutes < 60) text = `Был(а) ${minutes} мин назад`;
-  else if (hours < 24) text = `Был(а) ${hours} ч назад`;
-  else if (days < 7) text = `Был(а) ${days} дн назад`;
-  else if (weeks < 4) text = `Был(а) ${weeks} нед назад`;
-  else text = `Был(а) ${months} мес назад`;
-
-  sellerLastSeen.textContent = text;
-  sellerLastSeen.classList.add("offline");
-  sellerLastSeen.style.display = "block";
+  sellerStatusDotEl.classList.add("online");
+} else {
+  sellerStatusDotEl.classList.add("offline");
 }
   if (o.seller.avatarUrl) {
-    sellerAvatar.src = o.seller.avatarUrl;
+    sellerAvatarEl.src = o.seller.avatarUrl;
   } else if (o.seller.avatarDataUrl) {
-    sellerAvatar.src = o.seller.avatarDataUrl;
+    sellerAvatarEl.src = o.seller.avatarDataUrl;
   }
 
 // ===== GALLERY =====
@@ -843,33 +986,96 @@ setupDescExpand();
 
 
 }
+
 function getFavs(){
-  try{ return JSON.parse(localStorage.getItem("tp_favorites") || "[]"); }
-  catch{ return []; }
+  try {
+    return JSON.parse(localStorage.getItem("tp_favorites") || "[]");
+  } catch {
+    return [];
+  }
 }
 
 function setFavs(arr){
   localStorage.setItem("tp_favorites", JSON.stringify(arr));
 }
 
+function getCurrentLangForFav(){
+  const lang = (localStorage.getItem("tp_lang") || "ru").trim().toLowerCase();
+  return ["ru", "uk", "en"].includes(lang) ? lang : "ru";
+}
+
+function isFavorite(id){
+  const lang = getCurrentLangForFav();
+
+  return getFavs().some(f => {
+    if (typeof f === "string") return f === id;
+    return f.id === id && f.lang === lang;
+  });
+}
+
 function toggleFavorite(id){
+  const lang = getCurrentLangForFav();
   let favs = getFavs();
-  if(favs.includes(id)){
-    favs = favs.filter(x => x !== id);
-  } else {
-    favs.push(id);
+
+  const index = favs.findIndex(f => {
+    if (typeof f === "string") return f === id;
+    return f.id === id && f.lang === lang;
+  });
+
+  if (index >= 0) {
+    favs.splice(index, 1);
+    setFavs(favs);
+    return false;
   }
+
+  favs.push({ id, lang });
   setFavs(favs);
-  return favs.includes(id);
+  return true;
 }
 
-loadOffer();
+function waitForGames(){
+  return new Promise(resolve => {
+    const check = () => {
+      if (window.GAMES) resolve();
+      else setTimeout(check, 10);
+    };
+    check();
+  });
+}
+
+async function initOfferPage(){
+  const lang = getCurrentPageLang();
+
+  await waitForGames();
+
+  if (window.tpI18n?.load) {
+    await window.tpI18n.load(lang);
+  }
+
+  await loadOffer();
+}
+
+initOfferPage();
+
+window.addEventListener("tp:lang-change", async (e) => {
+  const lang = (e.detail?.lang || getCurrentPageLang()).trim().toLowerCase();
+
+  if (window.tpI18n?.load) {
+    await window.tpI18n.load(lang);
+  }
+
+  await waitForGames();
+  await loadOffer();
+});
+
 async function updatePrice(){
-  const eur = Number(price.dataset.price);
-  if (!eur) return;
+  const basePrice = Number(priceEl.dataset.price);
 
-  price.textContent = await tpMoney.formatPrice(eur);
+  if (!Number.isFinite(basePrice) || basePrice <= 0) return;
+
+  priceEl.textContent = await tpMoney.formatPrice(basePrice);
 }
+
 // ===== UI CLEANUP =====
 function cleanupOfferUI(o){
   const descText = getTextByLang(o.description);
@@ -878,7 +1084,7 @@ function cleanupOfferUI(o){
   if (!descText) {
     section.style.display = "none";
   } else {
-    desc.textContent = descText;
+    descEl.textContent = descText;
     section.style.display = "block";
   }
 }
@@ -888,6 +1094,10 @@ window.addEventListener("tp:currency-change", updatePrice);
 function setupTitleExpand(){
   const titleEl = document.getElementById("title");
   const btn = document.getElementById("expandTitleBtn");
+
+  titleEl.style.display = "-webkit-box";
+  titleEl.style.webkitLineClamp = "2";
+  btn.style.display = "none";
 
   setTimeout(() => {
     if (titleEl.scrollHeight > titleEl.clientHeight) {
@@ -901,9 +1111,14 @@ function setupTitleExpand(){
     btn.style.display = "none";
   };
 }
+
 function setupDescExpand(){
   const descEl = document.getElementById("desc");
   const btn = document.getElementById("expandDescBtn");
+
+  descEl.style.display = "-webkit-box";
+  descEl.style.webkitLineClamp = "6";
+  btn.style.display = "none";
 
   setTimeout(() => {
     if (descEl.scrollHeight > descEl.clientHeight) {
@@ -918,13 +1133,99 @@ function setupDescExpand(){
   };
 }
 
+function setupOfferToolTexts(){
+  const t = getOfferUiText();
+
+  if (shareOfferBtnText) shareOfferBtnText.textContent = t.share;
+  if (reportOfferBtnText) reportOfferBtnText.textContent = t.report;
+}
+
+function getOfferAbsoluteUrl(){
+  return new URL(`/offer.html?id=${offerId}`, window.location.origin).toString();
+}
+
+function flashToolButton(btn, text){
+  if (!btn) return;
+
+  const span = btn.querySelector("span");
+  if (!span) return;
+
+  const oldText = span.textContent;
+
+  btn.classList.add("is-success");
+  span.textContent = text;
+
+  setTimeout(() => {
+    btn.classList.remove("is-success");
+    span.textContent = oldText;
+  }, 1400);
+}
+
+async function shareOffer(){
+  if (!currentOffer) return;
+
+  const t = getOfferUiText();
+  const url = getOfferAbsoluteUrl();
+  const title = getTextByLang(currentOffer.title) || document.title;
+
+  const shareData = {
+    title,
+    text: title,
+    url
+  };
+
+  if (navigator.share) {
+    try {
+      if (!navigator.canShare || navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        return;
+      }
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(url);
+    flashToolButton(shareOfferBtn, t.shareDone);
+  } catch (e) {
+    alert(t.shareFail);
+  }
+}
+
+function openOfferReportPage(){
+  if (!currentOffer) return;
+
+  const token = localStorage.getItem("tp_token");
+  const t = getOfferUiText();
+
+  if (!token) {
+    alert(t.reportLogin);
+    location.href = "/auth.html?mode=login";
+    return;
+  }
+
+  const params = new URLSearchParams({
+    category: "report_offer",
+    offerId: currentOffer.offerId ? `OID:${currentOffer.offerId}` : ""
+  });
+
+  location.href = `${SUPPORT_CREATE_URL}?${params.toString()}`;
+}
+
+if (shareOfferBtn) {
+  shareOfferBtn.addEventListener("click", shareOffer);
+}
+
+if (reportOfferBtn) {
+  reportOfferBtn.addEventListener("click", openOfferReportPage);
+}
+
 function setupFavorite(offerId){
   const btn = document.getElementById("favoriteBtn");
-  if(!btn) return;
+  if (!btn) return;
 
-  const favs = getFavs();
-
-  if(favs.includes(offerId)){
+  if (isFavorite(offerId)) {
     btn.classList.add("active");
   }
 
@@ -933,7 +1234,7 @@ function setupFavorite(offerId){
 
     const active = toggleFavorite(offerId);
 
-    if(active){
+    if (active) {
       btn.classList.add("active");
     } else {
       btn.classList.remove("active");

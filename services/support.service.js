@@ -28,7 +28,7 @@ function makeShortId(){
   return id;
 }
 
-function createTicket({ user, subject, category, orderId, message, attachments, priority }){
+function createTicket({ user, subject, category, orderId, userId, offerId, message, attachments, priority }){
 
   // 🔒 Проверка темы
   if (!subject || subject.length < 3) {
@@ -50,10 +50,13 @@ lastTicketCreateTime.set(user.email, Date.now());
 const ticket = {
   id: ticketId,
   shortId: makeShortId(),
+  kind: "support",
   userEmail: user.email,
   subject,
   category,
   orderId: orderId || null,
+  userId: userId || null,
+  offerId: offerId || null,
   status: "waiting",
   priority: priority || "normal",
   reopenCount: 0,
@@ -83,15 +86,29 @@ addLog(ticketId, "created", user);
 }
 
 function getTicketsForUser(user){
+  const sortTickets = (list) =>
+    [...list].sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt));
 
-  if(user.role === "support" || user.role === "admin"){
-    return [...supportTickets]
-      .sort((a,b)=>(b.updatedAt||b.createdAt)-(a.updatedAt||a.createdAt));
+  if (
+    user.role === "support" ||
+    user.role === "admin" ||
+    user.role === "super_admin"
+  ) {
+    return sortTickets(supportTickets);
   }
 
-  return supportTickets
-    .filter(t=>t.userEmail === user.email)
-    .sort((a,b)=>(b.updatedAt||b.createdAt)-(a.updatedAt||a.createdAt));
+  if (user.role === "resolution") {
+    return sortTickets(
+      supportTickets.filter(t =>
+        t.kind === "order_dispute" &&
+        t.assignedTo === user.email
+      )
+    );
+  }
+
+  return sortTickets(
+    supportTickets.filter(t => t.userEmail === user.email)
+  );
 }
 
 function getTicketById(id){
@@ -104,85 +121,88 @@ function getMessages(ticketId){
     .sort((a,b)=>a.createdAt - b.createdAt);
 }
 
-function addMessage({ ticket, user, text, attachments }){
+function isStaffUser(user) {
+  return (
+    user?.role === "support" ||
+    user?.role === "admin" ||
+    user?.role === "super_admin" ||
+    user?.role === "resolution"
+  );
+}
 
-  if(ticket.status === "resolved"){
+function addMessage({ ticket, user, text, attachments }){
+  if (ticket.status === "resolved") {
     throw new Error("Тикет закрыт");
   }
 
   const createdAt = Date.now();
-// анти-спам (1 сообщение в 2 секунды)
-const lastMsg = [...supportMessages]
-  .reverse()
-  .find(m => 
-    m.ticketId === ticket.id && 
-    m.userEmail === user.email
-  );
 
-if (lastMsg && Date.now() - lastMsg.createdAt < 2000) {
-  throw new Error("Слишком быстро. Подождите пару секунд.");
-}
+  // анти-спам (1 сообщение в 2 секунды)
+  const lastMsg = [...supportMessages]
+    .reverse()
+    .find(m =>
+      m.ticketId === ticket.id &&
+      m.userEmail === user.email
+    );
 
-supportMessages.push({
-  id: crypto.randomUUID(),
-  ticketId: ticket.id,
-  from:
-    user.role === "support" || user.role === "admin"
-      ? "support"
-      : "user",
-  userEmail: user.email,
-  username: user.username,
-  avatarUrl: user.avatarUrl || null,
-  avatarDataUrl: user.avatarDataUrl || null,
-  text,
-  attachments: attachments || [],
-  createdAt
-});
-addLog(ticket.id, "message", user);
-if (user.role === "support" || user.role === "admin") {
-
-  // если ещё не назначен — автоматически назначаем
-  if (!ticket.assignedTo) {
-    ticket.assignedTo = user.email;
-    ticket.assignedAt = Date.now();
+  if (lastMsg && createdAt - lastMsg.createdAt < 2000) {
+    throw new Error("Слишком быстро. Подождите пару секунд.");
   }
 
-  ticket.status = "in_progress";
+  supportMessages.push({
+    id: crypto.randomUUID(),
+    ticketId: ticket.id,
+    from: isStaffUser(user) ? "support" : "user",
+    userEmail: user.email,
+    username: user.username,
+    avatarUrl: user.avatarUrl || null,
+    avatarDataUrl: user.avatarDataUrl || null,
+    text,
+    attachments: attachments || [],
+    createdAt
+  });
 
-} else {
+  addLog(ticket.id, "message", user);
 
-  // пользователь написал
-  if (ticket.assignedTo) {
+  if (isStaffUser(user)) {
+    // если ещё не назначен — автоматически назначаем
+    if (!ticket.assignedTo) {
+      ticket.assignedTo = user.email;
+      ticket.assignedAt = createdAt;
+    }
+
     ticket.status = "in_progress";
   } else {
-    ticket.status = "waiting";
+    // пользователь написал
+    if (ticket.assignedTo) {
+      ticket.status = "in_progress";
+    } else {
+      ticket.status = "waiting";
+    }
   }
 
-}
+  ticket.updatedAt = createdAt;
 
-// 🔥 REALTIME отправка сообщения
-if(ioInstance && onlineSocketsMap){
-
-  // отправляем владельцу тикета
-  const userSocket = onlineSocketsMap.get(ticket.userEmail);
-  if(userSocket){
-    ioInstance.to(userSocket).emit("new-support-message", {
-      ticketId: ticket.id
-    });
-  }
-
-  // отправляем назначенному сотруднику
-  if(ticket.assignedTo){
-    const supportSocket = onlineSocketsMap.get(ticket.assignedTo);
-    if(supportSocket){
-      ioInstance.to(supportSocket).emit("new-support-message", {
+  // realtime
+  if (ioInstance && onlineSocketsMap) {
+    // отправляем владельцу тикета
+    const userSocket = onlineSocketsMap.get(ticket.userEmail);
+    if (userSocket) {
+      ioInstance.to(userSocket).emit("new-support-message", {
         ticketId: ticket.id
       });
     }
-  }
-}
 
-  ticket.updatedAt = createdAt;
+    // отправляем назначенному сотруднику
+    if (ticket.assignedTo) {
+      const supportSocket = onlineSocketsMap.get(ticket.assignedTo);
+      if (supportSocket) {
+        ioInstance.to(supportSocket).emit("new-support-message", {
+          ticketId: ticket.id
+        });
+      }
+    }
+  }
 }
 
 function closeTicket(ticket, user){
