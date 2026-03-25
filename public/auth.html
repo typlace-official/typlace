@@ -6,6 +6,7 @@
 <title data-i18n="page.title"></title>
 <link rel="stylesheet" href="/header.css">
 <link rel="stylesheet" href="/footer.css">
+<link rel="stylesheet" href="/tp-ui.css">
 
   <style>
     body { margin:0; font-family: Arial, sans-serif; background:#f6f6f6; color:#111; }
@@ -298,7 +299,7 @@ input {
 <span data-i18n="page.terms.accept"></span>
 <a href="/terms.html" target="_blank" data-i18n="page.terms.terms"></a>,
 <a href="/rules.html" target="_blank" data-i18n="page.terms.rules"></a>
-<span data-i18n="page.common.and"></span>
+<span data-i18n="common.and"></span>
 <a href="/privacy.html" target="_blank" data-i18n="page.terms.privacy"></a>
 </span>
   </label>
@@ -328,14 +329,14 @@ input {
     <div class="modal" role="dialog" aria-modal="true">
       <div class="modal-head">
         <b id="modalTitle" data-i18n="page.modal.title"></b>
-        <button class="xbtn" id="modalCloseBtn" aria-label="Закрыть">×</button>
+        <button class="xbtn" id="modalCloseBtn" data-i18n-aria-label="page.modal.close_aria">×</button>
       </div>
 
       <div class="modal-body">
         <div style="font-size:15px;font-weight:800;display:flex;align-items:center;gap:10px;">
           <span>🔑</span><span data-i18n="page.modal.enter_code"></span>
         </div>
-        <div class="hint" id="modalHint">Мы отправили письмо на …</div>
+        <div class="hint" id="modalHint"></div>
 
         <div class="code-row" id="codeRow">
           <input class="code-cell" inputmode="numeric" maxlength="1" />
@@ -366,8 +367,10 @@ input {
 <script src="/i18n.js"></script>
 <script src="/header.js"></script>
 <script src="/footer.js"></script>
+<script src="/tp-ui.js"></script>
 
   <script>
+  const t = (key, params = {}) => window.tpI18n.t(key, params);  
     // ====== state ======
     let mode = "login"; // login | register
     let currentEmail = "";
@@ -448,7 +451,7 @@ regNick.addEventListener("input", () => {
       modalError.style.display = "none";
       modalError.textContent = "";
       codeInputs.forEach(i => i.value = "");
-      modalHint.textContent = "Мы отправили письмо на " + email;
+      modalHint.textContent = t("page.modal.email_sent_to", { email });
 
       modalBackdrop.style.display = "flex";
       setTimeout(() => codeInputs[0].focus(), 50);
@@ -474,7 +477,7 @@ regNick.addEventListener("input", () => {
     function startResendTimer(seconds) {
       resendLeft = seconds;
       resendBtn.disabled = true;
-      timerHint.textContent = "Отправить повторно можно через " + resendLeft + " c.";
+      timerHint.textContent = t("page.modal.resend_in", { seconds: resendLeft });
 
       stopResendTimer();
       resendTimer = setInterval(() => {
@@ -484,7 +487,7 @@ regNick.addEventListener("input", () => {
           resendBtn.disabled = false;
           timerHint.textContent = "";
         } else {
-          timerHint.textContent = "Отправить повторно можно через " + resendLeft + " c.";
+          timerHint.textContent = t("page.modal.resend_in", { seconds: resendLeft });
         }
       }, 1000);
     }
@@ -597,73 +600,131 @@ if (!data.success) {
     }
 
     // ====== actions ======
-    loginSendBtn.addEventListener("click", async () => {
-      const email = String(loginEmail.value || "").trim().toLowerCase();
-      if (!email) return alert("Введите email.");
+loginSendBtn.addEventListener("click", async () => {
+  const email = String(loginEmail.value || "").trim().toLowerCase();
 
-      loginSendBtn.disabled = true;
-      try {
-        const d = await requestCode(email, "login");
-        if (!d.success) return alert(d.message);
-
-        currentEmail = email;
-        currentNick = "";
-        modalHint.textContent = "Мы отправили письмо на " + maskEmail(email);
-        openModal(maskEmail(email));
-      } catch {
-        alert("Ошибка. Попробуйте снова.");
-      } finally {
-        loginSendBtn.disabled = false;
-      }
+  if (!email) {
+    await tpAlert(t("page.errors.enter_email"), {
+      type: "error",
+      title: "Ошибка"
     });
+    return;
+  }
 
-    regSendBtn.addEventListener("click", async () => {
-      const acceptTerms = document.getElementById("acceptTerms");
+  loginSendBtn.disabled = true;
 
-if (!acceptTerms.checked) {
-  return alert("Необходимо принять Пользовательское соглашение.");
-}
-const email = String(regEmail.value || "").trim().toLowerCase();
-const nick = String(regNick.value || "").trim();
+  try {
+    const d = await requestCode(email, "login");
 
-if (!nick) return alert("Введите ник.");
-if (!email) return alert("Введите email.");
+    if (!d.success) {
+      await tpAlert(d.message || t("page.errors.generic"), {
+        type: "error",
+        title: "Ошибка"
+      });
+      return;
+    }
 
-// проверка символов
-if (!/^[A-Za-z0-9_.]{1,20}$/.test(nick)) {
-  return alert("Ник может содержать только буквы, цифры, _ и . (до 20 символов)");
-}
-
-// нельзя только символы
-if (/^[_.]+$/.test(nick)) {
-  return alert("Ник должен содержать хотя бы одну букву или цифру.");
-}
-
-const reserved = [
-  "admin",
-  "support",
-  "moderator",
-  "system",
-  "typlace"
-];
-
-if (reserved.includes(nick.toLowerCase())) {
-  return alert("Этот ник зарезервирован.");
-}
-      regSendBtn.disabled = true;
-      try {
-        const d = await requestCode(email, "register", nick);
-        if (!d.success) return alert(d.message);
-
-        currentEmail = email;
-        currentNick = nick;
-        openModal(maskEmail(email));
-      } catch {
-        alert("Ошибка. Попробуйте снова.");
-      } finally {
-        regSendBtn.disabled = false;
-      }
+    currentEmail = email;
+    currentNick = "";
+    modalHint.textContent = "Мы отправили письмо на " + maskEmail(email);
+    openModal(maskEmail(email));
+  } catch {
+    await tpAlert("Ошибка. Попробуйте снова.", {
+      type: "error",
+      title: "Ошибка"
     });
+  } finally {
+    loginSendBtn.disabled = false;
+  }
+});
+
+regSendBtn.addEventListener("click", async () => {
+  const acceptTerms = document.getElementById("acceptTerms");
+
+  if (!acceptTerms.checked) {
+    await tpAlert(t("page.errors.accept_terms"), {
+      type: "error",
+      title: "Ошибка"
+    });
+    return;
+  }
+
+  const email = String(regEmail.value || "").trim().toLowerCase();
+  const nick = String(regNick.value || "").trim();
+
+  if (!nick) {
+    await tpAlert(t("page.errors.enter_nickname"), {
+      type: "error",
+      title: "Ошибка"
+    });
+    return;
+  }
+
+  if (!email) {
+    await tpAlert(t("page.errors.enter_email"), {
+      type: "error",
+      title: "Ошибка"
+    });
+    return;
+  }
+
+  if (!/^[A-Za-z0-9_.]{1,20}$/.test(nick)) {
+    await tpAlert(t("page.errors.nickname_invalid"), {
+      type: "error",
+      title: "Ошибка"
+    });
+    return;
+  }
+
+  if (/^[_.]+$/.test(nick)) {
+    await tpAlert(t("page.errors.nickname_letters_or_digits"), {
+      type: "error",
+      title: "Ошибка"
+    });
+    return;
+  }
+
+  const reserved = [
+    "admin",
+    "support",
+    "moderator",
+    "system",
+    "typlace"
+  ];
+
+  if (reserved.includes(nick.toLowerCase())) {
+    await tpAlert(t("page.errors.nickname_reserved"), {
+      type: "error",
+      title: "Ошибка"
+    });
+    return;
+  }
+
+  regSendBtn.disabled = true;
+
+  try {
+    const d = await requestCode(email, "register", nick);
+
+    if (!d.success) {
+      await tpAlert(d.message || t("page.errors.generic"), {
+        type: "error",
+        title: "Ошибка"
+      });
+      return;
+    }
+
+    currentEmail = email;
+    currentNick = nick;
+    openModal(maskEmail(email));
+  } catch {
+    await tpAlert(t("page.errors.try_again"), {
+      type: "error",
+      title: "Ошибка"
+    });
+  } finally {
+    regSendBtn.disabled = false;
+  }
+});
 
     resendBtn.addEventListener("click", async () => {
       if (!currentEmail) return;
@@ -678,14 +739,14 @@ if (reserved.includes(nick.toLowerCase())) {
         startResendTimer(48);
       } catch {
         resendBtn.disabled = false;
-        showModalError("Ошибка отправки. Попробуйте снова.");
+        showModalError(t("page.errors.send_failed"));
       }
     });
 
     verifyBtn.addEventListener("click", async () => {
   const code = getCodeValue();
   if (!/^\d{6}$/.test(code)) {
-    showModalError("Введите 6 цифр кода.");
+    showModalError(t("page.errors.enter_code_6"));
     return;
   }
 
@@ -705,7 +766,7 @@ if (reserved.includes(nick.toLowerCase())) {
     const d = await r.json();
 
     if (!d.success) {
-      showModalError(d.message || "Ошибка");
+      showModalError(d.message || t("page.errors.generic"));
       return;
     }
 
@@ -732,7 +793,7 @@ location.replace("/");
 
   } catch (err) {
     console.error(err);
-    showModalError("Ошибка соединения");
+    showModalError(t("page.errors.connection"));
   } finally {
     verifyBtn.disabled = false;
   }

@@ -16,15 +16,14 @@
     "other_region": "Другие регионы"
   },
 
-
-    "badges": {
-      "admin": "Админ",
-      "super_admin": "Супер админ",
-      "moderator": "Модератор",
-      "support": "Поддержка",
-      "resolution": "Арбитраж",
-      "official": "Официальный"
-    },
+  "badges": {
+    "admin": "Админ",
+    "super_admin": "Супер админ",
+    "moderator": "Модератор",
+    "support": "Поддержка",
+    "resolution": "Арбитраж",
+    "official": "Официальный"
+  },
 
   "search_placeholder": "Поиск",
   "help": "Помощь",
@@ -39,21 +38,19 @@
   "search_by_name": "Поиск по названию",
   "sell": "Продать",
 
-"offers_found_one": "Найдено {{count}} объявление",
-"offers_found_few": "Найдено {{count}} объявления",
-"offers_found_many": "Найдено {{count}} объявлений",
+  "offers_found_one": "Найдено {{count}} объявление",
+  "offers_found_few": "Найдено {{count}} объявления",
+  "offers_found_many": "Найдено {{count}} объявлений",
 
-"no_reviews": "Нет отзывов",
+  "no_reviews": "Нет отзывов",
 
-"reviews_count": {
-  "one": "{{count}} отзыв",
-  "few": "{{count}} отзыва",
-  "many": "{{count}} отзывов"
-},
+  "reviews_count_one": "{{count}} отзыв",
+  "reviews_count_few": "{{count}} отзыва",
+  "reviews_count_many": "{{count}} отзывов",
 
-"home": "Главная",
-"favorites": "Избранное",
-"no_favorites": "У тебя пока нет избранных предложений",
+  "home": "Главная",
+  "favorites": "Избранное",
+  "no_favorites": "У тебя пока нет избранных объявлений",
 
   "from": "От",
   "to": "До",
@@ -82,32 +79,36 @@
   "enter_description": "Введите описание на выбранном языке",
 
   "offer_deleted": "Объявление удалено",
-  "offer_not_found": "Оффер не найден",
+  "offer_not_found": "Объявление не найдено",
 
   "buyer_pays": "Покупатель заплатит",
 
   "title": "Название",
   "description": "Описание",
 
-"lang_ru": "Русский",
-"lang_uk": "Украинский",
-"lang_en": "English",
+  "lang_ru": "Русский",
+  "lang_uk": "Украинский",
+  "lang_en": "English",
 
-"system_messages": {
-  "label": "SYSTEM",
-  "fallback_user": "Пользователь",
-  "fallback_order": "Заказ",
-  "fallback_text": "Системное сообщение",
+  "system_messages": {
+    "label": "СИСТЕМА",
+    "fallback_user": "Пользователь",
+    "fallback_order": "Заказ",
+    "fallback_text": "Системное сообщение",
 
-  "order_created": "Покупатель {{actor}} оформил заказ {{order}}. Средства заморожены.",
-  "order_confirmed": "Покупатель {{actor}} подтвердил получение по заказу {{order}}. Сделка завершена.",
-  "order_refunded": "Продавец {{actor}} сделал возврат по заказу {{order}}.",
-  "order_confirmed_admin": "Администратор подтвердил заказ {{order}}. Сделка завершена.",
-  "order_refunded_admin": "Администратор сделал возврат по заказу {{order}}.",
-  "review_created": "Покупатель {{actor}} оставил отзыв по заказу {{order}}."
-},
+    "order_created": "Покупатель {{actor}} оформил заказ {{order}}. Средства заморожены.",
+    "order_confirmed": "Покупатель {{actor}} подтвердил получение по заказу {{order}}. Сделка завершена.",
+    "order_refunded": "Продавец {{actor}} сделал возврат по заказу {{order}}.",
+    "order_confirmed_admin": "Администратор подтвердил заказ {{order}}. Сделка завершена.",
+    "order_refunded_admin": "Администратор сделал возврат по заказу {{order}}.",
+    "review_created": "Покупатель {{actor}} оставил отзыв по заказу {{order}}."
+  },
 
-"footer": {
+    "common": {
+    "and": "и"
+  },
+
+  "footer": {
     "copyLine1": "© 2026 TyPlace — маркетплейс цифровых товаров и услуг.",
     "copyLine2": "Все права защищены.",
     "links": {
@@ -115,7 +116,7 @@
       "terms": "Пользовательское соглашение",
       "privacy": "Политика конфиденциальности",
       "cookies": "Политика cookie",
-      "about": "О компании",
+      "about": "О платформе",
       "help": "Центр помощи",
       "contacts": "Контакты"
     }

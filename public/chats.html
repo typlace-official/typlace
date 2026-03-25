@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="/header.css">
 <link rel="stylesheet" href="/footer.css">
 <link rel="stylesheet" href="/badges.css">
+<link rel="stylesheet" href="/tp-ui.css">
 <style>
 :root{
   --tp-page-bg:#f6f6f6;
@@ -794,55 +795,64 @@ body{
 
 .msg-resolution{
   justify-content:flex-start;
+  margin:14px 0;
 }
 
-.msg-resolution-wrap{
+.msg-body--resolution{
+  position:relative;
   max-width:min(78%, 420px);
-}
-
-.msg-resolution-head{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin:0 0 6px 2px;
-  min-width:0;
-  max-width:100%;
-}
-
-.msg-resolution-name{
-  font-size:13px;
-  font-weight:800;
-  color:var(--tp-resolution-name);
-  min-width:0;
-  max-width:100%;
-}
-
-.msg-resolution .msg-body--text{
   background:var(--tp-resolution-bg);
   border:1px solid var(--tp-resolution-line);
   color:var(--tp-resolution-text);
+  border-radius:16px;
   border-bottom-left-radius:6px;
+  padding:12px 14px 22px;
+  text-align:left;
 }
 
-.msg-resolution .msg-time{
+.msg-resolution-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:22px;
+  padding:0 10px;
+  border-radius:999px;
+  background:#ede9fe;
+  color:var(--tp-resolution-name);
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+
+.msg-body--resolution .msg-text{
+  font-size:14px;
+  line-height:1.45;
+  white-space:pre-wrap;
+  padding-right:48px;
+}
+
+.msg-body--resolution .msg-time{
+  position:absolute;
+  right:12px;
+  bottom:8px;
   color:var(--tp-resolution-text);
   opacity:.75;
 }
 
-.msg-resolution .tp-name-with-badge{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  min-width:0;
-  max-width:100%;
+.msg-body--resolution .msg-media{
+  margin-top:8px;
 }
 
-.msg-resolution .tp-name-text{
-  min-width:0;
+.msg-body--resolution .msg-media img{
+  display:block;
+  width:100%;
   max-width:100%;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
+  height:auto;
+  max-height:420px;
+  border-radius:14px;
+  border:1px solid rgba(0,0,0,.08);
 }
 
 /* ===== TABLET ===== */
@@ -1032,6 +1042,22 @@ body{
 body.tp-restoring-chat .right{
   transition:none !important;
 }
+.chat-profile-link{
+  cursor:pointer;
+  transition:opacity .15s ease;
+}
+
+.chat-profile-link:hover{
+  opacity:.88;
+}
+
+.chat-profile-link.is-disabled{
+  cursor:default;
+}
+
+.chat-profile-link.is-disabled:hover{
+  opacity:1;
+}
 </style>
 </head>
 
@@ -1056,7 +1082,7 @@ body.tp-restoring-chat .right{
       <div class="panel right" id="rightPanel">
         <div class="right-top" id="rightTop">
           <button class="back-btn" id="backBtn" aria-label="Назад">←</button>
-<div class="right-title">
+<div class="right-title chat-profile-link is-disabled" id="activeUserLink">
   <div class="chat-ava" id="activeAva">?</div>
 
   <div class="right-user-meta">
@@ -1137,6 +1163,7 @@ body.tp-restoring-chat .right{
 <script src="/tp-money.js"></script>
 <script src="/badges.js"></script>
 <script src="/chat-system.js"></script>
+<script src="/tp-ui.js"></script>
 
 <script>
 (async function(){
@@ -1203,6 +1230,40 @@ function getLastSeenText(lastSeen){
   return `Был(а) ${days} д назад`;
 }
 const DEFAULT_AVATAR = "/img/avatar-default.svg";
+const PUBLIC_PROFILE_BASE = "/profile.html?id=";
+
+function isSystemProfileUser(user){
+  const safeEmail = String(user?.email || "").trim().toLowerCase();
+
+  return (
+    safeEmail === "__official__@typlace.local" ||
+    safeEmail === "__resolution__@typlace.local"
+  );
+}
+
+function getPublicProfileUrl(user){
+  if (!user?.userId) return "";
+  if (isSystemProfileUser(user)) return "";
+
+  return PUBLIC_PROFILE_BASE + encodeURIComponent(user.userId);
+}
+
+function updateActiveProfileLink(user, chat){
+  const el = document.getElementById("activeUserLink");
+  if (!el) return;
+
+  const url = chat?.official ? "" : getPublicProfileUrl(user);
+
+  el.classList.toggle("is-disabled", !url);
+
+  el.onclick = null;
+
+  if (url) {
+    el.onclick = () => {
+      location.href = url;
+    };
+  }
+}
 function escapeHtml(value){
   return String(value || "")
     .replace(/&/g, "&amp;")
@@ -1225,6 +1286,33 @@ function isProtectedChatUser(role, email){
     "super_admin",
     "official"
   ].includes(safeRole);
+}
+
+function canOpenUserProfileFromChat(user){
+  if (!user) return false;
+
+  const safeEmail = String(user.email || "").trim().toLowerCase();
+  const safeRole = String(user.role || "").trim().toLowerCase();
+  const safeUserId = String(user.userId || "").trim();
+
+  if (!safeUserId) return false;
+  if (safeEmail === "__official__@typlace.local") return false;
+  if (safeEmail === "__resolution__@typlace.local") return false;
+
+  if ([
+    "official",
+    "resolution_entity"
+  ].includes(safeRole)) {
+    return false;
+  }
+
+  return true;
+}
+
+function openUserProfileFromChat(user){
+  if (!canOpenUserProfileFromChat(user)) return;
+
+  location.href = `/profile.html?id=${encodeURIComponent(user.userId)}`;
 }
 
 let chats = [];
@@ -1321,6 +1409,12 @@ filePicker.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file || !activeChatId) return;
 
+  const chat = chats.find(c => c.id === activeChatId);
+  if (chat?.official) {
+    filePicker.value = "";
+    return;
+  }
+
   const formData = new FormData();
   formData.append("file", file);
 
@@ -1334,10 +1428,19 @@ filePicker.addEventListener("change", async (e) => {
 
   const data = await res.json();
 
-if (data.success && data.message) {
-  addMessageToUI(data.message);
-  updateChatPreviewLocally(data.message);
+if (!data.success) {
+  await tpAlert(data.message || "Не удалось отправить файл", {
+    type: "error",
+    title: "Ошибка"
+  });
+  filePicker.value = "";
+  return;
 }
+
+  if (data.success && data.message) {
+    addMessageToUI(data.message);
+    updateChatPreviewLocally(data.message);
+  }
 
   filePicker.value = "";
 });
@@ -1405,63 +1508,75 @@ function renderChatList(){
     return;
   }
 
-  chats.forEach(c=>{
-
+  chats.forEach(c => {
     const user = c.otherUser;
+    const canOpenProfile = canOpenUserProfileFromChat(user);
     const username = user?.username || "Пользователь";
-const userRole = user?.role || "user";
+    const userRole = user?.role || "user";
 
     const avatar =
       user?.avatarUrl ||
       user?.avatarDataUrl ||
       DEFAULT_AVATAR;
 
-    // ✅ ТОЛЬКО последнее сообщение
-let lastText = "Нет сообщений";
+    let lastText = "Нет сообщений";
 
-if (c.lastMessage) {
-  if (window.tpChatSystem?.isSystemMessage?.(c.lastMessage)) {
-    lastText = window.tpI18n?.t("common.system_messages.label") || "SYSTEM";
-  } else if (c.lastMessage.text) {
-    lastText =
-      c.lastMessage.text.length > 40
-        ? c.lastMessage.text.slice(0, 40) + "..."
-        : c.lastMessage.text;
-  } else if (c.lastMessage.media?.length) {
-    lastText = "📷 Фото";
-  }
-}
+    if (c.lastMessage) {
+      if (window.tpChatSystem?.isSystemMessage?.(c.lastMessage)) {
+        lastText = window.tpI18n?.t("common.system_messages.label") || "SYSTEM";
+      } else if (c.lastMessage.text) {
+        lastText =
+          c.lastMessage.text.length > 40
+            ? c.lastMessage.text.slice(0, 40) + "..."
+            : c.lastMessage.text;
+      } else if (c.lastMessage.media?.length) {
+        lastText = "📷 Фото";
+      }
+    }
 
     const time = c.lastMessage?.createdAt
-      ? new Date(c.lastMessage.createdAt)
-          .toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})
+      ? new Date(c.lastMessage.createdAt).toLocaleTimeString("ru-RU", {
+          hour: "2-digit",
+          minute: "2-digit"
+        })
       : "";
 
-const div = document.createElement("div");
-div.className = "chat-item" + (c.id === activeChatId ? " active" : "");
-div.onclick = ()=>openChat(c.id);
+    const div = document.createElement("div");
+    div.className = "chat-item" + (c.id === activeChatId ? " active" : "");
+    div.onclick = () => openChat(c.id);
 
-const safeLastText = escapeHtml(lastText);
+    const safeLastText = escapeHtml(lastText);
 
-div.innerHTML = `
-  <div class="chat-ava">
-    <img src="${avatar}">
-    <span class="status-dot ${user?.online ? "online" : "offline"}"></span>
-  </div>
-
-  <div class="chat-meta">
-    <div style="display:flex;justify-content:space-between;gap:8px;">
-      <div class="chat-name-line">
-        ${window.tpBadges.renderNameWithBadge(username, userRole)}
+    div.innerHTML = `
+      <div class="chat-ava" data-open-profile="${canOpenProfile ? "1" : "0"}">
+        <img src="${avatar}">
+        <span class="status-dot ${user?.online ? "online" : "offline"}"></span>
       </div>
-      <div style="font-size:12px;color:#888;flex:0 0 auto;">${time}</div>
-    </div>
 
-    <div class="chat-status-line">
-      ${safeLastText}
-    </div>
-  </div>
-`;
+      <div class="chat-meta">
+        <div style="display:flex;justify-content:space-between;gap:8px;">
+          <div class="chat-name-line" data-open-profile="${canOpenProfile ? "1" : "0"}">
+            ${window.tpBadges.renderNameWithBadge(username, userRole)}
+          </div>
+          <div style="font-size:12px;color:#888;flex:0 0 auto;">${time}</div>
+        </div>
+
+        <div class="chat-status-line" data-open-profile="${canOpenProfile ? "1" : "0"}">
+          ${safeLastText}
+        </div>
+      </div>
+    `;
+
+    if (canOpenProfile) {
+      div.querySelectorAll('[data-open-profile="1"]').forEach(el => {
+        el.style.cursor = "pointer";
+
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          openUserProfileFromChat(user);
+        });
+      });
+    }
 
     list.appendChild(div);
   });
@@ -1471,10 +1586,13 @@ div.innerHTML = `
 async function openChat(id){
   const chat = await ensureChatInState(id);
 
-  if(!chat){
-    alert("Чат не найден или нет доступа");
-    return;
-  }
+if(!chat){
+  await tpAlert("Чат не найден или нет доступа", {
+    type: "error",
+    title: "Ошибка"
+  });
+  return;
+}
 
   document.getElementById("rightPanel").style.display = "flex";
 
@@ -1485,7 +1603,6 @@ async function openChat(id){
   localStorage.setItem(CHAT_ID_KEY, id);
   localStorage.setItem(CHAT_VIEW_KEY, "chat");
 
-  
   activeChatId = id;
   window.tpActiveChatId = id;
   updateChatNotifyButton();
@@ -1495,69 +1612,92 @@ async function openChat(id){
   const user = chat.otherUser;
   const isOfficialChat = Boolean(chat.official);
   const isProtectedChat = isProtectedChatUser(user?.role, user?.email);
-  const isStaffOfficialView = isOfficialChat && currentUser.role !== "user";
 
+  const chatActions = document.getElementById("chatActions");
+  const chatNotifyBtnEl = document.getElementById("chatNotifyBtn");
+  const chatMenuWrapper = document.getElementById("chatMenuWrapper");
   const btnReport = document.getElementById("btnReport");
   const btnBlock = document.getElementById("btnBlock");
   const btnDelete = document.getElementById("btnDelete");
   const composer = document.getElementById("composer");
   const blockedNotice = document.getElementById("blockedNotice");
+  const msgInput = document.getElementById("msgInput");
 
-  btnBlock.style.display = (!isProtectedChat && !isStaffOfficialView) ? "block" : "none";
-  btnReport.style.display = (!isProtectedChat && !isStaffOfficialView) ? "block" : "none";
-  btnDelete.style.display = isStaffOfficialView ? "none" : "block";
-  attachBtn.style.display = isOfficialChat ? "none" : "flex";
+if (isOfficialChat) {
+  chatActions.style.display = "none";
+  chatNotifyBtnEl.style.display = "none";
+  chatMenuWrapper.style.display = "none";
+  btnReport.style.display = "none";
+  btnBlock.style.display = "none";
+  btnDelete.style.display = "none";
+  blockedNotice.style.display = "none";
+  attachBtn.style.display = "none";
+  composer.style.display = "none";
 
-// для staff скрываем кнопку блокировки
-btnBlock.style.display = isProtectedChat ? "none" : "block";
-
-if (!isProtectedChat) {
-  btnBlock.textContent = chat?.blockedByMe ? "Разблокировать" : "Заблокировать";
-
-  if (chat.blockedByMe) {
-    composer.style.display = "none";
-    blockedNotice.style.display = "block";
-  } else {
-    composer.style.display = "flex";
-    blockedNotice.style.display = "none";
+  if (msgInput) {
+    msgInput.value = "";
+    msgInput.placeholder = "Официальный чат доступен только для чтения";
   }
 } else {
-  // staff нельзя блокировать, значит поле ввода всегда доступно
-  composer.style.display = "flex";
-  blockedNotice.style.display = "none";
-}
+    chatActions.style.display = "flex";
+    chatNotifyBtnEl.style.display = "flex";
+    chatMenuWrapper.style.display = "block";
+    btnDelete.style.display = "block";
+    attachBtn.style.display = "flex";
+
+    btnReport.style.display = isProtectedChat ? "none" : "block";
+    btnBlock.style.display = isProtectedChat ? "none" : "block";
+
+    if (!isProtectedChat) {
+      btnBlock.textContent = chat?.blockedByMe ? "Разблокировать" : "Заблокировать";
+
+      if (chat.blockedByMe) {
+        composer.style.display = "none";
+        blockedNotice.style.display = "block";
+      } else {
+        composer.style.display = "flex";
+        blockedNotice.style.display = "none";
+      }
+    } else {
+      composer.style.display = "flex";
+      blockedNotice.style.display = "none";
+    }
+
+    if (msgInput) {
+      msgInput.placeholder =
+        window.tpI18n?.t("page.writeMessage") || "Напишите сообщение";
+    }
+  }
 
 if(user){
-  // Аватар
   const ava = document.getElementById("activeAva");
-const avatar =
-  user?.avatarUrl ||
-  user?.avatarDataUrl ||
-  DEFAULT_AVATAR;
+  const avatar =
+    user?.avatarUrl ||
+    user?.avatarDataUrl ||
+    DEFAULT_AVATAR;
 
-ava.innerHTML = `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;">`;
-  // Ник
-window.tpBadges.applyNameWithBadge(
-  document.getElementById("activeName"),
-  user.username || "Пользователь",
-  user.role || "user"
-);
+  ava.innerHTML = `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;">`;
 
-  // Онлайн / был(а)
+  window.tpBadges.applyNameWithBadge(
+    document.getElementById("activeName"),
+    user.username || "Пользователь",
+    user.role || "user"
+  );
+
   if (isOfficialChat && user?.email === "__official__@typlace.local") {
     document.getElementById("activeSub").textContent = "Официальный аккаунт";
+  } else if (isOfficialChat) {
+    document.getElementById("activeSub").textContent = "";
   } else {
-if (isOfficialChat) {
-  document.getElementById("activeSub").textContent = "";
-} else {
-  document.getElementById("activeSub").textContent =
-    user.online
-      ? "В сети"
-      : getLastSeenText(user.lastSeen);
-}
+    document.getElementById("activeSub").textContent =
+      user.online ? "В сети" : getLastSeenText(user.lastSeen);
   }
+
+  updateActiveProfileLink(user, chat);
+} else {
+  updateActiveProfileLink(null, null);
 }
-  // 🔥 1. Помечаем сообщения как прочитанные
+
   await fetch(`/api/chats/${id}/read`, {
     method: "POST",
     headers: {
@@ -1565,85 +1705,77 @@ if (isOfficialChat) {
     }
   });
 
-  // 🔥 2. Обновляем бейдж в хедере
   updateUnreadBadge();
-// ===== ПОКАЗЫВАЕМ МИНИ-ОФФЕР ЕСЛИ ЕСТЬ =====
-if(chat?.offerId){
 
-  const isHidden = localStorage.getItem("tp_hide_offer_block_" + chat.offerId);
+  if(chat?.offerId){
+    const isHidden = localStorage.getItem("tp_hide_offer_block_" + chat.offerId);
 
-  if(isHidden){
-    document.getElementById("offerMiniBlock").style.display = "none";
-  } else {
+    if(isHidden){
+      document.getElementById("offerMiniBlock").style.display = "none";
+    } else {
+      const offerRes = await fetch(`/api/offers/${chat.offerId}`);
+      const offerData = await offerRes.json();
 
-    const offerRes = await fetch(`/api/offers/${chat.offerId}`);
-    const offerData = await offerRes.json();
+      const block = document.getElementById("offerMiniBlock");
 
-const block = document.getElementById("offerMiniBlock");
+      if(offerData.success && offerData.offer){
+        const offer = offerData.offer;
 
-if(offerData.success && offerData.offer){
-  const offer = offerData.offer;
+        block.style.display = "block";
 
-  block.style.display = "block";
+        block.innerHTML = `
+          <div style="position:relative; display:flex; align-items:center; gap:12px;">
+            <div onclick="closeMiniOffer('${chat.offerId}')"
+                 style="
+                    position:absolute;
+                    right:12px;
+                    top:50%;
+                    transform:translateY(-50%);
+                    font-size:24px;
+                    cursor:pointer;
+                    color:#999;
+                    font-weight:800;
+                    width:32px;
+                    height:32px;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    border-radius:50%;
+                 ">
+              ✕
+            </div>
 
-  block.innerHTML = `
-    <div style="position:relative;
-                display:flex;
-                align-items:center;
-                gap:12px;">
+            <div onclick="location.href='/offer.html?id=${offer.id}'"
+                 style="display:flex;align-items:center;gap:12px;cursor:pointer;width:100%;">
 
-      <div onclick="closeMiniOffer('${chat.offerId}')"
-           style="
-              position:absolute;
-              right:12px;
-              top:50%;
-              transform:translateY(-50%);
-              font-size:24px;
-              cursor:pointer;
-              color:#999;
-              font-weight:800;
-              width:32px;
-              height:32px;
-              display:flex;
-              align-items:center;
-              justify-content:center;
-              border-radius:50%;
-           ">
-        ✕
-      </div>
+              <img src="${offer.imageUrl || '/img/offer-default.png'}"
+                   style="width:60px;height:60px;object-fit:cover;border-radius:10px;border:1px solid #ddd;">
 
-      <div onclick="location.href='/offer.html?id=${offer.id}'"
-           style="display:flex;align-items:center;gap:12px;cursor:pointer;width:100%;">
+              <div class="mini-offer-content">
+                <div class="mini-offer-title">
+                  ${buildOfferTitle(offer)}
+                </div>
 
-        <img src="${offer.imageUrl || '/img/offer-default.png'}"
-             style="width:60px;height:60px;object-fit:cover;border-radius:10px;border:1px solid #ddd;">
-
-        <div class="mini-offer-content">
-          <div class="mini-offer-title">
-            ${buildOfferTitle(offer)}
+                <div class="mini-offer-price" data-price="${offer.price}"></div>
+              </div>
+            </div>
           </div>
+        `;
 
-          <div class="mini-offer-price" data-price="${offer.price}"></div>
-        </div>
-
-      </div>
-    </div>
-  `;
-
-  await updateMiniOfferPrices();
-  setTimeout(updateMiniOfferPrices, 50);
-} else {
-  block.style.display = "none";
-  block.innerHTML = "";
-}
+        await updateMiniOfferPrices();
+        setTimeout(updateMiniOfferPrices, 50);
+      } else {
+        block.style.display = "none";
+        block.innerHTML = "";
+      }
+    }
+  } else {
+    document.getElementById("offerMiniBlock").style.display = "none";
   }
-
-}else{
-  document.getElementById("offerMiniBlock").style.display = "none";
-}
 
   loadMessages();
 }
+
 function formatDateDivider(date){
 
   const today = new Date();
@@ -1687,7 +1819,7 @@ function renderMessageBody(m){
 
   const safeText = window.tpBadges?.escapeHtml
     ? window.tpBadges.escapeHtml(text)
-    : text;
+    : escapeHtml(text);
 
   if (hasMedia && !hasText) {
     return `
@@ -1716,9 +1848,7 @@ function renderMessageBody(m){
 function isResolutionMessage(m){
   return (
     m?.messageType === "resolution" ||
-    m?.kind === "resolution" ||
-    m?.fromRole === "resolution" ||
-    m?.staffRole === "resolution"
+    (m?.kind === "staff" && m?.staffRole === "resolution")
   );
 }
 
@@ -1731,39 +1861,36 @@ function getResolutionName(m){
   );
 }
 
+function getResolutionLabel(){
+  return window.tpBadges?.getTranslatedLabel
+    ? window.tpBadges.getTranslatedLabel("resolution")
+    : "Арбитраж";
+}
+
 function renderResolutionMessageItem(m){
   const text = String(m.text || "").trim();
   const media = Array.isArray(m.media) ? m.media : [];
 
   const safeText = window.tpBadges?.escapeHtml
     ? window.tpBadges.escapeHtml(text)
-    : text;
+    : escapeHtml(text);
 
-  const nameHtml = window.tpBadges?.renderNameWithBadge
-    ? window.tpBadges.renderNameWithBadge(getResolutionName(m), "resolution")
-    : `
-      <span class="tp-name-with-badge">
-        <span class="tp-name-text">${getResolutionName(m)}</span>
-        <span class="tp-badge tp-badge--resolution">Арбитраж</span>
-      </span>
-    `;
+  const safeLabel = escapeHtml(getResolutionLabel());
 
   return `
     <div class="msg msg-resolution" data-msg-id="${m.id}">
-      <div class="msg-resolution-wrap">
-        <div class="msg-resolution-head">
-          <div class="msg-resolution-name">${nameHtml}</div>
-        </div>
+      <div class="msg-body msg-body--resolution">
+        <div class="msg-resolution-badge">${safeLabel}</div>
 
-        <div class="msg-body msg-body--text">
-          ${text ? `<div class="msg-text">${safeText}</div>` : ""}
-          ${media.length ? `
-            <div class="msg-media" style="margin-top:8px;">
-              ${media.map(url => `<img src="${url}" alt="">`).join("")}
-            </div>
-          ` : ""}
-          <span class="msg-time">${formatMessageTime(m.createdAt)}</span>
-        </div>
+        ${text ? `<div class="msg-text">${safeText}</div>` : ""}
+
+        ${media.length ? `
+          <div class="msg-media">
+            ${media.map(url => `<img src="${url}" alt="">`).join("")}
+          </div>
+        ` : ""}
+
+        <span class="msg-time">${formatMessageTime(m.createdAt)}</span>
       </div>
     </div>
   `;
@@ -1877,11 +2004,17 @@ const lastDivider = dividers.length
 
 /* ===== SEND MESSAGE ===== */
 document.getElementById("sendBtn").onclick = async ()=>{
-
   const input = document.getElementById("msgInput");
   const text = input.value.trim();
 
   if(!text || !activeChatId) return;
+
+  const chat = chats.find(c => c.id === activeChatId);
+  const isOfficialChat = Boolean(chat?.official);
+
+  if (isOfficialChat) {
+    return;
+  }
 
   const res = await fetch(`/api/chats/${activeChatId}/messages`,{
     method:"POST",
@@ -1893,13 +2026,20 @@ document.getElementById("sendBtn").onclick = async ()=>{
   });
 
   const data = await res.json();
-  if(!data.success) return;
 
-  // ✅ СРАЗУ ДОБАВЛЯЕМ В UI
-addMessageToUI(data.message);
-updateChatPreviewLocally(data.message);
-input.value = "";
+if(!data.success){
+  await tpAlert(data.message || "Не удалось отправить сообщение", {
+    type: "error",
+    title: "Ошибка"
+  });
+  return;
+}
+
+  addMessageToUI(data.message);
+  updateChatPreviewLocally(data.message);
+  input.value = "";
 };
+
 document.getElementById("msgInput").addEventListener("keydown", e => {
   if(e.key === "Enter"){
     document.getElementById("sendBtn").click();
@@ -1962,10 +2102,13 @@ async function buyOffer(offerId){
 
   const data = await res.json();
 
-  if(!data.success){
-    alert(data.message);
-    return;
-  }
+if(!data.success){
+  await tpAlert(data.message || "Не удалось создать заказ", {
+    type: "error",
+    title: "Ошибка"
+  });
+  return;
+}
 
   // 🔥 ПРАВИЛЬНЫЙ РЕДИРЕКТ
   location.href = "/order.html?id=" + data.order.id;
@@ -1984,6 +2127,12 @@ chatNotifyBtn?.addEventListener("click", () => {
   chatNotifyBtn.classList.remove("tp-bell-pop");
   void chatNotifyBtn.offsetWidth;
   chatNotifyBtn.classList.add("tp-bell-pop");
+
+  tpToast(
+    isChatMuted(activeChatId) ? "Уведомления выключены" : "Уведомления включены",
+    "info",
+    { duration: 1800 }
+  );
 });
 
 menuBtn.onclick = () => {
@@ -1999,7 +2148,14 @@ document.addEventListener("click", (e) => {
 });
 
 document.getElementById("btnDelete").onclick = async () => {
-  if(!confirm("Удалить чат?")) return;
+  const confirmed = await tpConfirm("Удалить чат?", {
+  title: "Подтверждение",
+  confirmText: "Удалить",
+  cancelText: "Отмена",
+  dangerConfirm: true
+});
+
+if(!confirmed) return;
 
   const res = await fetch(`/api/chats/${activeChatId}`,{
     method:"DELETE",
@@ -2008,10 +2164,13 @@ document.getElementById("btnDelete").onclick = async () => {
 
   const data = await res.json().catch(() => ({}));
 
-  if(!data.success){
-    alert(data.message || "Не удалось удалить чат");
-    return;
-  }
+if(!data.success){
+  await tpAlert(data.message || "Не удалось удалить чат", {
+    type: "error",
+    title: "Ошибка"
+  });
+  return;
+}
 
   activeChatId = null;
   localStorage.removeItem(CHAT_ID_KEY);
@@ -2057,6 +2216,10 @@ if(data.blocked){
 }
 
 renderChatList();
+tpToast(
+  data.blocked ? "Пользователь заблокирован" : "Пользователь разблокирован",
+  "success"
+);
 
 };
 

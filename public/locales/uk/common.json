@@ -16,14 +16,14 @@
     "other_region": "Інші регіони"
   },
 
-    "badges": {
-      "admin": "Адмін",
-      "super_admin": "Супер-адмін",
-      "moderator": "Модератор",
-      "support": "Підтримка",
-      "resolution": "Арбітраж",
-      "official": "Офіційний"
-    },
+  "badges": {
+    "admin": "Адмін",
+    "super_admin": "Супер адмін",
+    "moderator": "Модератор",
+    "support": "Підтримка",
+    "resolution": "Арбітраж",
+    "official": "Офіційний"
+  },
 
   "search_placeholder": "Пошук",
   "help": "Допомога",
@@ -42,17 +42,15 @@
   "offers_found_few": "Знайдено {{count}} оголошення",
   "offers_found_many": "Знайдено {{count}} оголошень",
 
-  "no_reviews": "Без відгуків",
+  "no_reviews": "Немає відгуків",
 
-  "reviews_count": {
-    "one": "{{count}} відгук",
-    "few": "{{count}} відгуки",
-    "many": "{{count}} відгуків"
-  },
+  "reviews_count_one": "{{count}} відгук",
+  "reviews_count_few": "{{count}} відгуки",
+  "reviews_count_many": "{{count}} відгуків",
 
   "home": "Головна",
   "favorites": "Обране",
-  "no_favorites": "У тебе поки немає обраних пропозицій",
+  "no_favorites": "У тебе поки немає обраних оголошень",
 
   "from": "Від",
   "to": "До",
@@ -77,23 +75,23 @@
   "delete_offer": "Видалити оголошення",
 
   "invalid_price": "Вкажіть коректну ціну",
-  "enter_title": "Введіть назву обраною мовою",
-  "enter_description": "Введіть опис обраною мовою",
+  "enter_title": "Введіть назву вибраною мовою",
+  "enter_description": "Введіть опис вибраною мовою",
 
   "offer_deleted": "Оголошення видалено",
   "offer_not_found": "Оголошення не знайдено",
 
-  "buyer_pays": "Покупець сплатить",
+  "buyer_pays": "Покупець заплатить",
 
   "title": "Назва",
   "description": "Опис",
 
   "lang_ru": "Російська",
   "lang_uk": "Українська",
-  "lang_en": "Англійська",
+  "lang_en": "English",
 
   "system_messages": {
-    "label": "SYSTEM",
+    "label": "СИСТЕМА",
     "fallback_user": "Користувач",
     "fallback_order": "Замовлення",
     "fallback_text": "Системне повідомлення",
@@ -106,6 +104,10 @@
     "review_created": "Покупець {{actor}} залишив відгук за замовленням {{order}}."
   },
 
+    "common": {
+    "and": "і"
+  },
+
   "footer": {
     "copyLine1": "© 2026 TyPlace — маркетплейс цифрових товарів і послуг.",
     "copyLine2": "Усі права захищені.",
@@ -114,7 +116,7 @@
       "terms": "Користувацька угода",
       "privacy": "Політика конфіденційності",
       "cookies": "Політика cookie",
-      "about": "Про компанію",
+      "about": "Про платформу",
       "help": "Центр допомоги",
       "contacts": "Контакти"
     }

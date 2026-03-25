@@ -1,32 +1,34 @@
 {
-  "title": "Create a ticket",
+  "title": "Create Request",
 
   "category": "Category",
-  "chooseCategory": "Choose a category",
+  "chooseCategory": "Choose category",
 
   "categories": {
-    "order": "Order issue",
-    "finance": "Payments and withdrawals",
-    "account": "Account issue",
-    "report": "Report a user",
-    "report_offer": "Report a listing",
-    "bug": "Report a bug",
+    "order": "Order Issue",
+    "finance": "Payments and Withdrawals",
+    "account": "Account Issue",
+    "report": "Report a User",
+    "report_offer": "Report a Listing",
+    "bug": "Report a Bug",
     "other": "Other"
   },
 
   "topics": {
     "seller_not_complete": "Seller is not completing the order",
     "wrong_item": "I received the wrong item",
+    "seller_took_back_item_or_access": "Seller took back the item or access",
     "cancel_order": "I want to cancel the order",
-    "buyer_not_confirm": "Buyer is not confirming the order",
-    "delivery_problem": "Item delivery problem",
 
-    "deposit_problem": "Deposit issue",
-    "withdraw_problem": "Withdrawal issue",
+    "buyer_not_confirm": "Buyer is not confirming the order",
+    "delivery_or_service_problem": "Problem with item delivery or service completion",
+
+    "deposit_problem": "Deposit problem",
+    "withdraw_problem": "Withdrawal problem",
     "payment_failed": "Payment failed",
 
     "account_hacked": "My account was hacked",
-    "restore_access": "Restore access to my account",
+    "restore_access": "Restore account access",
     "appeal_ban": "Appeal account ban",
 
     "rule_violation": "Rule violation",
@@ -44,8 +46,8 @@
     "filters_bug": "Filters bug",
 
     "general_question": "General question",
-    "site_suggestion": "Website suggestion",
-    "not_in_list": "Issue not listed",
+    "site_suggestion": "Site suggestion",
+    "not_in_list": "Issue not in the list",
 
     "other": "Other"
   },
@@ -53,12 +55,12 @@
   "role": "Who are you?",
   "choose": "Choose",
 
-  "roleBuyer": "I am a buyer",
-  "roleSeller": "I am a seller",
+  "roleBuyer": "I am the buyer",
+  "roleSeller": "I am the seller",
 
-  "subject": "Ticket subject",
-  "chooseSubject": "Choose a subject",
-  "selectRoleFirst": "Choose your role first",
+  "subject": "Request topic",
+  "chooseSubject": "Choose topic",
+  "selectRoleFirst": "Choose role first",
 
   "orderId": "Order number",
 
@@ -68,12 +70,12 @@
   "offerId": "Listing ID",
   "enterOfferId": "Enter listing ID",
 
-  "description": "Ticket description",
+  "description": "Request description",
 
   "addFiles": "Add files",
-  "send": "Send ticket",
+  "send": "Send request",
 
-  "file": "photo",
+  "file": "File",
 
   "counter": "{{current}} / {{max}}",
 

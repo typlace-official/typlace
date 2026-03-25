@@ -2,103 +2,102 @@
   "title": "Privacy Policy",
 
   "meta": {
-    "line1": "Edition: 2026",
-    "line2": "Last updated: 2026-02-27",
-    "line3": "Contact:"
+    "line1": "Document describing how user data may be processed on the TyPlace platform.",
+    "line2": "The current version is published on this page.",
+    "line3": "Data-related contacts:"
   },
 
-  "intro": "This Privacy Policy describes how personal data of users of the TyPlace platform (the “Platform”) is processed and protected.",
+  "intro": "This Privacy Policy describes what data the TyPlace platform may process, for what purposes such processing is carried out, how the data is used, and what rights the user may have.",
 
   "section1": {
-    "title": "1. Data Controller",
-    "p1": "The data controller is the entity operating the TyPlace platform (details are published on the ",
-    "link1": "About",
-    "or": " or ",
-    "link2": "Contacts"
+    "title": "1. Who processes the data",
+    "p1": "The data operator within the operation of the TyPlace platform is the person managing the platform. Current contact methods are available on the",
+    "link1": "Contacts"
   },
 
   "section2": {
-    "title": "2. What Data We Collect",
-    "l1": "Email address",
-    "l2": "Username (nickname)",
-    "l3": "IP address and technical device data",
-    "l4": "Transaction and operation history",
-    "l5": "Chat messages within the platform",
-    "l6": "Payment data (via payment providers)",
-    "l7": "Data provided when contacting support"
+    "title": "2. What data may be processed",
+    "l1": "email address;",
+    "l2": "username, user ID, avatar, and other profile data that the user provides or uploads to the platform;",
+    "l3": "technical data, including IP address, device data, browser data, and the date and time of actions performed on the platform;",
+    "l4": "data related to listings, orders, reviews, support requests, disputes, and actions within the platform;",
+    "l5": "the content of platform chat messages and attachments sent through chat or support;",
+    "l6": "data related to internal balance, operation history, withdrawal requests, top-ups, and other financial actions within the platform;",
+    "l7": "notification-related data, including email notifications and, where connected, Telegram notifications;",
+    "l8": "other data voluntarily provided by the user or generated through the use of the service."
   },
 
   "section3": {
-    "title": "3. Purpose of Processing",
-    "l1": "Account registration and maintenance",
-    "l2": "Executing transactions and escrow services",
-    "l3": "Payment processing",
-    "l4": "Fraud prevention and abuse detection",
-    "l5": "Compliance with legal obligations",
-    "l6": "Handling support requests",
-    "l7": "Improving the platform"
+    "title": "3. Purposes of data processing",
+    "l1": "registration, login, and account maintenance;",
+    "l2": "operation of listings, orders, safe transactions, internal balance, and other platform functions;",
+    "l3": "processing of top-ups, deductions, refunds, and withdrawal requests;",
+    "l4": "handling support requests, disputes, and appeals;",
+    "l5": "communication with the user regarding the account, orders, security, and platform operation;",
+    "l6": "detection of fraud, abuse, suspicious activity, and other risks;",
+    "l7": "security, logging of activity, and technical diagnostics;",
+    "l8": "improving the stability, functionality, and quality of the platform."
   },
 
   "section4": {
-    "title": "4. Legal Basis",
-    "p1": "Personal data is processed based on:",
-    "l1": "performance of a contract (User Agreement)",
-    "l2": "legitimate interests of the operator",
-    "l3": "user consent (where required)",
-    "l4": "legal obligations"
+    "title": "4. Legal grounds for processing",
+    "p1": "The platform may process user data on the following grounds:",
+    "l1": "the necessity to perform the Terms of Use and provide platform functionality;",
+    "l2": "the legitimate interest of the platform in ensuring security, stability, and protection of the service against abuse;",
+    "l3": "the user's consent, where such consent is required under applicable rules or the logic of the service;",
+    "l4": "the necessity to comply with mandatory requirements of applicable law."
   },
 
   "section5": {
-    "title": "5. Sharing with Third Parties",
-    "p1": "We may share data with:",
-    "l1": "payment providers",
-    "l2": "hosting providers",
-    "l3": "anti-fraud services",
-    "l4": "government authorities upon lawful request",
-    "p2": "Data is shared only to the extent necessary for the relevant purpose."
+    "title": "5. Transfer of data to third parties",
+    "p1": "The platform may transfer data to third parties only to the extent necessary for the operation of the service and the relevant purposes.",
+    "l1": "payment, infrastructure, and technical providers;",
+    "l2": "hosting providers, email services, security tools, analytics tools, and other technical services;",
+    "l3": "services related to security, anti-fraud, logging, and abuse prevention;",
+    "l4": "public authorities, rights holders, or other persons where such transfer is required on mandatory legal grounds."
   },
 
   "section6": {
-    "title": "6. International Data Transfers",
-    "p1": "The Platform may use technical services located in other countries. In such cases, appropriate safeguards are implemented in accordance with applicable law."
+    "title": "6. International nature of processing",
+    "p1": "The platform and the technical services it uses may involve data processing in different countries. The user understands that some of the technical infrastructure, providers, and communication channels may be located outside the user's country."
   },
 
   "section7": {
-    "title": "7. Data Retention",
-    "p1": "Data is stored for the duration of the account and additionally for the period necessary to comply with legal obligations and resolve disputes."
+    "title": "7. Data retention period",
+    "p1": "Data may be retained for the duration of the user's account, for the period necessary for the operation of platform functions, dispute handling, support processing, abuse prevention, and for any other period reasonably necessary to perform the platform's obligations and protect its legitimate interests."
   },
 
   "section8": {
-    "title": "8. User Rights",
-    "p1": "Users have the right to:",
-    "l1": "access their data",
-    "l2": "request correction",
-    "l3": "request deletion (where legally permitted)",
-    "l4": "restrict processing",
-    "l5": "withdraw consent",
-    "p2": "Requests can be sent to:"
+    "title": "8. Security and anti-fraud",
+    "p1": "The platform applies technical and organizational measures to protect data and may also use internal checks, restrictions, activity logs, and automated and manual risk analysis mechanisms aimed at ensuring the security of the service, users, and operations."
   },
 
   "section9": {
-    "title": "9. Data Protection",
-    "p1": "We implement technical and organizational security measures to protect data from unauthorized access, loss, or alteration."
+    "title": "9. User rights",
+    "p1": "Depending on applicable law, the user may have the right to:",
+    "l1": "receive information about the processing of their data;",
+    "l2": "request correction of inaccurate or outdated data;",
+    "l3": "request deletion of data where such deletion is permitted and does not conflict with mandatory requirements or the platform's legitimate interests;",
+    "l4": "restrict certain processing methods in the cases provided for by applicable law;",
+    "l5": "submit a request regarding data processing through the platform's available communication channels;",
+    "p2": "For data-related questions, requests may be sent to:"
   },
 
   "section10": {
-    "title": "10. Cookies and Analytics",
-    "p1": "The Platform uses cookies and similar technologies. Details are available in the ",
+    "title": "10. Cookies and similar technologies",
+    "p1": "The platform may use cookies and similar technologies. This is described in more detail in the",
     "link": "Cookie Policy"
   },
 
   "section11": {
-    "title": "11. Policy Updates",
-    "p1": "We may update this Policy. The current version is published on the website."
+    "title": "11. Changes to this policy",
+    "p1": "The platform may update this Privacy Policy. The current version is published on this page, and continued use of the platform after an update means acceptance of the new version to the extent applicable."
   },
 
   "footer": {
-    "text1": "If you have questions about data protection, please use the ",
+    "text1": "If you have any questions about this Policy, please use the",
     "link1": "Contacts",
-    "or": " or ",
+    "or": "or",
     "link2": "Help Center"
   }
 }

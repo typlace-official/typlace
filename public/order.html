@@ -982,60 +982,71 @@ body{
   text-transform:uppercase;
   color:#9ca3af;
 }
+
 /* ===== RESOLUTION MESSAGE ===== */
 
 .msg-resolution{
   justify-content:flex-start;
+  margin:14px 0;
 }
 
-.msg-resolution-wrap{
+.msg-body--resolution{
+  position:relative;
   max-width:min(78%, 420px);
-}
-
-.msg-resolution-head{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin:0 0 6px 2px;
-  min-width:0;
-  max-width:100%;
-}
-
-.msg-resolution-name{
-  font-size:13px;
-  font-weight:800;
-  color:var(--resolution-name);
-  min-width:0;
-  max-width:100%;
-}
-
-.msg-resolution .msg-body--text{
   background:var(--resolution-bg);
   border:1px solid var(--resolution-line);
   color:var(--resolution-text);
+  border-radius:16px;
   border-bottom-left-radius:6px;
+  padding:12px 14px 22px;
+  text-align:left;
 }
 
-.msg-resolution .msg-time{
+.msg-resolution-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:22px;
+  padding:0 10px;
+  border-radius:999px;
+  background:#ede9fe;
+  color:var(--resolution-name);
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+
+.msg-body--resolution .msg-text{
+  font-size:14px;
+  line-height:1.45;
+  white-space:pre-wrap;
+  padding-right:48px;
+}
+
+.msg-body--resolution .msg-time{
+  position:absolute;
+  right:12px;
+  bottom:8px;
   color:var(--resolution-text);
   opacity:.75;
 }
 
-.msg-resolution .tp-name-with-badge{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  min-width:0;
-  max-width:100%;
+.msg-body--resolution .msg-media{
+  margin-top:8px;
 }
 
-.msg-resolution .tp-name-text{
-  min-width:0;
+.msg-body--resolution .msg-media img{
+  display:block;
+  width:100%;
   max-width:100%;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
+  height:auto;
+  max-height:420px;
+  border-radius:14px;
+  border:1px solid rgba(0,0,0,.08);
 }
+
 /* ===== RESOLUTION DECISION PANEL ===== */
 
 .resolution-decision{
@@ -1099,6 +1110,22 @@ body{
 
 .btnResolutionRefund:hover{
   background:#b91c1c;
+}
+.order-chat-profile-link{
+  cursor:pointer;
+  transition:opacity .15s ease;
+}
+
+.order-chat-profile-link:hover{
+  opacity:.88;
+}
+
+.order-chat-profile-link.is-disabled{
+  cursor:default;
+}
+
+.order-chat-profile-link.is-disabled:hover{
+  opacity:1;
 }
 </style>
 </head>
@@ -1193,7 +1220,7 @@ body{
 <div class="order-chat-card" id="orderChatCard">
 
   <div class="right-top">
-    <div class="right-title">
+    <div class="right-title order-chat-profile-link is-disabled" id="orderChatUserLink">
       <div class="chat-ava" id="chatAva">?</div>
 
       <div class="right-user-meta">
@@ -1325,6 +1352,7 @@ const resolutionDecisionBoxEl = document.getElementById("resolutionDecisionBox")
 const resolutionDecisionTextEl = document.getElementById("resolutionDecisionText");
 const resolutionConfirmBtnEl = document.getElementById("resolutionConfirmBtn");
 const resolutionRefundBtnEl = document.getElementById("resolutionRefundBtn");
+const orderChatUserLinkEl = document.getElementById("orderChatUserLink");
 
 async function ensureUserEmail(force = false){
   if (meLoaded && myEmail && !force) {
@@ -1356,6 +1384,61 @@ let canUseOrderChat = false;
 let canWriteResolutionChat = false;
 let currentOrder = null;
 
+const ORDER_APPEAL_WINDOW_MS = 72 * 60 * 60 * 1000;
+
+function getCompletedAppealDeadline(order){
+  const completedAt = Number(order?.completedAt || 0);
+  if (!completedAt) return 0;
+  return completedAt + ORDER_APPEAL_WINDOW_MS;
+}
+
+function canBuyerAppealCompletedOrder(order){
+  if (!order) return false;
+  if (role !== "buyer") return false;
+  if (order.status !== "completed") return false;
+
+  const deadline = getCompletedAppealDeadline(order);
+  return deadline > Date.now();
+}
+
+function getAppealTimeLeftText(order){
+  const deadline = getCompletedAppealDeadline(order);
+  const msLeft = Math.max(0, deadline - Date.now());
+
+  if (!msLeft) return "";
+
+  const totalHours = Math.ceil(msLeft / (60 * 60 * 1000));
+
+  if (totalHours >= 24) {
+    const days = Math.floor(totalHours / 24);
+    const hours = totalHours % 24;
+
+    if (hours === 0) {
+      return `${days} д.`;
+    }
+
+    return `${days} д. ${hours} ч.`;
+  }
+
+  return `${totalHours} ч.`;
+}
+
+function openCompletedOrderAppeal(){
+  if (!currentOrder) return;
+
+  const params = new URLSearchParams({
+    category: "order",
+    role: "buyer",
+    subject: "seller_took_back_item_or_access",
+    orderId: currentOrder.orderNumber || currentOrder.id,
+    chatId: currentOrder.chatId || ""
+  });
+
+  location.href = "/support-create.html?" + params.toString();
+}
+
+window.openCompletedOrderAppeal = openCompletedOrderAppeal;
+
 function isParticipantRole(){
   return role === "buyer" || role === "seller";
 }
@@ -1377,6 +1460,49 @@ function pageT(key, params = {}){
   return window.tpI18n?.t
     ? window.tpI18n.t(`page.${key}`, params)
     : key;
+}
+
+i18nReady.then(() => {
+  if (window.tpI18n?.apply) {
+    window.tpI18n.apply(document.body);
+  }
+});
+
+function canOpenPendingOrderDispute(order){
+  if (!order || !isParticipantRole()) return false;
+  if (order.status !== "pending") return false;
+
+  return !["requested", "in_review"].includes(order.disputeStatus);
+}
+
+function canOpenUserProfileFromOrderChat(user){
+  if (!user) return false;
+
+  const safeEmail = String(user.email || "").trim().toLowerCase();
+  const safeRole = String(user.role || "").trim().toLowerCase();
+  const safeUserId = String(user.userId || "").trim();
+
+  if (!safeUserId) return false;
+  if (safeEmail === "__official__@typlace.local") return false;
+  if (safeEmail === "__resolution__@typlace.local") return false;
+  if (["official", "resolution_entity"].includes(safeRole)) return false;
+
+  return true;
+}
+
+function updateOrderChatProfileLink(user){
+  if (!orderChatUserLinkEl) return;
+
+  const canOpen = canOpenUserProfileFromOrderChat(user);
+
+  orderChatUserLinkEl.classList.toggle("is-disabled", !canOpen);
+  orderChatUserLinkEl.onclick = null;
+
+  if (canOpen) {
+    orderChatUserLinkEl.onclick = () => {
+      location.href = `/profile.html?id=${encodeURIComponent(user.userId)}`;
+    };
+  }
 }
 
 function getMutedChats(){
@@ -1497,6 +1623,18 @@ if (canUseOrderChat) {
   await loadChatHeader();
 }
 
+const chatActionsEl = document.getElementById("chatActions");
+const reportBtnEl = document.getElementById("chatReportBtn");
+
+if (chatActionsEl) {
+  chatActionsEl.style.display =
+    canUseOrderChat && isParticipantRole() ? "flex" : "none";
+}
+
+if (reportBtnEl) {
+  reportBtnEl.style.display = canOpenPendingOrderDispute(o) ? "flex" : "none";
+}
+
 const liveOffer = o.offer || null;
 const snapshot = o.offerSnapshot || {};
 
@@ -1578,6 +1716,20 @@ if(role === "buyer" && o.status === "pending"){
     <button class="btn btnBlue" onclick="confirmOrder()">
       Подтвердить получение
     </button>
+  `;
+}
+
+// buyer appeal after completed
+if (canBuyerAppealCompletedOrder(o)) {
+  const timeLeft = getAppealTimeLeftText(o);
+
+  actions.innerHTML += `
+    <button class="btn btnGray" onclick="openCompletedOrderAppeal()">
+      Подать апелляцию
+    </button>
+    <div style="width:100%;font-size:12px;color:#6b7280;margin-top:2px;">
+      Апелляция доступна ещё ${timeLeft}
+    </div>
   `;
 }
 
@@ -1739,18 +1891,14 @@ function renderMessageBody(m){
 function isResolutionMessage(m){
   return (
     m?.messageType === "resolution" ||
-    m?.kind === "resolution" ||
-    m?.fromRole === "resolution"
+    (m?.kind === "staff" && m?.staffRole === "resolution")
   );
 }
 
-function getResolutionName(m){
-  return (
-    m?.fromUsername ||
-    m?.username ||
-    m?.authorName ||
-    "Сотрудник"
-  );
+function getResolutionLabel(){
+  return window.tpBadges?.getTranslatedLabel
+    ? window.tpBadges.getTranslatedLabel("resolution")
+    : "Арбитраж";
 }
 
 function renderResolutionMessageItem(m){
@@ -1759,33 +1907,34 @@ function renderResolutionMessageItem(m){
 
   const safeText = window.tpBadges?.escapeHtml
     ? window.tpBadges.escapeHtml(text)
-    : text;
+    : String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
 
-  const nameHtml = window.tpBadges?.renderNameWithBadge
-    ? window.tpBadges.renderNameWithBadge(getResolutionName(m), "resolution")
-    : `
-      <span class="tp-name-with-badge">
-        <span class="tp-name-text">${getResolutionName(m)}</span>
-        <span class="tp-badge tp-badge--resolution">Арбитраж</span>
-      </span>
-    `;
+  const safeLabel = String(getResolutionLabel())
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 
   return `
     <div class="msg msg-resolution" data-msg-id="${m.id}">
-      <div class="msg-resolution-wrap">
-        <div class="msg-resolution-head">
-          <div class="msg-resolution-name">${nameHtml}</div>
-        </div>
+      <div class="msg-body msg-body--resolution">
+        <div class="msg-resolution-badge">${safeLabel}</div>
 
-        <div class="msg-body msg-body--text">
-          ${text ? `<div class="msg-text">${safeText}</div>` : ""}
-          ${media.length ? `
-            <div class="msg-media" style="margin-top:8px;">
-              ${media.map(url => `<img src="${url}" alt="">`).join("")}
-            </div>
-          ` : ""}
-          <span class="msg-time">${formatMessageTime(m.createdAt)}</span>
-        </div>
+        ${text ? `<div class="msg-text">${safeText}</div>` : ""}
+
+        ${media.length ? `
+          <div class="msg-media">
+            ${media.map(url => `<img src="${url}" alt="">`).join("")}
+          </div>
+        ` : ""}
+
+        <span class="msg-time">${formatMessageTime(m.createdAt)}</span>
       </div>
     </div>
   `;
@@ -1837,8 +1986,6 @@ async function loadChatHeader(){
 
   const actions = document.getElementById("chatActions");
 
-  // Для арбитража / staff не пытаемся показывать "другого пользователя",
-  // потому что chat route возвращает otherUser корректно только для участника чата.
   if(!isParticipantRole()){
     document.getElementById("chatAva").innerHTML =
       `<img src="${DEFAULT_AVATAR}" alt="">`;
@@ -1847,6 +1994,8 @@ async function loadChatHeader(){
     document.getElementById("chatSub").textContent = isResolutionWriter()
       ? "Арбитражный чат"
       : "Просмотр сообщений";
+
+    updateOrderChatProfileLink(null);
 
     if(actions) actions.style.display = "none";
     return;
@@ -1857,16 +2006,15 @@ async function loadChatHeader(){
   });
 
   const data = await res.json();
-  if(!data.success) return;
 
-  const user = data.chat?.otherUser;
+  if(!data.success || !data.chat?.otherUser){
+    updateOrderChatProfileLink(null);
 
-  if(!user){
     if(actions) actions.style.display = "none";
     return;
   }
 
-  if(actions) actions.style.display = "flex";
+  const user = data.chat.otherUser;
 
   const avatar =
     user.avatarUrl ||
@@ -1884,7 +2032,10 @@ async function loadChatHeader(){
   document.getElementById("chatSub").textContent =
     user.online ? pageT("chat.online") : getLastSeenText(user.lastSeen);
 
+  updateOrderChatProfileLink(user);
   updateChatActionLabels();
+
+  if(actions) actions.style.display = "flex";
 }
 
 function formatDateDivider(date){
@@ -2234,10 +2385,16 @@ document.getElementById("chatNotifyBtn")?.addEventListener("click", async () => 
 });
 
 document.getElementById("chatReportBtn")?.addEventListener("click", () => {
-  if(!orderId) return;
+  if(!currentOrder) return;
+  if(!canOpenPendingOrderDispute(currentOrder)) return;
 
-  location.href =
-    `/support-create.html?category=order&orderId=${encodeURIComponent(orderId)}&chatId=${encodeURIComponent(chatId || "")}`;
+  const params = new URLSearchParams({
+    category: "order",
+    orderId: currentOrder.orderNumber || currentOrder.id || orderId,
+    chatId: currentOrder.chatId || chatId || ""
+  });
+
+  location.href = "/support-create.html?" + params.toString();
 });
 
 resolutionConfirmBtnEl?.addEventListener("click", () => {

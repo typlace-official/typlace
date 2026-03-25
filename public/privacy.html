@@ -1,80 +1,104 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+  <script>
+    document.titleKey = "page.title";
+  </script>
 
-<script>
-  document.titleKey = "page.title";
-</script>
+  <title>TyPlace</title>
 
-<title>TyPlace</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/header.css">
+  <link rel="stylesheet" href="/footer.css">
 
-<link rel="stylesheet" href="/header.css">
-<link rel="stylesheet" href="/footer.css">
+  <style>
+    body{
+      margin:0;
+      background:#f6f7f9;
+      font-family:Inter, Arial, sans-serif;
+      color:#111827;
+    }
 
-<style>
-body{
-  margin:0;
-  background:#f6f7f9;
-  font-family:Inter, Arial, sans-serif;
-  color:#111827;
-}
+    .page{
+      max-width:900px;
+      margin:40px auto;
+      padding:0 16px;
+    }
 
-.page{
-  max-width:900px;
-  margin:40px auto;
-  padding:0 16px;
-}
+    .content{
+      background:#fff;
+      padding:40px;
+      border-radius:18px;
+      border:1px solid #e5e7eb;
+      box-shadow:0 12px 32px rgba(0,0,0,.06);
+    }
 
-.content{
-  background:#fff;
-  padding:40px;
-  border-radius:18px;
-  border:1px solid #e5e7eb;
-  box-shadow:0 12px 32px rgba(0,0,0,.06);
-}
+    .content h1{
+      font-size:26px;
+      margin:0 0 10px 0;
+      letter-spacing:-.2px;
+    }
 
-.content h1{font-size:26px;margin-bottom:10px;}
-.content h2{font-size:19px;margin:34px 0 12px;font-weight:800;}
+    .content h2{
+      font-size:19px;
+      margin:34px 0 12px;
+      font-weight:800;
+      letter-spacing:-.15px;
+    }
 
-.content p, .content li{
-  font-size:14px;
-  line-height:1.7;
-  color:#374151;
-  margin-bottom:12px;
-}
+    .content p,
+    .content li{
+      font-size:14px;
+      line-height:1.7;
+      color:#374151;
+      margin-bottom:12px;
+    }
 
-.content ul{margin:10px 0 16px 18px;}
+    .content ul{
+      margin:10px 0 16px 18px;
+    }
 
-.meta{
-  font-size:13px;
-  color:#6b7280;
-  margin-bottom:20px;
-}
+    .meta{
+      font-size:13px;
+      color:#6b7280;
+      margin-bottom:20px;
+      line-height:1.6;
+    }
 
-.doc-link{
-  color:#2563eb;
-  text-decoration:none;
-  font-weight:600;
-}
+    .doc-link{
+      color:#2563eb;
+      text-decoration:none;
+      font-weight:400;
+    }
 
-.doc-link:hover{text-decoration:underline;}
+    .doc-link:hover{
+      text-decoration:underline;
+    }
 
-hr{
-  border:none;
-  height:1px;
-  background:#e5e7eb;
-  margin:28px 0;
-}
+    hr{
+      border:none;
+      height:1px;
+      background:#e5e7eb;
+      margin:28px 0;
+    }
 
-@media(max-width:900px){
-  .content{ padding:22px; border-radius:16px; }
-  .content h1{ font-size:22px; }
-  .content h2{ font-size:17px; }
-}
-</style>
+    @media(max-width:900px){
+      .content{
+        padding:22px;
+        border-radius:16px;
+      }
+
+      .content h1{
+        font-size:22px;
+      }
+
+      .content h2{
+        font-size:17px;
+      }
+    }
+  </style>
 </head>
 
 <body>
@@ -82,113 +106,111 @@ hr{
 <div id="header-container"></div>
 
 <main class="page-content">
-<div class="page">
+  <div class="page">
+    <article class="content">
 
-<article class="content">
+      <h1 data-i18n="page.title"></h1>
 
-<h1 data-i18n="page.title"></h1>
+      <div class="meta">
+        <span data-i18n="page.meta.line1"></span><br>
+        <span data-i18n="page.meta.line2"></span><br>
+        <span data-i18n="page.meta.line3"></span>
+        <a href="mailto:legal@typlace.com" class="doc-link">legal@typlace.com</a>
+      </div>
 
-<div class="meta">
-  <span data-i18n="page.meta.line1"></span><br>
-  <span data-i18n="page.meta.line2"></span><br>
-  <span data-i18n="page.meta.line3"></span>
-  <a href="mailto:legal@typlace.com" class="doc-link">legal@typlace.com</a>
-</div>
+      <p data-i18n="page.intro"></p>
 
-<p data-i18n="page.intro"></p>
+      <h2 data-i18n="page.section1.title"></h2>
+      <p>
+        <span data-i18n="page.section1.p1"></span>
+        <a href="/contacts.html" class="doc-link" data-i18n="page.section1.link1"></a>.
+      </p>
 
-<h2 data-i18n="page.section1.title"></h2>
-<p>
-  <span data-i18n="page.section1.p1"></span>
-  <a href="/about.html" class="doc-link" data-i18n="page.section1.link1"></a>
-  <span data-i18n="page.section1.or"></span>
-  <a href="/contacts.html" class="doc-link" data-i18n="page.section1.link2"></a>.
-</p>
+      <h2 data-i18n="page.section2.title"></h2>
+      <ul>
+        <li data-i18n="page.section2.l1"></li>
+        <li data-i18n="page.section2.l2"></li>
+        <li data-i18n="page.section2.l3"></li>
+        <li data-i18n="page.section2.l4"></li>
+        <li data-i18n="page.section2.l5"></li>
+        <li data-i18n="page.section2.l6"></li>
+        <li data-i18n="page.section2.l7"></li>
+        <li data-i18n="page.section2.l8"></li>
+      </ul>
 
-<h2 data-i18n="page.section2.title"></h2>
-<ul>
-  <li data-i18n="page.section2.l1"></li>
-  <li data-i18n="page.section2.l2"></li>
-  <li data-i18n="page.section2.l3"></li>
-  <li data-i18n="page.section2.l4"></li>
-  <li data-i18n="page.section2.l5"></li>
-  <li data-i18n="page.section2.l6"></li>
-  <li data-i18n="page.section2.l7"></li>
-</ul>
+      <h2 data-i18n="page.section3.title"></h2>
+      <ul>
+        <li data-i18n="page.section3.l1"></li>
+        <li data-i18n="page.section3.l2"></li>
+        <li data-i18n="page.section3.l3"></li>
+        <li data-i18n="page.section3.l4"></li>
+        <li data-i18n="page.section3.l5"></li>
+        <li data-i18n="page.section3.l6"></li>
+        <li data-i18n="page.section3.l7"></li>
+        <li data-i18n="page.section3.l8"></li>
+      </ul>
 
-<h2 data-i18n="page.section3.title"></h2>
-<ul>
-  <li data-i18n="page.section3.l1"></li>
-  <li data-i18n="page.section3.l2"></li>
-  <li data-i18n="page.section3.l3"></li>
-  <li data-i18n="page.section3.l4"></li>
-  <li data-i18n="page.section3.l5"></li>
-  <li data-i18n="page.section3.l6"></li>
-  <li data-i18n="page.section3.l7"></li>
-</ul>
+      <h2 data-i18n="page.section4.title"></h2>
+      <p data-i18n="page.section4.p1"></p>
+      <ul>
+        <li data-i18n="page.section4.l1"></li>
+        <li data-i18n="page.section4.l2"></li>
+        <li data-i18n="page.section4.l3"></li>
+        <li data-i18n="page.section4.l4"></li>
+      </ul>
 
-<h2 data-i18n="page.section4.title"></h2>
-<p data-i18n="page.section4.p1"></p>
-<ul>
-  <li data-i18n="page.section4.l1"></li>
-  <li data-i18n="page.section4.l2"></li>
-  <li data-i18n="page.section4.l3"></li>
-  <li data-i18n="page.section4.l4"></li>
-</ul>
+      <h2 data-i18n="page.section5.title"></h2>
+      <p data-i18n="page.section5.p1"></p>
+      <ul>
+        <li data-i18n="page.section5.l1"></li>
+        <li data-i18n="page.section5.l2"></li>
+        <li data-i18n="page.section5.l3"></li>
+        <li data-i18n="page.section5.l4"></li>
+      </ul>
 
-<h2 data-i18n="page.section5.title"></h2>
-<p data-i18n="page.section5.p1"></p>
-<ul>
-  <li data-i18n="page.section5.l1"></li>
-  <li data-i18n="page.section5.l2"></li>
-  <li data-i18n="page.section5.l3"></li>
-  <li data-i18n="page.section5.l4"></li>
-</ul>
-<p data-i18n="page.section5.p2"></p>
+      <h2 data-i18n="page.section6.title"></h2>
+      <p data-i18n="page.section6.p1"></p>
 
-<h2 data-i18n="page.section6.title"></h2>
-<p data-i18n="page.section6.p1"></p>
+      <h2 data-i18n="page.section7.title"></h2>
+      <p data-i18n="page.section7.p1"></p>
 
-<h2 data-i18n="page.section7.title"></h2>
-<p data-i18n="page.section7.p1"></p>
+      <h2 data-i18n="page.section8.title"></h2>
+      <p data-i18n="page.section8.p1"></p>
 
-<h2 data-i18n="page.section8.title"></h2>
-<p data-i18n="page.section8.p1"></p>
-<ul>
-  <li data-i18n="page.section8.l1"></li>
-  <li data-i18n="page.section8.l2"></li>
-  <li data-i18n="page.section8.l3"></li>
-  <li data-i18n="page.section8.l4"></li>
-  <li data-i18n="page.section8.l5"></li>
-</ul>
-<p>
-  <span data-i18n="page.section8.p2"></span>
-  <a href="mailto:legal@typlace.com" class="doc-link">legal@typlace.com</a>
-</p>
+      <h2 data-i18n="page.section9.title"></h2>
+      <p data-i18n="page.section9.p1"></p>
+      <ul>
+        <li data-i18n="page.section9.l1"></li>
+        <li data-i18n="page.section9.l2"></li>
+        <li data-i18n="page.section9.l3"></li>
+        <li data-i18n="page.section9.l4"></li>
+        <li data-i18n="page.section9.l5"></li>
+      </ul>
+      <p>
+        <span data-i18n="page.section9.p2"></span>
+        <a href="mailto:legal@typlace.com" class="doc-link">legal@typlace.com</a>
+      </p>
 
-<h2 data-i18n="page.section9.title"></h2>
-<p data-i18n="page.section9.p1"></p>
+      <h2 data-i18n="page.section10.title"></h2>
+      <p>
+        <span data-i18n="page.section10.p1"></span>
+        <a href="/cookies.html" class="doc-link" data-i18n="page.section10.link"></a>.
+      </p>
 
-<h2 data-i18n="page.section10.title"></h2>
-<p>
-  <span data-i18n="page.section10.p1"></span>
-  <a href="/cookies.html" class="doc-link" data-i18n="page.section10.link"></a>.
-</p>
+      <h2 data-i18n="page.section11.title"></h2>
+      <p data-i18n="page.section11.p1"></p>
 
-<h2 data-i18n="page.section11.title"></h2>
-<p data-i18n="page.section11.p1"></p>
+      <hr>
 
-<hr>
+      <p class="meta">
+        <span data-i18n="page.footer.text1"></span>
+        <a href="/contacts.html" class="doc-link" data-i18n="page.footer.link1"></a>
+        <span data-i18n="page.footer.or"></span>
+        <a href="/help.html" class="doc-link" data-i18n="page.footer.link2"></a>.
+      </p>
 
-<p class="meta">
-  <span data-i18n="page.footer.text1"></span>
-  <a href="/contacts.html" class="doc-link" data-i18n="page.footer.link1"></a>
-  <span data-i18n="page.footer.or"></span>
-  <a href="/help.html" class="doc-link" data-i18n="page.footer.link2"></a>.
-</p>
-
-</article>
-</div>
+    </article>
+  </div>
 </main>
 
 <div id="footer-container"></div>

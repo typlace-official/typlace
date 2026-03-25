@@ -2,9 +2,8 @@ const { TronWeb } = require("tronweb");
 const { listDepositWallets, decrypt } = require("./deposit-wallet.service");
 
 const USDT_CONTRACT = process.env.TRON_USDT_CONTRACT;
-if (!USDT_CONTRACT) {
-  throw new Error("TRON_USDT_CONTRACT env missing");
-}
+const TRON_USDT_CONTRACT =
+  process.env.TRON_USDT_CONTRACT || "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
 
 async function sweepWallet(wallet){
 

@@ -17,13 +17,15 @@
   "topics": {
     "seller_not_complete": "Продавец не выполняет заказ",
     "wrong_item": "Получил не тот товар",
+    "seller_took_back_item_or_access": "Продавец забрал товар или доступ обратно",
     "cancel_order": "Хочу отменить заказ",
+
     "buyer_not_confirm": "Покупатель не подтверждает заказ",
-    "delivery_problem": "Проблема с передачей товара",
+    "delivery_or_service_problem": "Проблема с передачей товара или выполнением услуги",
 
     "deposit_problem": "Проблема с пополнением",
     "withdraw_problem": "Проблема с выводом",
-    "payment_failed": "Платеж не проходит",
+    "payment_failed": "Платёж не проходит",
 
     "account_hacked": "Мой аккаунт взломан",
     "restore_access": "Восстановить доступ к аккаунту",
@@ -73,7 +75,7 @@
   "addFiles": "Добавить файлы",
   "send": "Отправить обращение",
 
-  "file": "photo",
+  "file": "Файл",
 
   "counter": "{{current}} / {{max}}",
 

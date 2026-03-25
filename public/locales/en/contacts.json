@@ -2,23 +2,23 @@
   "title": "Contacts",
 
   "legal": {
-    "title": "Legal Inquiries",
-    "text": "For government authorities, rights holders and official legal requests."
+    "title": "Legal Requests",
+    "text": "For public authorities, rights holders, and official legal requests related to the operation of the platform."
   },
 
   "finance": {
-    "title": "Financial Relations",
-    "text": "For banks and payment systems regarding cooperation and financial matters."
+    "title": "Financial Cooperation",
+    "text": "For banks, payment providers, and other financial partners regarding cooperation and operational matters."
   },
 
   "partners": {
-    "title": "Business Partnerships",
-    "text": "Partnership and commercial cooperation proposals."
+    "title": "Business Cooperation",
+    "text": "For partnership proposals, integrations, and other forms of commercial cooperation."
   },
 
   "support": {
     "title": "User Support",
-    "text1": "For orders, accounts and disputes please use the",
+    "text1": "For questions about orders, account issues, disputes, and use of the platform, please use the",
     "link": "Help Center"
   }
 }

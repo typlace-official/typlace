@@ -2,563 +2,84 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Панель поддержки — TyPlace</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-*{
-  box-sizing:border-box;
-}
-
-body{
-  margin:0;
-  font-family:Inter,Arial,sans-serif;
-  background:#f3f4f6;
-  color:#111827;
-}
-
-.topbar{
-  background:#0f172a;
-  color:#fff;
-  padding:16px 24px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  flex-wrap:wrap;
-}
-
-.topbar-left{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-}
-
-.topbar-title{
-  font-size:18px;
-  font-weight:900;
-}
-
-.topbar-subtitle{
-  font-size:13px;
-  color:#94a3b8;
-  font-weight:600;
-}
-
-.topbar-right{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex-wrap:wrap;
-}
-
-.admin-btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:10px 14px;
-  border-radius:5px;
-  background:#1e293b;
-  color:#fff;
-  text-decoration:none;
-  font-size:14px;
-  font-weight:800;
-}
-
-.admin-btn:hover{
-  background:#334155;
-}
-
-.role-pill{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:10px 14px;
-  border-radius:5px;
-  background:rgba(255,255,255,.08);
-  color:#fff;
-  font-size:13px;
-  font-weight:900;
-}
-
-.page{
-  max-width:1200px;
-  margin:28px auto;
-  padding:0 16px;
-}
-
-.page-head{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:16px;
-  margin-bottom:20px;
-  flex-wrap:wrap;
-}
-
-.page-head h1{
-  margin:0;
-  font-size:28px;
-  font-weight:900;
-}
-
-.page-head p{
-  margin:6px 0 0;
-  color:#6b7280;
-  font-size:14px;
-  font-weight:600;
-}
-
-.stats{
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:12px;
-  margin-bottom:20px;
-}
-
-.stat-box{
-  background:#fff;
-  border:1px solid #e5e7eb;
-  padding:14px 16px;
-  border-radius:12px;
-}
-
-.stat-label{
-  font-size:12px;
-  font-weight:800;
-  color:#6b7280;
-  text-transform:uppercase;
-  letter-spacing:.4px;
-  margin-bottom:10px;
-}
-
-.stat-value{
-  font-size:24px;
-  font-weight:900;
-  color:#111827;
-}
-
-.filters{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-bottom:20px;
-}
-
-.select{
-  min-width:180px;
-  padding:10px 12px;
-  border-radius:5px;
-  border:1px solid #d1d5db;
-  background:#fff;
-  font-weight:700;
-  color:#111827;
-  outline:none;
-}
-
-.select:focus{
-  border-color:#1e50d4;
-}
-
-.card{
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:5px;
-  overflow:hidden;
-}
-
-.ticket{
-  padding:18px;
-  border-top:1px solid #f3f4f6;
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:16px;
-}
-
-.ticket:first-child{
-  border-top:none;
-}
-
-.ticket:hover{
-  background:#f9fafb;
-}
-
-.ticket-main{
-  min-width:0;
-  flex:1;
-}
-
-.ticket-top{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-bottom:8px;
-}
-
-.ticket-id{
-  font-size:15px;
-  font-weight:900;
-}
-
-.ticket-subject{
-  font-size:16px;
-  font-weight:800;
-  line-height:1.35;
-  margin-bottom:8px;
-}
-
-.ticket-meta{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin-bottom:8px;
-}
-
-.meta-chip{
-  display:inline-flex;
-  align-items:center;
-  padding:6px 10px;
-  border-radius:5px;
-  background:#f3f4f6;
-  color:#374151;
-  font-size:12px;
-  font-weight:800;
-}
-
-.meta-chip.priority-high{
-  background:#ef4444;
-  color:#fff;
-}
-
-.meta-chip.unread{
-  background:#dbeafe;
-  color:#1e40af;
-}
-
-.wait-time{
-  font-size:12px;
-  font-weight:800;
-  color:#6b7280;
-}
-
-.wait-time.late{
-  color:#dc2626;
-}
-
-.assigned-line{
-  font-size:13px;
-  color:#6b7280;
-  font-weight:700;
-}
-
-.ticket-actions{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  flex-shrink:0;
-  flex-wrap:wrap;
-  justify-content:flex-end;
-}
-
-.badge{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:6px 12px;
-  border-radius:5px;
-  font-size:12px;
-  font-weight:900;
-  color:#fff;
-}
-
-.badge.waiting{
-  background:#16a34a;
-  color:#fff;
-}
-
-.badge.in_progress{
-  background:#f59e0b;
-  color:#fff;
-}
-
-.badge.resolved{
-  background:#6b7280;
-  color:#fff;
-}
-
-.btn{
-  border:none;
-  padding:10px 14px;
-  border-radius:5px;
-  font-weight:800;
-  cursor:pointer;
-  background:#eef2f7;
-  color:#111827;
-}
-
-.btn:hover{
-  background:#e5e7eb;
-}
-
-.btn-primary{
-  background:#1E50D4;
-  color:#fff;
-}
-
-.btn-primary:hover{
-  background:#1844b6;
-}
-
-.empty{
-  padding:24px;
-  text-align:center;
-  color:#6b7280;
-  font-weight:700;
-}
-
-/* ===== OFFICIAL CHAT TOOL ===== */
-.official-card{
-  padding:18px;
-  margin-bottom:20px;
-}
-
-.official-head{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:12px;
-  flex-wrap:wrap;
-  margin-bottom:14px;
-}
-
-.official-title{
-  font-size:18px;
-  font-weight:900;
-  color:#111827;
-}
-
-.official-subtitle{
-  margin-top:4px;
-  font-size:13px;
-  color:#6b7280;
-  font-weight:600;
-}
-
-.official-search-row{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-
-.search-input{
-  flex:1;
-  min-width:260px;
-  padding:12px 14px;
-  border-radius:5px;
-  border:1px solid #d1d5db;
-  background:#fff;
-  color:#111827;
-  font-size:14px;
-  font-weight:700;
-  outline:none;
-}
-
-.search-input:focus{
-  border-color:#1e50d4;
-}
-
-.user-results{
-  margin-top:14px;
-  border-top:1px solid #f3f4f6;
-}
-
-.user-row{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:14px;
-  padding:14px 0;
-  border-bottom:1px solid #f3f4f6;
-}
-
-.user-row:last-child{
-  border-bottom:none;
-}
-
-.user-main{
-  min-width:0;
-  flex:1;
-}
-
-.user-name{
-  font-size:15px;
-  font-weight:900;
-  color:#111827;
-  margin-bottom:6px;
-  word-break:break-word;
-}
-
-.user-meta{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-}
-
-.user-actions{
-  flex-shrink:0;
-  display:flex;
-  align-items:center;
-}
-
-@media (max-width: 950px){
-  .stats{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
-
-  .ticket{
-    flex-direction:column;
-  }
-
-  .ticket-actions{
-    width:100%;
-    justify-content:flex-start;
-  }
-
-  .user-row{
-    flex-direction:column;
-    align-items:stretch;
-  }
-
-  .user-actions{
-    width:100%;
-  }
-
-  .user-actions .btn{
-    width:100%;
-  }
-}
-
-@media (max-width: 560px){
-  .stats{
-    grid-template-columns:1fr;
-  }
-
-  .page-head h1{
-    font-size:24px;
-  }
-
-  .topbar{
-    padding:14px 16px;
-  }
-
-  .page{
-    margin:20px auto;
-  }
-
-  .ticket{
-    padding:16px;
-  }
-
-  .search-input{
-    min-width:100%;
-  }
-}
-</style>
-
+<title>Поддержка — Тикеты — TyPlace</title>
+<link rel="stylesheet" href="/support-panel.css">
 </head>
-
 <body>
 
-<div class="topbar">
-  <div class="topbar-left">
-    <div class="topbar-title">TyPlace Support</div>
-    <div class="topbar-subtitle">Служебная панель поддержки</div>
-  </div>
-
-  <div class="topbar-right">
-    <a class="admin-btn" href="/admin">Админ панель</a>
-    <div class="role-pill" id="rolePill">Роль: ...</div>
-  </div>
-</div>
-
-<div class="page">
-
-  <div class="page-head">
-    <div>
-      <h1>Тикеты поддержки</h1>
-      <p>Рабочая очередь сотрудников поддержки.</p>
-    </div>
-  </div>
-
-  <div class="stats">
-    <div class="stat-box">
-      <div class="stat-label">Ожидают</div>
-      <div class="stat-value" id="statWaiting">0</div>
+<div class="support-layout">
+  <aside class="support-sidebar">
+    <div class="support-brand">
+      <div class="support-brand-title">TyPlace</div>
+      <div class="support-brand-subtitle">Support Panel</div>
     </div>
 
-    <div class="stat-box">
-      <div class="stat-label">В процессе</div>
-      <div class="stat-value" id="statInProgress">0</div>
+    <nav class="support-nav">
+      <a class="support-nav-link active" href="/support-admin.html">Тикеты</a>
+      <a class="support-nav-link" href="/support-resolution.html">Арбитраж</a>
+      <a class="support-nav-link" href="/support-official.html">Официальные сообщения</a>
+    </nav>
+
+    <div class="support-sidebar-bottom">
+      <a class="support-side-btn" id="adminBackBtn" href="/admin">В админку</a>
+      <button class="support-side-btn danger" id="logoutBtn" type="button">Выйти</button>
+    </div>
+  </aside>
+
+  <main class="support-content">
+    <div class="support-content-top">
+      <div class="support-page-head">
+        <h1>Тикеты поддержки</h1>
+        <p>Очередь обращений пользователей и модераторов.</p>
+      </div>
+
+      <div class="role-pill" id="rolePill">Роль: ...</div>
     </div>
 
-    <div class="stat-box">
-      <div class="stat-label">Решены</div>
-      <div class="stat-value" id="statResolved">0</div>
-    </div>
+    <div class="stats">
+      <div class="stat-box">
+        <div class="stat-label">Ожидают</div>
+        <div class="stat-value" id="statWaiting">0</div>
+      </div>
 
-    <div class="stat-box">
-      <div class="stat-label">Всего</div>
-      <div class="stat-value" id="statTotal">0</div>
-    </div>
-  </div>
+      <div class="stat-box">
+        <div class="stat-label">В процессе</div>
+        <div class="stat-value" id="statInProgress">0</div>
+      </div>
 
-  <div class="filters">
-    <select class="select" id="statusFilter">
-      <option value="">Все статусы</option>
-      <option value="waiting">Ожидают ответа</option>
-      <option value="in_progress">В процессе</option>
-      <option value="resolved">Решены</option>
-    </select>
+      <div class="stat-box">
+        <div class="stat-label">Решены</div>
+        <div class="stat-value" id="statResolved">0</div>
+      </div>
 
-    <select class="select" id="assignedFilter">
-      <option value="">Все тикеты</option>
-      <option value="me">Только мои</option>
-    </select>
-  </div>
-<div class="card official-card">
-  <div class="official-head">
-    <div>
-      <div class="official-title">Официальные сообщения</div>
-      <div class="official-subtitle">
-        Поиск пользователя и открытие чата от имени TyPlace.
+      <div class="stat-box">
+        <div class="stat-label">Всего</div>
+        <div class="stat-value" id="statTotal">0</div>
       </div>
     </div>
-  </div>
 
-  <div class="official-search-row">
-    <input
-      type="text"
-      id="officialSearchInput"
-      class="search-input"
-      placeholder="Email, ник или ID пользователя"
-    >
-    <button class="btn btn-primary" id="officialSearchBtn">Найти</button>
-  </div>
+    <div class="filters">
+      <select class="select" id="statusFilter">
+        <option value="">Все статусы</option>
+        <option value="waiting">Ожидают ответа</option>
+        <option value="in_progress">В процессе</option>
+        <option value="resolved">Решены</option>
+      </select>
 
-  <div class="user-results" id="officialSearchResults">
-    <div class="empty">Введите email, ник или ID пользователя</div>
-  </div>
-</div>
-  <div class="card" id="ticketList">
-    <div class="empty">Загрузка...</div>
-  </div>
+      <select class="select" id="assignedFilter">
+        <option value="">Все тикеты</option>
+        <option value="me">Только мои</option>
+      </select>
+    </div>
 
+    <div class="card" id="ticketList">
+      <div class="empty">Загрузка...</div>
+    </div>
+  </main>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
-
 <script>
 const token = localStorage.getItem("tp_token");
 
@@ -567,22 +88,12 @@ if(!token){
   throw new Error("No token");
 }
 
-let userRole = null;
 const socket = io();
+let userRole = "";
 
 const SUPPORT_PANEL_ROLES = new Set(["support", "admin", "super_admin"]);
 const ADMIN_PANEL_ROLES = new Set(["super_admin"]);
-const OFFICIAL_CHAT_PAGE_URL = "/chat.html?id=";
 
-function getRoleLabel(role){
-  const map = {
-    support: "Support",
-    admin: "Admin",
-    super_admin: "Super Admin"
-  };
-
-  return map[role] || role || "—";
-}
 function esc(s){
   return String(s || "")
     .replaceAll("&","&amp;")
@@ -591,13 +102,30 @@ function esc(s){
     .replaceAll('"',"&quot;")
     .replaceAll("'","&#039;");
 }
+
+function getRoleLabel(role){
+  const map = {
+    support: "Support",
+    admin: "Admin",
+    super_admin: "Super Admin"
+  };
+  return map[role] || role || "—";
+}
+
+function logout(){
+  localStorage.removeItem("tp_token");
+  location.href = "/auth.html?mode=login";
+}
+
 function formatWait(ts){
   const diff = Date.now() - Number(ts || 0);
   const minutes = Math.floor(diff / 60000);
 
   if(minutes < 60) return minutes + " мин.";
+
   const hours = Math.floor(minutes / 60);
   const restMinutes = minutes % 60;
+
   return hours + " ч. " + restMinutes + " мин.";
 }
 
@@ -611,158 +139,17 @@ function badge(status){
   return '<span class="badge ' + status + '">' + (map[status] || status) + '</span>';
 }
 
-function renderOfficialUsers(users, query){
-  const list = document.getElementById("officialSearchResults");
-
-  if (!query) {
-    list.innerHTML = '<div class="empty">Введите email, ник или ID пользователя</div>';
-    return;
-  }
-
-  if (!Array.isArray(users) || !users.length) {
-    list.innerHTML = '<div class="empty">Пользователи не найдены</div>';
-    return;
-  }
-
-  list.innerHTML = "";
-
-  users.forEach(user => {
-    const row = document.createElement("div");
-    row.className = "user-row";
-
-    const main = document.createElement("div");
-    main.className = "user-main";
-
-    const name = document.createElement("div");
-    name.className = "user-name";
-    name.textContent = user.username || "Пользователь";
-
-    const meta = document.createElement("div");
-    meta.className = "user-meta";
-
-    const emailChip = document.createElement("div");
-    emailChip.className = "meta-chip";
-    emailChip.textContent = user.email || "—";
-
-    meta.appendChild(emailChip);
-
-    if (user.userId) {
-      const idChip = document.createElement("div");
-      idChip.className = "meta-chip";
-      idChip.textContent = "ID: " + user.userId;
-      meta.appendChild(idChip);
-    }
-
-    if (user.role) {
-      const roleChip = document.createElement("div");
-      roleChip.className = "meta-chip";
-      roleChip.textContent = "Роль: " + user.role;
-      meta.appendChild(roleChip);
-    }
-
-    if (user.banned) {
-      const bannedChip = document.createElement("div");
-      bannedChip.className = "meta-chip";
-      bannedChip.textContent = "Заблокирован";
-      meta.appendChild(bannedChip);
-    }
-
-    main.appendChild(name);
-    main.appendChild(meta);
-
-    const actions = document.createElement("div");
-    actions.className = "user-actions";
-
-    const btn = document.createElement("button");
-    btn.className = "btn btn-primary";
-    btn.textContent = "Открыть чат";
-    btn.onclick = () => openOfficialChat(user.email);
-
-    actions.appendChild(btn);
-
-    row.appendChild(main);
-    row.appendChild(actions);
-
-    list.appendChild(row);
-  });
-}
-
-async function searchOfficialUsers(){
-  const input = document.getElementById("officialSearchInput");
-  const query = String(input.value || "").trim();
-  const list = document.getElementById("officialSearchResults");
-
-  if (!query) {
-    renderOfficialUsers([], "");
-    return;
-  }
-
-  list.innerHTML = '<div class="empty">Поиск...</div>';
-
-  const r = await fetch("/api/support/users/search?q=" + encodeURIComponent(query), {
-    headers:{ Authorization:"Bearer " + token }
-  });
-
-  if (r.status === 401) {
-    localStorage.removeItem("tp_token");
-    location.href = "/auth.html?mode=login";
-    return;
-  }
-
-  if (r.status === 403) {
-    localStorage.removeItem("tp_token");
-    location.href = "/banned.html";
-    return;
-  }
-
-  const d = await r.json().catch(() => ({}));
-
-  if (!d.success) {
-    list.innerHTML = '<div class="empty">Ошибка поиска пользователей</div>';
-    return;
-  }
-
-  renderOfficialUsers(d.users || [], query);
-}
-
-async function openOfficialChat(userEmail){
-  const r = await fetch("/api/official/chat/by-user", {
-    method: "POST",
-    headers: {
-      Authorization: "Bearer " + token,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ userEmail })
-  });
-
-  if (r.status === 401) {
-    localStorage.removeItem("tp_token");
-    location.href = "/auth.html?mode=login";
-    return;
-  }
-
-  if (r.status === 403) {
-    localStorage.removeItem("tp_token");
-    location.href = "/banned.html";
-    return;
-  }
-
-  const d = await r.json().catch(() => ({}));
-
-  if (!d.success || !d.chat || !d.chat.id) {
-    alert(d.message || "Не удалось открыть официальный чат");
-    return;
-  }
-
-  location.href = OFFICIAL_CHAT_PAGE_URL + encodeURIComponent(d.chat.id);
-}
-
 async function loadMe(){
   const r = await fetch("/auth/me", {
     headers:{ Authorization:"Bearer " + token }
   });
 
-  if (r.status === 403) {
+  if(r.status === 401){
+    logout();
+    return false;
+  }
+
+  if(r.status === 403){
     localStorage.removeItem("tp_token");
     location.href = "/banned.html";
     return false;
@@ -771,7 +158,7 @@ async function loadMe(){
   const d = await r.json().catch(() => ({}));
 
   if(!d.success){
-    location.href = "/auth.html?mode=login";
+    logout();
     return false;
   }
 
@@ -783,9 +170,9 @@ async function loadMe(){
     return false;
   }
 
-  const adminBtn = document.querySelector(".admin-btn");
-  if (adminBtn && !ADMIN_PANEL_ROLES.has(userRole)) {
-    adminBtn.style.display = "none";
+  const adminBackBtn = document.getElementById("adminBackBtn");
+  if(adminBackBtn && !ADMIN_PANEL_ROLES.has(userRole)){
+    adminBackBtn.classList.add("hidden");
   }
 
   socket.emit("auth", { token });
@@ -797,13 +184,12 @@ async function loadStats(){
     headers:{ Authorization:"Bearer " + token }
   });
 
-  if (r.status === 401) {
-    localStorage.removeItem("tp_token");
-    location.href = "/auth.html?mode=login";
+  if(r.status === 401){
+    logout();
     return;
   }
 
-  if (r.status === 403) {
+  if(r.status === 403){
     localStorage.removeItem("tp_token");
     location.href = "/banned.html";
     return;
@@ -830,13 +216,12 @@ async function loadTickets(){
     headers:{ Authorization:"Bearer " + token }
   });
 
-  if (r.status === 401) {
-    localStorage.removeItem("tp_token");
-    location.href = "/auth.html?mode=login";
+  if(r.status === 401){
+    logout();
     return;
   }
 
-  if (r.status === 403) {
+  if(r.status === 403){
     localStorage.removeItem("tp_token");
     location.href = "/banned.html";
     return;
@@ -873,94 +258,99 @@ async function loadTickets(){
     const div = document.createElement("div");
     div.className = "ticket";
 
-const waitBase = Number(t.updatedAt || t.createdAt || 0);
-const isLate = t.status === "waiting" && (Date.now() - waitBase > 10 * 60 * 1000);
+    const waitBase = Number(t.updatedAt || t.createdAt || 0);
+    const isLate = t.status === "waiting" && (Date.now() - waitBase > 10 * 60 * 1000);
 
-const waitLine = t.status === "waiting"
-  ? '<div class="wait-time ' + (isLate ? 'late' : '') + '">Ждёт: ' + formatWait(waitBase) + '</div>'
-  : '';
+    const waitLine = t.status === "waiting"
+      ? '<div class="wait-time ' + (isLate ? 'late' : '') + '">Ждёт: ' + formatWait(waitBase) + '</div>'
+      : '';
 
-const categoryLabel = esc(t.categoryLabel || t.category || "Без категории");
-const subjectText = esc(t.subject || "");
-const shortIdText = esc(t.shortId || t.id || "");
+    const categoryLabel = esc(t.categoryLabel || t.category || "Без категории");
+    const subjectText = esc(t.subject || "");
+    const shortIdText = esc(t.shortId || t.id || "");
 
-const priorityChip = t.priority === "high"
-  ? '<div class="meta-chip priority-high">Высокий приоритет</div>'
-  : '';
+    const priorityChip = t.priority === "high"
+      ? '<div class="meta-chip priority-high">Высокий приоритет</div>'
+      : '';
 
-const orderChip = t.orderId
-  ? `<div class="meta-chip">Заказ: ${esc(t.orderId)}</div>`
-  : '';
+    const orderChip = t.orderId
+      ? `<div class="meta-chip">Заказ: ${esc(t.orderId)}</div>`
+      : '';
 
-const reportChip = t.userId
-  ? `<div class="meta-chip">ID пользователя: ${esc(t.userId)}</div>`
-  : '';
+    const reportChip = t.userId
+      ? `<div class="meta-chip">ID пользователя: ${esc(t.userId)}</div>`
+      : '';
 
-const offerChip = t.offerId
-  ? `<div class="meta-chip">ID объявления: ${esc(t.offerId)}</div>`
-  : '';
+    const offerChip = t.offerId
+      ? `<div class="meta-chip">ID объявления: ${esc(t.offerId)}</div>`
+      : '';
 
-const unreadChip = t.unread > 0
-  ? `<div class="meta-chip unread">Новых: ${t.unread}</div>`
-  : '';
+    const unreadChip = t.unread > 0
+      ? `<div class="meta-chip unread">Новых: ${t.unread}</div>`
+      : '';
 
-const creatorLine = t.creator
-  ? `Создал: ${esc(t.creator.username)}${t.creator.userId ? ` (ID ${esc(t.creator.userId)})` : ""}`
-  : "Создал: Пользователь";
+    const creatorLine = t.creator
+      ? `Создал: ${esc(t.creator.username)}${t.creator.userId ? ` (ID ${esc(t.creator.userId)})` : ""}`
+      : "Создал: Пользователь";
 
-const lastMessageLine =
-  t.lastMessageFrom === "user"
-    ? "Последний ответ: пользователь"
-    : t.lastMessageFrom === "support"
-      ? "Последний ответ: поддержка"
-      : "Сообщений пока нет";
-const assignedText = t.assignedTo
-  ? `Ответственный: ${esc(t.assignedUsername || t.assignedTo)}${t.assignedUserId ? ` (ID ${esc(t.assignedUserId)})` : ""}`
-  : 'Ответственный: не назначен';
-div.innerHTML = `
-  <div class="ticket-main">
-    <div class="ticket-top">
-      <div class="ticket-id">${shortIdText}</div>
-      ${badge(t.status)}
-    </div>
+    const lastMessageLine =
+      t.lastMessageFrom === "user"
+        ? "Последний ответ: пользователь"
+        : t.lastMessageFrom === "support"
+          ? "Последний ответ: поддержка"
+          : "Сообщений пока нет";
 
-<div class="ticket-subject">${subjectText}</div>
+    const assignedText = t.assignedTo
+      ? `Ответственный: ${esc(t.assignedUsername || t.assignedTo)}${t.assignedUserId ? ` (ID ${esc(t.assignedUserId)})` : ""}`
+      : "Ответственный: не назначен";
 
-<div class="ticket-meta">
-  <div class="meta-chip">${categoryLabel}</div>
-  ${priorityChip}
-  ${orderChip}
-  ${reportChip}
-  ${offerChip}
-  ${unreadChip}
-</div>
+    div.innerHTML = `
+      <div class="ticket-main">
+        <div class="ticket-top">
+          <div class="ticket-id">${shortIdText}</div>
+          ${badge(t.status)}
+        </div>
 
-    ${waitLine}
+        <div class="ticket-subject">${subjectText}</div>
 
-    <div class="assigned-line">${creatorLine}</div>
-    <div class="assigned-line">${lastMessageLine}</div>
+        <div class="ticket-meta">
+          <div class="meta-chip">${categoryLabel}</div>
+          ${priorityChip}
+          ${orderChip}
+          ${reportChip}
+          ${offerChip}
+          ${unreadChip}
+        </div>
 
-<div class="assigned-line">${assignedText}</div>
-  </div>
+        ${waitLine}
+        <div class="assigned-line">${creatorLine}</div>
+        <div class="assigned-line">${lastMessageLine}</div>
+        <div class="assigned-line">${assignedText}</div>
+      </div>
 
-  <div class="ticket-actions">
-    ${!t.assignedTo && t.status !== "resolved"
-      ? `<button class="btn btn-primary" onclick="assignTicket('${t.id}')">Взять</button>`
-      : ''}
+      <div class="ticket-actions">
+        ${!t.assignedTo && t.status !== "resolved"
+          ? `<button class="btn btn-primary" onclick="assignTicket('${t.id}')">Взять</button>`
+          : ''}
 
-    <button class="btn" onclick="openTicket('${t.id}')">Открыть</button>
-  </div>
-`;
+        <button class="btn" onclick="openTicket('${t.id}')">Открыть</button>
+      </div>
+    `;
 
     list.appendChild(div);
   });
 }
 
 async function assignTicket(id){
-  const r = await fetch("/api/support/tickets/" + id + "/assign", {
+  const r = await fetch("/api/support/tickets/" + encodeURIComponent(id) + "/assign", {
     method:"POST",
     headers:{ Authorization:"Bearer " + token }
   });
+
+  if(r.status === 401){
+    logout();
+    return;
+  }
 
   const d = await r.json().catch(() => ({}));
 
@@ -969,8 +359,8 @@ async function assignTicket(id){
     return;
   }
 
-  loadTickets();
-  loadStats();
+  await loadTickets();
+  await loadStats();
 }
 
 function openTicket(id){
@@ -979,18 +369,10 @@ function openTicket(id){
 
 document.getElementById("statusFilter").onchange = loadTickets;
 document.getElementById("assignedFilter").onchange = loadTickets;
-
-document.getElementById("officialSearchBtn").onclick = searchOfficialUsers;
-
-document.getElementById("officialSearchInput").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    searchOfficialUsers();
-  }
-});
+document.getElementById("logoutBtn").onclick = logout;
 
 loadMe().then((ok) => {
-  if (!ok) return;
+  if(!ok) return;
   loadTickets();
   loadStats();
 });
@@ -1005,6 +387,5 @@ socket.on("support-ticket-updated", () => {
   loadStats();
 });
 </script>
-
 </body>
 </html>

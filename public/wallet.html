@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Кошелёк — TyPlace</title>
+  <title>Баланс — TyPlace</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
@@ -657,6 +657,15 @@
   color:#6b7280;
   text-align:center;
 }
+.actions button:disabled{
+  cursor:not-allowed;
+  opacity:.6;
+  filter:none;
+}
+
+.actions button:disabled:hover{
+  background:inherit;
+}
   </style>
 </head>
 
@@ -667,15 +676,17 @@
 
    <main class="page-content">
       <div class="container">
-    <h1>Кошелёк</h1>
+    <h1>Баланс</h1>
 
     <div class="balance" id="balance">—</div>
 
 <div class="actions">
-  <button class="deposit" id="depositBtn">Пополнить</button>
-  <button class="withdraw" id="withdrawBtn">Вывести</button>
+<button class="deposit" id="depositBtn" disabled>Пополнение скоро будет доступно</button>
+<button class="withdraw" id="withdrawBtn" disabled>Вывод скоро будет доступен</button>
 </div>
-
+<div class="wallet-note" style="margin-bottom:20px;">
+  Пополнение и вывод средств временно недоступны. Сейчас на платформе доступен только внутренний баланс для операций внутри сервиса.
+</div>
 <h2>История операций</h2>
 
 <div class="wallet-filter" id="walletFilter">
@@ -2095,13 +2106,17 @@ function openTxInExplorer(){
   window.open("https://tronscan.org", "_blank");
 }
 
-document.getElementById("depositBtn").addEventListener("click", () => {
-  openWalletModal("deposit");
-});
+const PAYMENTS_ENABLED = false;
 
-document.getElementById("withdrawBtn").addEventListener("click", () => {
-  openWalletModal("withdraw");
-});
+if (PAYMENTS_ENABLED) {
+  document.getElementById("depositBtn").addEventListener("click", () => {
+    openWalletModal("deposit");
+  });
+
+  document.getElementById("withdrawBtn").addEventListener("click", () => {
+    openWalletModal("withdraw");
+  });
+}
 
 walletCloseBtn.addEventListener("click", closeWalletModal);
 walletCancelBtn.addEventListener("click", closeWalletModal);

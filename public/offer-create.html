@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="/header.css">
 <link rel="stylesheet" href="/gallery.css">
 <link rel="stylesheet" href="/footer.css">
+<link rel="stylesheet" href="/tp-ui.css">
 
 <style>
 body{
@@ -819,6 +820,7 @@ body.keyboard-open #footer-container{
 <script type="module" src="/games/index.js"></script>
 <script src="/tp-money.js"></script>
 <script src="/footer.js"></script>
+<script src="/tp-ui.js"></script>
 
 <script type="module">
 const langSelect = document.getElementById("langSelect");
@@ -1894,27 +1896,40 @@ submitBtn.setAttribute("data-i18n", "common.save_changes");
   const deleteBtn = document.getElementById("deleteBtn");
   deleteBtn.style.display = "block";
 
-  deleteBtn.onclick = async () => {
-    if (!confirm("Вы уверены, что хотите удалить объявление?")) return;
+deleteBtn.onclick = async () => {
+  const confirmed = await tpConfirm("Вы уверены, что хотите удалить объявление?", {
+    title: "Подтверждение",
+    confirmText: "Удалить",
+    cancelText: "Отмена",
+    dangerConfirm: true
+  });
 
-    const token = localStorage.getItem("tp_token");
+  if (!confirmed) return;
 
-    const res = await fetch("/api/offers/" + editId, {
-      method: "DELETE",
-      headers: {
-        Authorization: "Bearer " + token
-      }
-    });
+  const token = localStorage.getItem("tp_token");
 
-    const data = await res.json();
-
-    if (data.success) {
-      alert(window.tpI18n.t("common.offer_deleted"));
-      location.href = "/my-offers.html";
-    } else {
-      alert(data.message || "Ошибка удаления");
+  const res = await fetch("/api/offers/" + editId, {
+    method: "DELETE",
+    headers: {
+      Authorization: "Bearer " + token
     }
-  };
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    await tpAlert(window.tpI18n.t("common.offer_deleted"), {
+      type: "success",
+      title: "Успешно"
+    });
+    location.href = "/my-offers.html";
+  } else {
+    await tpAlert(data.message || "Ошибка удаления", {
+      type: "error",
+      title: "Ошибка"
+    });
+  }
+};
 }
 
 function setDynamicFieldValue(key, value){
@@ -1938,7 +1953,10 @@ async function loadOfferForEdit(id){
 
   const data = await res.json();
 if (!data.success || data.deleted || !data.offer) {
-  alert(window.tpI18n.t("common.offer_not_found"));
+  await tpAlert(window.tpI18n.t("common.offer_not_found"), {
+    type: "error",
+    title: "Ошибка"
+  });
   location.href = "/my-offers.html";
   return;
 }

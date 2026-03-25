@@ -1,12 +1,16 @@
 const fs = require("fs");
 const path = require("path");
 
-function ensureFile(filePath, fallback) {
+function ensureDir(filePath) {
   const dir = path.dirname(filePath);
 
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
+}
+
+function ensureFile(filePath, fallback) {
+  ensureDir(filePath);
 
   if (!fs.existsSync(filePath)) {
     fs.writeFileSync(filePath, JSON.stringify(fallback, null, 2), "utf8");
@@ -25,11 +29,12 @@ function readJson(filePath, fallback = []) {
 }
 
 function writeJson(filePath, data) {
-  ensureFile(filePath, []);
+  ensureDir(filePath);
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf8");
 }
 
 module.exports = {
+  ensureDir,
   ensureFile,
   readJson,
   writeJson

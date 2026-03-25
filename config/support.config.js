@@ -1,22 +1,24 @@
 module.exports = {
-  order: {
-    labelKey: "page.categories.order",
+order: {
+  labelKey: "page.categories.order",
 
-    roles: {
-      buyer: [
-        "page.topics.seller_not_complete",
-        "page.topics.wrong_item",
-        "page.topics.cancel_order",
-        "page.topics.other"
-      ],
+  roles: {
+    buyer: [
+      "page.topics.seller_not_complete",
+      "page.topics.wrong_item",
+      "page.topics.seller_took_back_item_or_access",
+      "page.topics.cancel_order",
+      "page.topics.other"
+    ],
 
-      seller: [
-        "page.topics.buyer_not_confirm",
-        "page.topics.delivery_problem",
-        "page.topics.other"
-      ]
-    }
-  },
+    seller: [
+      "page.topics.buyer_not_confirm",
+      "page.topics.delivery_problem",
+      "page.topics.buyer_abuse_or_false_claim",
+      "page.topics.other"
+    ]
+  }
+},
 
   finance: {
     labelKey: "page.categories.finance",

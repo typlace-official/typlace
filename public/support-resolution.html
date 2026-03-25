@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Поддержка — Арбитраж — TyPlace</title>
+<link rel="stylesheet" href="/support-panel.css">
+</head>
+<body>
+
+<div class="support-layout">
+  <aside class="support-sidebar">
+    <div class="support-brand">
+      <div class="support-brand-title">TyPlace</div>
+      <div class="support-brand-subtitle">Support Panel</div>
+    </div>
+
+    <nav class="support-nav">
+      <a class="support-nav-link" href="/support-admin.html">Тикеты</a>
+      <a class="support-nav-link active" href="/support-resolution.html">Арбитраж</a>
+      <a class="support-nav-link" href="/support-official.html">Официальные сообщения</a>
+    </nav>
+
+    <div class="support-sidebar-bottom">
+      <a class="support-side-btn" id="adminBackBtn" href="/admin">В админку</a>
+      <button class="support-side-btn danger" id="logoutBtn" type="button">Выйти</button>
+    </div>
+  </aside>
+
+  <main class="support-content">
+    <div class="support-content-top">
+      <div class="support-page-head">
+        <h1>Арбитраж</h1>
+        <p>Очередь споров по заказам и назначение сотрудников resolution.</p>
+      </div>
+
+      <div class="role-pill" id="rolePill">Роль: ...</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-box">
+        <div class="stat-label">Всего споров</div>
+        <div class="stat-value" id="statTotal">0</div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-label">Ожидают</div>
+        <div class="stat-value" id="statWaiting">0</div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-label">В процессе</div>
+        <div class="stat-value" id="statInProgress">0</div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-label">Решены</div>
+        <div class="stat-value" id="statResolved">0</div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <select class="select" id="statusFilter">
+        <option value="">Все статусы</option>
+        <option value="waiting">Ожидают ответа</option>
+        <option value="in_progress">В процессе</option>
+        <option value="resolved">Решены</option>
+      </select>
+
+      <select class="select" id="assignedFilter">
+        <option value="">Все споры</option>
+        <option value="me">Только мои</option>
+      </select>
+    </div>
+
+    <div class="tool-stack">
+      <div class="card card-pad hidden" id="assignCard">
+        <div class="card-title" id="assignCardTitle">Назначение арбитража</div>
+        <div class="card-subtitle" id="assignCardSubtitle">Выберите сотрудника resolution</div>
+
+        <div class="search-row">
+          <input
+            type="text"
+            id="resolutionSearchInput"
+            class="search-input"
+            placeholder="Email, ник или ID сотрудника resolution"
+          >
+          <button class="btn btn-primary" id="resolutionSearchBtn" type="button">Найти</button>
+          <button class="btn" id="assignCloseBtn" type="button">Закрыть</button>
+        </div>
+
+        <div class="user-results" id="resolutionSearchResults">
+          <div class="empty">Введите email, ник или ID сотрудника resolution</div>
+        </div>
+      </div>
+
+      <div class="card" id="ticketList">
+        <div class="empty">Загрузка...</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const token = localStorage.getItem("tp_token");
+
+if(!token){
+  location.href = "/auth.html?mode=login";
+  throw new Error("No token");
+}
+
+const socket = io();
+let userRole = "";
+let disputesCache = [];
+let resolutionAssignState = {
+  ticketId: null,
+  shortId: "",
+  orderId: ""
+};
+
+const RESOLUTION_PAGE_ROLES = new Set(["support", "admin", "super_admin", "resolution"]);
+const ADMIN_PANEL_ROLES = new Set(["super_admin"]);
+
+function esc(s){
+  return String(s || "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function getRoleLabel(role){
+  const map = {
+    support: "Support",
+    admin: "Admin",
+    super_admin: "Super Admin",
+    resolution: "Resolution"
+  };
+  return map[role] || role || "—";
+}
+
+function logout(){
+  localStorage.removeItem("tp_token");
+  location.href = "/auth.html?mode=login";
+}
+
+function canManageResolutionAssignments(){
+  return ["support", "admin", "super_admin"].includes(userRole);
+}
+
+function isResolutionTicket(ticket){
+  return ticket?.kind === "order_dispute" || ticket?.category === "order";
+}
+
+function formatWait(ts){
+  const diff = Date.now() - Number(ts || 0);
+  const minutes = Math.floor(diff / 60000);
+
+  if(minutes < 60) return minutes + " мин.";
+
+  const hours = Math.floor(minutes / 60);
+  const restMinutes = minutes % 60;
+
+  return hours + " ч. " + restMinutes + " мин.";
+}
+
+function badge(status){
+  const map = {
+    waiting: "Ожидает ответа",
+    in_progress: "В процессе",
+    resolved: "Решено"
+  };
+
+  return '<span class="badge ' + status + '">' + (map[status] || status) + '</span>';
+}
+
+function getResolutionAssignedText(t){
+  const value =
+    t.resolutionUsername ||
+    t.resolutionAssignedUsername ||
+    t.resolutionAssignedTo ||
+    t.resolutionEmail ||
+    t.resolutionAssignedEmail ||
+    "";
+
+  if(!value) return "Арбитраж: не назначен";
+
+  return "Арбитраж: " + esc(value);
+}
+
+function openAssignCard(ticketId, shortId, orderId){
+  if(!canManageResolutionAssignments()) return;
+
+  resolutionAssignState.ticketId = ticketId;
+  resolutionAssignState.shortId = shortId || ticketId || "";
+  resolutionAssignState.orderId = orderId || "";
+
+  document.getElementById("assignCard").classList.remove("hidden");
+  document.getElementById("assignCardTitle").textContent =
+    "Назначение арбитража — " + (resolutionAssignState.shortId || "спор");
+
+  document.getElementById("assignCardSubtitle").textContent =
+    resolutionAssignState.orderId
+      ? "Заказ: " + resolutionAssignState.orderId
+      : "Выберите сотрудника resolution";
+
+  document.getElementById("resolutionSearchInput").value = "";
+  document.getElementById("resolutionSearchResults").innerHTML =
+    '<div class="empty">Введите email, ник или ID сотрудника resolution</div>';
+}
+
+function closeAssignCard(){
+  resolutionAssignState.ticketId = null;
+  resolutionAssignState.shortId = "";
+  resolutionAssignState.orderId = "";
+  document.getElementById("assignCard").classList.add("hidden");
+}
+
+function renderResolutionUsers(users, query){
+  const list = document.getElementById("resolutionSearchResults");
+
+  if(!query){
+    list.innerHTML = '<div class="empty">Введите email, ник или ID сотрудника resolution</div>';
+    return;
+  }
+
+  const filtered = (Array.isArray(users) ? users : []).filter(user =>
+    user.role === "resolution" || user.role === "super_admin"
+  );
+
+  if(!filtered.length){
+    list.innerHTML = '<div class="empty">Арбитраж не найден</div>';
+    return;
+  }
+
+  list.innerHTML = "";
+
+  filtered.forEach(user => {
+    const row = document.createElement("div");
+    row.className = "user-row";
+
+    row.innerHTML = `
+      <div class="user-main">
+        <div class="user-name">${esc(user.username || "Сотрудник")}</div>
+
+        <div class="user-meta">
+          <div class="meta-chip">${esc(user.email || "—")}</div>
+          ${user.userId ? `<div class="meta-chip">ID: ${esc(user.userId)}</div>` : ""}
+          ${user.role ? `<div class="meta-chip">Роль: ${esc(user.role)}</div>` : ""}
+        </div>
+      </div>
+
+      <div class="user-actions">
+        <button class="btn btn-primary" type="button" onclick="assignResolution('${esc(user.email || "").replaceAll("&#039;","\\'")}')">
+          Назначить
+        </button>
+      </div>
+    `;
+
+    list.appendChild(row);
+  });
+}
+
+async function searchResolutionUsers(){
+  const input = document.getElementById("resolutionSearchInput");
+  const query = String(input.value || "").trim();
+  const list = document.getElementById("resolutionSearchResults");
+
+  if(!query){
+    renderResolutionUsers([], "");
+    return;
+  }
+
+  list.innerHTML = '<div class="empty">Поиск...</div>';
+
+  const r = await fetch("/api/support/users/search?q=" + encodeURIComponent(query), {
+    headers:{ Authorization:"Bearer " + token }
+  });
+
+  if(r.status === 401){
+    logout();
+    return;
+  }
+
+  if(r.status === 403){
+    localStorage.removeItem("tp_token");
+    location.href = "/banned.html";
+    return;
+  }
+
+  const d = await r.json().catch(() => ({}));
+
+  if(!d.success){
+    list.innerHTML = '<div class="empty">Ошибка поиска сотрудников</div>';
+    return;
+  }
+
+  renderResolutionUsers(d.users || [], query);
+}
+
+async function assignResolution(email){
+  if(!resolutionAssignState.ticketId) return;
+
+  const r = await fetch(
+    "/api/support/tickets/" + encodeURIComponent(resolutionAssignState.ticketId) + "/assign-resolution",
+    {
+      method:"POST",
+      headers:{
+        Authorization:"Bearer " + token,
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({ resolutionEmail: email })
+    }
+  );
+
+  if(r.status === 401){
+    logout();
+    return;
+  }
+
+  const d = await r.json().catch(() => ({}));
+
+  if(!d.success){
+    alert(d.message || "Не удалось назначить арбитраж");
+    return;
+  }
+
+  closeAssignCard();
+  await loadDisputes();
+  alert("Арбитраж назначен");
+}
+
+async function loadMe(){
+  const r = await fetch("/auth/me", {
+    headers:{ Authorization:"Bearer " + token }
+  });
+
+  if(r.status === 401){
+    logout();
+    return false;
+  }
+
+  if(r.status === 403){
+    localStorage.removeItem("tp_token");
+    location.href = "/banned.html";
+    return false;
+  }
+
+  const d = await r.json().catch(() => ({}));
+
+  if(!d.success){
+    logout();
+    return false;
+  }
+
+  userRole = d.user.role || "";
+  document.getElementById("rolePill").textContent = "Роль: " + getRoleLabel(userRole);
+
+  if(!RESOLUTION_PAGE_ROLES.has(userRole)){
+    location.href = "/";
+    return false;
+  }
+
+  const adminBackBtn = document.getElementById("adminBackBtn");
+  if(adminBackBtn && !ADMIN_PANEL_ROLES.has(userRole)){
+    adminBackBtn.classList.add("hidden");
+  }
+
+  if(!canManageResolutionAssignments()){
+    document.getElementById("assignCard").classList.add("hidden");
+  }
+
+  socket.emit("auth", { token });
+  return true;
+}
+
+function renderStats(items){
+  const total = items.length;
+  const waiting = items.filter(t => t.status === "waiting").length;
+  const inProgress = items.filter(t => t.status === "in_progress").length;
+  const resolved = items.filter(t => t.status === "resolved").length;
+
+  document.getElementById("statTotal").textContent = total;
+  document.getElementById("statWaiting").textContent = waiting;
+  document.getElementById("statInProgress").textContent = inProgress;
+  document.getElementById("statResolved").textContent = resolved;
+}
+
+async function loadDisputes(){
+  const status = document.getElementById("statusFilter").value;
+  const assigned = document.getElementById("assignedFilter").value;
+
+  let url = "/api/support/tickets?";
+  if(status) url += "status=" + encodeURIComponent(status) + "&";
+  if(assigned) url += "assigned=" + encodeURIComponent(assigned) + "&";
+
+  const r = await fetch(url, {
+    headers:{ Authorization:"Bearer " + token }
+  });
+
+  if(r.status === 401){
+    logout();
+    return;
+  }
+
+  if(r.status === 403){
+    localStorage.removeItem("tp_token");
+    location.href = "/banned.html";
+    return;
+  }
+
+  const d = await r.json().catch(() => ({}));
+  const list = document.getElementById("ticketList");
+
+  if(!d.success){
+    list.innerHTML = '<div class="empty">Ошибка загрузки споров</div>';
+    return;
+  }
+
+  const tickets = Array.isArray(d.tickets) ? d.tickets : [];
+  const disputes = tickets.filter(isResolutionTicket);
+
+  disputes.sort((a,b) => {
+    if(a.status === "waiting" && b.status !== "waiting") return -1;
+    if(b.status === "waiting" && a.status !== "waiting") return 1;
+    return (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0);
+  });
+
+  disputesCache = disputes;
+  renderStats(disputes);
+
+  if(!disputes.length){
+    list.innerHTML = '<div class="empty">Споров нет</div>';
+    return;
+  }
+
+  list.innerHTML = "";
+
+  disputes.forEach(t => {
+    const div = document.createElement("div");
+    div.className = "ticket";
+
+    const waitBase = Number(t.updatedAt || t.createdAt || 0);
+    const isLate = t.status === "waiting" && (Date.now() - waitBase > 10 * 60 * 1000);
+
+    const waitLine = t.status === "waiting"
+      ? '<div class="wait-time ' + (isLate ? 'late' : '') + '">Ждёт: ' + formatWait(waitBase) + '</div>'
+      : '';
+
+    const shortIdText = esc(t.shortId || t.id || "");
+    const subjectText = esc(t.subject || "Спор по заказу");
+    const orderChip = t.orderId ? `<div class="meta-chip">Заказ: ${esc(t.orderId)}</div>` : "";
+    const unreadChip = t.unread > 0 ? `<div class="meta-chip unread">Новых: ${t.unread}</div>` : "";
+
+    const creatorLine = t.creator
+      ? `Создал: ${esc(t.creator.username)}${t.creator.userId ? ` (ID ${esc(t.creator.userId)})` : ""}`
+      : "Создал: Пользователь";
+
+    div.innerHTML = `
+      <div class="ticket-main">
+        <div class="ticket-top">
+          <div class="ticket-id">${shortIdText}</div>
+          ${badge(t.status)}
+        </div>
+
+        <div class="ticket-subject">${subjectText}</div>
+
+        <div class="ticket-meta">
+          <div class="meta-chip">Спор</div>
+          ${orderChip}
+          ${unreadChip}
+        </div>
+
+        ${waitLine}
+        <div class="assigned-line">${creatorLine}</div>
+        <div class="assigned-line">${getResolutionAssignedText(t)}</div>
+      </div>
+
+      <div class="ticket-actions">
+        ${canManageResolutionAssignments() && t.status !== "resolved"
+          ? `<button class="btn" type="button" onclick='openAssignCard(${JSON.stringify(t.id)}, ${JSON.stringify(t.shortId || t.id || "")}, ${JSON.stringify(t.orderId || "")})'>Назначить арбитража</button>`
+          : ""}
+
+        <button class="btn btn-primary" type="button" onclick="openTicket('${t.id}')">Открыть тикет</button>
+      </div>
+    `;
+
+    list.appendChild(div);
+  });
+}
+
+function openTicket(id){
+  location.href = "/support-ticket.html?id=" + encodeURIComponent(id);
+}
+
+document.getElementById("statusFilter").onchange = loadDisputes;
+document.getElementById("assignedFilter").onchange = loadDisputes;
+document.getElementById("resolutionSearchBtn").onclick = searchResolutionUsers;
+document.getElementById("assignCloseBtn").onclick = closeAssignCard;
+document.getElementById("logoutBtn").onclick = logout;
+
+document.getElementById("resolutionSearchInput").addEventListener("keydown", (e) => {
+  if(e.key === "Enter"){
+    e.preventDefault();
+    searchResolutionUsers();
+  }
+});
+
+loadMe().then((ok) => {
+  if(!ok) return;
+  loadDisputes();
+});
+
+socket.on("new-support-ticket", () => {
+  loadDisputes();
+});
+
+socket.on("support-ticket-updated", () => {
+  loadDisputes();
+});
+</script>
+</body>
+</html>

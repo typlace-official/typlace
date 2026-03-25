@@ -2,7 +2,7 @@
   "sale": "Sale",
   "rent": "Rent",
 
-  "vc_yes": "Has VC",
+  "vc_yes": "VC available",
   "vc_no": "No VC",
 
   "other_amount": "Other amount",
@@ -16,20 +16,20 @@
     "other_region": "Other regions"
   },
 
-    "badges": {
-      "admin": "Admin",
-      "super_admin": "Super Admin",
-      "moderator": "Moderator",
-      "support": "Support",
-      "resolution": "Resolution",
-      "official": "Official"
-    },
+  "badges": {
+    "admin": "Admin",
+    "super_admin": "Super Admin",
+    "moderator": "Moderator",
+    "support": "Support",
+    "resolution": "Dispute Resolution",
+    "official": "Official"
+  },
 
   "search_placeholder": "Search",
   "help": "Help",
   "chats": "Chats",
   "profile": "Profile",
-  "login": "Log in",
+  "login": "Login",
   "signup": "Sign up",
 
   "price": "Price",
@@ -38,21 +38,19 @@
   "search_by_name": "Search by name",
   "sell": "Sell",
 
-  "offers_found_one": "Found {{count}} offer",
-  "offers_found_few": "Found {{count}} offers",
-  "offers_found_many": "Found {{count}} offers",
+  "offers_found_one": "{{count}} listing found",
+  "offers_found_few": "{{count}} listings found",
+  "offers_found_many": "{{count}} listings found",
 
   "no_reviews": "No reviews",
 
-  "reviews_count": {
-    "one": "{{count}} review",
-    "few": "{{count}} reviews",
-    "many": "{{count}} reviews"
-  },
+  "reviews_count_one": "{{count}} review",
+  "reviews_count_few": "{{count}} reviews",
+  "reviews_count_many": "{{count}} reviews",
 
   "home": "Home",
   "favorites": "Favorites",
-  "no_favorites": "You have no favorite offers yet",
+  "no_favorites": "You don't have any favorite listings yet",
 
   "from": "From",
   "to": "To",
@@ -60,7 +58,7 @@
   "category_placeholder": "Category",
   "choose_category": "Choose a category",
 
-  "empty": "No offers yet",
+  "empty": "No listings yet",
 
   "back": "Back",
   "photo_product": "Product photo",
@@ -68,22 +66,22 @@
   "availability": "Availability",
 
   "language": "Language",
-  "offer_language": "Offer language",
-  "ad_language": "Offer language",
+  "offer_language": "Listing language",
+  "ad_language": "Listing language",
 
-  "create_offer": "Create offer",
-  "edit_offer": "Edit offer",
+  "create_offer": "Create listing",
+  "edit_offer": "Edit listing",
   "save_changes": "Save changes",
-  "delete_offer": "Delete offer",
+  "delete_offer": "Delete listing",
 
   "invalid_price": "Enter a valid price",
   "enter_title": "Enter a title in the selected language",
   "enter_description": "Enter a description in the selected language",
 
-  "offer_deleted": "Offer deleted",
-  "offer_not_found": "Offer not found",
+  "offer_deleted": "Listing deleted",
+  "offer_not_found": "Listing not found",
 
-  "buyer_pays": "Buyer pays",
+  "buyer_pays": "Buyer will pay",
 
   "title": "Title",
   "description": "Description",
@@ -98,12 +96,16 @@
     "fallback_order": "Order",
     "fallback_text": "System message",
 
-    "order_created": "Buyer {{actor}} placed order {{order}}. Funds are frozen.",
-    "order_confirmed": "Buyer {{actor}} confirmed receipt for order {{order}}. The deal is completed.",
+    "order_created": "Buyer {{actor}} placed order {{order}}. Funds have been frozen.",
+    "order_confirmed": "Buyer {{actor}} confirmed receipt for order {{order}}. The deal has been completed.",
     "order_refunded": "Seller {{actor}} issued a refund for order {{order}}.",
-    "order_confirmed_admin": "Administrator confirmed order {{order}}. The deal is completed.",
+    "order_confirmed_admin": "Administrator confirmed order {{order}}. The deal has been completed.",
     "order_refunded_admin": "Administrator issued a refund for order {{order}}.",
     "review_created": "Buyer {{actor}} left a review for order {{order}}."
+  },
+
+    "common": {
+    "and": "and"
   },
 
   "footer": {
@@ -114,7 +116,7 @@
       "terms": "User Agreement",
       "privacy": "Privacy Policy",
       "cookies": "Cookie Policy",
-      "about": "About Us",
+      "about": "About the Platform",
       "help": "Help Center",
       "contacts": "Contacts"
     }

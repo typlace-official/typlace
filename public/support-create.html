@@ -491,6 +491,8 @@ const prefillUserId = String(params.get("userId") || "").trim();
 const prefillOfferId = String(params.get("offerId") || "").trim();
 const prefillOrderId = String(params.get("orderId") || "").trim();
 const prefillChatId = String(params.get("chatId") || "").trim();
+const prefillRole = String(params.get("role") || "").trim();
+const prefillSubject = String(params.get("subject") || "").trim();
 
 // 1️⃣ Загружаем конфиг с сервера
 async function loadConfig(){
@@ -559,6 +561,27 @@ async function applyPrefillFromUrl(){
 
   if (prefillOfferId && offerInput) {
     offerInput.value = normalizePrefixedId(prefillOfferId, "OID");
+  }
+
+  if (prefillCategory === "order" && prefillRole) {
+    const hasRoleOption = Array.from(roleSelect.options).some(
+      option => option.value === prefillRole
+    );
+
+    if (hasRoleOption) {
+      roleSelect.value = prefillRole;
+      roleSelect.dispatchEvent(new Event("change"));
+    }
+  }
+
+  if (prefillSubject) {
+    const hasSubjectOption = Array.from(subjectSelect.options).some(
+      option => option.value === prefillSubject
+    );
+
+    if (hasSubjectOption) {
+      subjectSelect.value = prefillSubject;
+    }
   }
 
   if (prefillCategory === "report" && prefillChatId && !prefillUserId) {

@@ -1,44 +1,65 @@
 {
-  "title": "Cookie Policy — TyPlace",
-  "heading": "Cookie Policy",
+  "title": "Cookie Policy",
+
+  "meta": {
+    "line1": "Document describing the use of cookies and similar technologies on the TyPlace platform.",
+    "line2": "The current version is published on this page."
+  },
+
+  "intro": "This Cookie Policy explains what cookies and similar technologies may be used on the TyPlace platform, why they are used, and how the user may manage such technologies.",
 
   "section1": {
-    "title": "1. General Provisions",
-    "p1": "This Cookie Policy regulates the use of cookies and similar technologies on the TyPlace platform.",
-    "p2": "By using the website, the User agrees to the use of cookies in accordance with this Policy."
+    "title": "1. General provisions",
+    "p1": "The TyPlace platform may use cookies, browser local storage, and other similar technologies for the proper functioning of the site, remembering settings, ensuring security, and supporting service features.",
+    "p2": "By using the platform, the user understands that certain technical files and similar mechanisms may be necessary for the basic operation of the website and its features."
   },
 
   "section2": {
-    "title": "2. What Cookies Are Used",
-    "required": "<strong>Essential cookies</strong> — necessary for proper website operation, security, user authentication, and service functionality.",
-    "functional": "<strong>Functional cookies</strong> — allow saving selected language, currency, and user preferences.",
-    "analytics": "<strong>Analytical cookies</strong> — used to analyze traffic and improve platform performance (with user consent).",
-    "technical": "<strong>Technical cookies</strong> — ensure the operation of chats, escrow system, anti-fraud mechanisms, and other internal processes."
+    "title": "2. What technologies may be used",
+    "p1": "The platform may use the following categories of cookies and similar technologies:",
+    "l1": "strictly necessary — required for the basic operation of the website, authentication, security, and core platform functions;",
+    "l2": "functional — allowing the platform to remember language, currency, interface settings, and other user preferences;",
+    "l3": "technical — related to chats, support, safe transactions, internal checks, and other internal platform processes;",
+    "l4": "analytics or measurement tools — where the platform uses such tools to analyze stability, performance, and service improvement."
   },
 
   "section3": {
-    "title": "3. Purpose of Use",
-    "li1": "ensuring user account security;",
-    "li2": "processing payments and operating the escrow mechanism;",
-    "li3": "saving user preferences;",
-    "li4": "improving platform performance and stability;",
-    "li5": "analyzing website usage (with user consent)."
+    "title": "3. Why they are used",
+    "l1": "to sign the user into the account and maintain the user session;",
+    "l2": "to store selected language, currency, and certain interface preferences;",
+    "l3": "to ensure the proper operation of chats, support, orders, notifications, and other platform features;",
+    "l4": "to provide security, prevent abuse, and perform technical diagnostics;",
+    "l5": "to improve the stability, convenience, and overall performance of the platform."
   },
 
   "section4": {
-    "title": "4. Third-Party Services",
-    "p1": "The platform may use third-party analytics services and payment systems that may set their own cookies in accordance with their privacy policies.",
-    "p2": "TyPlace does not control the use of cookies by third-party services."
+    "title": "4. Third-party services",
+    "p1": "The platform may use third-party technical, infrastructure, security, analytics, or payment services which, depending on their own logic, may use their own cookies or similar technologies.",
+    "p2": "The use of such technologies by third-party services is governed by their own rules and policies. The platform does not control the content of those external documents."
   },
 
   "section5": {
-    "title": "5. Managing Cookies",
-    "p1": "Users can manage cookies through their browser settings. Users may also choose cookie types through the consent banner on the website.",
-    "p2": "Disabling essential cookies may result in improper platform operation."
+    "title": "5. How the user can manage cookies",
+    "p1": "The user may manage cookies and similar technologies through browser settings, as well as by other means that may be available on the platform if such mechanisms are implemented.",
+    "p2": "Disabling necessary or technically required cookies may limit certain platform features or make proper use of the service impossible."
   },
 
   "section6": {
-    "title": "6. Policy Changes",
-    "p1": "The platform reserves the right to modify this Policy. The current version is always published on this page."
+    "title": "6. Changes to this policy",
+    "p1": "The platform may update this Cookie Policy. The current version is published on this page, and continued use of the platform after an update means acceptance of the new version to the extent applicable."
+  },
+
+  "section7": {
+    "title": "7. Related documents",
+    "p1": "The use of cookies and similar technologies is connected with the general data processing logic of the platform.",
+    "p2": "More information about the platform's approach to data is available in the",
+    "link": "Privacy Policy"
+  },
+
+  "footer": {
+    "text1": "If you have any questions about this Policy, please use the",
+    "link1": "Contacts",
+    "or": "or",
+    "link2": "Help Center"
   }
 }

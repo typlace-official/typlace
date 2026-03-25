@@ -7,11 +7,37 @@ const fetch = (...args) =>
 const express = require("express");
 const path = require("path");
 const multer = require("multer");
-const { sweepAllWallets } = require("./services/sweep.service");
-const { getOrCreateDepositWallet } = require("./services/deposit-wallet.service");
-const { scanAllDepositWallets, listDeposits } = require("./services/deposit-monitor.service");
-const { topupAllWallets } = require("./services/trx-topup.service");
 const { readJson, writeJson } = require("./services/json-store.service");
+
+const PAYMENTS_ENABLED = process.env.PAYMENTS_ENABLED === "true";
+const CRYPTO_ENABLED = process.env.CRYPTO_ENABLED === "true";
+const DEMO_MODE = process.env.DEMO_MODE === "true";
+
+const DEMO_ALLOWED_EMAILS = new Set(
+  String(process.env.DEMO_ALLOWED_EMAILS || "")
+    .split(",")
+    .map(v => v.trim().toLowerCase())
+    .filter(Boolean)
+);
+
+let sweepAllWallets = async () => {};
+let getOrCreateDepositWallet = async () => {
+  throw new Error("Crypto is disabled");
+};
+let scanAllDepositWallets = async () => {};
+let listDeposits = () => [];
+let topupAllWallets = async () => {};
+
+if (PAYMENTS_ENABLED && CRYPTO_ENABLED) {
+  try {
+    ({ sweepAllWallets } = require("./services/sweep.service"));
+    ({ getOrCreateDepositWallet } = require("./services/deposit-wallet.service"));
+    ({ scanAllDepositWallets, listDeposits } = require("./services/deposit-monitor.service"));
+    ({ topupAllWallets } = require("./services/trx-topup.service"));
+  } catch (e) {
+    console.log("Crypto services disabled:", e.message);
+  }
+}
 
 const supportService = require("./services/support.service");
 
@@ -124,6 +150,17 @@ function getOfficialWelcomeMessage(lang) {
   return OFFICIAL_WELCOME_MESSAGES[safeLang] || OFFICIAL_WELCOME_MESSAGES.ru;
 }
 
+const ORDER_COMPLETED_APPEAL_WINDOW_MS = 72 * 60 * 60 * 1000;
+
+function canBuyerOpenCompletedOrderAppeal(order, user) {
+  if (!order || !user) return false;
+  if (order.status !== "completed") return false;
+  if (order.buyerEmail !== user.email) return false;
+  if (!order.completedAt) return false;
+
+  return Date.now() <= Number(order.completedAt) + ORDER_COMPLETED_APPEAL_WINDOW_MS;
+}
+
 function hasRole(user, ...roles) {
   return Boolean(user && roles.includes(user.role));
 }
@@ -172,6 +209,13 @@ function isOfficialChat(chat) {
 
 function canWriteOfficial(user) {
   return hasRole(user, ROLE.SUPPORT, ROLE.ADMIN, ROLE.SUPER_ADMIN);
+}
+
+function canWriteOfficialFromStaffPanel(user, chat) {
+  if (!user || !chat) return false;
+  if (!isOfficialChat(chat)) return false;
+
+  return canWriteOfficial(user);
 }
 
 function canAccessOfficialChat(user, chat) {
@@ -306,16 +350,17 @@ function canViewChat(user, chat) {
   }
 
   const order = getOrderByChatId(chat.id);
-  if (!order || !isDisputeChatOpen(order)) {
-    return false;
-  }
+  if (!order) return false;
 
+  // super_admin видит любой order chat
   if (user.role === ROLE.SUPER_ADMIN) {
     return true;
   }
 
+  // resolution видит только активный спор, назначенный ему
   if (
     user.role === ROLE.RESOLUTION &&
+    isDisputeChatOpen(order) &&
     order.resolutionAssignedTo === user.email
   ) {
     return true;
@@ -807,6 +852,7 @@ const MIN_CRYPTO_WITHDRAW_USDT = 5;
 const MAX_CRYPTO_WITHDRAW_USDT = 2000;
 const MIN_OFFER_PRICE = 10;
 const MAX_OFFER_PRICE = 100000;
+const MAX_DEMO_TOPUP = 5000;
 
 let exchangeRates = {
   base: BASE_CURRENCY,
@@ -1485,6 +1531,56 @@ function authRequiredOptional(req, res, next) {
   next();
 }
 
+function paymentsDisabled(res, message = "Пополнение и вывод временно недоступны") {
+  return res.status(503).json({
+    success: false,
+    code: "PAYMENTS_DISABLED",
+    message
+  });
+}
+
+function requirePaymentsEnabled(req, res, next) {
+  if (!PAYMENTS_ENABLED) {
+    return paymentsDisabled(res);
+  }
+  next();
+}
+
+function requireCryptoEnabled(req, res, next) {
+  if (!PAYMENTS_ENABLED || !CRYPTO_ENABLED) {
+    return paymentsDisabled(res, "Криптооперации временно недоступны");
+  }
+  next();
+}
+
+function requireDemoMode(req, res, next) {
+  if (!DEMO_MODE) {
+    return res.status(403).json({
+      success: false,
+      code: "DEMO_MODE_DISABLED",
+      message: "Демо-режим отключён"
+    });
+  }
+
+  if (DEMO_ALLOWED_EMAILS.size === 0) {
+    return res.status(503).json({
+      success: false,
+      code: "DEMO_ALLOWLIST_REQUIRED",
+      message: "Демо-режим не настроен"
+    });
+  }
+
+  if (!DEMO_ALLOWED_EMAILS.has(req.user.email)) {
+    return res.status(403).json({
+      success: false,
+      code: "DEMO_ACCESS_DENIED",
+      message: "Нет доступа к демо-режиму"
+    });
+  }
+
+  next();
+}
+
 /* ================== API ================== */
 
 /**
@@ -1864,6 +1960,58 @@ app.post("/api/official/chat/by-user", authRequired, (req, res) => {
   });
 });
 
+app.post("/api/official/chats/:id/messages", authRequired, (req, res) => {
+  const chat = chats.find(c => c.id === req.params.id);
+
+  if (!chat || !isOfficialChat(chat)) {
+    return res.json({
+      success: false,
+      message: "Официальный чат не найден"
+    });
+  }
+
+  if (!canWriteOfficialFromStaffPanel(req.user, chat)) {
+    return res.json({
+      success: false,
+      message: "Нет доступа"
+    });
+  }
+
+  const text = String(req.body.text || "").trim();
+  const officialType = String(req.body.officialType || "notice").trim() || "notice";
+
+  if (!text) {
+    return res.json({
+      success: false,
+      message: "Пустое сообщение"
+    });
+  }
+
+  if (Array.isArray(chat.deletedBy)) {
+    chat.deletedBy = chat.deletedBy.filter(email => email !== chat.buyerEmail);
+  }
+
+  const message = pushOfficialMessage({
+    chatId: chat.id,
+    text,
+    officialType,
+    actor: req.user
+  });
+
+  addAdminLog({
+    actor: req.user,
+    action: "official_chat_message",
+    targetType: "chat",
+    targetId: chat.id,
+    text: `Отправил сообщение в официальный чат ${chat.id}`
+  });
+
+  return res.json({
+    success: true,
+    message
+  });
+});
+
 app.get("/api/support/users/search", authRequired, (req, res) => {
   if (!canWriteOfficial(req.user)) {
     return res.json({
@@ -2150,6 +2298,17 @@ app.get("/api/rates", (req, res) => {
   });
 });
 
+app.get("/api/public/platform-capabilities", (req, res) => {
+  res.json({
+    success: true,
+    capabilities: {
+      paymentsEnabled: PAYMENTS_ENABLED,
+      cryptoEnabled: PAYMENTS_ENABLED && CRYPTO_ENABLED,
+      demoMode: DEMO_MODE
+    }
+  });
+});
+
 app.get("/api/public/platform-settings", (req, res) => {
   res.json({
     success: true,
@@ -2162,13 +2321,20 @@ app.get("/api/public/platform-settings", (req, res) => {
   });
 });
 
-app.post("/api/balance/deposit", authRequired, (req, res) => {
+app.post("/api/demo/balance/topup", authRequired, requireDemoMode, (req, res) => {
   const amount = Number(req.body.amount || 0);
 
   if (!Number.isFinite(amount) || amount <= 0) {
     return res.json({
       success: false,
       message: "Некорректная сумма"
+    });
+  }
+
+  if (amount > MAX_DEMO_TOPUP) {
+    return res.json({
+      success: false,
+      message: `Максимальное демо-пополнение ${MAX_DEMO_TOPUP} ${BASE_CURRENCY}`
     });
   }
 
@@ -2179,17 +2345,17 @@ app.post("/api/balance/deposit", authRequired, (req, res) => {
     amount,
     currency: BASE_CURRENCY,
     status: "completed",
-    text: "Тестовое пополнение баланса"
+    text: "Демо-пополнение баланса"
   });
 
   return res.json({
     success: true,
     balance: req.user.balance,
-    message: "Баланс успешно пополнен (тест)"
+    message: "Демо-баланс зачислен"
   });
 });
 
-app.post("/api/deposit/crypto", authRequired, async (req, res) => {
+app.post("/api/deposit/crypto", authRequired, requireCryptoEnabled, async (req, res) => {
   try {
     const amount = Number(req.body.amount);
     const replaceExisting = parseBoolean(req.body.replaceExisting);
@@ -2280,7 +2446,7 @@ const deposit = {
   }
 });
 
-app.get("/api/deposit/crypto/pending", authRequired, (req, res) => {
+app.get("/api/deposit/crypto/pending", authRequired, requireCryptoEnabled, (req, res) => {
   const pending = getUserPendingCryptoDeposit(req.user.email);
 
   if (!pending) {
@@ -2302,7 +2468,7 @@ app.get("/api/deposit/crypto/pending", authRequired, (req, res) => {
   });
 });
 
-app.get("/api/wallet/crypto/deposit-address", authRequired, async (req, res) => {
+app.get("/api/wallet/crypto/deposit-address", authRequired, requireCryptoEnabled, async (req, res) => {
   try {
     const wallet = await getOrCreateDepositWallet(req.user);
 
@@ -2392,7 +2558,7 @@ async function autoCreditTronDeposit({ wallet, txid, amount }) {
   console.log("Auto credited:", wallet.email, amount, txid);
 }
 
-app.post("/api/withdraw/request", authRequired, (req, res) => {
+app.post("/api/withdraw/request", authRequired, requireCryptoEnabled, (req, res) => {
   const amount = Number(req.body.amount);
   const method = String(req.body.method || "crypto").trim();
   const wallet = String(req.body.wallet || "").trim();
@@ -2518,7 +2684,7 @@ if (amount < minWithdrawBase) {
   });
 });
 
-app.post("/api/withdraw/:id/cancel", authRequired, (req,res)=>{
+app.post("/api/withdraw/:id/cancel", authRequired, requireCryptoEnabled, (req,res)=>{
 
   const w = withdrawRequests.find(x => x.id === req.params.id);
 
@@ -2542,7 +2708,7 @@ req.user.balance = roundMoney((req.user.balance || 0) + Number(w.amount || 0));
 
 });
 
-app.get("/api/admin/withdraws", authRequired, (req, res) => {
+app.get("/api/admin/withdraws", authRequired, requireCryptoEnabled, (req, res) => {
   if (!isAdminPanelRole(req.user)) {
     return res.json({ success: false, message: "Нет доступа" });
   }
@@ -2575,7 +2741,7 @@ app.get("/api/admin/withdraws", authRequired, (req, res) => {
   });
 });
 
-app.post("/api/admin/withdraw/:id/approve", authRequired, (req, res) => {
+app.post("/api/admin/withdraw/:id/approve", authRequired, requireCryptoEnabled, (req, res) => {
   if (!isAdminPanelRole(req.user)) {
     return res.json({ success: false });
   }
@@ -2645,7 +2811,7 @@ app.post("/api/admin/withdraw/:id/approve", authRequired, (req, res) => {
   res.json({ success: true });
 });
 
-app.post("/api/admin/withdraw/:id/reject", authRequired, (req,res)=>{
+app.post("/api/admin/withdraw/:id/reject", authRequired, requireCryptoEnabled, (req,res)=>{
 
   if (!isAdminPanelRole(req.user)) {
     return res.json({ success:false, message:"Нет доступа" });
@@ -3604,7 +3770,7 @@ otherUser: buildPublicUserPayload(otherUser)
 
 // ===== MESSAGES =====
 app.post("/api/chats/:id/messages", authRequired, (req, res) => {
-  const { text, media, officialType } = req.body;
+  const { text, media } = req.body;
 
   const chat = chats.find(c => c.id === req.params.id);
   if (!chat) {
@@ -3625,43 +3791,21 @@ app.post("/api/chats/:id/messages", authRequired, (req, res) => {
   }
 
   if (isOfficialChat(chat)) {
-    if (canWriteOfficial(req.user)) {
-      if (safeMedia.length > 0) {
-        return res.json({
-          success: false,
-          message: "В официальный чат пока нельзя отправлять вложения"
-        });
-      }
+    return res.json({
+      success: false,
+      code: "OFFICIAL_CHAT_READ_ONLY",
+      message: "В обычном списке официальный чат доступен только для чтения"
+    });
+  }
 
-      const message = pushOfficialMessage({
-        chatId: chat.id,
-        text: safeText,
-        officialType: String(officialType || "notice").trim() || "notice",
-        actor: req.user
-      });
-
-      return res.json({
-        success: true,
-        message
-      });
-    }
-
-    if (!isChatParticipant(req.user, chat)) {
-      return res.json({
-        success: false,
-        message: "Нет доступа"
-      });
-    }
-  } else {
-    if (
-      chat.buyerEmail !== req.user.email &&
-      chat.sellerEmail !== req.user.email
-    ) {
-      return res.json({
-        success: false,
-        message: "Нет доступа"
-      });
-    }
+  if (
+    chat.buyerEmail !== req.user.email &&
+    chat.sellerEmail !== req.user.email
+  ) {
+    return res.json({
+      success: false,
+      message: "Нет доступа"
+    });
   }
 
   const myEmail = req.user.email;
@@ -3681,8 +3825,6 @@ app.post("/api/chats/:id/messages", authRequired, (req, res) => {
 
   if (chat.deletedBy) {
     if (chat.deletedBy.includes(otherEmail)) {
-      const otherUser = getUserByEmailSafe(otherEmail);
-
       if (!otherUser?.blockedUsers?.includes(myEmail)) {
         chat.deletedBy = chat.deletedBy.filter(e => e !== otherEmail);
       }
@@ -4849,6 +4991,7 @@ if (offerIdDigits) {
 const message = String(req.body.message || "").trim().slice(0, 2000);
 let priority = "normal";
 let linkedOrder = null;
+let shouldOpenLiveDispute = false;
 
 if (category === "order") {
   priority = "high";
@@ -4895,13 +5038,6 @@ if (rawOrderId) {
   }
 
   if (category === "order") {
-    if (order.status !== "pending") {
-      return res.json({
-        success: false,
-        message: "Спор можно открыть только по активному заказу"
-      });
-    }
-
     if (
       order.disputeStatus === "requested" ||
       order.disputeStatus === "in_review"
@@ -4909,6 +5045,22 @@ if (rawOrderId) {
       return res.json({
         success: false,
         message: "По этому заказу спор уже открыт"
+      });
+    }
+
+    if (order.status === "pending") {
+      shouldOpenLiveDispute = true;
+    } else if (order.status === "completed") {
+      if (!canBuyerOpenCompletedOrderAppeal(order, req.user)) {
+        return res.json({
+          success: false,
+          message: "Апелляцию по завершённому заказу можно открыть только покупателю в течение 72 часов после подтверждения"
+        });
+      }
+    } else {
+      return res.json({
+        success: false,
+        message: "По этому заказу нельзя открыть обращение в этой категории"
       });
     }
   }
@@ -4942,7 +5094,7 @@ const ticket = supportService.createTicket({
   priority
 });
 
-if (category === "order" && linkedOrder) {
+if (category === "order" && linkedOrder && shouldOpenLiveDispute) {
   ticket.kind = "order_dispute";
   ticket.chatId = linkedOrder.chatId;
   ticket.orderInternalId = linkedOrder.id;
@@ -4964,6 +5116,10 @@ if (category === "order" && linkedOrder) {
     orderId: linkedOrder.id,
     orderNumber: linkedOrder.orderNumber
   });
+} else if (category === "order" && linkedOrder && linkedOrder.status === "completed") {
+  ticket.kind = "completed_order_appeal";
+  ticket.chatId = linkedOrder.chatId;
+  ticket.orderInternalId = linkedOrder.id;
 }
 
 // 🔔 Уведомляем всех support онлайн
@@ -6000,7 +6156,7 @@ app.get("/api/admin/orders", authRequired, (req, res) => {
   });
 });
 
-app.post("/api/admin/crypto/:id/confirm", authRequired, (req, res) => {
+app.post("/api/admin/crypto/:id/confirm", authRequired, requireCryptoEnabled, (req, res) => {
   if (!isAdminPanelRole(req.user)) {
     return res.json({ success: false, message: "Нет доступа" });
   }
@@ -6364,58 +6520,65 @@ if (ticket.kind === "order_dispute") return;
 
 // ================= CRYPTO AUTO CHECK =================
 
-setInterval(() => {
-  try {
-    cleanupExpiredCryptoDeposits();
-  } catch (e) {
-    console.log("cleanup crypto deposits error:", e.message);
-  }
-}, 60 * 60 * 1000);
+if (PAYMENTS_ENABLED && CRYPTO_ENABLED) {
+  setInterval(() => {
+    try {
+      cleanupExpiredCryptoDeposits();
+    } catch (e) {
+      console.log("cleanup crypto deposits error:", e.message);
+    }
+  }, 60 * 60 * 1000);
 
-setInterval(async () => {
-  if (isDepositScanRunning) return;
-  isDepositScanRunning = true;
+  setInterval(async () => {
+    if (isDepositScanRunning) return;
+    isDepositScanRunning = true;
 
-  try {
-    await scanAllDepositWallets(autoCreditTronDeposit);
-  } catch (e) {
-    console.log("TRX deposit scan error:", e.message);
-  } finally {
-    isDepositScanRunning = false;
-  }
-}, 30000);
+    try {
+      await scanAllDepositWallets(autoCreditTronDeposit);
+    } catch (e) {
+      console.log("TRX deposit scan error:", e.message);
+    } finally {
+      isDepositScanRunning = false;
+    }
+  }, 30000);
 
-setInterval(async () => {
-  if (isTrxTopupRunning) return;
-  isTrxTopupRunning = true;
+  setInterval(async () => {
+    if (isTrxTopupRunning) return;
+    isTrxTopupRunning = true;
 
-  try {
-    await topupAllWallets();
-  } catch (e) {
-    console.log("trx topup error:", e.message);
-  } finally {
-    isTrxTopupRunning = false;
-  }
-}, 60000);
+    try {
+      await topupAllWallets();
+    } catch (e) {
+      console.log("trx topup error:", e.message);
+    } finally {
+      isTrxTopupRunning = false;
+    }
+  }, 60000);
 
-setInterval(async () => {
-  if (isSweepRunning) return;
-  isSweepRunning = true;
+  setInterval(async () => {
+    if (isSweepRunning) return;
+    isSweepRunning = true;
 
-  try {
-    await sweepAllWallets();
-  } catch (e) {
-    console.log("sweep error:", e.message);
-  } finally {
-    isSweepRunning = false;
-  }
-}, 60000);
+    try {
+      await sweepAllWallets();
+    } catch (e) {
+      console.log("sweep error:", e.message);
+    } finally {
+      isSweepRunning = false;
+    }
+  }, 60000);
+}
 /* ================== START ================== */
 async function startServer() {
   await updateRates();
 
   server.listen(PORT, "0.0.0.0", () => {
     console.log(`✅ Server running: http://localhost:${PORT}`);
+    console.log("platform flags:", {
+      paymentsEnabled: PAYMENTS_ENABLED,
+      cryptoEnabled: CRYPTO_ENABLED,
+      demoMode: DEMO_MODE
+    });
     startTelegramPolling();
   });
 }

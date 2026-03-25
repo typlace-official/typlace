@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <script>
-  document.titleKey = "page.title";
-</script>
+  <script>
+    document.titleKey = "page.title";
+  </script>
 
-<title>TyPlace</title>
+  <title>TyPlace</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -13,63 +13,21 @@
   <link rel="stylesheet" href="/footer.css">
 
   <style>
-body{
-  margin:0;
-  background:#f6f7f9;
-  font-family:Inter, Arial, sans-serif;
-  color:#111827;
-}
-
-html, body{
-  overflow-x: hidden;
-}
-
-.page{
-  max-width:900px;
-  margin:40px auto;
-  padding:0 16px;
-}
-
-    .sidebar{
-      position:sticky;
-      top:120px;
-      align-self:start;
-      background:#ffffff;
-      border:1px solid #e5e7eb;
-      border-radius:16px;
-      padding:16px;
-      box-shadow:0 10px 26px rgba(0,0,0,.05);
+    body{
+      margin:0;
+      background:#f6f7f9;
+      font-family:Inter, Arial, sans-serif;
+      color:#111827;
     }
 
-    .nav-title{
-      font-size:12px;
-      font-weight:800;
-      color:#6b7280;
-      letter-spacing:.04em;
-      text-transform:uppercase;
-      margin:4px 6px 10px;
+    html, body{
+      overflow-x:hidden;
     }
 
-    .sidebar a{
-      display:block;
-      padding:10px 12px;
-      border-radius:10px;
-      font-size:14px;
-      color:#6b7280;
-      text-decoration:none;
-      transition:.15s;
-      line-height:1.2;
-    }
-
-    .sidebar a:hover{
-      background:#f3f4f6;
-      color:#2563eb;
-    }
-
-    .sidebar a.active{
-      background:rgba(37,99,235,.10);
-      color:#2563eb;
-      font-weight:700;
+    .page{
+      max-width:900px;
+      margin:40px auto;
+      padding:0 16px;
     }
 
     .content{
@@ -110,6 +68,7 @@ html, body{
       margin:34px 0 12px;
       font-weight:800;
       letter-spacing:-.15px;
+      scroll-margin-top:120px;
     }
 
     .content p, .content li{
@@ -127,6 +86,16 @@ html, body{
       color:#111827;
     }
 
+    .doc-link{
+      color:#2563eb;
+      text-decoration:none;
+      font-weight:400;
+    }
+
+    .doc-link:hover{
+      text-decoration:underline;
+    }
+
     hr{
       border:none;
       height:1px;
@@ -134,32 +103,20 @@ html, body{
       margin:28px 0;
     }
 
-    code.k{
-      background:#f3f4f6;
-      border:1px solid #e5e7eb;
-      padding:2px 6px;
-      border-radius:8px;
-      font-size:12.5px;
+    @media(max-width:900px){
+      .content{
+        padding:22px;
+        border-radius:16px;
+      }
+
+      .content h1{
+        font-size:22px;
+      }
+
+      .content h2{
+        font-size:17px;
+      }
     }
-
-@media(max-width:900px){
-  .content{ padding:22px; border-radius:16px; }
-  .content h1{ font-size:22px; }
-  .content h2{ font-size:17px; }
-}
-
-.content h2{
-  scroll-margin-top:120px;
-}
-.doc-link{
-  color:#2563eb;
-  text-decoration:none;
-  font-weight:600;
-}
-
-.doc-link:hover{
-  text-decoration:underline;
-}
   </style>
 </head>
 <body>
@@ -172,177 +129,166 @@ html, body{
 
         <h1 data-i18n="page.title"></h1>
 
-<div class="meta">
-  <span data-i18n="page.meta.line1"></span><br>
-  <span data-i18n="page.meta.line2"></span><br>
-  <span data-i18n="page.meta.line3"></span>
-  <a href="mailto:legal@typlace.com" class="doc-link">legal@typlace.com</a>
-</div>
+        <div class="meta">
+          <span data-i18n="page.meta.line1"></span><br>
+          <span data-i18n="page.meta.line2"></span><br>
+          <span data-i18n="page.meta.line3"></span>
+        </div>
 
-<div class="note">
-  <b data-i18n="page.note.bold"></b>
-  <span data-i18n="page.note.text1"></span>
-</div>
+        <div class="note">
+          <b data-i18n="page.note.bold"></b>
+          <span data-i18n="page.note.text1"></span>
+        </div>
 
-<h2 id="defs" data-i18n="page.defs.title"></h2>
+        <h2 id="general" data-i18n="page.general.title"></h2>
+        <p data-i18n="page.general.p1"></p>
+        <p data-i18n="page.general.p2"></p>
+        <p data-i18n="page.general.p3"></p>
 
-<p><b data-i18n="page.defs.siteBold"></b> <span data-i18n="page.defs.siteText"></span></p>
+        <h2 id="defs" data-i18n="page.defs.title"></h2>
+        <p><b data-i18n="page.defs.platformBold"></b> <span data-i18n="page.defs.platformText"></span></p>
+        <p><b data-i18n="page.defs.userBold"></b> <span data-i18n="page.defs.userText"></span></p>
+        <p><b data-i18n="page.defs.sellerBold"></b> <span data-i18n="page.defs.sellerText"></span></p>
+        <p><b data-i18n="page.defs.buyerBold"></b> <span data-i18n="page.defs.buyerText"></span></p>
+        <p><b data-i18n="page.defs.listingBold"></b> <span data-i18n="page.defs.listingText"></span></p>
+        <p><b data-i18n="page.defs.orderBold"></b> <span data-i18n="page.defs.orderText"></span></p>
+        <p><b data-i18n="page.defs.balanceBold"></b> <span data-i18n="page.defs.balanceText"></span></p>
+        <p><b data-i18n="page.defs.escrowBold"></b> <span data-i18n="page.defs.escrowText"></span></p>
+        <p><b data-i18n="page.defs.supportBold"></b> <span data-i18n="page.defs.supportText"></span></p>
+        <p><b data-i18n="page.defs.disputeBold"></b> <span data-i18n="page.defs.disputeText"></span></p>
 
-<p>
-  <b data-i18n="page.defs.operatorBold"></b>
-  <span data-i18n="page.defs.operatorText1"></span>
-  <a href="/about.html" class="doc-link" data-i18n="page.defs.aboutLink"></a>
-  <span data-i18n="page.defs.or"></span>
-  <a href="/contacts.html" class="doc-link" data-i18n="page.defs.contactsLink"></a>.
-</p>
+        <h2 id="acceptance" data-i18n="page.acceptance.title"></h2>
+        <p data-i18n="page.acceptance.p1"></p>
+        <p data-i18n="page.acceptance.p2"></p>
 
-<p><b data-i18n="page.defs.userBold"></b> <span data-i18n="page.defs.userText"></span></p>
-<p><b data-i18n="page.defs.sellerBold"></b> <span data-i18n="page.defs.sellerText"></span></p>
-<p><b data-i18n="page.defs.buyerBold"></b> <span data-i18n="page.defs.buyerText"></span></p>
-<p><b data-i18n="page.defs.digitalBold"></b> <span data-i18n="page.defs.digitalText"></span></p>
-<p><b data-i18n="page.defs.adBold"></b> <span data-i18n="page.defs.adText"></span></p>
-<p><b data-i18n="page.defs.dealBold"></b> <span data-i18n="page.defs.dealText"></span></p>
-<p><b data-i18n="page.defs.escrowBold"></b> <span data-i18n="page.defs.escrowText"></span></p>
-<p><b data-i18n="page.defs.balanceBold"></b> <span data-i18n="page.defs.balanceText"></span></p>
+        <h2 id="capacity" data-i18n="page.capacity.title"></h2>
+        <p data-i18n="page.capacity.p1"></p>
+        <p data-i18n="page.capacity.p2"></p>
 
-<h2 id="accept" data-i18n="page.accept.title"></h2>
-<p data-i18n="page.accept.p1"></p>
-<p data-i18n="page.accept.p2"></p>
+        <h2 id="account" data-i18n="page.account.title"></h2>
+        <p data-i18n="page.account.p1"></p>
+        <p data-i18n="page.account.p2"></p>
+        <p data-i18n="page.account.p3"></p>
+        <p data-i18n="page.account.p4"></p>
 
-<h2 id="eligibility" data-i18n="page.eligibility.title"></h2>
-<p data-i18n="page.eligibility.p1"></p>
-<p data-i18n="page.eligibility.p2"></p>
+        <h2 id="status" data-i18n="page.status.title"></h2>
+        <p data-i18n="page.status.p1"></p>
+        <p data-i18n="page.status.p2"></p>
+        <p data-i18n="page.status.p3"></p>
 
-<h2 id="account" data-i18n="page.account.title"></h2>
-<p data-i18n="page.account.p1"></p>
-<p data-i18n="page.account.p2"></p>
-<p data-i18n="page.account.p3"></p>
-<p data-i18n="page.account.p4"></p>
-<h2 id="platform" data-i18n="page.platform.title"></h2>
-<p data-i18n="page.platform.p1"></p>
-<p data-i18n="page.platform.p2"></p>
-<p data-i18n="page.platform.p3"></p>
+        <h2 id="listings" data-i18n="page.listings.title"></h2>
+        <p data-i18n="page.listings.p1"></p>
+        <p data-i18n="page.listings.p2"></p>
+        <p data-i18n="page.listings.p3"></p>
+        <p data-i18n="page.listings.p4"></p>
 
-<h2 id="listings" data-i18n="page.listings.title"></h2>
-<p data-i18n="page.listings.p1"></p>
-<p data-i18n="page.listings.p2"></p>
-<p data-i18n="page.listings.p3"></p>
-<p data-i18n="page.listings.p4"></p>
+        <h2 id="prohibited" data-i18n="page.prohibited.title"></h2>
+        <p data-i18n="page.prohibited.p1"></p>
+        <ul>
+          <li data-i18n="page.prohibited.l1"></li>
+          <li data-i18n="page.prohibited.l2"></li>
+          <li data-i18n="page.prohibited.l3"></li>
+          <li data-i18n="page.prohibited.l4"></li>
+          <li data-i18n="page.prohibited.l5"></li>
+          <li data-i18n="page.prohibited.l6"></li>
+          <li data-i18n="page.prohibited.l7"></li>
+        </ul>
+        <p data-i18n="page.prohibited.p2"></p>
 
-<h2 id="prohibited" data-i18n="page.prohibited.title"></h2>
-<p data-i18n="page.prohibited.p1"></p>
+        <h2 id="balance" data-i18n="page.balance.title"></h2>
+        <p data-i18n="page.balance.p1"></p>
+        <p data-i18n="page.balance.p2"></p>
+        <p data-i18n="page.balance.p3"></p>
+        <p data-i18n="page.balance.p4"></p>
 
-<ul>
-  <li data-i18n="page.prohibited.l1"></li>
-  <li data-i18n="page.prohibited.l2"></li>
-  <li data-i18n="page.prohibited.l3"></li>
-  <li data-i18n="page.prohibited.l4"></li>
-  <li data-i18n="page.prohibited.l5"></li>
-  <li data-i18n="page.prohibited.l6"></li>
-  <li data-i18n="page.prohibited.l7"></li>
-</ul>
+        <h2 id="orders" data-i18n="page.orders.title"></h2>
+        <p data-i18n="page.orders.p1"></p>
+        <p data-i18n="page.orders.p2"></p>
+        <p data-i18n="page.orders.p3"></p>
+        <p data-i18n="page.orders.p4"></p>
 
-<p data-i18n="page.prohibited.p2"></p>
+        <h2 id="execution" data-i18n="page.execution.title"></h2>
+        <p data-i18n="page.execution.p1"></p>
+        <p data-i18n="page.execution.p2"></p>
+        <p data-i18n="page.execution.p3"></p>
 
-<h2 id="deal" data-i18n="page.deal.title"></h2>
-<p data-i18n="page.deal.p1"></p>
-<p data-i18n="page.deal.p2"></p>
-<p data-i18n="page.deal.p3"></p>
+        <h2 id="completion" data-i18n="page.completion.title"></h2>
+        <p data-i18n="page.completion.p1"></p>
+        <p data-i18n="page.completion.p2"></p>
+        <p data-i18n="page.completion.p3"></p>
+        <p data-i18n="page.completion.p4"></p>
 
-<h2 id="escrow" data-i18n="page.escrow.title"></h2>
-<p data-i18n="page.escrow.p1"></p>
-<p data-i18n="page.escrow.p2"></p>
-<p data-i18n="page.escrow.p3"></p>
-<p data-i18n="page.escrow.p4"></p>
+        <h2 id="disputes" data-i18n="page.disputes.title"></h2>
+        <p data-i18n="page.disputes.p1"></p>
+        <p data-i18n="page.disputes.p2"></p>
+        <p data-i18n="page.disputes.p3"></p>
+        <p data-i18n="page.disputes.p4"></p>
 
-<h2 id="fees" data-i18n="page.fees.title"></h2>
-<p data-i18n="page.fees.p1"></p>
-<p data-i18n="page.fees.p2"></p>
-<p data-i18n="page.fees.p3"></p>
-<p data-i18n="page.fees.p4"></p>
+        <h2 id="fees" data-i18n="page.fees.title"></h2>
+        <p data-i18n="page.fees.p1"></p>
+        <p data-i18n="page.fees.p2"></p>
+        <p data-i18n="page.fees.p3"></p>
 
-<h2 id="withdrawals" data-i18n="page.withdrawals.title"></h2>
-<p data-i18n="page.withdrawals.p1"></p>
-<p data-i18n="page.withdrawals.p2"></p>
-<p data-i18n="page.withdrawals.p3"></p>
+        <h2 id="moderation" data-i18n="page.moderation.title"></h2>
+        <p data-i18n="page.moderation.p1"></p>
+        <ul>
+          <li data-i18n="page.moderation.l1"></li>
+          <li data-i18n="page.moderation.l2"></li>
+          <li data-i18n="page.moderation.l3"></li>
+          <li data-i18n="page.moderation.l4"></li>
+          <li data-i18n="page.moderation.l5"></li>
+        </ul>
+        <p data-i18n="page.moderation.p2"></p>
 
-<h2 id="refunds" data-i18n="page.refunds.title"></h2>
-<p data-i18n="page.refunds.p1"></p>
-<p data-i18n="page.refunds.p2"></p>
-<p data-i18n="page.refunds.p3"></p>
+        <h2 id="checks" data-i18n="page.checks.title"></h2>
+        <p data-i18n="page.checks.p1"></p>
+        <p data-i18n="page.checks.p2"></p>
+        <p data-i18n="page.checks.p3"></p>
 
-<h2 id="disputes" data-i18n="page.disputes.title"></h2>
-<p data-i18n="page.disputes.p1"></p>
-<p data-i18n="page.disputes.p2"></p>
-<p data-i18n="page.disputes.p3"></p>
+        <h2 id="ip" data-i18n="page.ip.title"></h2>
+        <p data-i18n="page.ip.p1"></p>
+        <p data-i18n="page.ip.p2"></p>
+        <p data-i18n="page.ip.p3"></p>
 
-<h2 id="moderation" data-i18n="page.moderation.title"></h2>
-<p data-i18n="page.moderation.p1"></p>
+        <h2 id="privacy" data-i18n="page.privacy.title"></h2>
+        <p>
+          <span data-i18n="page.privacy.p1"></span>
+          <a href="/privacy.html" class="doc-link" data-i18n="page.privacy.linkPrivacy"></a>.
+        </p>
+        <p>
+          <span data-i18n="page.privacy.p2"></span>
+          <a href="/cookies.html" class="doc-link" data-i18n="page.privacy.linkCookies"></a>.
+        </p>
 
-<ul>
-  <li data-i18n="page.moderation.l1"></li>
-  <li data-i18n="page.moderation.l2"></li>
-  <li data-i18n="page.moderation.l3"></li>
-  <li data-i18n="page.moderation.l4"></li>
-  <li data-i18n="page.moderation.l5"></li>
-</ul>
+        <h2 id="liability" data-i18n="page.liability.title"></h2>
+        <p data-i18n="page.liability.p1"></p>
+        <p data-i18n="page.liability.p2"></p>
+        <p data-i18n="page.liability.p3"></p>
 
-<p data-i18n="page.moderation.p2"></p>
+        <h2 id="changes" data-i18n="page.changes.title"></h2>
+        <p data-i18n="page.changes.p1"></p>
+        <p data-i18n="page.changes.p2"></p>
 
-<h2 id="ip" data-i18n="page.ip.title"></h2>
-<p data-i18n="page.ip.p1"></p>
-<p data-i18n="page.ip.p2"></p>
-<p data-i18n="page.ip.p3"></p>
-<h2 id="privacy" data-i18n="page.privacy.title"></h2>
-<p data-i18n="page.privacy.p1"></p>
-<p data-i18n="page.privacy.p2"></p>
+        <h2 id="final" data-i18n="page.final.title"></h2>
+        <p data-i18n="page.final.p1"></p>
+        <p data-i18n="page.final.p2"></p>
+        <p data-i18n="page.final.p3"></p>
 
-<h2 id="aml" data-i18n="page.aml.title"></h2>
-<p data-i18n="page.aml.p1"></p>
-<p data-i18n="page.aml.p2"></p>
-<p data-i18n="page.aml.p3"></p>
+        <hr>
 
-<h2 id="international" data-i18n="page.international.title"></h2>
-<p data-i18n="page.international.p1"></p>
-<p data-i18n="page.international.p2"></p>
+        <p class="meta">
+          <span data-i18n="page.contacts.text"></span>
+          <a href="/contacts.html" class="doc-link" data-i18n="page.contacts.linkContacts"></a>
+          <span data-i18n="page.contacts.or"></span>
+          <a href="/help.html" class="doc-link" data-i18n="page.contacts.linkHelp"></a>.
+        </p>
 
-<h2 id="liability" data-i18n="page.liability.title"></h2>
-<p data-i18n="page.liability.p1"></p>
-<p data-i18n="page.liability.p2"></p>
-<p data-i18n="page.liability.p3"></p>
-<p data-i18n="page.liability.p4"></p>
-
-<h2 id="force" data-i18n="page.force.title"></h2>
-<p data-i18n="page.force.p1"></p>
-
-<h2 id="changes" data-i18n="page.changes.title"></h2>
-<p data-i18n="page.changes.p1"></p>
-<p data-i18n="page.changes.p2"></p>
-
-<h2 id="law" data-i18n="page.law.title"></h2>
-<p data-i18n="page.law.p1"></p>
-<p data-i18n="page.law.p2"></p>
-<p data-i18n="page.law.p3"></p>
-
-<h2 id="final" data-i18n="page.final.title"></h2>
-<p data-i18n="page.final.p1"></p>
-<p data-i18n="page.final.p2"></p>
-<p data-i18n="page.final.p3"></p>
-
-<p class="meta">
-  <span data-i18n="page.contacts.text"></span>
-  <a href="/contacts.html" class="doc-link" data-i18n="page.contacts.link_contacts"></a>
-  <span data-i18n="page.contacts.or"></span>
-  <a href="/help.html" class="doc-link" data-i18n="page.contacts.link_help"></a>.
-</p>
       </article>
-
     </div>
   </main>
 
   <div id="footer-container"></div>
 
-  <!-- порядок важен -->
   <script src="/i18n.js"></script>
   <script src="/header.js"></script>
   <script src="/footer.js"></script>

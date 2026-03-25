@@ -1,150 +1,152 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<script>
-  document.titleKey = "page.title";
-</script>
+  <script>
+    document.titleKey = "page.title";
+  </script>
 
-<title>TyPlace</title>
+  <title>TyPlace</title>
 
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<link rel="stylesheet" href="/header.css">
-<link rel="stylesheet" href="/footer.css">
+  <link rel="stylesheet" href="/header.css">
+  <link rel="stylesheet" href="/footer.css">
 
-<style>
-body{
-  margin:0;
-  background:#f6f7f9;
-  font-family:Inter, Arial, sans-serif;
-  color:#111827;
-}
+  <style>
+    body{
+      margin:0;
+      background:#f6f7f9;
+      font-family:Inter, Arial, sans-serif;
+      color:#111827;
+    }
 
-html, body{
-  height:100%;
-}
+    html, body{
+      height:100%;
+    }
 
-.page{
-  flex:1;
-  max-width:1000px;
-  margin:40px auto;
-  padding:0 16px 80px;
-}
+    .page-content{
+      min-height:100%;
+    }
 
-.card{
-  background:#ffffff;
-  border:1px solid #e5e7eb;
-  border-radius:16px;
-  padding:32px;
-}
+    .page{
+      max-width:1000px;
+      margin:40px auto;
+      padding:0 16px 80px;
+    }
 
-h1{
-  font-size:28px;
-  font-weight:900;
-  margin-bottom:24px;
-}
+    .card{
+      background:#ffffff;
+      border:1px solid #e5e7eb;
+      border-radius:18px;
+      padding:32px;
+      box-shadow:0 12px 32px rgba(0,0,0,.06);
+    }
 
-.section{
-  margin-bottom:26px;
-}
+    h1{
+      font-size:28px;
+      font-weight:900;
+      margin:0 0 24px;
+      letter-spacing:-.2px;
+    }
 
-.section:last-child{
-  margin-bottom:0;
-}
+    .section{
+      margin-bottom:28px;
+    }
 
-.section-title{
-  font-size:16px;
-  font-weight:800;
-  margin-bottom:8px;
-}
+    .section:last-child{
+      margin-bottom:0;
+    }
 
-.section-text{
-  font-size:14px;
-  line-height:1.7;
-  color:#4b5563;
-  margin-bottom:6px;
-}
+    .section-title{
+      font-size:16px;
+      font-weight:800;
+      margin-bottom:8px;
+    }
 
-.email{
-  display:inline-block;
-  font-size:14px;
-  font-weight:400;
-  line-height:1.7;
-  color:#2563eb;
-  text-decoration:none;
-  margin-top:4px;
-}
+    .section-text{
+      font-size:14px;
+      line-height:1.7;
+      color:#4b5563;
+      margin-bottom:6px;
+    }
 
-.email:hover{
-  text-decoration:underline;
-}
+    .email{
+      display:inline-block;
+      font-size:14px;
+      font-weight:400;
+      line-height:1.7;
+      color:#2563eb;
+      text-decoration:none;
+      margin-top:4px;
+    }
 
-.help-link{
-  font-size:14px;
-  font-weight:400;
-  line-height:1.7;
-  color:#2563eb;
-  text-decoration:none;
-}
+    .email:hover{
+      text-decoration:underline;
+    }
 
-.help-link:hover{
-  text-decoration:underline;
-}
+    .help-link{
+      font-size:14px;
+      font-weight:400;
+      line-height:1.7;
+      color:#2563eb;
+      text-decoration:none;
+    }
 
-@media(max-width:600px){
-  h1{
-    font-size:22px;
-  }
+    .help-link:hover{
+      text-decoration:underline;
+    }
 
-  .card{
-    padding:20px;
-  }
-}
-</style>
+    @media(max-width:600px){
+      h1{
+        font-size:22px;
+      }
+
+      .card{
+        padding:20px;
+        border-radius:16px;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
 <div id="header-container"></div>
 
-<main class="page">
-  <div class="card">
+<main class="page-content">
+  <div class="page">
+    <article class="card">
 
-    <h1 data-i18n="page.title"></h1>
+      <h1 data-i18n="page.title"></h1>
 
-    <div class="section">
-      <div class="section-title" data-i18n="page.legal.title"></div>
-      <div class="section-text" data-i18n="page.legal.text"></div>
-      <a href="mailto:business@typlace.com" class="email">
-        business@typlace.com
-      </a>
-    </div>
-
-    <div class="section">
-      <div class="section-title" data-i18n="page.finance.title"></div>
-      <div class="section-text" data-i18n="page.finance.text"></div>
-      <a href="mailto:business@typlace.com" class="email">
-        business@typlace.com
-      </a>
-    </div>
-
-    <div class="section">
-      <div class="section-title" data-i18n="page.partners.title"></div>
-      <div class="section-text" data-i18n="page.partners.text"></div>
-      <a href="mailto:business@typlace.com" class="email">
-        business@typlace.com
-      </a>
-    </div>
-
-    <div class="section">
-      <div class="section-title" data-i18n="page.support.title"></div>
-      <div class="section-text">
-        <span data-i18n="page.support.text1"></span>
-        <a href="/help.html" class="help-link" data-i18n="page.support.link"></a>.
+      <div class="section">
+        <div class="section-title" data-i18n="page.legal.title"></div>
+        <div class="section-text" data-i18n="page.legal.text"></div>
+        <a href="mailto:legal@typlace.com" class="email">legal@typlace.com</a>
       </div>
-    </div>
 
+      <div class="section">
+        <div class="section-title" data-i18n="page.finance.title"></div>
+        <div class="section-text" data-i18n="page.finance.text"></div>
+        <a href="mailto:business@typlace.com" class="email">business@typlace.com</a>
+      </div>
+
+      <div class="section">
+        <div class="section-title" data-i18n="page.partners.title"></div>
+        <div class="section-text" data-i18n="page.partners.text"></div>
+        <a href="mailto:business@typlace.com" class="email">business@typlace.com</a>
+      </div>
+
+      <div class="section">
+        <div class="section-title" data-i18n="page.support.title"></div>
+        <div class="section-text">
+          <span data-i18n="page.support.text1"></span>
+          <a href="/help.html" class="help-link" data-i18n="page.support.link"></a>.
+        </div>
+      </div>
+
+    </article>
   </div>
 </main>
 
