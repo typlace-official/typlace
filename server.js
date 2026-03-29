@@ -9,74 +9,217 @@ const path = require("path");
 const multer = require("multer");
 const { readJson, writeJson } = require("./services/json-store.service");
 
-const PAYMENTS_ENABLED = process.env.PAYMENTS_ENABLED === "true";
-const CRYPTO_ENABLED = process.env.CRYPTO_ENABLED === "true";
-const DEMO_MODE = process.env.DEMO_MODE === "true";
-
-const DEMO_ALLOWED_EMAILS = new Set(
-  String(process.env.DEMO_ALLOWED_EMAILS || "")
-    .split(",")
-    .map(v => v.trim().toLowerCase())
-    .filter(Boolean)
-);
-
-let sweepAllWallets = async () => {};
-let getOrCreateDepositWallet = async () => {
-  throw new Error("Crypto is disabled");
-};
-let scanAllDepositWallets = async () => {};
-let listDeposits = () => [];
-let topupAllWallets = async () => {};
-
-if (PAYMENTS_ENABLED && CRYPTO_ENABLED) {
-  try {
-    ({ sweepAllWallets } = require("./services/sweep.service"));
-    ({ getOrCreateDepositWallet } = require("./services/deposit-wallet.service"));
-    ({ scanAllDepositWallets, listDeposits } = require("./services/deposit-monitor.service"));
-    ({ topupAllWallets } = require("./services/trx-topup.service"));
-  } catch (e) {
-    console.log("Crypto services disabled:", e.message);
-  }
-}
-
 const supportService = require("./services/support.service");
 
 const sharp = require("sharp");
 const fs = require("fs");
 const SUPPORT_CONFIG = require("./config/support.config");
 
+const rateLimit = require("express-rate-limit");
+
 // ===== FILE UPLOAD CONFIG =====
+const UPLOADS_DIR = path.join(__dirname, "uploads");
+const DATA_DIR = path.join(__dirname, "data");
+
+fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+fs.mkdirSync(DATA_DIR, { recursive: true });
+
+const SUPPORTED_LANGS = ["ru", "uk", "en"];
+const DEFAULT_LANG = "ru";
+const LOCALES_DIR = path.join(__dirname, "public", "locales");
+
+let serverTranslations = Object.create(null);
+
+function readLocaleJsonSafe(filePath) {
+  try {
+    if (!fs.existsSync(filePath)) {
+      return {};
+    }
+
+    const raw = fs.readFileSync(filePath, "utf8");
+    if (!raw.trim()) {
+      return {};
+    }
+
+    return JSON.parse(raw);
+  } catch (err) {
+    console.error(`Failed to read locale file: ${filePath}`, err.message);
+    return {};
+  }
+}
+
+function deepGet(obj, key) {
+  return String(key || "")
+    .split(".")
+    .reduce((acc, part) => acc?.[part], obj);
+}
+
+function interpolateText(template, params = {}) {
+  if (typeof template !== "string") {
+    return template;
+  }
+
+  return template.replace(/{{\s*([\w.-]+)\s*}}/g, (_, key) => {
+    const value = params[key];
+    return value == null ? "" : String(value);
+  });
+}
+
+function loadServerTranslations() {
+  const next = {};
+
+  for (const lang of SUPPORTED_LANGS) {
+    next[lang] = readLocaleJsonSafe(
+      path.join(LOCALES_DIR, lang, "server.json")
+    );
+  }
+
+  serverTranslations = next;
+}
+
+function tServer(lang, key, params = {}, fallback = key) {
+  const safeLang = normalizeLang(lang);
+
+  let value = deepGet(serverTranslations[safeLang], key);
+
+  if (value == null && safeLang !== DEFAULT_LANG) {
+    value = deepGet(serverTranslations[DEFAULT_LANG], key);
+  }
+
+  if (value == null) {
+    return fallback;
+  }
+
+  if (typeof value !== "string") {
+    return String(value);
+  }
+
+  return interpolateText(value, params);
+}
+
+function getRequestLang(req, fallback = DEFAULT_LANG) {
+  return normalizeLang(
+    req?.user?.lang ||
+    req?.body?.lang ||
+    req?.query?.lang ||
+    req?.headers?.["x-tp-lang"] ||
+    fallback
+  );
+}
+
+function getAttachmentFallback(lang = DEFAULT_LANG) {
+  return tServer(lang, "common.attachmentFallback");
+}
+
+function tReq(req, key, params = {}) {
+  return tServer(getRequestLang(req), key, params, key);
+}
+
+function tUser(user, key, params = {}) {
+  return tServer(normalizeLang(user?.lang || DEFAULT_LANG), key, params, key);
+}
+
+function tLang(lang, key, params = {}) {
+  return tServer(normalizeLang(lang), key, params, key);
+}
+
+function tDefault(key, params = {}) {
+  return tServer(DEFAULT_LANG, key, params, key);
+}
+
+const SERVER_I18N_KEY_PREFIXES = [
+  "responses.",
+  "common.",
+  "official.",
+  "email.",
+  "telegram.",
+  "notifications."
+];
+
+function isServerI18nKey(value) {
+  if (typeof value !== "string") return false;
+  return SERVER_I18N_KEY_PREFIXES.some(prefix => value.startsWith(prefix));
+}
+
+function translateResponsePayload(req, payload) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    return payload;
+  }
+
+  const next = { ...payload };
+
+  if (isServerI18nKey(next.message)) {
+    next.message = tReq(req, next.message, next.messageParams || {});
+    delete next.messageParams;
+  }
+
+  return next;
+}
+
+loadServerTranslations();
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, "uploads"));
+    cb(null, UPLOADS_DIR);
   },
   filename: function (req, file, cb) {
     const uniqueName =
       Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
+    const ext = path.extname(file.originalname || "");
     cb(null, uniqueName + ext);
   }
 });
 
-const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
+function makeUpload({
+  fileSize,
+  allowedPrefixes = [],
+  allowedExact = [],
+  errorMessageKey = "responses.upload.unsupportedFileType"
+}) {
+  return multer({
+    storage,
+    limits: { fileSize },
+    fileFilter: (req, file, cb) => {
+      const mime = String(file.mimetype || "").toLowerCase();
 
-    if (!file.mimetype.startsWith("image/")) {
-      return cb(new Error("Only images allowed"));
+      const byPrefix = allowedPrefixes.some(prefix => mime.startsWith(prefix));
+      const byExact = allowedExact.includes(mime);
+
+      if (!byPrefix && !byExact) {
+        return cb(new Error(errorMessageKey));
+      }
+
+      cb(null, true);
     }
+  });
+}
 
-    cb(null, true);
-  }
+const uploadImages = makeUpload({
+  fileSize: 5 * 1024 * 1024,
+  allowedPrefixes: ["image/"],
+  errorMessageKey: "responses.upload.onlyImages"
+});
+
+const uploadChatFiles = makeUpload({
+  fileSize: 25 * 1024 * 1024,
+  allowedPrefixes: ["image/", "video/"],
+  errorMessageKey: "responses.upload.onlyImagesAndVideos"
+});
+
+const uploadSupportAttachments = makeUpload({
+  fileSize: 10 * 1024 * 1024,
+  allowedPrefixes: ["image/", "video/"],
+  allowedExact: ["application/pdf"],
+  errorMessageKey: "responses.upload.onlyImagesVideosAndPdf"
 });
 
 // чтобы сервер раздавал картинки
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
+const prisma = require("./lib/prisma");
 
 const app = express();
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(UPLOADS_DIR));
 const http = require("http");
 const { Server } = require("socket.io");
 
@@ -88,10 +231,66 @@ supportService.setSocket(io, onlineSockets);
 
 const PORT = process.env.PORT || 3000;
 
+app.set("trust proxy", 1);
+
+const authRequestCodeLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Слишком много попыток. Попробуйте позже."
+  }
+});
+
+const authVerifyCodeLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Слишком много попыток проверки кода. Попробуйте позже."
+  }
+});
+
+const supportCreateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.email || req.ip,
+  message: {
+    success: false,
+    message: "Слишком много обращений в поддержку. Подождите немного."
+  }
+});
+
+const supportMessageLimiter = rateLimit({
+  windowMs: 10 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.email || req.ip,
+  message: {
+    success: false,
+    message: "Слишком много сообщений. Подождите немного."
+  }
+});
+
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 app.use(express.static(path.join(__dirname, "public")));
+app.use((req, res, next) => {
+  const originalJson = res.json.bind(res);
 
+  res.json = (payload) => {
+    return originalJson(translateResponsePayload(req, payload));
+  };
+
+  next();
+});
 /* ================== EMAIL (GMAIL) ================== */
 const MAIL_USER = process.env.TYPLACE_GMAIL;
 const MAIL_PASS = process.env.TYPLACE_GMAIL_PASS;
@@ -121,33 +320,19 @@ const OFFICIAL_ACCOUNT = Object.freeze({
 const RESOLUTION_ENTITY = Object.freeze({
   email: "__resolution__@typlace.local",
   userId: "TP000002",
-  username: "Арбитраж",
+  username: "TyPlace Resolution",
   role: "resolution_entity",
   verified: true
-});
-const OFFICIAL_WELCOME_MESSAGES = Object.freeze({
-  ru: [
-    "Добро пожаловать в TyPlace!",
-    "Ваш аккаунт успешно создан.",
-    "В этом чате мы будем отправлять важные уведомления от платформы."
-  ].join("\n"),
-
-  uk: [
-    "Ласкаво просимо до TyPlace!",
-    "Ваш акаунт успішно створено.",
-    "У цьому чаті ми будемо надсилати важливі повідомлення від платформи."
-  ].join("\n"),
-
-  en: [
-    "Welcome to TyPlace!",
-    "Your account has been created successfully.",
-    "In this chat, we will send important platform notifications."
-  ].join("\n")
 });
 
 function getOfficialWelcomeMessage(lang) {
   const safeLang = normalizeLang(lang);
-  return OFFICIAL_WELCOME_MESSAGES[safeLang] || OFFICIAL_WELCOME_MESSAGES.ru;
+
+  return [
+    tLang(safeLang, "official.welcome.line1"),
+    tLang(safeLang, "official.welcome.line2"),
+    tLang(safeLang, "official.welcome.line3")
+  ].join("\n");
 }
 
 const ORDER_COMPLETED_APPEAL_WINDOW_MS = 72 * 60 * 60 * 1000;
@@ -166,7 +351,7 @@ function hasRole(user, ...roles) {
 }
 
 function isAdminPanelRole(user) {
-  return hasRole(user, ROLE.SUPER_ADMIN);
+  return hasRole(user, ROLE.ADMIN, ROLE.SUPER_ADMIN);
 }
 
 function isSupportRole(user) {
@@ -209,6 +394,22 @@ function isOfficialChat(chat) {
 
 function canWriteOfficial(user) {
   return hasRole(user, ROLE.SUPPORT, ROLE.ADMIN, ROLE.SUPER_ADMIN);
+}
+
+function isOfficialScopeRequest(req) {
+  return String(req.query.scope || "").trim().toLowerCase() === "official";
+}
+
+function isStaffLikeUser(user) {
+  if (!user) return false;
+
+  return [
+    ROLE.MODERATOR,
+    ROLE.SUPPORT,
+    ROLE.RESOLUTION,
+    ROLE.ADMIN,
+    ROLE.SUPER_ADMIN
+  ].includes(user.role);
 }
 
 function canWriteOfficialFromStaffPanel(user, chat) {
@@ -414,40 +615,113 @@ function getRealtimeEmailsForChat(chat) {
   return Array.from(set);
 }
 
-function getOrCreateOfficialChat(userEmail) {
+async function getOrCreateOfficialChat(userEmail) {
   const safeUserEmail = String(userEmail || "").trim().toLowerCase();
   if (!safeUserEmail) return null;
 
   let chat = chats.find(c =>
-    (c.buyerEmail === safeUserEmail && c.sellerEmail === OFFICIAL_ACCOUNT.email) ||
-    (c.sellerEmail === safeUserEmail && c.buyerEmail === OFFICIAL_ACCOUNT.email)
+    c.official === true &&
+    (
+      (c.buyerEmail === safeUserEmail && c.sellerEmail === OFFICIAL_ACCOUNT.email) ||
+      (c.sellerEmail === safeUserEmail && c.buyerEmail === OFFICIAL_ACCOUNT.email)
+    )
   );
 
-  if (!chat) {
-    chat = {
-      id: crypto.randomUUID(),
-      buyerEmail: safeUserEmail,
-      sellerEmail: OFFICIAL_ACCOUNT.email,
-      createdAt: Date.now(),
-      blocked: false,
-      official: true
-    };
-    chats.push(chat);
+  if (chat) {
+    return chat;
   }
 
-  return chat;
+  const dbChat = await prisma.chat.findFirst({
+    where: {
+      official: true,
+      OR: [
+        {
+          buyerEmail: safeUserEmail,
+          sellerEmail: OFFICIAL_ACCOUNT.email
+        },
+        {
+          sellerEmail: safeUserEmail,
+          buyerEmail: OFFICIAL_ACCOUNT.email
+        }
+      ]
+    }
+  });
+
+  if (dbChat) {
+    return syncChatToArray(dbChat);
+  }
+
+  return await createDbChatRecord({
+    buyerEmail: safeUserEmail,
+    sellerEmail: OFFICIAL_ACCOUNT.email,
+    blocked: false,
+    official: true,
+    deletedBy: []
+  });
 }
 
-function sendOfficialNoticeToUser({ userEmail, text, officialType = "notice", actor }) {
-  const safeUserEmail = String(userEmail || "").trim().toLowerCase();
-  const chat = getOrCreateOfficialChat(safeUserEmail);
-  if (!chat) return null;
+function hasMessagesInChat(chatId) {
+  return messages.some(m => m.chatId === chatId);
+}
 
-  if (Array.isArray(chat.deletedBy)) {
-    chat.deletedBy = chat.deletedBy.filter(email => email !== safeUserEmail);
+function getLastMessageForChat(chatId) {
+  return messages
+    .filter(m => m.chatId === chatId)
+    .sort((a, b) => b.createdAt - a.createdAt)[0] || null;
+}
+
+function getOfficialTargetEmail(chat) {
+  if (!chat || !isOfficialChat(chat)) return "";
+
+  const buyerEmail = String(chat.buyerEmail || "").trim().toLowerCase();
+  const sellerEmail = String(chat.sellerEmail || "").trim().toLowerCase();
+
+  if (buyerEmail && !isOfficialEmail(buyerEmail)) {
+    return buyerEmail;
   }
 
-  return pushOfficialMessage({
+  if (sellerEmail && !isOfficialEmail(sellerEmail)) {
+    return sellerEmail;
+  }
+
+  return "";
+}
+
+function getChatOtherEmailForViewer(chat, viewerEmail) {
+  if (!chat) return "";
+
+  const safeViewerEmail = String(viewerEmail || "").trim().toLowerCase();
+  const buyerEmail = String(chat.buyerEmail || "").trim().toLowerCase();
+  const sellerEmail = String(chat.sellerEmail || "").trim().toLowerCase();
+
+  if (buyerEmail === safeViewerEmail) {
+    return sellerEmail;
+  }
+
+  if (sellerEmail === safeViewerEmail) {
+    return buyerEmail;
+  }
+
+  // staff смотрит официальный чат со стороны панели
+  if (isOfficialChat(chat)) {
+    return getOfficialTargetEmail(chat);
+  }
+
+  return "";
+}
+
+async function sendOfficialNoticeToUser({ userEmail, text, officialType = "notice", actor }) {
+  const safeUserEmail = String(userEmail || "").trim().toLowerCase();
+  let chat = await getOrCreateOfficialChat(safeUserEmail);
+  if (!chat) return null;
+
+  if (Array.isArray(chat.deletedBy) && chat.deletedBy.includes(safeUserEmail)) {
+    chat = await updateDbChatRecord(chat.id, {
+      deletedBy: chat.deletedBy.filter(email => email !== safeUserEmail)
+    });
+  }
+
+  return await pushOfficialMessage({
     chatId: chat.id,
     text,
     officialType,
@@ -513,11 +787,11 @@ function emitChatMessageToParticipants(chatId, message) {
   });
 }
 
-function pushOfficialMessage({ chatId, text, officialType = "notice", actor }) {
+async function pushOfficialMessage({ chatId, text, officialType = "notice", actor }) {
   const safeText = String(text || "").trim();
   if (!safeText) return null;
 
-  const message = makeChatMessage({
+  const message = await createDbChatMessageRecord({
     chatId,
     fromEmail: OFFICIAL_ACCOUNT.email,
     fromUserId: OFFICIAL_ACCOUNT.userId,
@@ -525,20 +799,34 @@ function pushOfficialMessage({ chatId, text, officialType = "notice", actor }) {
     fromRole: OFFICIAL_ACCOUNT.role,
     kind: "official",
     messageType: "official",
+    staffRole: null,
     text: safeText,
     media: [],
     officialType,
+    systemType: null,
     meta: {
       actorEmail: actor?.email || "",
       actorUserId: actor?.userId || "",
       actorUsername: actor?.username || "",
       actorRole: actor?.role || "",
       actorVerified: Boolean(actor?.verified)
-    }
+    },
+    read: false
   });
 
-  messages.push(message);
   emitChatMessageToParticipants(chatId, message);
+
+  const chat = chats.find(c => c.id === chatId);
+  const targetEmail = getOfficialTargetEmail(chat);
+  const targetUser = users.get(targetEmail);
+
+  if (targetUser && targetUser.email !== actor?.email) {
+    notifyUser(targetUser, "official_message", {
+      text: safeText,
+      chatId,
+      officialType
+    });
+  }
 
   return message;
 }
@@ -578,34 +866,490 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-/* ================== STORAGE (без БД) ==================
-   Потом заменишь на базу данных — логика останется та же.
-*/
-const users = new Map(); 
-const walletHistory = new Map();
+/* ================== STORAGE BRIDGE (Prisma + legacy Map) ================== */
+const users = new Map();
+const pendingCodes = new Map();
+const sessions = new Map();
 
-const CRYPTO_PENDING_FILE = path.join(__dirname, "data", "crypto-pending.json");
-const CRYPTO_PENDING_TTL = 30 * 60 * 1000;
+const lastChatActionAt = new Map();
 
-const cryptoDeposits = readJson(CRYPTO_PENDING_FILE, []) || [];
+function getChatActionCooldownSeconds(chatId, userEmail, minMs = 1500) {
+  const key = `${chatId}:${String(userEmail || "").trim().toLowerCase()}`;
+  const nowMs = Date.now();
+  const lastAt = Number(lastChatActionAt.get(key) || 0);
 
-function saveCryptoDeposits() {
-  writeJson(CRYPTO_PENDING_FILE, cryptoDeposits);
+  if (lastAt && nowMs - lastAt < minMs) {
+    return Math.max(1, Math.ceil((minMs - (nowMs - lastAt)) / 1000));
+  }
+
+  lastChatActionAt.set(key, nowMs);
+  return 0;
 }
 
-const withdrawRequests = [];
-// баланс платформы
-let platformBalances = {
-  crypto: 0,       // деньги с крипты
-  fondy: 0,        // деньги с карт
-  paypal: 0,       // деньги для PayPal выплат
-  escrow: 0,       // деньги замороженные в сделках
-  commission: 0    // прибыль платформы
-};
-const pendingCodes = new Map(); // email -> { code, expiresAt, mode, tempUsername, lastSentAt, tries }
-const sessions = new Map(); // token -> { email, expiresAt }
+setInterval(() => {
+  const nowMs = Date.now();
+
+  for (const [key, lastAt] of lastChatActionAt.entries()) {
+    if (nowMs - Number(lastAt || 0) > 5 * 60 * 1000) {
+      lastChatActionAt.delete(key);
+    }
+  }
+}, 60 * 1000).unref();
+
+function dbUserToLegacy(dbUser) {
+  if (!dbUser) return null;
+
+  return {
+    email: dbUser.email,
+    username: dbUser.username,
+    userId: dbUser.userId,
+    avatarDataUrl: dbUser.avatarDataUrl || "",
+    avatarUrl: dbUser.avatarUrl || "",
+    createdAt: dbUser.createdAt ? dbUser.createdAt.toISOString() : null,
+    usernameChangedAt: dbUser.usernameChangedAt
+      ? dbUser.usernameChangedAt.getTime()
+      : null,
+    online: Boolean(dbUser.online),
+    lastSeen: dbUser.lastSeenAt ? dbUser.lastSeenAt.getTime() : 0,
+    banned: Boolean(dbUser.banned),
+    role: dbUser.role || ROLE.USER,
+    verified: Boolean(dbUser.verified),
+    blockedUsers: Array.isArray(dbUser.blockedUsers) ? dbUser.blockedUsers : [],
+    notify: {
+      site: Boolean(dbUser.notifySite),
+      email: Boolean(dbUser.notifyEmail),
+      telegram: Boolean(dbUser.notifyTelegram)
+    },
+    telegramChatId: dbUser.telegramChatId || null,
+    telegramUsername: dbUser.telegramUsername || "",
+    telegramFirstName: dbUser.telegramFirstName || "",
+    telegramLinkedAt: dbUser.telegramLinkedAt
+      ? dbUser.telegramLinkedAt.getTime()
+      : null,
+    lang: normalizeLang(dbUser.lang || "ru"),
+    rating: Number(dbUser.rating || 0),
+    reviewsCount: Number(dbUser.reviewsCount || 0)
+  };
+}
+
+function syncUserToMap(dbUser) {
+  const legacyUser = dbUserToLegacy(dbUser);
+  if (!legacyUser) return null;
+
+  users.set(legacyUser.email, legacyUser);
+  return legacyUser;
+}
+
+async function updateDbUserRecord(email, data) {
+  const dbUser = await prisma.user.update({
+    where: { email },
+    data
+  });
+
+  return syncUserToMap(dbUser);
+}
+
+function dbPendingCodeToLegacy(dbCode) {
+  if (!dbCode) return null;
+
+  return {
+    code: dbCode.code,
+    mode: dbCode.mode,
+    tempUsername: dbCode.tempUsername || "",
+    expiresAt: dbCode.expiresAt.getTime(),
+    lastSentAt: dbCode.lastSentAt.getTime(),
+    tries: Number(dbCode.tries || 0)
+  };
+}
+
+function dbSessionToLegacy(dbSession) {
+  if (!dbSession) return null;
+
+  return {
+    email: dbSession.email,
+    expiresAt: dbSession.expiresAt.getTime()
+  };
+}
+
+async function generateUniqueUserIdForDb() {
+  while (true) {
+    const candidate = Math.floor(10000000 + Math.random() * 90000000).toString();
+
+    const exists = await prisma.user.findUnique({
+      where: { userId: candidate },
+      select: { id: true }
+    });
+
+    if (!exists) {
+      return candidate;
+    }
+  }
+}
+
+async function loadAuthCacheFromDb() {
+  const nowDate = new Date();
+
+  const [dbUsers, dbSessions, dbPendingCodes] = await Promise.all([
+    prisma.user.findMany(),
+    prisma.session.findMany({
+      where: {
+        expiresAt: {
+          gt: nowDate
+        }
+      }
+    }),
+    prisma.pendingCode.findMany({
+      where: {
+        expiresAt: {
+          gt: nowDate
+        }
+      }
+    })
+  ]);
+
+  users.clear();
+  sessions.clear();
+  pendingCodes.clear();
+
+  dbUsers.forEach(syncUserToMap);
+
+  dbSessions.forEach(session => {
+    sessions.set(session.token, dbSessionToLegacy(session));
+  });
+
+  dbPendingCodes.forEach(code => {
+    pendingCodes.set(code.email, dbPendingCodeToLegacy(code));
+  });
+
+  console.log(
+    `🔐 Auth cache loaded: users=${users.size}, sessions=${sessions.size}, pendingCodes=${pendingCodes.size}`
+  );
+}
+
+async function cleanupExpiredAuthData() {
+  const nowDate = new Date();
+  const nowMs = Date.now();
+
+  await Promise.all([
+    prisma.session.deleteMany({
+      where: {
+        expiresAt: {
+          lte: nowDate
+        }
+      }
+    }),
+    prisma.pendingCode.deleteMany({
+      where: {
+        expiresAt: {
+          lte: nowDate
+        }
+      }
+    })
+  ]);
+
+  for (const [token, session] of sessions.entries()) {
+    if (!session?.expiresAt || session.expiresAt <= nowMs) {
+      sessions.delete(token);
+    }
+  }
+
+  for (const [email, code] of pendingCodes.entries()) {
+    if (!code?.expiresAt || code.expiresAt <= nowMs) {
+      pendingCodes.delete(email);
+    }
+  }
+}
+
+setInterval(() => {
+  cleanupExpiredAuthData().catch(err => {
+    console.error("cleanupExpiredAuthData error:", err.message);
+  });
+}, 60 * 1000);
 
 /* ================== MARKET STORAGE ================== */
+
+function toDateOrNull(value) {
+  if (value == null) return null;
+  if (value instanceof Date) return value;
+
+  const num = Number(value);
+  if (Number.isFinite(num)) {
+    return new Date(num);
+  }
+
+  const dt = new Date(value);
+  return Number.isNaN(dt.getTime()) ? null : dt;
+}
+
+function dbOrderToLegacy(dbOrder) {
+  if (!dbOrder) return null;
+
+  return {
+    id: dbOrder.id,
+    orderNumber: dbOrder.orderNumber,
+    offerId: dbOrder.offerId,
+    buyerEmail: dbOrder.buyerEmail,
+    sellerEmail: dbOrder.sellerEmail,
+    chatId: dbOrder.chatId,
+    price: Number(dbOrder.price || 0),
+    commission: Number(dbOrder.commission || 0),
+    status: dbOrder.status || "pending",
+    disputeStatus: dbOrder.disputeStatus || "none",
+    disputeTicketId: dbOrder.disputeTicketId || null,
+    resolutionAssignedTo: dbOrder.resolutionAssignedTo || null,
+    resolutionRequestedAt: dbOrder.resolutionRequestedAt
+      ? dbOrder.resolutionRequestedAt.getTime()
+      : null,
+    resolutionAssignedAt: dbOrder.resolutionAssignedAt
+      ? dbOrder.resolutionAssignedAt.getTime()
+      : null,
+    completedAt: dbOrder.completedAt ? dbOrder.completedAt.getTime() : null,
+    refundedAt: dbOrder.refundedAt ? dbOrder.refundedAt.getTime() : null,
+    createdAt: dbOrder.createdAt ? dbOrder.createdAt.getTime() : Date.now(),
+    offerSnapshot: dbOrder.offerSnapshot || null
+  };
+}
+
+function syncOrderToArray(dbOrder) {
+  const legacyOrder = dbOrderToLegacy(dbOrder);
+  if (!legacyOrder) return null;
+
+  const index = orders.findIndex(o => o.id === legacyOrder.id);
+
+  if (index === -1) {
+    orders.push(legacyOrder);
+  } else {
+    orders[index] = {
+      ...orders[index],
+      ...legacyOrder
+    };
+  }
+
+  return legacyOrder;
+}
+
+async function loadOrdersCacheFromDb() {
+  const dbOrders = await prisma.order.findMany({
+    orderBy: { createdAt: "asc" }
+  });
+
+  orders.length = 0;
+  dbOrders.forEach(syncOrderToArray);
+
+  console.log(`📦 Orders cache loaded: orders=${orders.length}`);
+}
+
+function normalizeOrderDbData(data = {}) {
+  const dbData = { ...data };
+
+  [
+    "createdAt",
+    "completedAt",
+    "refundedAt",
+    "resolutionRequestedAt",
+    "resolutionAssignedAt"
+  ].forEach(key => {
+    if (key in dbData) {
+      dbData[key] = toDateOrNull(dbData[key]);
+    }
+  });
+
+  return dbData;
+}
+
+async function createDbOrderRecord(data) {
+  const dbOrder = await prisma.order.create({
+    data: normalizeOrderDbData(data)
+  });
+
+  return syncOrderToArray(dbOrder);
+}
+
+async function updateDbOrderRecord(orderId, data) {
+  const dbOrder = await prisma.order.update({
+    where: { id: orderId },
+    data: normalizeOrderDbData(data)
+  });
+
+  return syncOrderToArray(dbOrder);
+}
+
+function dbReviewToLegacy(dbReview) {
+  if (!dbReview) return null;
+
+  return {
+    id: dbReview.id,
+    orderId: dbReview.orderId,
+    sellerEmail: dbReview.sellerEmail,
+    buyerEmail: dbReview.buyerEmail,
+    rating: Number(dbReview.rating || 0),
+    text: dbReview.text || "",
+    createdAt: dbReview.createdAt ? dbReview.createdAt.getTime() : Date.now()
+  };
+}
+
+function syncReviewToArray(dbReview) {
+  const legacyReview = dbReviewToLegacy(dbReview);
+  if (!legacyReview) return null;
+
+  const index = reviews.findIndex(r => r.id === legacyReview.id);
+
+  if (index === -1) {
+    reviews.push(legacyReview);
+  } else {
+    reviews[index] = {
+      ...reviews[index],
+      ...legacyReview
+    };
+  }
+
+  return legacyReview;
+}
+
+async function loadReviewsCacheFromDb() {
+  const dbReviews = await prisma.review.findMany({
+    orderBy: { createdAt: "asc" }
+  });
+
+  reviews.length = 0;
+  dbReviews.forEach(syncReviewToArray);
+
+  console.log(`⭐ Reviews cache loaded: reviews=${reviews.length}`);
+}
+
+async function createDbReviewRecord(data) {
+  const dbReview = await prisma.review.create({
+    data: {
+      orderId: data.orderId,
+      sellerEmail: data.sellerEmail,
+      buyerEmail: data.buyerEmail,
+      rating: Number(data.rating || 0),
+      text: String(data.text || ""),
+      createdAt: toDateOrNull(data.createdAt) || new Date()
+    }
+  });
+
+  return syncReviewToArray(dbReview);
+}
+
+async function deleteDbReviewByOrderId(orderId) {
+  await prisma.review.deleteMany({
+    where: { orderId }
+  });
+
+  const index = reviews.findIndex(r => r.orderId === orderId);
+  if (index !== -1) {
+    reviews.splice(index, 1);
+  }
+}
+
+async function recalcSellerRating(sellerEmail) {
+  const seller = users.get(sellerEmail);
+  if (!seller) return null;
+
+  const sellerReviews = reviews.filter(r => r.sellerEmail === sellerEmail);
+  const reviewsCount = sellerReviews.length;
+
+  let rating = 0;
+  if (reviewsCount >= 10) {
+    const avg =
+      sellerReviews.reduce((sum, r) => sum + Number(r.rating || 0), 0) / reviewsCount;
+    rating = Math.round(avg * 10) / 10;
+  }
+
+  return await updateDbUserRecord(sellerEmail, {
+    reviewsCount,
+    rating
+  });
+}
+
+function dbAdminLogToLegacy(dbLog) {
+  if (!dbLog) return null;
+
+  return {
+    id: dbLog.id,
+    actorEmail: dbLog.actorEmail || "",
+    actorUsername: dbLog.actorUsername || "Админ",
+    action: dbLog.action || "action",
+    targetType: dbLog.targetType || "",
+    targetId: dbLog.targetId || "",
+    text: dbLog.text || "",
+    createdAt: dbLog.createdAt ? dbLog.createdAt.getTime() : Date.now()
+  };
+}
+
+function syncAdminLogToArray(dbLog) {
+  const legacyLog = dbAdminLogToLegacy(dbLog);
+  if (!legacyLog) return null;
+
+  const index = adminLogs.findIndex(l => l.id === legacyLog.id);
+
+  if (index === -1) {
+    adminLogs.unshift(legacyLog);
+  } else {
+    adminLogs[index] = {
+      ...adminLogs[index],
+      ...legacyLog
+    };
+  }
+
+  adminLogs.sort((a, b) => b.createdAt - a.createdAt);
+
+  if (adminLogs.length > 1000) {
+    adminLogs.length = 1000;
+  }
+
+  return legacyLog;
+}
+
+async function loadAdminLogsCacheFromDb() {
+  const dbLogs = await prisma.adminLog.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 1000
+  });
+
+  adminLogs.length = 0;
+  dbLogs.forEach(syncAdminLogToArray);
+
+  console.log(`🧾 Admin logs cache loaded: logs=${adminLogs.length}`);
+}
+
+function addAdminLog({ actor, action, targetType, targetId, text }) {
+  const legacyLog = {
+    id: crypto.randomUUID(),
+    actorEmail: actor?.email || "",
+    actorUsername: actor?.username || "Админ",
+    action: action || "action",
+    targetType: targetType || "",
+    targetId: targetId || "",
+    text: text || "",
+    createdAt: Date.now()
+  };
+
+  adminLogs.unshift(legacyLog);
+
+  if (adminLogs.length > 1000) {
+    adminLogs.length = 1000;
+  }
+
+  prisma.adminLog.create({
+    data: {
+      id: legacyLog.id,
+      actorEmail: legacyLog.actorEmail,
+      actorUsername: legacyLog.actorUsername,
+      action: legacyLog.action,
+      targetType: legacyLog.targetType,
+      targetId: legacyLog.targetId,
+      text: legacyLog.text,
+      createdAt: new Date(legacyLog.createdAt)
+    }
+  }).catch(err => {
+    console.error("addAdminLog prisma error:", err.message);
+  });
+
+  return legacyLog;
+}
+
 const offers = [];
 const chats = [];
 const messages = [];
@@ -613,7 +1357,317 @@ const orders = [];
 const reviews = [];
 const adminLogs = [];
 
-function pushSystemMessage({
+function dbOfferToLegacy(dbOffer) {
+  if (!dbOffer) return null;
+
+  return {
+    id: dbOffer.id,
+    offerId: dbOffer.offerId,
+    game: dbOffer.game,
+    mode: dbOffer.mode,
+    category: dbOffer.category || null,
+
+    title: dbOffer.title || { ru: "", uk: "", en: "" },
+    description: dbOffer.description || { ru: "", uk: "", en: "" },
+    extra: dbOffer.extra || {},
+
+    priceNet: Number(dbOffer.priceNet || 0),
+    price: Number(dbOffer.price || 0),
+    amount: dbOffer.amount == null ? null : Number(dbOffer.amount),
+
+    method: dbOffer.method || null,
+    country: dbOffer.country || null,
+    accountType: dbOffer.accountType || null,
+    accountRegion: dbOffer.accountRegion || null,
+    voiceChat: dbOffer.voiceChat == null ? null : Boolean(dbOffer.voiceChat),
+
+    images: Array.isArray(dbOffer.images) ? dbOffer.images : [],
+    imageUrl: dbOffer.imageUrl || null,
+
+    sellerEmail: dbOffer.sellerEmail,
+    sellerName: dbOffer.sellerName,
+
+    status: dbOffer.status,
+    createdAt: dbOffer.createdAt ? dbOffer.createdAt.getTime() : Date.now(),
+    activeUntil: dbOffer.activeUntil ? dbOffer.activeUntil.getTime() : null
+  };
+}
+
+function syncOfferToArray(dbOffer) {
+  const legacyOffer = dbOfferToLegacy(dbOffer);
+  if (!legacyOffer) return null;
+
+  const index = offers.findIndex(o => o.id === legacyOffer.id);
+
+  if (index === -1) {
+    offers.push(legacyOffer);
+  } else {
+    offers[index] = {
+      ...offers[index],
+      ...legacyOffer
+    };
+  }
+
+  return legacyOffer;
+}
+
+async function loadOffersCacheFromDb() {
+  const dbOffers = await prisma.offer.findMany({
+    orderBy: { createdAt: "asc" }
+  });
+
+  offers.length = 0;
+  dbOffers.forEach(syncOfferToArray);
+
+  console.log(`🛒 Offers cache loaded: offers=${offers.length}`);
+}
+
+function normalizeOfferDbData(data = {}) {
+  const dbData = { ...data };
+
+  if ("priceNet" in dbData) {
+    dbData.priceNet = Number(dbData.priceNet || 0);
+  }
+
+  if ("price" in dbData) {
+    dbData.price = Number(dbData.price || 0);
+  }
+
+  if ("amount" in dbData) {
+    dbData.amount =
+      dbData.amount == null || dbData.amount === ""
+        ? null
+        : Number(dbData.amount);
+  }
+
+  if ("voiceChat" in dbData) {
+    dbData.voiceChat =
+      dbData.voiceChat == null
+        ? null
+        : Boolean(dbData.voiceChat);
+  }
+
+  if ("images" in dbData) {
+    dbData.images = Array.isArray(dbData.images)
+      ? dbData.images.map(v => String(v))
+      : [];
+  }
+
+  if ("imageUrl" in dbData) {
+    dbData.imageUrl = dbData.imageUrl || null;
+  }
+
+  if ("category" in dbData) {
+    dbData.category = dbData.category || null;
+  }
+
+  if ("method" in dbData) {
+    dbData.method = dbData.method || null;
+  }
+
+  if ("country" in dbData) {
+    dbData.country = dbData.country || null;
+  }
+
+  if ("accountType" in dbData) {
+    dbData.accountType = dbData.accountType || null;
+  }
+
+  if ("accountRegion" in dbData) {
+    dbData.accountRegion = dbData.accountRegion || null;
+  }
+
+  if ("extra" in dbData) {
+    dbData.extra = dbData.extra || {};
+  }
+
+  if ("title" in dbData) {
+    dbData.title = dbData.title || { ru: "", uk: "", en: "" };
+  }
+
+  if ("description" in dbData) {
+    dbData.description = dbData.description || { ru: "", uk: "", en: "" };
+  }
+
+  ["createdAt", "activeUntil"].forEach(key => {
+    if (key in dbData) {
+      dbData[key] = toDateOrNull(dbData[key]);
+    }
+  });
+
+  return dbData;
+}
+
+async function createDbOfferRecord(data) {
+  const dbOffer = await prisma.offer.create({
+    data: normalizeOfferDbData(data)
+  });
+
+  return syncOfferToArray(dbOffer);
+}
+
+async function updateDbOfferRecord(offerId, data) {
+  const dbOffer = await prisma.offer.update({
+    where: { id: offerId },
+    data: normalizeOfferDbData(data)
+  });
+
+  return syncOfferToArray(dbOffer);
+}
+
+function dbChatToLegacy(dbChat) {
+  if (!dbChat) return null;
+
+  return {
+    id: dbChat.id,
+    buyerEmail: dbChat.buyerEmail,
+    sellerEmail: dbChat.sellerEmail,
+    offerId: dbChat.offerId || null,
+    createdAt: dbChat.createdAt ? dbChat.createdAt.getTime() : Date.now(),
+    blocked: Boolean(dbChat.blocked),
+    official: Boolean(dbChat.official),
+    deletedBy: Array.isArray(dbChat.deletedBy) ? dbChat.deletedBy : []
+  };
+}
+
+function dbChatMessageToLegacy(dbMessage) {
+  if (!dbMessage) return null;
+
+  return {
+    id: dbMessage.id,
+    chatId: dbMessage.chatId,
+    fromEmail: dbMessage.fromEmail || "",
+    fromUserId: dbMessage.fromUserId || "",
+    fromUsername: dbMessage.fromUsername || "",
+    fromRole: dbMessage.fromRole || ROLE.USER,
+    kind: dbMessage.kind || "user",
+    messageType: dbMessage.messageType || "user",
+    staffRole: dbMessage.staffRole || null,
+    text: dbMessage.text || "",
+    media: Array.isArray(dbMessage.media) ? dbMessage.media : [],
+    officialType: dbMessage.officialType || null,
+    systemType: dbMessage.systemType || null,
+    meta: dbMessage.meta || {},
+    createdAt: dbMessage.createdAt ? dbMessage.createdAt.getTime() : Date.now(),
+    read: Boolean(dbMessage.read)
+  };
+}
+
+function syncChatToArray(dbChat) {
+  const legacyChat = dbChatToLegacy(dbChat);
+  if (!legacyChat) return null;
+
+  const index = chats.findIndex(c => c.id === legacyChat.id);
+
+  if (index === -1) {
+    chats.push(legacyChat);
+  } else {
+    chats[index] = {
+      ...chats[index],
+      ...legacyChat
+    };
+  }
+
+  return legacyChat;
+}
+
+function syncChatMessageToArray(dbMessage) {
+  const legacyMessage = dbChatMessageToLegacy(dbMessage);
+  if (!legacyMessage) return null;
+
+  const index = messages.findIndex(m => m.id === legacyMessage.id);
+
+  if (index === -1) {
+    messages.push(legacyMessage);
+  } else {
+    messages[index] = {
+      ...messages[index],
+      ...legacyMessage
+    };
+  }
+
+  return legacyMessage;
+}
+
+async function loadChatCacheFromDb() {
+  const [dbChats, dbMessages] = await Promise.all([
+    prisma.chat.findMany({
+      orderBy: { createdAt: "asc" }
+    }),
+    prisma.chatMessage.findMany({
+      orderBy: { createdAt: "asc" }
+    })
+  ]);
+
+  chats.length = 0;
+  messages.length = 0;
+
+  dbChats.forEach(syncChatToArray);
+  dbMessages.forEach(syncChatMessageToArray);
+
+  console.log(`💬 Chat cache loaded: chats=${chats.length}, messages=${messages.length}`);
+}
+
+async function createDbChatRecord(data) {
+  const dbChat = await prisma.chat.create({
+    data
+  });
+
+  return syncChatToArray(dbChat);
+}
+
+async function updateDbChatRecord(chatId, data) {
+  const dbChat = await prisma.chat.update({
+    where: { id: chatId },
+    data
+  });
+
+  return syncChatToArray(dbChat);
+}
+
+async function createDbChatMessageRecord(data) {
+  const dbMessage = await prisma.chatMessage.create({
+    data: {
+      chatId: data.chatId,
+      fromEmail: data.fromEmail || "",
+      fromUserId: data.fromUserId || null,
+      fromUsername: data.fromUsername || "",
+      fromRole: data.fromRole || ROLE.USER,
+      kind: data.kind || "user",
+      messageType: data.messageType || "user",
+      staffRole: data.staffRole || null,
+      text: String(data.text || "").trim(),
+      media: Array.isArray(data.media) ? data.media.map(v => String(v)) : [],
+      officialType: data.officialType || null,
+      systemType: data.systemType || null,
+      meta: data.meta ?? null,
+      read: Boolean(data.read)
+    }
+  });
+
+  return syncChatMessageToArray(dbMessage);
+}
+
+async function markDbChatMessagesRead(chatId, myEmail) {
+  await prisma.chatMessage.updateMany({
+    where: {
+      chatId,
+      fromEmail: { not: myEmail },
+      read: false
+    },
+    data: {
+      read: true
+    }
+  });
+
+  messages.forEach(m => {
+    if (m.chatId === chatId && m.fromEmail !== myEmail && m.read === false) {
+      m.read = true;
+    }
+  });
+}
+
+async function pushSystemMessage({
   chatId,
   systemType,
   actorEmail = "",
@@ -623,7 +1677,7 @@ function pushSystemMessage({
   actorUsername = "",
   actorRole = ""
 }) {
-  const message = makeChatMessage({
+  const message = await createDbChatMessageRecord({
     chatId,
     fromEmail: "system",
     fromUserId: "",
@@ -631,9 +1685,11 @@ function pushSystemMessage({
     fromRole: "system",
     kind: "system",
     messageType: "system",
-    systemType,
+    staffRole: null,
     text: "",
     media: [],
+    officialType: null,
+    systemType,
     meta: {
       actorEmail,
       orderId,
@@ -641,10 +1697,10 @@ function pushSystemMessage({
       actorUserId,
       actorUsername,
       actorRole
-    }
+    },
+    read: false
   });
 
-  messages.push(message);
   emitChatMessageToParticipants(chatId, message);
 
   return message;
@@ -659,43 +1715,25 @@ function getActorMeta(actor, fallbackRole = "user") {
   };
 }
 
-function applyOrderConfirm({ order, actor, systemType }) {
+async function applyOrderConfirm({ order, actor, systemType }) {
   if (!order || order.status !== "pending") {
-    throw new Error("Подтверждение невозможно");
+    throw new Error("responses.orders.confirmImpossible");
   }
-
-  const seller = users.get(order.sellerEmail);
-
-  if (!seller) {
-    throw new Error("Продавец не найден");
-  }
-
-  platformBalances.escrow = roundMoney(
-    Math.max(0, Number(platformBalances.escrow || 0) - Number(order.price || 0))
-  );
-
-  seller.balance = roundMoney((seller.balance || 0) + Number(order.sellerAmount || 0));
-
-  addWalletHistory(seller.email, {
-    type: "sale",
-    amount: Number(order.sellerAmount || 0),
-    currency: BASE_CURRENCY,
-    status: "completed",
-    text: `Продажа по заказу ${order.orderNumber}`
-  });
-
-  platformBalances.commission = roundMoney(
-    (platformBalances.commission || 0) + Number(order.commission || 0)
-  );
 
   order.status = "completed";
   order.completedAt = Date.now();
   order.disputeStatus = "closed";
 
+  await updateDbOrderRecord(order.id, {
+    status: order.status,
+    completedAt: order.completedAt,
+    disputeStatus: order.disputeStatus
+  });
+
   const chat = chats.find(c => c.id === order.chatId);
 
   if (chat) {
-    pushSystemMessage({
+    await pushSystemMessage({
       chatId: chat.id,
       systemType,
       orderId: order.id,
@@ -707,10 +1745,46 @@ function applyOrderConfirm({ order, actor, systemType }) {
   return order;
 }
 
-function pushResolutionMessage({ order, actor, text, media = [] }) {
+async function applyOrderRefund({ order, actor, systemType }) {
+  if (!order || order.status !== "pending") {
+    throw new Error("responses.orders.refundImpossible");
+  }
+
+  order.status = "refunded";
+  order.refundedAt = Date.now();
+  order.disputeStatus = "closed";
+
+  await updateDbOrderRecord(order.id, {
+    status: order.status,
+    refundedAt: order.refundedAt,
+    disputeStatus: order.disputeStatus
+  });
+
+  const chat = chats.find(c => c.id === order.chatId);
+
+  if (chat) {
+    await pushSystemMessage({
+      chatId: chat.id,
+      systemType,
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      ...getActorMeta(actor)
+    });
+  }
+
+  const existingReview = reviews.find(r => r.orderId === order.id);
+  if (existingReview) {
+    await deleteDbReviewByOrderId(order.id);
+    await recalcSellerRating(order.sellerEmail);
+  }
+
+  return order;
+}
+
+async function pushResolutionMessage({ order, actor, text, media = [] }) {
   if (!order?.chatId) return null;
 
-  const message = makeChatMessage({
+  const message = await createDbChatMessageRecord({
     chatId: order.chatId,
     fromEmail: RESOLUTION_ENTITY.email,
     fromUserId: RESOLUTION_ENTITY.userId,
@@ -721,6 +1795,8 @@ function pushResolutionMessage({ order, actor, text, media = [] }) {
     staffRole: ROLE.RESOLUTION,
     text,
     media,
+    officialType: null,
+    systemType: null,
     meta: {
       actorEmail: actor?.email || "",
       actorUserId: actor?.userId || "",
@@ -728,78 +1804,13 @@ function pushResolutionMessage({ order, actor, text, media = [] }) {
       actorRole: actor?.role || ROLE.RESOLUTION,
       orderId: order.id,
       orderNumber: order.orderNumber
-    }
+    },
+    read: false
   });
 
-  messages.push(message);
   emitChatMessageToParticipants(order.chatId, message);
 
   return message;
-}
-
-function applyOrderRefund({ order, actor, systemType }) {
-  if (!order || order.status !== "pending") {
-    throw new Error("Возврат невозможен");
-  }
-
-  const buyer = users.get(order.buyerEmail);
-
-  if (!buyer) {
-    throw new Error("Покупатель не найден");
-  }
-
-  platformBalances.escrow = roundMoney(
-    Math.max(0, Number(platformBalances.escrow || 0) - Number(order.price || 0))
-  );
-
-  buyer.balance = roundMoney((buyer.balance || 0) + Number(order.price || 0));
-
-  addWalletHistory(buyer.email, {
-    type: "refund",
-    amount: Number(order.price || 0),
-    currency: BASE_CURRENCY,
-    status: "completed",
-    text: `Возврат по заказу ${order.orderNumber}`
-  });
-
-  order.status = "refunded";
-  order.refundedAt = Date.now();
-  order.disputeStatus = "closed";
-
-  const chat = chats.find(c => c.id === order.chatId);
-
-  if (chat) {
-    pushSystemMessage({
-      chatId: chat.id,
-      systemType,
-      orderId: order.id,
-      orderNumber: order.orderNumber,
-      ...getActorMeta(actor)
-    });
-  }
-
-  const reviewIndex = reviews.findIndex(r => r.orderId === order.id);
-
-  if (reviewIndex !== -1) {
-    reviews.splice(reviewIndex, 1);
-
-    const seller = users.get(order.sellerEmail);
-
-    if (seller) {
-      const sellerReviews = reviews.filter(r => r.sellerEmail === seller.email);
-      seller.reviewsCount = sellerReviews.length;
-
-      if (seller.reviewsCount >= 10) {
-        const avg =
-          sellerReviews.reduce((s, r) => s + r.rating, 0) / sellerReviews.length;
-        seller.rating = Math.round(avg * 10) / 10;
-      } else {
-        seller.rating = 0;
-      }
-    }
-  }
-
-  return order;
 }
 
 const ADMIN_SETTINGS_FILE = path.join(__dirname, "data", "admin-settings.json");
@@ -808,10 +1819,8 @@ const rawAdminSettings = readJson(ADMIN_SETTINGS_FILE, {}) || {};
 
 let adminSettings = {
   marketplaceFeePercent: Number(rawAdminSettings.marketplaceFeePercent ?? 10),
-  minDepositUah: Number(rawAdminSettings.minDepositUah ?? rawAdminSettings.minDepositEur ?? 20),
-  minWithdrawUah: Number(rawAdminSettings.minWithdrawUah ?? rawAdminSettings.minWithdrawEur ?? 20),
   maintenanceText: String(
-    rawAdminSettings.maintenanceText || "На сайте ведутся технические работы."
+    rawAdminSettings.maintenanceText || tDefault("common.maintenanceTextDefault")
   )
 };
 
@@ -819,40 +1828,15 @@ function saveAdminSettings(){
   writeJson(ADMIN_SETTINGS_FILE, adminSettings);
 }
 
-function addAdminLog({ actor, action, targetType, targetId, text }){
-  adminLogs.unshift({
-    id: crypto.randomUUID(),
-    actorEmail: actor?.email || "",
-    actorUsername: actor?.username || "Админ",
-    action: action || "action",
-    targetType: targetType || "",
-    targetId: targetId || "",
-    text: text || "",
-    createdAt: Date.now()
-  });
-
-  if (adminLogs.length > 1000) {
-    adminLogs.length = 1000;
-  }
-}
 /* ================== SETTINGS ================== */
 const SESSION_DAYS = 2; // ✅ ты говорил максимум 2 дня, не 7
 
 const BASE_CURRENCY = "UAH";
 
 // поставь тут свои реальные лимиты в гривне
-const MIN_DEPOSIT_AMOUNT = 20;
-const MIN_WITHDRAW_AMOUNT = 20;
-const MAX_WITHDRAW_AMOUNT = 5000;
 
-const MIN_CRYPTO_DEPOSIT_USDT = 10;
-const MAX_CRYPTO_DEPOSIT_USDT = 5000;
-
-const MIN_CRYPTO_WITHDRAW_USDT = 5;
-const MAX_CRYPTO_WITHDRAW_USDT = 2000;
 const MIN_OFFER_PRICE = 10;
 const MAX_OFFER_PRICE = 100000;
-const MAX_DEMO_TOPUP = 5000;
 
 let exchangeRates = {
   base: BASE_CURRENCY,
@@ -864,103 +1848,11 @@ let exchangeRates = {
   updatedAt: 0
 };
 
-let isDepositScanRunning = false;
-let isSweepRunning = false;
-let isTrxTopupRunning = false;
 /* ================== HELPERS ================== */
-function addWalletHistory(email, item){
-  if (!walletHistory.has(email)) {
-    walletHistory.set(email, []);
-  }
 
-  walletHistory.get(email).unshift({
-    ...item,
-    createdAt: Date.now()
-  });
-}
 function roundMoney(n){
   // если у тебя гривны целые — можешь заменить на Math.round(n)
   return Math.round((Number(n) || 0) * 100) / 100; // 2 знака
-}
-function isValidTronAddress(address) {
-  return /^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(String(address || "").trim());
-}
-
-function convertBaseToUsd(amountBase) {
-  const usdRate = Number(exchangeRates?.rates?.USD || 0);
-
-  if (!usdRate || !Number.isFinite(usdRate)) {
-    return 0;
-  }
-
-  return roundMoney(Number(amountBase || 0) * usdRate);
-}
-
-function convertUsdToBase(amountUsd) {
-  const usdRate = Number(exchangeRates?.rates?.USD || 0);
-
-  if (!usdRate || !Number.isFinite(usdRate)) {
-    return 0;
-  }
-
-  return roundMoney(Number(amountUsd || 0) / usdRate);
-}
-
-const CRYPTO_WITHDRAW_FEE_PERCENT = 4;
-
-function calcCryptoWithdrawByBase(amountBase) {
-  const grossUsdt = convertBaseToUsd(amountBase);
-
-  if (!grossUsdt || !Number.isFinite(grossUsdt)) {
-    return {
-      grossUsdt: 0,
-      feeUsdt: 0,
-      netUsdt: 0
-    };
-  }
-
-  const feeUsdt = roundMoney(grossUsdt * (CRYPTO_WITHDRAW_FEE_PERCENT / 100));
-  const netUsdt = roundMoney(grossUsdt - feeUsdt);
-
-  return {
-    grossUsdt,
-    feeUsdt,
-    netUsdt
-  };
-}
-
-function cleanupExpiredCryptoDeposits() {
-  let changed = false;
-  const nowTime = Date.now();
-
-  cryptoDeposits.forEach(dep => {
-    if (
-      dep.status === "pending" &&
-      dep.createdAt &&
-      nowTime - dep.createdAt > CRYPTO_PENDING_TTL
-    ) {
-      dep.status = "expired";
-      dep.expiredAt = nowTime;
-      changed = true;
-    }
-  });
-
-  if (changed) {
-    saveCryptoDeposits();
-  }
-}
-function getUserPendingCryptoDeposit(email) {
-  cleanupExpiredCryptoDeposits();
-
-  return cryptoDeposits.find(dep =>
-    dep.email === email &&
-    dep.status === "pending"
-  ) || null;
-}
-
-function getCryptoDepositExpiresInMs(dep) {
-  if (!dep || !dep.createdAt) return 0;
-  return Math.max(0, CRYPTO_PENDING_TTL - (Date.now() - dep.createdAt));
 }
 
 async function updateRates() {
@@ -1032,8 +1924,183 @@ function calcFee(gross, net){
   return roundMoney(gross - net); // комиссия маркетплейса
 }
 
-function sendNotification(user, { type, text }) {
+const APP_URL = String(process.env.APP_URL || "https://typlace.com")
+  .trim()
+  .replace(/\/+$/, "");
+
+function getUserNotifyLang(user) {
+  return normalizeLang(user?.lang || DEFAULT_LANG);
+}
+
+function trimNotifyText(value, maxLen = 180) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxLen);
+}
+
+function buildAppUrl(pathname = "/") {
+  const safePath = String(pathname || "/");
+  return `${APP_URL}${safePath.startsWith("/") ? safePath : `/${safePath}`}`;
+}
+
+function joinNotifyLines(lines) {
+  return lines.filter(Boolean).join("\n");
+}
+
+function buildNotificationMessage(type, payload = {}, lang = DEFAULT_LANG) {
+  const safeLang = normalizeLang(lang);
+
+  const brand = tLang(safeLang, "notifications.brand");
+  const userFallback = tLang(safeLang, "notifications.userFallback");
+  const manageHint = tLang(safeLang, "notifications.manageHint");
+
+  switch (type) {
+    case "chat_new_message": {
+      const preview = trimNotifyText(payload.preview);
+
+      return {
+        subject: `${brand} — ${tLang(safeLang, "notifications.chat.subject")}`,
+        text: joinNotifyLines([
+          brand,
+          "",
+          tLang(safeLang, "notifications.chat.title"),
+          `${tLang(safeLang, "notifications.chat.fromLabel")}: ${payload.senderName || userFallback}`,
+          preview ? `${tLang(safeLang, "notifications.chat.messageLabel")}: ${preview}` : "",
+          `${tLang(safeLang, "notifications.chat.openLabel")}: ${buildAppUrl(`/chats.html?chat=${encodeURIComponent(payload.chatId || "")}`)}`,
+          "",
+          manageHint
+        ])
+      };
+    }
+
+    case "official_message": {
+      const preview = trimNotifyText(payload.text, 500);
+
+      return {
+        subject: `${brand} — ${tLang(safeLang, "notifications.official.subject")}`,
+        text: joinNotifyLines([
+          brand,
+          "",
+          tLang(safeLang, "notifications.official.title"),
+          preview,
+          `${tLang(safeLang, "notifications.official.openLabel")}: ${buildAppUrl("/chats.html")}`,
+          "",
+          manageHint
+        ])
+      };
+    }
+
+    case "support_ticket_created": {
+      return {
+        subject: `${brand} — ${tLang(safeLang, "notifications.supportCreated.subject")}`,
+        text: joinNotifyLines([
+          brand,
+          "",
+          tLang(safeLang, "notifications.supportCreated.title"),
+          `${tLang(safeLang, "notifications.supportCreated.ticketLabel")}: #${payload.ticketShortId || ""}`,
+          payload.subject
+            ? `${tLang(safeLang, "notifications.supportCreated.subjectLabel")}: ${payload.subject}`
+            : "",
+          `${tLang(safeLang, "notifications.supportCreated.openLabel")}: ${buildAppUrl("/help.html")}`,
+          "",
+          manageHint
+        ])
+      };
+    }
+
+    case "support_new_reply": {
+      const preview = trimNotifyText(payload.preview);
+
+      return {
+        subject: `${brand} — ${tLang(safeLang, "notifications.supportReply.subject")}`,
+        text: joinNotifyLines([
+          brand,
+          "",
+          tLang(safeLang, "notifications.supportReply.title"),
+          `${tLang(safeLang, "notifications.supportReply.ticketLabel")}: #${payload.ticketShortId || ""}`,
+          payload.subject
+            ? `${tLang(safeLang, "notifications.supportReply.subjectLabel")}: ${payload.subject}`
+            : "",
+          preview
+            ? `${tLang(safeLang, "notifications.supportReply.messageLabel")}: ${preview}`
+            : "",
+          `${tLang(safeLang, "notifications.supportReply.openLabel")}: ${buildAppUrl("/help.html")}`,
+          "",
+          manageHint
+        ])
+      };
+    }
+
+    case "support_new_user_message": {
+      const preview = trimNotifyText(payload.preview);
+
+      return {
+        subject: `${brand} — ${tLang(safeLang, "notifications.supportUserMessage.subject")}`,
+        text: joinNotifyLines([
+          brand,
+          "",
+          tLang(safeLang, "notifications.supportUserMessage.title"),
+          `${tLang(safeLang, "notifications.supportUserMessage.ticketLabel")}: #${payload.ticketShortId || ""}`,
+          payload.subject
+            ? `${tLang(safeLang, "notifications.supportUserMessage.subjectLabel")}: ${payload.subject}`
+            : "",
+          payload.senderName
+            ? `${tLang(safeLang, "notifications.supportUserMessage.fromLabel")}: ${payload.senderName}`
+            : "",
+          preview
+            ? `${tLang(safeLang, "notifications.supportUserMessage.messageLabel")}: ${preview}`
+            : "",
+          `${tLang(safeLang, "notifications.supportUserMessage.openLabel")}: ${buildAppUrl("/support.html")}`,
+          "",
+          manageHint
+        ])
+      };
+    }
+
+    case "support_ticket_closed": {
+      return {
+        subject: `${brand} — ${tLang(safeLang, "notifications.supportClosed.subject")}`,
+        text: joinNotifyLines([
+          brand,
+          "",
+          tLang(safeLang, "notifications.supportClosed.title"),
+          `${tLang(safeLang, "notifications.supportClosed.ticketLabel")}: #${payload.ticketShortId || ""}`,
+          payload.subject
+            ? `${tLang(safeLang, "notifications.supportClosed.subjectLabel")}: ${payload.subject}`
+            : "",
+          `${tLang(safeLang, "notifications.supportClosed.openLabel")}: ${buildAppUrl("/help.html")}`,
+          "",
+          manageHint
+        ])
+      };
+    }
+
+    default:
+      return null;
+  }
+}
+
+function notifyUser(user, type, payload = {}) {
   if (!user || !user.notify) return;
+
+  const lang = getUserNotifyLang(user);
+  const built = buildNotificationMessage(type, payload, lang);
+  if (!built) return;
+
+  sendNotification(user, {
+    type,
+    subject: built.subject,
+    text: built.text
+  });
+}
+
+function sendNotification(user, { type, subject, text }) {
+  if (!user || !user.notify) return;
+
+  const safeSubject = String(
+    subject || `${tUser(user, "notifications.brand")} — ${tUser(user, "notifications.defaultSubjectSuffix")}`
+  ).trim();
 
   const safeText = String(text || "").trim();
   if (!safeText) return;
@@ -1042,7 +2109,7 @@ function sendNotification(user, { type, text }) {
     transporter.sendMail({
       from: MAIL_USER,
       to: user.email,
-      subject: "TyPlace — уведомление",
+      subject: safeSubject,
       text: safeText
     }).catch(() => {});
   }
@@ -1074,13 +2141,19 @@ function generateUserId() {
   return id;
 }
 
-function generateOfferId(){
+async function generateOfferId() {
   let id;
   let exists = true;
 
   while (exists) {
     id = Math.floor(10000000 + Math.random() * 90000000).toString();
-    exists = offers.some(o => o.offerId === id);
+
+    const dbOffer = await prisma.offer.findUnique({
+      where: { offerId: id },
+      select: { id: true }
+    });
+
+    exists = Boolean(dbOffer);
   }
 
   return id;
@@ -1135,7 +2208,7 @@ function normalizeOrderLookup(value) {
 
 function normalizeLang(value) {
   const lang = String(value || "").trim().toLowerCase();
-  return ["ru", "uk", "en"].includes(lang) ? lang : "ru";
+  return SUPPORTED_LANGS.includes(lang) ? lang : DEFAULT_LANG;
 }
 
 function parseBoolean(value) {
@@ -1154,31 +2227,35 @@ function getRequiredOfferLangs(interfaceLang) {
   return ["en"];
 }
 
-function getLangLabel(lang) {
-  if (lang === "ru") return "русский";
-  if (lang === "uk") return "украинский";
-  if (lang === "en") return "английский";
-  return lang;
+function getLangLabel(lang, uiLang = DEFAULT_LANG) {
+  const safeLang = normalizeLang(lang);
+  const safeUiLang = normalizeLang(uiLang);
+
+  return tLang(safeUiLang, `common.languageNames.${safeLang}`);
 }
 
 function validateOfferTranslations({ interfaceLang, title, description }) {
-  const requiredLangs = getRequiredOfferLangs(interfaceLang);
+  const safeUiLang = normalizeLang(interfaceLang);
+  const requiredLangs = getRequiredOfferLangs(safeUiLang);
 
   for (const lang of requiredLangs) {
     const titleValue = String(title?.[lang] || "").trim();
     const descValue = String(description?.[lang] || "").trim();
+    const langLabel = getLangLabel(lang, safeUiLang);
 
     if (!titleValue) {
       return {
         success: false,
-        message: `Заполните название для языка: ${getLangLabel(lang)}`
+        message: "responses.offers.fillTitleForLanguage",
+        messageParams: { language: langLabel }
       };
     }
 
     if (!descValue) {
       return {
         success: false,
-        message: `Заполните описание для языка: ${getLangLabel(lang)}`
+        message: "responses.offers.fillDescriptionForLanguage",
+        messageParams: { language: langLabel }
       };
     }
   }
@@ -1197,9 +2274,11 @@ function isEmailValid(email) {
   return typeof email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
-async function sendCodeEmail(email, code) {
-  const subject = "TyPlace — код подтверждения";
-  const text = `Ваш код подтверждения TyPlace: ${code}\n\nЕсли это были не вы — просто проигнорируйте письмо.`;
+async function sendCodeEmail(email, code, lang = DEFAULT_LANG) {
+  const safeLang = normalizeLang(lang);
+
+  const subject = tLang(safeLang, "email.authCode.subject");
+  const text = tLang(safeLang, "email.authCode.text", { code });
 
   await transporter.sendMail({
     from: MAIL_USER,
@@ -1277,13 +2356,18 @@ function findTelegramLinkByCode(code) {
   return null;
 }
 
-function findUserByTelegramChatId(chatId) {
+async function findUserByTelegramChatId(chatId) {
   const safeChatId = String(chatId || "").trim();
   if (!safeChatId) return null;
 
-  return Array.from(users.values()).find(
-    user => String(user.telegramChatId || "") === safeChatId
-  ) || null;
+  const dbUser = await prisma.user.findFirst({
+    where: {
+      telegramChatId: safeChatId
+    }
+  });
+
+  if (!dbUser) return null;
+  return syncUserToMap(dbUser);
 }
 
 async function telegramApi(method, payload = {}) {
@@ -1328,7 +2412,7 @@ async function handleTelegramStartCommand(message, payload) {
   if (!payload) {
     await sendTelegramMessage(
       chatId,
-      "TyPlace Telegram bot подключён. Вернитесь на сайт: Профиль → Уведомления → Telegram."
+      tDefault("telegram.start.connected")
     );
     return;
   }
@@ -1338,53 +2422,53 @@ async function handleTelegramStartCommand(message, payload) {
   if (!linkRecord) {
     await sendTelegramMessage(
       chatId,
-      "Ссылка недействительна или устарела. Откройте TyPlace и запросите новую привязку Telegram."
+      tDefault("telegram.start.invalidLink")
     );
     return;
   }
 
-  const user = users.get(linkRecord.email);
+  const dbUser = await prisma.user.findUnique({
+    where: { email: linkRecord.email }
+  });
 
-  if (!user) {
+  if (!dbUser) {
     telegramLinkCodes.delete(linkRecord.email);
 
     await sendTelegramMessage(
       chatId,
-      "Пользователь TyPlace не найден. Запросите новую привязку на сайте."
+      tDefault("telegram.start.userNotFound")
     );
     return;
   }
 
-  const alreadyLinkedUser = findUserByTelegramChatId(chatId);
+  const safeLang = normalizeLang(dbUser.lang || DEFAULT_LANG);
+  const alreadyLinkedUser = await findUserByTelegramChatId(chatId);
 
-  if (alreadyLinkedUser && alreadyLinkedUser.email !== user.email) {
+  if (alreadyLinkedUser && alreadyLinkedUser.email !== dbUser.email) {
     await sendTelegramMessage(
       chatId,
-      "Этот Telegram уже привязан к другому аккаунту TyPlace."
+      tLang(safeLang, "telegram.start.alreadyLinked")
     );
     return;
   }
 
-  user.telegramChatId = chatId;
-  user.telegramUsername = from.username ? String(from.username) : "";
-  user.telegramFirstName = from.first_name ? String(from.first_name) : "";
-  user.telegramLinkedAt = Date.now();
+  const updatedUser = await prisma.user.update({
+    where: { email: dbUser.email },
+    data: {
+      telegramChatId: chatId,
+      telegramUsername: from.username ? String(from.username) : "",
+      telegramFirstName: from.first_name ? String(from.first_name) : "",
+      telegramLinkedAt: new Date(),
+      notifyTelegram: true
+    }
+  });
 
-  if (!user.notify) {
-    user.notify = {
-      site: true,
-      email: true,
-      telegram: false
-    };
-  }
-
-  user.notify.telegram = true;
-
+  syncUserToMap(updatedUser);
   telegramLinkCodes.delete(linkRecord.email);
 
   await sendTelegramMessage(
     chatId,
-    "Telegram успешно подключён к вашему аккаунту TyPlace. Уведомления в Telegram включены."
+    tLang(safeLang, "telegram.start.success")
   );
 }
 
@@ -1452,50 +2536,104 @@ function getToken(req) {
   return "";
 }
 
-function authRequired(req, res, next) {
+async function authRequired(req, res, next) {
+  try {
+    const token = getToken(req);
 
-  const token = getToken(req);
-  if (!token) return res.status(401).json({ success: false, message: "Нет токена" });
+    if (!token) {
+      return res.status(401).json({ success: false, message: "responses.auth.noToken" });
+    }
 
-  const s = sessions.get(token);
-  if (!s) return res.status(401).json({ success: false, message: "Сессия не найдена" });
+    let s = sessions.get(token);
 
-  if (now() > s.expiresAt) {
-    sessions.delete(token);
-    return res.status(401).json({ success: false, message: "Сессия истекла" });
+    if (!s) {
+      const dbSession = await prisma.session.findUnique({
+        where: { token },
+        include: { user: true }
+      });
+
+      if (!dbSession) {
+        return res.status(401).json({ success: false, message: "responses.auth.sessionNotFound" });
+      }
+
+      s = dbSessionToLegacy(dbSession);
+      sessions.set(token, s);
+
+      if (dbSession.user) {
+        syncUserToMap(dbSession.user);
+      }
+    }
+
+    if (now() > s.expiresAt) {
+      sessions.delete(token);
+
+      await prisma.session.deleteMany({
+        where: { token }
+      });
+
+      return res.status(401).json({ success: false, message: "responses.auth.sessionExpired" });
+    }
+
+    let u = users.get(s.email);
+
+    if (!u) {
+      const dbUser = await prisma.user.findUnique({
+        where: { email: s.email }
+      });
+
+      if (!dbUser) {
+        return res.status(401).json({
+          success: false,
+          message: "responses.common.userNotFound"
+        });
+      }
+
+      u = syncUserToMap(dbUser);
+    }
+
+    if (u.banned) {
+      sessions.delete(token);
+
+      await prisma.session.deleteMany({
+        where: { token }
+      });
+
+      return res.status(403).json({
+        success: false,
+        message: "responses.auth.accountBanned"
+      });
+    }
+
+    u.online = true;
+    u.lastSeen = Date.now();
+
+    prisma.user.update({
+      where: { email: u.email },
+      data: {
+        online: true,
+        lastSeenAt: new Date(u.lastSeen)
+      }
+    }).catch(err => {
+      console.error("authRequired user.update error:", err.message);
+    });
+
+    req.userEmail = s.email;
+    req.user = u;
+    req.token = token;
+
+    next();
+  } catch (e) {
+    console.error("authRequired error:", e);
+    return res.status(500).json({
+      success: false,
+      message: "responses.auth.internalError"
+    });
   }
-
-const u = users.get(s.email);
-
-if (!u) {
-  return res.status(401).json({
-    success: false,
-    message: "Пользователь не найден"
-  });
-}
-
-if (u.banned) {
-  sessions.delete(token);
-  return res.status(403).json({
-    success: false,
-    message: "Аккаунт заблокирован"
-  });
-}
-
-  // ✅ ОБНОВЛЕНИЕ СТАТУСА
-  u.online = true;
-  u.lastSeen = Date.now();
-
-  req.userEmail = s.email;
-  req.user = u;
-  req.token = token;
-
-  next();
 }
 
 function supportRequired(req, res, next) {
   if (!req.user) {
-    return res.status(401).json({ success: false, message: "Нет доступа" });
+    return res.status(401).json({ success: false, message: "responses.common.noAccess" });
   }
 
   if (!isSupportRole(req.user)) {
@@ -1505,80 +2643,71 @@ function supportRequired(req, res, next) {
   next();
 }
 
-function authRequiredOptional(req, res, next) {
-  const token = getToken(req);
+async function authRequiredOptional(req, res, next) {
+  try {
+    const token = getToken(req);
 
-  if (!token) {
+    if (!token) {
+      req.user = null;
+      return next();
+    }
+
+    let s = sessions.get(token);
+
+    if (!s) {
+      const dbSession = await prisma.session.findUnique({
+        where: { token },
+        include: { user: true }
+      });
+
+      if (!dbSession) {
+        req.user = null;
+        return next();
+      }
+
+      s = dbSessionToLegacy(dbSession);
+      sessions.set(token, s);
+
+      if (dbSession.user) {
+        syncUserToMap(dbSession.user);
+      }
+    }
+
+    if (Date.now() > s.expiresAt) {
+      sessions.delete(token);
+
+      await prisma.session.deleteMany({
+        where: { token }
+      });
+
+      req.user = null;
+      return next();
+    }
+
+    let u = users.get(s.email);
+
+    if (!u) {
+      const dbUser = await prisma.user.findUnique({
+        where: { email: s.email }
+      });
+
+      if (!dbUser) {
+        req.user = null;
+        return next();
+      }
+
+      u = syncUserToMap(dbUser);
+    }
+
+    req.user = u;
+    req.userEmail = u.email;
+
+    return next();
+  } catch (e) {
+    console.error("authRequiredOptional error:", e);
     req.user = null;
     return next();
   }
-
-  const s = sessions.get(token);
-  if (!s || Date.now() > s.expiresAt) {
-    req.user = null;
-    return next();
-  }
-
-  const u = users.get(s.email);
-  if (!u) {
-    req.user = null;
-    return next();
-  }
-
-  req.user = u;
-  req.userEmail = u.email;
-
-  next();
-}
-
-function paymentsDisabled(res, message = "Пополнение и вывод временно недоступны") {
-  return res.status(503).json({
-    success: false,
-    code: "PAYMENTS_DISABLED",
-    message
-  });
-}
-
-function requirePaymentsEnabled(req, res, next) {
-  if (!PAYMENTS_ENABLED) {
-    return paymentsDisabled(res);
-  }
-  next();
-}
-
-function requireCryptoEnabled(req, res, next) {
-  if (!PAYMENTS_ENABLED || !CRYPTO_ENABLED) {
-    return paymentsDisabled(res, "Криптооперации временно недоступны");
-  }
-  next();
-}
-
-function requireDemoMode(req, res, next) {
-  if (!DEMO_MODE) {
-    return res.status(403).json({
-      success: false,
-      code: "DEMO_MODE_DISABLED",
-      message: "Демо-режим отключён"
-    });
-  }
-
-  if (DEMO_ALLOWED_EMAILS.size === 0) {
-    return res.status(503).json({
-      success: false,
-      code: "DEMO_ALLOWLIST_REQUIRED",
-      message: "Демо-режим не настроен"
-    });
-  }
-
-  if (!DEMO_ALLOWED_EMAILS.has(req.user.email)) {
-    return res.status(403).json({
-      success: false,
-      code: "DEMO_ACCESS_DENIED",
-      message: "Нет доступа к демо-режиму"
-    });
-  }
-
-  next();
 }
 
 /* ================== API ================== */
@@ -1587,117 +2716,159 @@ function requireDemoMode(req, res, next) {
  * POST /auth/request-code
  * body: { email, mode: "login" | "register", username?: string }
  */
-app.post("/auth/request-code", async (req, res) => {
+app.post("/auth/request-code", authRequestCodeLimiter, async (req, res) => {
   try {
     const email = String(req.body.email || "").trim().toLowerCase();
     const mode = String(req.body.mode || "").trim();
     const username = String(req.body.username || "").trim();
-// ===== TURNSTILE CHECK (только для регистрации) =====
-// ===== TURNSTILE CHECK =====
-if (TURNSTILE_ENABLED && mode === "register") {
 
-  const isLocal =
-    req.ip === "127.0.0.1" ||
-    req.ip === "::1" ||
-    req.ip.startsWith("192.168");
+    if (TURNSTILE_ENABLED && mode === "register") {
+      const isLocal =
+        req.ip === "127.0.0.1" ||
+        req.ip === "::1" ||
+        req.ip.startsWith("192.168");
 
-  const token = req.body["cf-turnstile-response"];
+      const token = req.body["cf-turnstile-response"];
 
-  // если локальная разработка — пропускаем капчу
-  if (!isLocal) {
-
-    if (!token) {
-      return res.json({
-        success:false,
-        message:"Подтвердите что вы не робот."
-      });
-    }
-
-    try {
-
-      const verifyRes = await fetch(
-        "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-          },
-          body: new URLSearchParams({
-            secret: process.env.TURNSTILE_SECRET,
-            response: token,
-            remoteip: req.ip
-          })
+      if (!isLocal) {
+        if (!token) {
+          return res.json({
+            success: false,
+            message: "responses.auth.turnstileRequired"
+          });
         }
-      );
 
-      const verifyData = await verifyRes.json();
+        try {
+          const verifyRes = await fetch(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+              },
+              body: new URLSearchParams({
+                secret: process.env.TURNSTILE_SECRET,
+                response: token,
+                remoteip: req.ip
+              })
+            }
+          );
 
-      if (!verifyData.success) {
-        return res.json({
-          success:false,
-          message:"Проверка безопасности не пройдена."
-        });
+          const verifyData = await verifyRes.json();
+
+          if (!verifyData.success) {
+            return res.json({
+              success: false,
+              message: "responses.auth.turnstileFailed"
+            });
+          }
+        } catch (e) {
+          return res.json({
+            success: false,
+            message: "responses.auth.turnstileError"
+          });
+        }
       }
-
-    } catch (e) {
-      return res.json({
-        success:false,
-        message:"Ошибка проверки безопасности."
-      });
     }
 
-  }
-
-}
     if (!isEmailValid(email)) {
-      return res.json({ success: false, message: "Введите корректный email." });
-    }
-    if (mode !== "login" && mode !== "register") {
-      return res.json({ success: false, message: "Неверный режим." });
+      return res.json({ success: false, message: "responses.auth.enterValidEmail" });
     }
 
-    const userExists = users.has(email);
+    if (mode !== "login" && mode !== "register") {
+      return res.json({ success: false, message: "responses.auth.invalidMode" });
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true }
+    });
+
+    const userExists = Boolean(existingUser);
 
     if (mode === "login" && !userExists) {
-      return res.json({ success: false, message: "Аккаунт не найден. Перейдите в «Регистрация»." });
+      return res.json({
+        success: false,
+        message: "responses.auth.accountNotFoundGoRegister"
+      });
     }
 
     if (mode === "register") {
       if (userExists) {
-        return res.json({ success: false, message: "Этот email уже зарегистрирован. Перейдите во «Вход»." });
+        return res.json({
+          success: false,
+          message: "responses.auth.emailAlreadyRegisteredGoLogin"
+        });
       }
+
       if (!username || username.length < 3) {
-        return res.json({ success: false, message: "Введите ник (минимум 3 символа)." });
+        return res.json({
+          success: false,
+          message: "responses.auth.usernameTooShort"
+        });
       }
+
       if (username.length > 20) {
-        return res.json({ success: false, message: "Ник слишком длинный (макс. 20)." });
+        return res.json({
+          success: false,
+          message: "responses.auth.usernameTooLong"
+        });
       }
     }
 
-    // анти-спам: не чаще чем раз в 30 секунд
-    const existing = pendingCodes.get(email);
-    if (existing && existing.lastSentAt && now() - existing.lastSentAt < 30_000) {
-      const wait = Math.ceil((30_000 - (now() - existing.lastSentAt)) / 1000);
-      return res.json({ success: false, message: `Подождите ${wait} сек. и попробуйте снова.` });
+    const existingCode = await prisma.pendingCode.findUnique({
+      where: { email }
+    });
+
+    if (
+      existingCode &&
+      existingCode.lastSentAt &&
+      now() - existingCode.lastSentAt.getTime() < 30_000
+    ) {
+      const wait = Math.ceil(
+        (30_000 - (now() - existingCode.lastSentAt.getTime())) / 1000
+      );
+
+return res.json({
+  success: false,
+  message: "responses.auth.waitBeforeRetry",
+  messageParams: { seconds: wait }
+});
     }
 
     const code = genCode6();
-    const record = {
-      code,
-      mode,
-      tempUsername: mode === "register" ? username : "",
-      expiresAt: now() + 10 * 60 * 1000, // 10 минут
-      lastSentAt: now(),
-      tries: 0,
-    };
-    pendingCodes.set(email, record);
 
-    await sendCodeEmail(email, code);
+    const savedCode = await prisma.pendingCode.upsert({
+      where: { email },
+      update: {
+        code,
+        mode,
+        tempUsername: mode === "register" ? username : "",
+        expiresAt: new Date(now() + 10 * 60 * 1000),
+        lastSentAt: new Date(),
+        tries: 0,
+        userId: existingUser?.id || null
+      },
+      create: {
+        email,
+        code,
+        mode,
+        tempUsername: mode === "register" ? username : "",
+        expiresAt: new Date(now() + 10 * 60 * 1000),
+        lastSentAt: new Date(),
+        tries: 0,
+        userId: existingUser?.id || null
+      }
+    });
 
-    return res.json({ success: true, message: "Код отправлен." });
+    pendingCodes.set(email, dbPendingCodeToLegacy(savedCode));
+
+    await sendCodeEmail(email, code, getRequestLang(req));
+
+    return res.json({ success: true, message: "responses.auth.codeSent" });
   } catch (e) {
     console.log("request-code error:", e);
-    return res.json({ success: false, message: "Ошибка отправки кода." });
+    return res.json({ success: false, message: "responses.auth.codeSendError" });
   }
 });
 
@@ -1705,70 +2876,137 @@ if (TURNSTILE_ENABLED && mode === "register") {
  * POST /auth/verify-code
  * body: { email, code, mode: "login"|"register" }
  */
-app.post("/auth/verify-code", (req, res) => {
-  const email = String(req.body.email || "").trim().toLowerCase();
-  const code = String(req.body.code || "").trim();
-  const mode = String(req.body.mode || "").trim();
-  const lang = normalizeLang(req.body.lang || "ru");
+app.post("/auth/verify-code", authVerifyCodeLimiter, async (req, res) => {
+  try {
+    const email = String(req.body.email || "").trim().toLowerCase();
+    const code = String(req.body.code || "").trim();
+    const mode = String(req.body.mode || "").trim();
+    const lang = normalizeLang(req.body.lang || "ru");
 
-  if (!isEmailValid(email)) return res.json({ success: false, message: "Некорректный email." });
-  if (!/^\d{6}$/.test(code)) return res.json({ success: false, message: "Код должен быть из 6 цифр." });
-  if (mode !== "login" && mode !== "register") return res.json({ success: false, message: "Неверный режим." });
+    if (!isEmailValid(email)) {
+      return res.json({ success: false, message: "responses.auth.invalidEmail" });
+    }
 
-  const rec = pendingCodes.get(email);
-  if (!rec) return res.json({ success: false, message: "Сначала нажмите «Получить код»." });
-  if (rec.mode !== mode) return res.json({ success: false, message: "Код был отправлен для другого действия." });
-  if (now() > rec.expiresAt) {
+    if (!/^\d{6}$/.test(code)) {
+      return res.json({ success: false, message: "responses.auth.codeMustBeSixDigits" });
+    }
+
+    if (mode !== "login" && mode !== "register") {
+      return res.json({ success: false, message: "responses.auth.invalidMode" });
+    }
+
+    const rec = await prisma.pendingCode.findUnique({
+      where: { email }
+    });
+
+    if (!rec) {
+      return res.json({
+        success: false,
+        message: "responses.auth.requestCodeFirst"
+      });
+    }
+
+    if (rec.mode !== mode) {
+      return res.json({
+        success: false,
+        message: "responses.auth.codeSentForAnotherAction"
+      });
+    }
+
+    if (now() > rec.expiresAt.getTime()) {
+      await prisma.pendingCode.deleteMany({
+        where: { email }
+      });
+
+      pendingCodes.delete(email);
+
+      return res.json({
+        success: false,
+        message: "responses.auth.codeExpired"
+      });
+    }
+
+    const nextTries = Number(rec.tries || 0) + 1;
+
+    if (rec.code !== code) {
+      if (nextTries > 7) {
+        await prisma.pendingCode.deleteMany({
+          where: { email }
+        });
+
+        pendingCodes.delete(email);
+
+        return res.json({
+          success: false,
+          message: "responses.auth.tooManyAttempts"
+        });
+      }
+
+      const updatedCode = await prisma.pendingCode.update({
+        where: { email },
+        data: {
+          tries: nextTries
+        }
+      });
+
+      pendingCodes.set(email, dbPendingCodeToLegacy(updatedCode));
+
+      return res.json({ success: false, message: "responses.auth.invalidCode" });
+    }
+
+    await prisma.pendingCode.deleteMany({
+      where: { email }
+    });
+
     pendingCodes.delete(email);
-    return res.json({ success: false, message: "Код истёк. Нажмите «Получить код» ещё раз." });
-  }
 
-  rec.tries += 1;
-  if (rec.tries > 7) {
-    pendingCodes.delete(email);
-    return res.json({ success: false, message: "Слишком много попыток. Запросите новый код." });
-  }
+    let dbUser = null;
 
-  if (rec.code !== code) {
-    return res.json({ success: false, message: "Неверный код." });
-  }
+    if (mode === "register") {
+      const alreadyExists = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true }
+      });
 
-  // успех
-  pendingCodes.delete(email);
+      if (alreadyExists) {
+        return res.json({
+          success: false,
+          message: "responses.auth.emailAlreadyRegisteredGoLogin"
+        });
+      }
 
-if (mode === "register") {
-  if (users.has(email)) {
-    return res.json({ success: false, message: "Этот email уже зарегистрирован. Перейдите во «Вход»." });
-  }
+      const username = rec.tempUsername || "User";
+      const userId = await generateUniqueUserIdForDb();
 
-  const username = rec.tempUsername || "User";
+      dbUser = await prisma.user.create({
+        data: {
+          email,
+          username,
+          userId,
+          avatarDataUrl: "",
+          avatarUrl: "",
+          online: false,
+          lastSeenAt: new Date(),
+          banned: false,
+          role: SUPER_ADMIN_EMAILS.includes(email)
+            ? ROLE.SUPER_ADMIN
+            : ROLE.USER,
+          verified: false,
+          blockedUsers: [],
+          notifySite: true,
+          notifyEmail: true,
+          notifyTelegram: false,
+          telegramChatId: null,
+          telegramUsername: "",
+          telegramFirstName: "",
+          lang
+        }
+      });
 
-  users.set(email, {
-    email,
-    username,
-    userId: generateUserId(),
-    avatarDataUrl: "",
-    avatarUrl: "",
-    createdAt: new Date().toISOString(),
-    usernameChangedAt: null,
-    online: false,
-    lastSeen: Date.now(),
-    balance: 0,
-    banned: false,
-    role: SUPER_ADMIN_EMAILS.includes(email)
-      ? ROLE.SUPER_ADMIN
-      : ROLE.USER,
-    blockedUsers: [],
-    notify: {
-      site: true,
-      email: true,
-      telegram: false
-    },
-    telegramChatId: null
-  });
+      syncUserToMap(dbUser);
 
 try {
-  sendOfficialNoticeToUser({
+  await sendOfficialNoticeToUser({
     userEmail: email,
     text: getOfficialWelcomeMessage(lang),
     officialType: "welcome",
@@ -1783,27 +3021,56 @@ try {
 } catch (e) {
   console.log("official welcome message error:", e.message);
 }
+    } else {
+      dbUser = await prisma.user.findUnique({
+        where: { email }
+      });
 
-} else {
-    if (!users.has(email)) {
-      return res.json({ success: false, message: "Аккаунт не найден. Перейдите в «Регистрация»." });
+      if (!dbUser) {
+        return res.json({
+          success: false,
+          message: "responses.auth.accountNotFoundGoRegister"
+        });
+      }
+
+      syncUserToMap(dbUser);
     }
+
+    const token = makeToken();
+    const expiresAt = new Date(
+      now() + SESSION_DAYS * 24 * 60 * 60 * 1000
+    );
+
+    const dbSession = await prisma.session.create({
+      data: {
+        token,
+        email,
+        expiresAt,
+        userId: dbUser.id
+      }
+    });
+
+    sessions.set(token, dbSessionToLegacy(dbSession));
+
+    const u = users.get(email) || syncUserToMap(dbUser);
+
+    return res.json({
+      success: true,
+      token,
+      user: {
+        email: u.email,
+        username: u.username,
+        avatarDataUrl: u.avatarDataUrl || "",
+        avatarUrl: u.avatarUrl || ""
+      }
+    });
+  } catch (e) {
+    console.log("verify-code error:", e);
+    return res.json({
+      success: false,
+      message: "responses.auth.verifyCodeError"
+    });
   }
-
-  const token = makeToken();
-  sessions.set(token, { email, expiresAt: now() + SESSION_DAYS * 24 * 60 * 60 * 1000 });
-
-  const u = users.get(email);
-  return res.json({
-    success: true,
-    token,
-    user: {
-      email: u.email,
-      username: u.username,
-      avatarDataUrl: u.avatarDataUrl || "",
-      avatarUrl: u.avatarUrl || "",
-    },
-  });
 });
 
 /**
@@ -1812,41 +3079,53 @@ try {
  */
 app.get("/auth/me", authRequired, (req, res) => {
   const u = req.user;
-  // если старый пользователь без ID — создаём ID
-if (!u.userId) {
-  u.userId = generateUserId();
-}
-return res.json({
-  success: true,
-  user: {
-    email: u.email,
-    username: u.username,
-    userId: u.userId || null,
-    avatarDataUrl: u.avatarDataUrl || "",
-    avatarUrl: u.avatarUrl || "",
-    createdAt: u.createdAt || null,
-    usernameChangedAt: u.usernameChangedAt || null,
-    role: u.role || "user"
-  },
-});
+
+  return res.json({
+    success: true,
+    user: {
+      email: u.email,
+      username: u.username,
+      userId: u.userId || null,
+      avatarDataUrl: u.avatarDataUrl || "",
+      avatarUrl: u.avatarUrl || "",
+      createdAt: u.createdAt || null,
+      usernameChangedAt: u.usernameChangedAt || null,
+      role: u.role || "user"
+    }
+  });
 });
 
 /**
- * POST /auth/logout (опционально)
+ * POST /auth/logout
  * header: Authorization: Bearer <token>
  */
-app.post("/auth/logout", authRequired, (req, res) => {
-  sessions.delete(req.token);
-  return res.json({ success: true });
+app.post("/auth/logout", authRequired, async (req, res) => {
+  try {
+    sessions.delete(req.token);
+
+    await prisma.session.deleteMany({
+      where: {
+        token: req.token
+      }
+    });
+
+    return res.json({ success: true });
+  } catch (e) {
+    console.error("logout error:", e);
+    return res.json({
+      success: false,
+      message: "responses.auth.logoutError"
+    });
+  }
 });
 
-app.post("/api/official/messages", authRequired, (req, res) => {
-if (!canWriteOfficial(req.user)) {
-  return res.json({
-    success: false,
-    message: "Нет доступа"
-  });
-}
+app.post("/api/official/messages", authRequired, async (req, res) => {
+  if (!canWriteOfficial(req.user)) {
+    return res.json({
+      success: false,
+      message: "responses.common.noAccess"
+    });
+  }
 
   const userEmail = String(req.body.userEmail || "").trim().toLowerCase();
   const text = String(req.body.text || "").trim();
@@ -1855,28 +3134,28 @@ if (!canWriteOfficial(req.user)) {
   if (!userEmail || !users.has(userEmail)) {
     return res.json({
       success: false,
-      message: "Пользователь не найден"
+      message: "responses.common.userNotFound"
     });
   }
 
   if (!text) {
     return res.json({
       success: false,
-      message: "Пустое сообщение"
+      message: "responses.common.emptyMessage"
     });
   }
 
-const message = sendOfficialNoticeToUser({
-  userEmail,
-  text,
-  officialType,
-  actor: req.user
-});
+  const message = await sendOfficialNoticeToUser({
+    userEmail,
+    text,
+    officialType,
+    actor: req.user
+  });
 
   if (!message) {
     return res.json({
       success: false,
-      message: "Не удалось отправить официальное сообщение"
+      message: "responses.official.sendFailed"
     });
   }
 
@@ -1894,18 +3173,20 @@ const message = sendOfficialNoticeToUser({
   });
 });
 
-app.post("/api/official/chat", authRequired, (req, res) => {
-  const chat = getOrCreateOfficialChat(req.user.email);
+app.post("/api/official/chat", authRequired, async (req, res) => {
+  let chat = await getOrCreateOfficialChat(req.user.email);
 
   if (!chat) {
     return res.json({
       success: false,
-      message: "Не удалось создать официальный чат"
+      message: "responses.official.chatCreateFailed"
     });
   }
 
-  if (Array.isArray(chat.deletedBy)) {
-    chat.deletedBy = chat.deletedBy.filter(email => email !== req.user.email);
+  if (Array.isArray(chat.deletedBy) && chat.deletedBy.includes(req.user.email)) {
+    chat = await updateDbChatRecord(chat.id, {
+      deletedBy: chat.deletedBy.filter(email => email !== req.user.email)
+    });
   }
 
   return res.json({
@@ -1919,11 +3200,11 @@ app.post("/api/official/chat", authRequired, (req, res) => {
   });
 });
 
-app.post("/api/official/chat/by-user", authRequired, (req, res) => {
+app.post("/api/official/chat/by-user", authRequired, async (req, res) => {
   if (!canWriteOfficial(req.user)) {
     return res.json({
       success: false,
-      message: "Нет доступа"
+      message: "responses.common.noAccess"
     });
   }
 
@@ -1932,21 +3213,23 @@ app.post("/api/official/chat/by-user", authRequired, (req, res) => {
   if (!userEmail || !users.has(userEmail)) {
     return res.json({
       success: false,
-      message: "Пользователь не найден"
+      message: "responses.common.userNotFound"
     });
   }
 
-  const chat = getOrCreateOfficialChat(userEmail);
+  let chat = await getOrCreateOfficialChat(userEmail);
 
   if (!chat) {
     return res.json({
       success: false,
-      message: "Не удалось создать официальный чат"
+      message: "responses.official.chatCreateFailed"
     });
   }
 
-  if (Array.isArray(chat.deletedBy)) {
-    chat.deletedBy = chat.deletedBy.filter(email => email !== userEmail);
+  if (Array.isArray(chat.deletedBy) && chat.deletedBy.includes(userEmail)) {
+    chat = await updateDbChatRecord(chat.id, {
+      deletedBy: chat.deletedBy.filter(email => email !== userEmail)
+    });
   }
 
   return res.json({
@@ -1960,20 +3243,20 @@ app.post("/api/official/chat/by-user", authRequired, (req, res) => {
   });
 });
 
-app.post("/api/official/chats/:id/messages", authRequired, (req, res) => {
-  const chat = chats.find(c => c.id === req.params.id);
+app.post("/api/official/chats/:id/messages", authRequired, async (req, res) => {
+  let chat = chats.find(c => c.id === req.params.id);
 
   if (!chat || !isOfficialChat(chat)) {
     return res.json({
       success: false,
-      message: "Официальный чат не найден"
+      message: "responses.official.chatNotFound"
     });
   }
 
   if (!canWriteOfficialFromStaffPanel(req.user, chat)) {
     return res.json({
       success: false,
-      message: "Нет доступа"
+      message: "responses.common.noAccess"
     });
   }
 
@@ -1983,15 +3266,17 @@ app.post("/api/official/chats/:id/messages", authRequired, (req, res) => {
   if (!text) {
     return res.json({
       success: false,
-      message: "Пустое сообщение"
+      message: "responses.common.emptyMessage"
     });
   }
 
-  if (Array.isArray(chat.deletedBy)) {
-    chat.deletedBy = chat.deletedBy.filter(email => email !== chat.buyerEmail);
+  if (Array.isArray(chat.deletedBy) && chat.deletedBy.includes(chat.buyerEmail)) {
+    chat = await updateDbChatRecord(chat.id, {
+      deletedBy: chat.deletedBy.filter(email => email !== chat.buyerEmail)
+    });
   }
 
-  const message = pushOfficialMessage({
+  const message = await pushOfficialMessage({
     chatId: chat.id,
     text,
     officialType,
@@ -2016,7 +3301,7 @@ app.get("/api/support/users/search", authRequired, (req, res) => {
   if (!canWriteOfficial(req.user)) {
     return res.json({
       success: false,
-      message: "Нет доступа"
+      message: "responses.common.noAccess"
     });
   }
 
@@ -2056,10 +3341,9 @@ app.get("/api/support/users/search", authRequired, (req, res) => {
 
 // Назначить роль пользователю (только admin)
 
-app.post("/api/admin/set-role", authRequired, (req, res) => {
-
+app.post("/api/admin/set-role", authRequired, async (req, res) => {
   if (!isAdminPanelRole(req.user)) {
-    return res.json({ success: false, message: "Нет доступа" });
+    return res.json({ success: false, message: "responses.common.noAccess" });
   }
 
   const email = String(req.body.email || "").trim().toLowerCase();
@@ -2067,32 +3351,40 @@ app.post("/api/admin/set-role", authRequired, (req, res) => {
 
   const target = users.get(email);
   if (!target) {
-    return res.json({ success: false, message: "Пользователь не найден" });
+    return res.json({ success: false, message: "responses.common.userNotFound" });
   }
 
   if (!Object.values(ROLE).includes(role)) {
-    return res.json({ success: false, message: "Неверная роль" });
+    return res.json({ success: false, message: "responses.admin.invalidRole" });
   }
 
   if (!canSetRole(req.user, target, role)) {
     return res.json({
       success: false,
-      message: "Недостаточно прав для смены этой роли"
+      message: "responses.admin.cannotChangeToThisRole"
     });
   }
 
   const oldRole = target.role || ROLE.USER;
-  target.role = role;
+  const updatedTarget = await updateDbUserRecord(target.email, { role });
 
   addAdminLog({
     actor: req.user,
     action: "set_role",
     targetType: "user",
-    targetId: target.userId || target.email,
-    text: `Сменил роль пользователя ${target.username || target.email}: ${oldRole} → ${role}`
+    targetId: updatedTarget.userId || updatedTarget.email,
+    text: `Сменил роль пользователя ${updatedTarget.username || updatedTarget.email}: ${oldRole} → ${role}`
   });
 
-  res.json({ success: true });
+  res.json({
+    success: true,
+    user: {
+      email: updatedTarget.email,
+      username: updatedTarget.username,
+      userId: updatedTarget.userId || null,
+      role: updatedTarget.role || ROLE.USER
+    }
+  });
 });
 
 /**
@@ -2100,152 +3392,217 @@ app.post("/api/admin/set-role", authRequired, (req, res) => {
  * header: Authorization: Bearer <token>
  * body: { username?, avatarUrl?, avatarDataUrl? }
  */
-app.put("/profile", authRequired, (req, res) => {
-  const u = req.user;
+app.put("/profile", authRequired, async (req, res) => {
+  try {
+    const u = req.user;
 
-  const username =
-    typeof req.body.username === "string"
-      ? req.body.username.trim()
-      : "";
+    const username =
+      typeof req.body.username === "string"
+        ? req.body.username.trim()
+        : "";
 
-  const avatarUrl =
-    typeof req.body.avatarUrl === "string"
-      ? req.body.avatarUrl.trim()
-      : "";
+    const avatarUrl =
+      typeof req.body.avatarUrl === "string"
+        ? req.body.avatarUrl.trim()
+        : "";
 
-  const avatarDataUrl =
-    typeof req.body.avatarDataUrl === "string"
-      ? req.body.avatarDataUrl.trim()
-      : "";
+    const avatarDataUrl =
+      typeof req.body.avatarDataUrl === "string"
+        ? req.body.avatarDataUrl.trim()
+        : "";
 
-  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+    const data = {};
 
-  // ===== USERNAME =====
-  if (username && username !== u.username) {
-    if (username.length < 3) {
+    if (username && username !== u.username) {
+      if (username.length < 3) {
+        return res.json({
+          success: false,
+          code: "USERNAME_TOO_SHORT",
+          message: "responses.profile.usernameMinLength"
+        });
+      }
+
+      if (username.length > 20) {
+        return res.json({
+          success: false,
+          code: "USERNAME_TOO_LONG",
+          message: "responses.auth.usernameTooLong"
+        });
+      }
+
+      const lastChangedAt = Number(u.usernameChangedAt || 0);
+      const nextUsernameChangeAt = lastChangedAt
+        ? lastChangedAt + THIRTY_DAYS_MS
+        : 0;
+
+      if (nextUsernameChangeAt && Date.now() < nextUsernameChangeAt) {
+        return res.json({
+          success: false,
+          code: "USERNAME_CHANGE_TOO_EARLY",
+          message: "responses.profile.usernameChangeTooEarly",
+          nextUsernameChangeAt
+        });
+      }
+
+      data.username = username;
+      data.usernameChangedAt = new Date();
+    }
+
+    if (avatarUrl) {
+      data.avatarUrl = avatarUrl;
+      data.avatarDataUrl = "";
+    } else if (avatarDataUrl) {
+      data.avatarDataUrl = avatarDataUrl;
+      data.avatarUrl = "";
+    }
+
+    if (Object.keys(data).length === 0) {
       return res.json({
-        success: false,
-        code: "USERNAME_TOO_SHORT",
-        message: "Ник минимум 3 символа."
+        success: true,
+        user: {
+          email: u.email,
+          username: u.username,
+          userId: u.userId || null,
+          avatarDataUrl: u.avatarDataUrl || "",
+          avatarUrl: u.avatarUrl || "",
+          createdAt: u.createdAt || null,
+          usernameChangedAt: u.usernameChangedAt || null
+        }
       });
     }
 
-    if (username.length > 20) {
-      return res.json({
-        success: false,
-        code: "USERNAME_TOO_LONG",
-        message: "Ник слишком длинный (макс. 20)."
-      });
-    }
+    const updatedUser = await prisma.user.update({
+      where: { email: u.email },
+      data
+    });
 
-    const lastChangedAt = Number(u.usernameChangedAt || 0);
-    const nextUsernameChangeAt = lastChangedAt
-      ? lastChangedAt + THIRTY_DAYS_MS
-      : 0;
+    const syncedUser = syncUserToMap(updatedUser);
 
-    if (nextUsernameChangeAt && Date.now() < nextUsernameChangeAt) {
-      return res.json({
-        success: false,
-        code: "USERNAME_CHANGE_TOO_EARLY",
-        message: "Ник можно менять только раз в 30 дней.",
-        nextUsernameChangeAt
-      });
-    }
-
-    u.username = username;
-    u.usernameChangedAt = Date.now();
+    return res.json({
+      success: true,
+      user: {
+        email: syncedUser.email,
+        username: syncedUser.username,
+        userId: syncedUser.userId || null,
+        avatarDataUrl: syncedUser.avatarDataUrl || "",
+        avatarUrl: syncedUser.avatarUrl || "",
+        createdAt: syncedUser.createdAt || null,
+        usernameChangedAt: syncedUser.usernameChangedAt || null
+      }
+    });
+  } catch (e) {
+    console.error("PUT /profile error:", e);
+    return res.json({
+      success: false,
+      message: "responses.profile.updateFailed"
+    });
   }
-
-  // ===== AVATAR =====
-  if (avatarUrl) {
-    u.avatarUrl = avatarUrl;
-    u.avatarDataUrl = "";
-  } else if (avatarDataUrl) {
-    u.avatarDataUrl = avatarDataUrl;
-    u.avatarUrl = "";
-  }
-
-  users.set(u.email, u);
-
-  return res.json({
-    success: true,
-    user: {
-      email: u.email,
-      username: u.username,
-      userId: u.userId || null,
-      avatarDataUrl: u.avatarDataUrl || "",
-      avatarUrl: u.avatarUrl || "",
-      createdAt: u.createdAt || null,
-      usernameChangedAt: u.usernameChangedAt || null
-    },
-  });
 });
+
 /**
  * GET /api/settings/notifications
  */
-app.get("/api/settings/notifications", authRequired, (req, res) => {
-  if (!req.user.notify) {
-    req.user.notify = {
-      site: true,
-      email: true,
-      telegram: false
-    };
-  }
+app.get("/api/settings/notifications", authRequired, async (req, res) => {
+  try {
+    const dbUser = await prisma.user.findUnique({
+      where: { email: req.user.email }
+    });
 
-  res.json({
-    success: true,
-    notify: req.user.notify,
-    telegramLinked: Boolean(req.user.telegramChatId),
-    telegramUsername: req.user.telegramUsername || "",
-    telegramBotUsername: TELEGRAM_BOT_USERNAME || ""
-  });
+    if (!dbUser) {
+      return res.json({
+        success: false,
+        message: "responses.common.userNotFound"
+      });
+    }
+
+    const user = syncUserToMap(dbUser);
+
+    return res.json({
+      success: true,
+      notify: user.notify,
+      telegramLinked: Boolean(user.telegramChatId),
+      telegramUsername: user.telegramUsername || "",
+      telegramBotUsername: TELEGRAM_BOT_USERNAME || ""
+    });
+  } catch (e) {
+    console.error("GET /api/settings/notifications error:", e);
+    return res.json({
+      success: false,
+      message: "responses.settings.notificationsLoadFailed"
+    });
+  }
 });
 
 /**
  * PUT /api/settings/notifications
  * body: { site?, email?, telegram? }
  */
-app.put("/api/settings/notifications", authRequired, (req, res) => {
-  const { site, email, telegram } = req.body;
+app.put("/api/settings/notifications", authRequired, async (req, res) => {
+  try {
+    const { site, email, telegram } = req.body;
 
-  if (!req.user.notify) {
-    req.user.notify = { site: true, email: true, telegram: false };
-  }
+    const dbUser = await prisma.user.findUnique({
+      where: { email: req.user.email }
+    });
 
-  if (typeof site === "boolean") {
-    req.user.notify.site = site;
-  }
-
-  if (typeof email === "boolean") {
-    req.user.notify.email = email;
-  }
-
-  if (typeof telegram === "boolean") {
-    if (telegram && !req.user.telegramChatId) {
+    if (!dbUser) {
       return res.json({
         success: false,
-        code: "TELEGRAM_NOT_LINKED",
-        message: "Сначала подключите Telegram"
+        message: "responses.common.userNotFound"
       });
     }
 
-    req.user.notify.telegram = telegram;
-  }
+    if (typeof telegram === "boolean" && telegram && !dbUser.telegramChatId) {
+      return res.json({
+        success: false,
+        code: "TELEGRAM_NOT_LINKED",
+        message: "responses.settings.telegramLinkFirst"
+      });
+    }
 
-  res.json({
-    success: true,
-    notify: req.user.notify,
-    telegramLinked: Boolean(req.user.telegramChatId),
-    telegramUsername: req.user.telegramUsername || "",
-    telegramBotUsername: TELEGRAM_BOT_USERNAME || ""
-  });
+    const data = {};
+
+    if (typeof site === "boolean") {
+      data.notifySite = site;
+    }
+
+    if (typeof email === "boolean") {
+      data.notifyEmail = email;
+    }
+
+    if (typeof telegram === "boolean") {
+      data.notifyTelegram = telegram;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { email: req.user.email },
+      data
+    });
+
+    const user = syncUserToMap(updatedUser);
+
+    return res.json({
+      success: true,
+      notify: user.notify,
+      telegramLinked: Boolean(user.telegramChatId),
+      telegramUsername: user.telegramUsername || "",
+      telegramBotUsername: TELEGRAM_BOT_USERNAME || ""
+    });
+  } catch (e) {
+    console.error("PUT /api/settings/notifications error:", e);
+    return res.json({
+      success: false,
+      message: "responses.settings.notificationsSaveFailed"
+    });
+  }
 });
 
 app.post("/api/settings/telegram/link", authRequired, (req, res) => {
   if (!isTelegramConfigured()) {
     return res.json({
       success: false,
-      message: "Telegram не настроен на сервере"
+      message: "responses.settings.telegramNotConfigured"
     });
   }
 
@@ -2261,34 +3618,35 @@ app.post("/api/settings/telegram/link", authRequired, (req, res) => {
   });
 });
 
-app.post("/api/settings/telegram/unlink", authRequired, (req, res) => {
-  req.user.telegramChatId = null;
-  req.user.telegramUsername = "";
-  req.user.telegramFirstName = "";
-  req.user.telegramLinkedAt = null;
+app.post("/api/settings/telegram/unlink", authRequired, async (req, res) => {
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { email: req.user.email },
+      data: {
+        telegramChatId: null,
+        telegramUsername: "",
+        telegramFirstName: "",
+        telegramLinkedAt: null,
+        notifyTelegram: false
+      }
+    });
 
-  if (!req.user.notify) {
-    req.user.notify = { site: true, email: true, telegram: false };
+    const user = syncUserToMap(updatedUser);
+    telegramLinkCodes.delete(req.user.email);
+
+    return res.json({
+      success: true,
+      notify: user.notify
+    });
+  } catch (e) {
+    console.error("POST /api/settings/telegram/unlink error:", e);
+    return res.json({
+      success: false,
+      message: "responses.settings.telegramUnlinkFailed"
+    });
   }
-
-  req.user.notify.telegram = false;
-  telegramLinkCodes.delete(req.user.email);
-
-  return res.json({
-    success: true,
-    notify: req.user.notify
-  });
 });
 
-/* ================== BALANCE ================== */
-
-// получить баланс
-app.get("/api/balance", authRequired, (req, res) => {
-  res.json({
-    success: true,
-    balance: req.user.balance || 0
-  });
-});
 app.get("/api/rates", (req, res) => {
   res.json({
     success: true,
@@ -2302,9 +3660,9 @@ app.get("/api/public/platform-capabilities", (req, res) => {
   res.json({
     success: true,
     capabilities: {
-      paymentsEnabled: PAYMENTS_ENABLED,
-      cryptoEnabled: PAYMENTS_ENABLED && CRYPTO_ENABLED,
-      demoMode: DEMO_MODE
+      paymentsEnabled: false,
+      cryptoEnabled: false,
+      demoMode: false
     }
   });
 });
@@ -2314,554 +3672,8 @@ app.get("/api/public/platform-settings", (req, res) => {
     success: true,
     settings: {
       marketplaceFeePercent: Number(adminSettings.marketplaceFeePercent ?? 10),
-      minDepositUah: Number(adminSettings.minDepositUah ?? 0),
-      minWithdrawUah: Number(adminSettings.minWithdrawUah ?? 0),
       maintenanceText: String(adminSettings.maintenanceText ?? "")
     }
-  });
-});
-
-app.post("/api/demo/balance/topup", authRequired, requireDemoMode, (req, res) => {
-  const amount = Number(req.body.amount || 0);
-
-  if (!Number.isFinite(amount) || amount <= 0) {
-    return res.json({
-      success: false,
-      message: "Некорректная сумма"
-    });
-  }
-
-  if (amount > MAX_DEMO_TOPUP) {
-    return res.json({
-      success: false,
-      message: `Максимальное демо-пополнение ${MAX_DEMO_TOPUP} ${BASE_CURRENCY}`
-    });
-  }
-
-  req.user.balance = roundMoney((req.user.balance || 0) + amount);
-
-  addWalletHistory(req.user.email, {
-    type: "deposit",
-    amount,
-    currency: BASE_CURRENCY,
-    status: "completed",
-    text: "Демо-пополнение баланса"
-  });
-
-  return res.json({
-    success: true,
-    balance: req.user.balance,
-    message: "Демо-баланс зачислен"
-  });
-});
-
-app.post("/api/deposit/crypto", authRequired, requireCryptoEnabled, async (req, res) => {
-  try {
-    const amount = Number(req.body.amount);
-    const replaceExisting = parseBoolean(req.body.replaceExisting);
-
-    if (!amount || amount <= 0) {
-      return res.json({
-        success: false,
-        message: "Некорректная сумма"
-      });
-    }
-
-if (amount < MIN_CRYPTO_DEPOSIT_USDT) {
-  return res.json({
-    success: false,
-    message: `Минимальный депозит ${MIN_CRYPTO_DEPOSIT_USDT} USDT`
-  });
-}
-
-if (amount > MAX_CRYPTO_DEPOSIT_USDT) {
-  return res.json({
-    success: false,
-    message: `Максимальный депозит ${MAX_CRYPTO_DEPOSIT_USDT} USDT`
-  });
-}
-cleanupExpiredCryptoDeposits();
-
-const existing = cryptoDeposits.find(
-  d => d.email === req.user.email && d.status === "pending"
-);
-    // Если уже есть активный депозит и пользователь НЕ просил заменить
-    if (existing && !replaceExisting) {
-      return res.json({
-        success: false,
-        code: "PENDING_DEPOSIT_EXISTS",
-        message: "У вас уже есть активный депозит",
-        pending: true,
-        depositId: existing.id,
-        address: existing.address,
-        amount: existing.amountExpected,
-        network: existing.network || "TRC20",
-        expiresInMs: getCryptoDepositExpiresInMs(existing)
-      });
-    }
-
-    // Если есть активный депозит и пользователь просит заменить его новым
-    if (existing && replaceExisting) {
-      existing.status = "cancelled";
-      existing.cancelledAt = Date.now();
-      existing.cancelReason = "replaced_by_user";
-      saveCryptoDeposits();
-    }
-
-    const wallet = await getOrCreateDepositWallet(req.user);
-
-const deposit = {
-  id: crypto.randomUUID(),
-  email: req.user.email,
-  userId: req.user.userId || null,
-  amountExpected: amount,
-  amountReceived: 0,
-  currency: "USDT",
-  network: "TRC20",
-  address: wallet.address,
-  provider: "tron",
-  status: "pending",
-  txHash: null,
-  confirmations: 0,
-  createdAt: Date.now()
-};
-
-    cryptoDeposits.push(deposit);
-    saveCryptoDeposits();
-
-    return res.json({
-      success: true,
-      depositId: deposit.id,
-      address: wallet.address,
-      amount,
-      network: "TRC20",
-      expiresInMs: CRYPTO_PENDING_TTL
-    });
-  } catch (e) {
-    console.log("create crypto deposit error:", e);
-    return res.json({
-      success: false,
-      message: "Ошибка создания депозита"
-    });
-  }
-});
-
-app.get("/api/deposit/crypto/pending", authRequired, requireCryptoEnabled, (req, res) => {
-  const pending = getUserPendingCryptoDeposit(req.user.email);
-
-  if (!pending) {
-    return res.json({
-      success: true,
-      pending: false
-    });
-  }
-
-  return res.json({
-    success: true,
-    pending: true,
-    depositId: pending.id,
-    address: pending.address,
-    amount: pending.amountExpected,
-    network: pending.network || "TRC20",
-    createdAt: pending.createdAt,
-    expiresInMs: getCryptoDepositExpiresInMs(pending)
-  });
-});
-
-app.get("/api/wallet/crypto/deposit-address", authRequired, requireCryptoEnabled, async (req, res) => {
-  try {
-    const wallet = await getOrCreateDepositWallet(req.user);
-
-    res.json({
-      success: true,
-      address: wallet.address,
-      network: "TRC20",
-      currency: "USDT"
-    });
-  } catch (e) {
-    console.log("get deposit address error:", e);
-    res.json({
-      success: false,
-      message: "Не удалось получить адрес"
-    });
-  }
-});
-
-async function autoCreditTronDeposit({ wallet, txid, amount }) {
-  if (!txid) {
-    console.log("skip credit: empty txid");
-    return;
-  }
-
-  if (amount < 1) {
-    console.log("Deposit too small:", txid);
-    return;
-  }
-
-  const alreadyCreditedInHistory = Array.from(walletHistory.values()).some(items =>
-    (items || []).some(item => item.txHash === txid)
-  );
-
-  const alreadyCreditedOnDisk =
-    listDeposits().some(dep => dep.txHash === txid) ||
-    cryptoDeposits.some(dep => dep.txHash === txid);
-
-  if (alreadyCreditedInHistory || alreadyCreditedOnDisk) {
-    console.log("TX already credited:", txid);
-    return;
-  }
-
-  const user = users.get(wallet.email);
-  if (!user) {
-    console.log("user not found for deposit:", wallet.email);
-    return;
-  }
-
-  const amountBase = convertUsdToBase(amount);
-
-  if (!amountBase || amountBase <= 0) {
-    console.log("Deposit conversion error:", txid);
-    return;
-  }
-
-  user.balance = roundMoney((user.balance || 0) + amountBase);
-  platformBalances.crypto = roundMoney((platformBalances.crypto || 0) + amount);
-
-  addWalletHistory(user.email, {
-    type: "deposit",
-    amount,
-    currency: "USDT",
-    status: "completed",
-    text: "Крипто пополнение (USDT TRC20)",
-    txHash: txid
-  });
-
-  const pending = cryptoDeposits.find(
-    d =>
-      d.email === wallet.email &&
-      d.address === wallet.address &&
-      d.status === "pending"
-  );
-
-  if (pending && pending.amountExpected && amount < pending.amountExpected) {
-    console.log("Deposit smaller than expected");
-  }
-
-  if (pending) {
-    pending.status = "completed";
-    pending.txHash = txid;
-    pending.amountReceived = amount;
-    pending.confirmedAt = Date.now();
-    saveCryptoDeposits();
-  }
-
-  console.log("Auto credited:", wallet.email, amount, txid);
-}
-
-app.post("/api/withdraw/request", authRequired, requireCryptoEnabled, (req, res) => {
-  const amount = Number(req.body.amount);
-  const method = String(req.body.method || "crypto").trim();
-  const wallet = String(req.body.wallet || "").trim();
-
-  if (method !== "crypto") {
-  return res.json({
-    success: false,
-    message: "Этот способ вывода сейчас недоступен"
-  });
-}
-  if (!Number.isFinite(amount) || amount <= 0) {
-    return res.json({
-      success: false,
-      message: "Некорректная сумма"
-    });
-  }
-const minWithdrawBase = Number(adminSettings.minWithdrawUah ?? MIN_WITHDRAW_AMOUNT);
-
-if (amount < minWithdrawBase) {
-  return res.json({
-    success: false,
-    message: `Минимальный вывод ${minWithdrawBase} ${BASE_CURRENCY}`
-  });
-}
-  if (req.user.balance < amount) {
-    return res.json({
-      success: false,
-      message: "Недостаточно средств"
-    });
-  }
-
-  const existing = withdrawRequests.find(
-    w => w.email === req.user.email && w.status === "pending"
-  );
-
-  if (existing) {
-    return res.json({
-      success: false,
-      message: "У вас уже есть заявка на вывод"
-    });
-  }
-
-  const request = {
-    id: crypto.randomUUID(),
-    email: req.user.email,
-    amount: roundMoney(amount),
-    method,
-    status: "pending",
-    createdAt: Date.now()
-  };
-
-  if (method === "crypto") {
-    if (!wallet) {
-      return res.json({
-        success: false,
-        message: "Введите адрес кошелька"
-      });
-    }
-
-    if (!isValidTronAddress(wallet)) {
-      return res.json({
-        success: false,
-        message: "Неверный формат адреса TRC20"
-      });
-    }
-
-    const { grossUsdt, feeUsdt, netUsdt } = calcCryptoWithdrawByBase(amount);
-
-    if (!grossUsdt || grossUsdt <= 0 || !netUsdt || netUsdt <= 0) {
-      return res.json({
-        success: false,
-        message: "Не удалось определить сумму в USDT"
-      });
-    }
-
-    if (netUsdt < MIN_CRYPTO_WITHDRAW_USDT) {
-      return res.json({
-        success: false,
-        message: `Минимальная сумма к получению ${MIN_CRYPTO_WITHDRAW_USDT} USDT`
-      });
-    }
-
-    if (netUsdt > MAX_CRYPTO_WITHDRAW_USDT) {
-      return res.json({
-        success: false,
-        message: `Максимальная сумма к получению ${MAX_CRYPTO_WITHDRAW_USDT} USDT`
-      });
-    }
-
-    request.wallet = wallet;
-    request.network = "TRC20";
-    request.currency = BASE_CURRENCY;
-    request.amountUsdtGross = grossUsdt;
-    request.amountUsdtNet = netUsdt;
-    request.feePercent = CRYPTO_WITHDRAW_FEE_PERCENT;
-    request.feeUsdt = feeUsdt;
-  } else {
-    if (amount > MAX_WITHDRAW_AMOUNT) {
-      return res.json({
-        success: false,
-        message: `Максимальный вывод ${MAX_WITHDRAW_AMOUNT} ${BASE_CURRENCY}`
-      });
-    }
-
-    if (amount < MIN_WITHDRAW_AMOUNT) {
-      return res.json({
-        success: false,
-        message: `Минимальный вывод ${MIN_WITHDRAW_AMOUNT} ${BASE_CURRENCY}`
-      });
-    }
-
-    request.currency = BASE_CURRENCY;
-    request.wallet = wallet;
-  }
-
-  req.user.balance = roundMoney((req.user.balance || 0) - request.amount);
-
-  withdrawRequests.push(request);
-
-  res.json({
-    success: true,
-    request
-  });
-});
-
-app.post("/api/withdraw/:id/cancel", authRequired, requireCryptoEnabled, (req,res)=>{
-
-  const w = withdrawRequests.find(x => x.id === req.params.id);
-
-  if (!w){
-    return res.json({ success:false });
-  }
-
-  if (w.email !== req.user.email){
-    return res.json({ success:false });
-  }
-
-  if (w.status !== "pending"){
-    return res.json({ success:false });
-  }
-
-req.user.balance = roundMoney((req.user.balance || 0) + Number(w.amount || 0));
-
-  w.status = "cancelled";
-
-  res.json({ success:true });
-
-});
-
-app.get("/api/admin/withdraws", authRequired, requireCryptoEnabled, (req, res) => {
-  if (!isAdminPanelRole(req.user)) {
-    return res.json({ success: false, message: "Нет доступа" });
-  }
-
-  const list = withdrawRequests.map(w => {
-    const user = users.get(w.email);
-
-    return {
-      id: w.id,
-      email: w.email,
-      username: user?.username || "Пользователь",
-      userId: user?.userId || null,
-      amount: w.amount,
-      currency: w.currency || BASE_CURRENCY,
-      method: w.method || "crypto",
-      wallet: w.wallet || "",
-      network: w.network || null,
-      amountUsdtGross: Number(w.amountUsdtGross || 0),
-      amountUsdtNet: Number(w.amountUsdtNet || 0),
-      feePercent: Number(w.feePercent || 0),
-      feeUsdt: Number(w.feeUsdt || 0),
-      status: w.status,
-      createdAt: w.createdAt
-    };
-  });
-
-  res.json({
-    success: true,
-    withdraws: list
-  });
-});
-
-app.post("/api/admin/withdraw/:id/approve", authRequired, requireCryptoEnabled, (req, res) => {
-  if (!isAdminPanelRole(req.user)) {
-    return res.json({ success: false });
-  }
-
-  const w = withdrawRequests.find(x => x.id === req.params.id);
-
-  if (!w) {
-    return res.json({ success: false, message: "Заявка не найдена" });
-  }
-
-  if (w.status !== "pending") {
-    return res.json({ success: false, message: "Заявка уже обработана" });
-  }
-
-  const user = users.get(w.email);
-
-  if (!user) {
-    return res.json({ success: false, message: "Пользователь не найден" });
-  }
-
-  if (w.method === "crypto") {
-    const amountUsdtNet = Number(w.amountUsdtNet || 0);
-
-    if (!amountUsdtNet || amountUsdtNet <= 0) {
-      return res.json({
-        success: false,
-        message: "Некорректная сумма USDT"
-      });
-    }
-
-    if (Number(platformBalances.crypto || 0) < amountUsdtNet) {
-      return res.json({
-        success: false,
-        message: "Недостаточно USDT резерва платформы"
-      });
-    }
-
-    platformBalances.crypto = roundMoney(
-      Number(platformBalances.crypto || 0) - amountUsdtNet
-    );
-
-    addWalletHistory(user.email, {
-      type: "withdraw",
-      amount: -Number(w.amount || 0),
-      currency: BASE_CURRENCY,
-      status: "completed",
-      text: `Вывод ${Number(w.amountUsdtNet || 0)} USDT (TRC20)`
-    });
-  } else {
-    return res.json({
-      success: false,
-      message: "Этот способ вывода сейчас недоступен"
-    });
-  }
-
-  w.status = "approved";
-  w.approvedAt = Date.now();
-
-  addAdminLog({
-    actor: req.user,
-    action: "withdraw_approve",
-    targetType: "withdraw",
-    targetId: w.id,
-    text: `Подтвердил выплату ${w.amount}`
-  });
-
-  res.json({ success: true });
-});
-
-app.post("/api/admin/withdraw/:id/reject", authRequired, requireCryptoEnabled, (req,res)=>{
-
-  if (!isAdminPanelRole(req.user)) {
-    return res.json({ success:false, message:"Нет доступа" });
-  }
-
-  const w = withdrawRequests.find(x => x.id === req.params.id);
-
-  if (!w){
-    return res.json({ success:false, message:"Заявка не найдена" });
-  }
-
-  if (w.status !== "pending"){
-    return res.json({ success:false, message:"Заявка уже обработана" });
-  }
-
-  const user = users.get(w.email);
-
-  if (!user){
-    return res.json({ success:false, message:"Пользователь не найден" });
-  }
-
-  user.balance = roundMoney((user.balance || 0) + Number(w.amount || 0));
-  w.status = "rejected";
-
-addWalletHistory(user.email,{
-  type:"withdraw",
-  amount:Number(w.amount || 0),
-  currency: BASE_CURRENCY,
-  status:"failed",
-  text:"Заявка на вывод отклонена, средства возвращены"
-});
-
-  addAdminLog({
-    actor:req.user,
-    action:"withdraw_reject",
-    targetType:"withdraw",
-    targetId:w.id,
-    text:`Отклонил выплату ${w.amount}`
-  });
-
-  res.json({ success:true });
-
-});
-
-/* ================== WALLET HISTORY ================== */
-
-app.get("/api/wallet/history", authRequired, (req, res) => {
-  res.json({
-    success: true,
-    items: walletHistory.get(req.user.email) || []
   });
 });
 
@@ -2877,441 +3689,432 @@ app.get("/api/my-offers", authRequired, (req, res) => {
 });
 // активировать оффер
 // ===== АКТИВИРОВАТЬ ОФФЕР =====
-app.post("/api/offers/:id/activate", authRequired, (req, res) => {
-
+app.post("/api/offers/:id/activate", authRequired, async (req, res) => {
   const offer = offers.find(o => o.id === req.params.id);
 
   if (!offer) {
-    return res.json({ success: false, message: "Оффер не найден" });
+    return res.json({ success: false, message: "responses.offers.offerNotFound" });
   }
 
   if (offer.sellerEmail !== req.user.email) {
-    return res.json({ success: false, message: "Нет доступа" });
+    return res.json({ success: false, message: "responses.common.noAccess" });
   }
 
   if (offer.status !== "inactive") {
     return res.json({
       success: false,
-      message: "Оффер нельзя активировать"
+      message: "responses.offers.cannotActivate"
     });
   }
 
-  offer.status = "active";
-  offer.activeUntil = Date.now() + 7 * 24 * 60 * 60 * 1000;
+  const updatedOffer = await updateDbOfferRecord(offer.id, {
+    status: "active",
+    activeUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+  });
 
-  res.json({ success: true });
+  res.json({ success: true, offer: updatedOffer });
 });
 
-
 // ===== ДЕАКТИВИРОВАТЬ ОФФЕР =====
-app.post("/api/offers/:id/deactivate", authRequired, (req, res) => {
-
+app.post("/api/offers/:id/deactivate", authRequired, async (req, res) => {
   const offer = offers.find(o => o.id === req.params.id);
 
   if (!offer) {
-    return res.json({ success: false, message: "Оффер не найден" });
+    return res.json({ success: false, message: "responses.offers.offerNotFound" });
   }
 
   if (offer.sellerEmail !== req.user.email) {
-    return res.json({ success: false, message: "Нет доступа" });
+    return res.json({ success: false, message: "responses.common.noAccess" });
   }
 
   if (offer.status !== "active") {
     return res.json({
       success: false,
-      message: "Оффер уже не активен"
+      message: "responses.offers.alreadyInactive"
     });
   }
 
-  offer.status = "inactive";
-  offer.activeUntil = null;
+  const updatedOffer = await updateDbOfferRecord(offer.id, {
+    status: "inactive",
+    activeUntil: null
+  });
 
-  res.json({ success: true });
+  res.json({ success: true, offer: updatedOffer });
 });
-// ===== КЛОНИРОВАТЬ ПРОДАННЫЙ ОФФЕР =====
-app.post("/api/offers/:id/clone", authRequired, (req, res) => {
 
+// ===== КЛОНИРОВАТЬ ПРОДАННЫЙ ОФФЕР =====
+app.post("/api/offers/:id/clone", authRequired, async (req, res) => {
   const oldOffer = offers.find(o => o.id === req.params.id);
 
   if (!oldOffer) {
-    return res.json({ success:false, message:"Оффер не найден" });
+    return res.json({ success:false, message:"responses.offers.offerNotFound" });
   }
 
   if (oldOffer.sellerEmail !== req.user.email) {
-    return res.json({ success:false, message:"Нет доступа" });
+    return res.json({ success:false, message:"responses.common.noAccess" });
   }
 
   if (oldOffer.status !== "closed") {
     return res.json({
-      success:false,
-      message:"Можно клонировать только проданный оффер"
-    });
+  success:false,
+  message:"responses.offers.onlyClosedOfferCanBeCloned"
+});
   }
 
-const newOffer = {
-  ...oldOffer,
-  id: crypto.randomUUID(),
-  offerId: generateOfferId(),
-  status: "active",
-  createdAt: Date.now(),
-  activeUntil: Date.now() + 7 * 24 * 60 * 60 * 1000
-};
+  const newOffer = await createDbOfferRecord({
+    ...oldOffer,
+    offerId: await generateOfferId(),
+    status: "active",
+    createdAt: Date.now(),
+    activeUntil: Date.now() + 7 * 24 * 60 * 60 * 1000
+  });
 
-  offers.push(newOffer);
-
-  res.json({ success:true });
-
+  res.json({ success:true, offer: newOffer });
 });
+
 /* ================== CHATS ================== */
 
 /**
  * POST /api/offers
  * создание объявления
  */
-app.post("/api/offers", authRequired, upload.array("images", 5), async (req, res) => {
-
+app.post("/api/offers", authRequired, uploadImages.array("images", 5), async (req, res) => {
   try {
+    const {
+      game,
+      mode,
+      price,
+      amount,
+      method,
+      country,
+      accountType,
+      accountRegion,
+      voiceChat,
+      category,
+      interfaceLang,
 
-const {
-  game,
-  mode,
-  price,
-  amount,
-  method,
-  country,
-  accountType,
-  accountRegion,
-  voiceChat,
-  category,
-  interfaceLang,
+      title_ru,
+      desc_ru,
+      title_uk,
+      desc_uk,
+      title_en,
+      desc_en
+    } = req.body;
 
-  title_ru,
-  desc_ru,
-  title_uk,
-  desc_uk,
-  title_en,
-  desc_en
-} = req.body;
+    let extra = {};
 
-let extra = {};
-
-Object.keys(req.body).forEach(key => {
-  if (
-    ![
-      "game",
-      "mode",
-      "price",
-      "amount",
-      "method",
-      "country",
-      "accountType",
-      "accountRegion",
-      "voiceChat",
-      "category",
-      "interfaceLang",
-      "title_ru",
-      "desc_ru",
-      "title_uk",
-      "desc_uk",
-      "title_en",
-      "desc_en"
-    ].includes(key)
-  ) {
-    extra[key] = req.body[key];
-  }
-});
+    Object.keys(req.body).forEach(key => {
+      if (
+        ![
+          "game",
+          "mode",
+          "price",
+          "amount",
+          "method",
+          "country",
+          "accountType",
+          "accountRegion",
+          "voiceChat",
+          "category",
+          "interfaceLang",
+          "title_ru",
+          "desc_ru",
+          "title_uk",
+          "desc_uk",
+          "title_en",
+          "desc_en"
+        ].includes(key)
+      ) {
+        extra[key] = req.body[key];
+      }
+    });
 
     if (!game || !mode || !price) {
-      return res.json({ success: false, message: "Не все поля заполнены" });
+      return res.json({ success: false, message: "responses.offers.requiredFields" });
     }
-const priceNumber = Number(price);
 
-if (!Number.isFinite(priceNumber) || priceNumber <= 0) {
-  return res.json({
-    success: false,
-    message: "Некорректная цена"
-  });
+    const priceNumber = Number(price);
+
+    if (!Number.isFinite(priceNumber) || priceNumber <= 0) {
+      return res.json({
+        success: false,
+        message: "responses.offers.invalidPrice"
+      });
+    }
+
+    if (priceNumber < MIN_OFFER_PRICE) {
+      return res.json({
+        success: false,
+        message: "responses.offers.minPrice",
+messageParams: {
+  price: MIN_OFFER_PRICE,
+  currency: BASE_CURRENCY
 }
+      });
+    }
 
-if (priceNumber < MIN_OFFER_PRICE) {
-  return res.json({
-    success: false,
-    message: `Минимальная цена ${MIN_OFFER_PRICE} ${BASE_CURRENCY}`
-  });
+    if (priceNumber > MAX_OFFER_PRICE) {
+      return res.json({
+        success: false,
+        message: "responses.offers.maxPrice",
+messageParams: {
+  price: MAX_OFFER_PRICE,
+  currency: BASE_CURRENCY
 }
+      });
+    }
 
-if (priceNumber > MAX_OFFER_PRICE) {
-  return res.json({
-    success: false,
-    message: `Максимальная цена ${MAX_OFFER_PRICE} ${BASE_CURRENCY}`
-  });
-}
-const normalizedInterfaceLang = normalizeLang(interfaceLang);
+    const normalizedInterfaceLang = normalizeLang(interfaceLang);
 
-const title = {
-  ru: cleanOfferText(title_ru, 70),
-  uk: cleanOfferText(title_uk, 70),
-  en: cleanOfferText(title_en, 70)
-};
+    const title = {
+      ru: cleanOfferText(title_ru, 70),
+      uk: cleanOfferText(title_uk, 70),
+      en: cleanOfferText(title_en, 70)
+    };
 
-const description = {
-  ru: cleanOfferText(desc_ru, 1000),
-  uk: cleanOfferText(desc_uk, 1000),
-  en: cleanOfferText(desc_en, 1000)
-};
+    const description = {
+      ru: cleanOfferText(desc_ru, 1000),
+      uk: cleanOfferText(desc_uk, 1000),
+      en: cleanOfferText(desc_en, 1000)
+    };
 
-const translationValidation = validateOfferTranslations({
-  interfaceLang: normalizedInterfaceLang,
-  title,
-  description
-});
+    const translationValidation = validateOfferTranslations({
+      interfaceLang: normalizedInterfaceLang,
+      title,
+      description
+    });
 
-if (!translationValidation.success) {
-  return res.json(translationValidation);
-}
-const priceNet = roundMoney(priceNumber);
+    if (!translationValidation.success) {
+      return res.json(translationValidation);
+    }
+
+    const priceNet = roundMoney(priceNumber);
     const priceGross = calcGrossFromNet(priceNet);
 
     let imageUrls = [];
 
-if (req.files && req.files.length > 0) {
-  for (const file of req.files) {
-    const inputPath = file.path;
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const inputPath = file.path;
 
-    const outputFilename =
-      "optimized-" + Date.now() + "-" + Math.random().toString(36).slice(2) + ".jpg";
+        const outputFilename =
+          "optimized-" + Date.now() + "-" + Math.random().toString(36).slice(2) + ".jpg";
 
-    const outputPath = path.join(
-      __dirname,
-      "uploads",
-      outputFilename
-    );
+        const outputPath = path.join(__dirname, "uploads", outputFilename);
 
-    await sharp(inputPath)
-      .resize(600) // можно 600, нормальный баланс
-      .jpeg({ quality: 92 })
-      .toFile(outputPath);
+        await sharp(inputPath)
+          .resize(600)
+          .jpeg({ quality: 92 })
+          .toFile(outputPath);
 
-    fs.unlinkSync(inputPath);
+        fs.unlinkSync(inputPath);
 
-    imageUrls.push("/uploads/" + outputFilename);
-  }
-}
+        imageUrls.push("/uploads/" + outputFilename);
+      }
+    }
 
-const offer = {
-  id: crypto.randomUUID(),
-  offerId: generateOfferId(),
-
-  game,
-  mode,
-  category: category || null,
-
-title,
-description,
-  extra,
-  priceNet,
-  price: priceGross,
-
+    const offer = await createDbOfferRecord({
+      offerId: await generateOfferId(),
+      game,
+      mode,
+      category: category || null,
+      title,
+      description,
+      extra,
+      priceNet,
+      price: priceGross,
       amount: amount ? Number(amount) : null,
-
       method: method || null,
       country: country || null,
-
       accountType: accountType || null,
       accountRegion: accountRegion || null,
-voiceChat:
-  voiceChat === "yes" ? true :
-  voiceChat === "no" ? false :
-  null,
-
+      voiceChat:
+        voiceChat === "yes" ? true :
+        voiceChat === "no" ? false :
+        null,
       images: imageUrls,
-imageUrl: imageUrls[0] || null,
-
+      imageUrl: imageUrls[0] || null,
       sellerEmail: req.user.email,
       sellerName: req.user.username,
-
       status: "active",
       createdAt: Date.now(),
       activeUntil: Date.now() + 7 * 24 * 60 * 60 * 1000
-    };
-
-    offers.push(offer);
+    });
 
     return res.json({ success: true, offer });
-
   } catch (err) {
     console.error("Image processing error:", err);
     return res.json({
       success: false,
-      message: "Ошибка обработки изображения"
+      message: "responses.offers.imageProcessingError"
     });
   }
 });
 /* ================== EDIT OFFER ================== */
-app.put("/api/offers/:id", authRequired, upload.array("images", 5), async (req, res) => {
-
+app.put("/api/offers/:id", authRequired, uploadImages.array("images", 5), async (req, res) => {
   const offer = offers.find(o => o.id === req.params.id);
   if (!offer) {
-    return res.json({ success:false, message:"Оффер не найден" });
+    return res.json({ success:false, message:"responses.offers.offerNotFound" });
   }
 
   if (offer.sellerEmail !== req.user.email) {
-    return res.json({ success:false, message:"Нет доступа" });
+    return res.json({ success:false, message:"responses.common.noAccess" });
   }
 
-const {
-  price,
-  category,
-  interfaceLang,
-  title_ru,
-  desc_ru,
-  title_uk,
-  desc_uk,
-  title_en,
-  desc_en
-} = req.body;
+  const {
+    price,
+    category,
+    interfaceLang,
+    title_ru,
+    desc_ru,
+    title_uk,
+    desc_uk,
+    title_en,
+    desc_en
+  } = req.body;
 
-const normalizedInterfaceLang = normalizeLang(interfaceLang);
+  const normalizedInterfaceLang = normalizeLang(interfaceLang);
 
-const title = {
-  ru: cleanOfferText(title_ru, 70),
-  uk: cleanOfferText(title_uk, 70),
-  en: cleanOfferText(title_en, 70)
-};
+  const title = {
+    ru: cleanOfferText(title_ru, 70),
+    uk: cleanOfferText(title_uk, 70),
+    en: cleanOfferText(title_en, 70)
+  };
 
-const description = {
-  ru: cleanOfferText(desc_ru, 1000),
-  uk: cleanOfferText(desc_uk, 1000),
-  en: cleanOfferText(desc_en, 1000)
-};
+  const description = {
+    ru: cleanOfferText(desc_ru, 1000),
+    uk: cleanOfferText(desc_uk, 1000),
+    en: cleanOfferText(desc_en, 1000)
+  };
 
-const translationValidation = validateOfferTranslations({
-  interfaceLang: normalizedInterfaceLang,
-  title,
-  description
-});
+  const translationValidation = validateOfferTranslations({
+    interfaceLang: normalizedInterfaceLang,
+    title,
+    description
+  });
 
-if (!translationValidation.success) {
-  return res.json(translationValidation);
-}
-
-  // 💰 цена
-if (price !== undefined) {
-  const net = roundMoney(Number(price));
-
-  if (!Number.isFinite(net) || net <= 0) {
-    return res.json({
-      success: false,
-      message: "Некорректная цена"
-    });
+  if (!translationValidation.success) {
+    return res.json(translationValidation);
   }
 
-  if (net < MIN_OFFER_PRICE) {
-    return res.json({
-      success: false,
-      message: `Минимальная цена ${MIN_OFFER_PRICE} ${BASE_CURRENCY}`
-    });
+  const updateData = {
+    category: category || null,
+    title,
+    description
+  };
+
+  if (price !== undefined) {
+    const net = roundMoney(Number(price));
+
+    if (!Number.isFinite(net) || net <= 0) {
+      return res.json({
+        success: false,
+        message: "responses.offers.invalidPrice"
+      });
+    }
+
+    if (net < MIN_OFFER_PRICE) {
+      return res.json({
+        success: false,
+        message: "responses.offers.minPrice",
+messageParams: {
+  price: MIN_OFFER_PRICE,
+  currency: BASE_CURRENCY
+}
+      });
+    }
+
+    if (net > MAX_OFFER_PRICE) {
+      return res.json({
+        success: false,
+        message: "responses.offers.maxPrice",
+messageParams: {
+  price: MAX_OFFER_PRICE,
+  currency: BASE_CURRENCY
+}
+      });
+    }
+
+    updateData.priceNet = net;
+    updateData.price = calcGrossFromNet(net);
   }
 
-  if (net > MAX_OFFER_PRICE) {
-    return res.json({
-      success: false,
-      message: `Максимальная цена ${MAX_OFFER_PRICE} ${BASE_CURRENCY}`
-    });
+  const {
+    amount,
+    method,
+    country,
+    accountType,
+    accountRegion,
+    voiceChat
+  } = req.body;
+
+  if (amount !== undefined) {
+    updateData.amount = amount ? Number(amount) : null;
   }
 
-  offer.priceNet = net;
-  offer.price = calcGrossFromNet(net);
-}
+  if (method !== undefined) {
+    updateData.method = method || null;
+  }
 
-  // 📂 категория
-  offer.category = category || null;
+  if (country !== undefined) {
+    updateData.country = country || null;
+  }
 
-  // 📝 названия
-offer.title = title;
-offer.description = description;
-// ===== ОБНОВЛЯЕМ ВСЕ ОСНОВНЫЕ ПОЛЯ =====
+  if (accountType !== undefined) {
+    updateData.accountType = accountType || null;
+  }
 
-const {
-  amount,
-  method,
-  country,
-  accountType,
-  accountRegion,
-  voiceChat
-} = req.body;
+  if (accountRegion !== undefined) {
+    updateData.accountRegion = accountRegion || null;
+  }
 
-if (amount !== undefined) {
-  offer.amount = amount ? Number(amount) : null;
-}
+  if (voiceChat !== undefined) {
+    updateData.voiceChat =
+      voiceChat === "yes" ? true :
+      voiceChat === "no" ? false :
+      null;
+  }
 
-if (method !== undefined) {
-  offer.method = method || null;
-}
+  const BASE_KEYS = [
+    "game",
+    "mode",
+    "price",
+    "amount",
+    "method",
+    "country",
+    "accountType",
+    "accountRegion",
+    "voiceChat",
+    "category",
+    "interfaceLang",
+    "title_ru",
+    "desc_ru",
+    "title_uk",
+    "desc_uk",
+    "title_en",
+    "desc_en"
+  ];
 
-if (country !== undefined) {
-  offer.country = country || null;
-}
+  let newExtra = {};
 
-if (accountType !== undefined) {
-  offer.accountType = accountType || null;
-}
+  Object.keys(req.body).forEach(key => {
+    if (BASE_KEYS.includes(key)) return;
+    newExtra[key] = req.body[key];
+  });
 
-if (accountRegion !== undefined) {
-  offer.accountRegion = accountRegion || null;
-}
+  delete newExtra.game;
+  delete newExtra.mode;
+  delete newExtra.category;
 
-if (voiceChat !== undefined) {
-offer.voiceChat =
-  voiceChat === "yes" ? true :
-  voiceChat === "no" ? false :
-  null;
-}
-// 🔥 ОБНОВЛЕНИЕ EXTRA ПОЛЕЙ (ТОЛЬКО ДИНАМИЧЕСКИЕ ФИЛЬТРЫ)
+  updateData.extra = newExtra;
 
-const BASE_KEYS = [
-  "game",
-  "mode",
-  "price",
-  "amount",
-  "method",
-  "country",
-  "accountType",
-  "accountRegion",
-  "voiceChat",
-  "category",
-  "interfaceLang",
-
-  "title_ru",
-  "desc_ru",
-  "title_uk",
-  "desc_uk",
-  "title_en",
-  "desc_en"
-];
-
-let newExtra = {};
-
-Object.keys(req.body).forEach(key => {
-  if (BASE_KEYS.includes(key)) return;
-  newExtra[key] = req.body[key];
-});
-
-// на всякий случай чистим старый мусор
-delete newExtra.game;
-delete newExtra.mode;
-delete newExtra.category;
-
-offer.extra = newExtra;
-
-  // 🖼️ фото — ТОЛЬКО если загрузили новые
   if (req.files && req.files.length > 0) {
     const imageUrls = [];
 
     for (const file of req.files) {
       const inputPath = file.path;
       const filename =
-  "optimized-" + Date.now() + "-" + Math.random().toString(36).slice(2) + ".jpg";
+        "optimized-" + Date.now() + "-" + Math.random().toString(36).slice(2) + ".jpg";
       const outputPath = path.join(__dirname, "uploads", filename);
 
       await sharp(inputPath)
@@ -3323,32 +4126,35 @@ offer.extra = newExtra;
       imageUrls.push("/uploads/" + filename);
     }
 
-    offer.images = imageUrls;
-    offer.imageUrl = imageUrls[0] || null;
+    updateData.images = imageUrls;
+    updateData.imageUrl = imageUrls[0] || null;
   }
 
-  res.json({ success:true, offer });
+  const updatedOffer = await updateDbOfferRecord(offer.id, updateData);
+
+  res.json({ success:true, offer: updatedOffer });
 });
+
 // 🗑️ УДАЛЕНИЕ ОФФЕРА
-app.delete("/api/offers/:id", authRequired, (req, res) => {
+app.delete("/api/offers/:id", authRequired, async (req, res) => {
+  const offer = offers.find(o => o.id === req.params.id);
 
-  const index = offers.findIndex(o => o.id === req.params.id);
-
-  if (index === -1) {
-    return res.json({ success: false, message: "Оффер не найден" });
+  if (!offer) {
+    return res.json({ success: false, message: "responses.offers.offerNotFound" });
   }
-
-  const offer = offers[index];
 
   if (offer.sellerEmail !== req.user.email) {
-    return res.json({ success: false, message: "Нет доступа" });
+    return res.json({ success: false, message: "responses.common.noAccess" });
   }
 
-offer.status = "deleted";
-offer.activeUntil = null;
+  const updatedOffer = await updateDbOfferRecord(offer.id, {
+    status: "deleted",
+    activeUntil: null
+  });
 
-  res.json({ success: true });
+  res.json({ success: true, offer: updatedOffer });
 });
+
 /**
  * GET /api/offers
  * ?game=roblox&mode=Робуксы
@@ -3368,8 +4174,6 @@ const {
   accountType,
   accountRegion,
   voiceChat,
-  subsFrom,
-  subsTo,
   lang
 } = req.query;
 // 🔥 безопасный язык
@@ -3377,13 +4181,6 @@ const langSafe =
   ["ru","uk","en"].includes(lang)
     ? lang
     : "ru";
-
-// 🔧 нормализация range-фильтров (subscribers)
-const normalizedSubsFrom =
-  req.query.subscribers_from ?? subsFrom;
-
-const normalizedSubsTo =
-  req.query.subscribers_to ?? subsTo;
 
 // 1️⃣ базовый список
 let result = offers.filter(o => o.status === "active");
@@ -3414,10 +4211,6 @@ const extraFilters = { ...req.query };
   "accountType",
   "accountRegion",
   "voiceChat",
-  "subsFrom",
-  "subsTo",
-  "subscribers_from",
-  "subscribers_to",
   "lang"
 ].forEach(k => delete extraFilters[k]);
 
@@ -3440,20 +4233,7 @@ Object.entries(extraFilters).forEach(([key, value]) => {
   if (mode) {
     result = result.filter(o => o.mode === mode);
   }
-// 📺 YouTube + Telegram — фильтр по подписчикам
-if (
-  (game === "youtube" || game === "telegram") &&
-  mode === "Каналы"
-) {
-  result = result.filter(o => {
-    const subs = Number(o.extra?.subscribers || 0);
 
-if (normalizedSubsFrom && subs < Number(normalizedSubsFrom)) return false;
-if (normalizedSubsTo && subs > Number(normalizedSubsTo)) return false;
-
-    return true;
-  });
-}
   // 🧩 КАТЕГОРИЯ
 if (category) {
   result = result.filter(o => o.category === category);
@@ -3554,15 +4334,9 @@ if (sort === "amount_desc") {
 
     return {
       ...o,
-seller: seller ? (() => {
-
-  if (!seller.userId) {
-    seller.userId = generateUserId();
-  }
-
-return {
+seller: seller ? {
   username: seller.username || "Продавец",
-  userId: seller.userId,
+  userId: seller.userId || null,
   role: seller.role || ROLE.USER,
   verified: Boolean(seller.verified),
   avatarUrl: seller.avatarUrl || null,
@@ -3571,16 +4345,18 @@ return {
   rating: seller.rating || 0,
   reviewsCount: seller.reviewsCount || 0,
   createdAt: seller.createdAt
-};
-
-})() : {
-        username: "Продавец",
-        avatarUrl: null,
-        avatarDataUrl: null,
-        online: false,
-        rating: 0,
-        reviewsCount: 0
-      }
+} : {
+  username: "Продавец",
+  userId: null,
+  role: ROLE.USER,
+  verified: false,
+  avatarUrl: null,
+  avatarDataUrl: null,
+  online: false,
+  rating: 0,
+  reviewsCount: 0,
+  createdAt: null
+}
     };
   });
 
@@ -3621,94 +4397,85 @@ if (req.user && seller?.blockedUsers?.includes(req.user.email)) {
     blockedBySeller,
     offer: {
       ...offer,
-seller: seller ? (() => {
-
-  if (!seller.userId) {
-    seller.userId = generateUserId();
-  }
-
-  return {
-    username: seller.username || "Продавец",
-    userId: seller.userId,
-    avatarUrl: seller.avatarUrl || null,
-    avatarDataUrl: seller.avatarDataUrl || null,
-    online: Boolean(seller.online),
-    rating: seller.rating || 0,
-    reviewsCount: seller.reviewsCount || 0,
-    createdAt: seller.createdAt
-  };
-
-})() : {
-        username: "Продавец",
-        avatarUrl: null,
-        avatarDataUrl: null,
-        online: false,
-        rating: 0,
-        reviewsCount: 0
-      }
+seller: seller ? {
+  username: seller.username || "Продавец",
+  userId: seller.userId || null,
+  avatarUrl: seller.avatarUrl || null,
+  avatarDataUrl: seller.avatarDataUrl || null,
+  online: Boolean(seller.online),
+  rating: seller.rating || 0,
+  reviewsCount: seller.reviewsCount || 0,
+  createdAt: seller.createdAt
+} : {
+  username: "Продавец",
+  userId: null,
+  avatarUrl: null,
+  avatarDataUrl: null,
+  online: false,
+  rating: 0,
+  reviewsCount: 0,
+  createdAt: null
+}
     }
   });
 });
-setInterval(() => {
-  const now = Date.now();
 
-  users.forEach(user => {
-    if (now - user.lastSeen > 60000) {
-      user.online = false;
-    }
-  });
-}, 30000);
 // ===== CREATE / GET CHAT BY OFFER =====
-app.post("/api/chats/start", authRequired, (req, res) => {
+app.post("/api/chats/start", authRequired, async (req, res) => {
   const { offerId } = req.body;
 
   const offer = offers.find(o => o.id === offerId);
-  
+
   if (!offer) {
-    return res.json({ success:false, message:"Оффер не найден" });
+    return res.json({ success:false, message:"responses.offers.offerNotFound" });
   }
 
   if (offer.sellerEmail === req.user.email) {
     const seller = users.get(offer.sellerEmail);
 
-if (seller?.blockedUsers?.includes(req.user.email)) {
-  return res.json({
-    success: false,
-    message: "Товар недоступен"
-  });
-}
+    if (seller?.blockedUsers?.includes(req.user.email)) {
+      return res.json({
+        success: false,
+        message: "responses.chats.itemUnavailable"
+      });
+    }
+
     return res.json({
       success: false,
-      message: "Нельзя писать самому себе"
+      message: "responses.chats.cannotWriteToYourself"
     });
   }
-// 🔒 Если продавец заблокировал покупателя
-const seller = users.get(offer.sellerEmail);
 
-if (seller?.blockedUsers?.includes(req.user.email)) {
-  return res.json({
-    success: false,
-    message: "Товар недоступен"
-  });
-}
+  const seller = users.get(offer.sellerEmail);
+
+  if (seller?.blockedUsers?.includes(req.user.email)) {
+    return res.json({
+      success: false,
+      message: "responses.chats.itemUnavailable"
+    });
+  }
 
   let chat = chats.find(c =>
-    (c.buyerEmail === req.user.email && c.sellerEmail === offer.sellerEmail) ||
-    (c.sellerEmail === req.user.email && c.buyerEmail === offer.sellerEmail)
+    !c.official &&
+    (
+      (c.buyerEmail === req.user.email && c.sellerEmail === offer.sellerEmail) ||
+      (c.sellerEmail === req.user.email && c.buyerEmail === offer.sellerEmail)
+    )
   );
 
   if (!chat) {
-    chat = {
-      id: crypto.randomUUID(),
+    chat = await createDbChatRecord({
       buyerEmail: req.user.email,
       sellerEmail: offer.sellerEmail,
-      offerId: offer.id,      // 🔥 ВАЖНО
-      createdAt: Date.now(),
-      blocked: false
-    };
-    chats.push(chat);
-  } else {
-    chat.offerId = offer.id;  // 🔥 обновляем если перешёл с другого оффера
+      offerId: offer.id,
+      blocked: false,
+      official: false,
+      deletedBy: []
+    });
+  } else if (chat.offerId !== offer.id) {
+    chat = await updateDbChatRecord(chat.id, {
+      offerId: offer.id
+    });
   }
 
   res.json({ success:true, chat });
@@ -3716,11 +4483,36 @@ if (seller?.blockedUsers?.includes(req.user.email)) {
 
 // ===== GET MY CHATS =====
 app.get("/api/chats", authRequired, (req, res) => {
-
   const myEmail = req.user.email;
+  const officialScope = isOfficialScopeRequest(req);
 
-const myChats = chats
-  .filter(c => {
+  let myChats = chats.filter(c => {
+    if (officialScope) {
+      if (!canWriteOfficial(req.user)) return false;
+      if (!isOfficialChat(c)) return false;
+      if (c.deletedBy?.includes(myEmail)) return false;
+
+      const hasMessages = messages.some(m => m.chatId === c.id);
+      if (!hasMessages) return false;
+
+      const buyerUser = getUserByEmailSafe(c.buyerEmail);
+
+      // В official scope показываем только реальные пользовательские чаты,
+      // а не staff / системные / свои служебные
+      if (!buyerUser) return false;
+      if (
+  buyerUser.email === OFFICIAL_ACCOUNT.email ||
+  buyerUser.email === RESOLUTION_ENTITY.email
+) {
+  return false;
+}
+      if (buyerUser.email === OFFICIAL_ACCOUNT.email) return false;
+      if (buyerUser.email === RESOLUTION_ENTITY.email) return false;
+      if (isStaffLikeUser(buyerUser)) return false;
+
+      return true;
+    }
+
     const isMine =
       c.buyerEmail === myEmail || c.sellerEmail === myEmail;
 
@@ -3735,48 +4527,84 @@ const myChats = chats
 
     return true;
   })
-    .map(c => {
+  .map(c => {
+    const otherEmail = officialScope
+      ? c.buyerEmail
+      : (c.buyerEmail === myEmail ? c.sellerEmail : c.buyerEmail);
 
-      const otherEmail =
-        c.buyerEmail === myEmail
-          ? c.sellerEmail
-          : c.buyerEmail;
+    const otherUser = getUserByEmailSafe(otherEmail);
 
-      const otherUser = getUserByEmailSafe(otherEmail);
+    const chatMessages = messages
+      .filter(m => m.chatId === c.id)
+      .sort((a, b) => b.createdAt - a.createdAt);
 
-      // 🔥 ИЩЕМ ПОСЛЕДНЕЕ СООБЩЕНИЕ
-      const chatMessages = messages
-        .filter(m => m.chatId === c.id)
-        .sort((a,b) => b.createdAt - a.createdAt);
+    const lastMessage = chatMessages[0] || null;
 
-      const lastMessage = chatMessages[0] || null;
+    const unreadCount = messages.filter(m => {
+      if (m.chatId !== c.id) return false;
+      if (m.read === true) return false;
 
-      return {
-        ...c,
-        lastMessage,
-        blockedByMe: req.user.blockedUsers?.includes(otherEmail) || false,
-otherUser: buildPublicUserPayload(otherUser)
-      };
-    })
-    // 🔥 СОРТИРОВКА ПО ПОСЛЕДНЕМУ СООБЩЕНИЮ
-    .sort((a,b) => {
-      const aTime = a.lastMessage?.createdAt || a.createdAt;
-      const bTime = b.lastMessage?.createdAt || b.createdAt;
-      return bTime - aTime;
-    });
+      // В обычных чатах не считаем мои сообщения
+      if (!officialScope && m.fromEmail === myEmail) return false;
+
+      // В official scope staff не должен считать сообщения TyPlace как входящие
+      if (officialScope && String(m.fromEmail || "").toLowerCase() === OFFICIAL_ACCOUNT.email) {
+        return false;
+      }
+
+      return true;
+    }).length;
+
+    return {
+      ...c,
+      lastMessage,
+      unreadCount,
+      blockedByMe: req.user.blockedUsers?.includes(otherEmail) || false,
+      otherUser: buildPublicUserPayload(otherUser)
+    };
+  })
+  .sort((a, b) => {
+    const aTime = a.lastMessage?.createdAt || a.createdAt;
+    const bTime = b.lastMessage?.createdAt || b.createdAt;
+    return bTime - aTime;
+  });
 
   res.json({ success: true, chats: myChats });
 });
 
+app.get("/api/chats/unread-count", authRequired, (req, res) => {
+  const myEmail = req.user.email;
+
+  const myChats = chats.filter(c =>
+    (c.buyerEmail === myEmail || c.sellerEmail === myEmail) &&
+    !c.deletedBy?.includes(myEmail)
+  );
+
+  const myChatIds = myChats.map(c => c.id);
+
+  const unread = messages.filter(m => {
+    if (!myChatIds.includes(m.chatId)) return false;
+    if (m.fromEmail === myEmail) return false;
+    if (m.read === true) return false;
+    if (req.user.blockedUsers?.includes(m.fromEmail)) return false;
+    return true;
+  });
+
+  res.json({
+    success: true,
+    count: unread.length
+  });
+});
+
 // ===== MESSAGES =====
-app.post("/api/chats/:id/messages", authRequired, (req, res) => {
+app.post("/api/chats/:id/messages", authRequired, async (req, res) => {
   const { text, media } = req.body;
 
-  const chat = chats.find(c => c.id === req.params.id);
+  let chat = chats.find(c => c.id === req.params.id);
   if (!chat) {
     return res.json({
       success: false,
-      message: "Чат не найден"
+      message: "responses.chats.chatNotFound"
     });
   }
 
@@ -3786,7 +4614,7 @@ app.post("/api/chats/:id/messages", authRequired, (req, res) => {
   if (!safeText && safeMedia.length === 0) {
     return res.json({
       success: false,
-      message: "Пустое сообщение"
+      message: "responses.common.emptyMessage"
     });
   }
 
@@ -3794,7 +4622,7 @@ app.post("/api/chats/:id/messages", authRequired, (req, res) => {
     return res.json({
       success: false,
       code: "OFFICIAL_CHAT_READ_ONLY",
-      message: "В обычном списке официальный чат доступен только для чтения"
+      message: "responses.chats.officialReadOnlyInDefaultList"
     });
   }
 
@@ -3804,7 +4632,7 @@ app.post("/api/chats/:id/messages", authRequired, (req, res) => {
   ) {
     return res.json({
       success: false,
-      message: "Нет доступа"
+      message: "responses.common.noAccess"
     });
   }
 
@@ -3819,55 +4647,74 @@ app.post("/api/chats/:id/messages", authRequired, (req, res) => {
   if (otherUser?.blockedUsers?.includes(myEmail)) {
     return res.json({
       success: false,
-      message: "Вы заблокированы этим пользователем"
+      message: "responses.chats.blockedByUser"
     });
   }
 
-  if (chat.deletedBy) {
-    if (chat.deletedBy.includes(otherEmail)) {
-      if (!otherUser?.blockedUsers?.includes(myEmail)) {
-        chat.deletedBy = chat.deletedBy.filter(e => e !== otherEmail);
-      }
+  if (chat.deletedBy?.includes(otherEmail)) {
+    if (!otherUser?.blockedUsers?.includes(myEmail)) {
+      const nextDeletedBy = chat.deletedBy.filter(e => e !== otherEmail);
+      chat = await updateDbChatRecord(chat.id, {
+        deletedBy: nextDeletedBy
+      });
     }
   }
 
-  if (req.user.blockedUsers?.includes(otherEmail)) {
-    return res.json({
-      success: false,
-      message: "Пользователь заблокирован"
-    });
-  }
+if (req.user.blockedUsers?.includes(otherEmail)) {
+  return res.json({
+    success: false,
+    message: "responses.chats.userBlocked"
+  });
+}
 
-  const message = makeChatMessage({
+const cooldownSeconds = getChatActionCooldownSeconds(chat.id, req.user.email);
+
+if (cooldownSeconds > 0) {
+  return res.status(429).json({
+    success: false,
+    message: `Слишком быстро. Подождите ${cooldownSeconds} сек.`
+  });
+}
+
+const message = await createDbChatMessageRecord({
     chatId: req.params.id,
     fromEmail: req.user.email,
-    fromUserId: req.user.userId || "",
+    fromUserId: req.user.userId || null,
     fromUsername: req.user.username || "Пользователь",
     fromRole: req.user.role || ROLE.USER,
     kind: "user",
     messageType: "user",
     staffRole: null,
     text: safeText,
-    media: safeMedia
+    media: safeMedia,
+    meta: null,
+    read: false
   });
 
-  messages.push(message);
   emitChatMessageToParticipants(chat.id, message);
+
+  if (otherUser && otherUser.email !== req.user.email) {
+    notifyUser(otherUser, "chat_new_message", {
+      senderName: req.user.username || "Пользователь",
+      preview: safeText || getAttachmentFallback(otherUser?.lang),
+      chatId: chat.id
+    });
+  }
 
   res.json({ success: true, message });
 });
 
 // ===== SEND FILE TO CHAT =====
-app.post("/api/chats/:id/files", authRequired, upload.single("file"), (req, res) => {
-  const chat = chats.find(c => c.id === req.params.id);
+app.post("/api/chats/:id/files", authRequired, uploadChatFiles.single("file"), async (req, res) => {
+  let chat = chats.find(c => c.id === req.params.id);
   if (!chat) {
-    return res.json({ success:false, message:"Чат не найден" });
+    return res.json({ success:false, message:"responses.chats.chatNotFound" });
   }
 
   if (isOfficialChat(chat)) {
     return res.json({
       success: false,
-      message: "В официальный чат пока нельзя отправлять файлы"
+      message: "responses.chats.officialFilesNotAllowed"
     });
   }
 
@@ -3875,15 +4722,14 @@ app.post("/api/chats/:id/files", authRequired, upload.single("file"), (req, res)
     chat.buyerEmail !== req.user.email &&
     chat.sellerEmail !== req.user.email
   ) {
-    return res.json({ success:false, message:"Нет доступа" });
+    return res.json({ success:false, message:"responses.common.noAccess" });
   }
 
   if (!req.file) {
-    return res.json({ success:false, message:"Файл не найден" });
+    return res.json({ success:false, message: "responses.upload.fileNotFound" });
   }
 
   const myEmail = req.user.email;
-
   const otherEmail =
     chat.buyerEmail === myEmail
       ? chat.sellerEmail
@@ -3894,40 +4740,69 @@ app.post("/api/chats/:id/files", authRequired, upload.single("file"), (req, res)
   if (otherUser?.blockedUsers?.includes(myEmail)) {
     return res.json({
       success: false,
-      message: "Вы заблокированы этим пользователем"
+      message: "responses.chats.blockedByUser"
     });
   }
 
   if (chat.deletedBy?.includes(otherEmail)) {
     if (!otherUser?.blockedUsers?.includes(myEmail)) {
-      chat.deletedBy = chat.deletedBy.filter(e => e !== otherEmail);
+      const nextDeletedBy = chat.deletedBy.filter(e => e !== otherEmail);
+      chat = await updateDbChatRecord(chat.id, {
+        deletedBy: nextDeletedBy
+      });
     }
   }
 
-  if (req.user.blockedUsers?.includes(otherEmail)) {
-    return res.json({
-      success:false,
-      message:"Пользователь заблокирован"
-    });
+if (req.user.blockedUsers?.includes(otherEmail)) {
+  if (req.file?.path && fs.existsSync(req.file.path)) {
+    fs.unlinkSync(req.file.path);
   }
 
-  const fileUrl = "/uploads/" + req.file.filename;
+  return res.json({
+    success:false,
+    message:"responses.chats.userBlocked"
+  });
+}
 
-  const message = makeChatMessage({
+const cooldownSeconds = getChatActionCooldownSeconds(chat.id, req.user.email);
+
+if (cooldownSeconds > 0) {
+  if (req.file?.path && fs.existsSync(req.file.path)) {
+    fs.unlinkSync(req.file.path);
+  }
+
+  return res.status(429).json({
+    success: false,
+    message: `Слишком быстро. Подождите ${cooldownSeconds} сек.`
+  });
+}
+
+const fileUrl = "/uploads/" + req.file.filename;
+
+  const message = await createDbChatMessageRecord({
     chatId: req.params.id,
     fromEmail: req.user.email,
-    fromUserId: req.user.userId || "",
+    fromUserId: req.user.userId || null,
     fromUsername: req.user.username || "Пользователь",
     fromRole: req.user.role || ROLE.USER,
     kind: "user",
     messageType: "user",
     staffRole: null,
     text: "",
-    media: [fileUrl]
+    media: [fileUrl],
+    meta: null,
+    read: false
   });
 
-  messages.push(message);
   emitChatMessageToParticipants(chat.id, message);
+
+  if (otherUser && otherUser.email !== req.user.email) {
+    notifyUser(otherUser, "chat_new_message", {
+      senderName: req.user.username || "Пользователь",
+      preview: getAttachmentFallback(otherUser?.lang),
+      chatId: chat.id
+    });
+  }
 
   res.json({
     success: true,
@@ -3938,32 +4813,48 @@ app.post("/api/chats/:id/files", authRequired, upload.single("file"), (req, res)
 
 // ===== GET ONE CHAT =====
 app.get("/api/chats/:id", authRequired, (req, res) => {
+  const scope = String(req.query.scope || "").trim().toLowerCase();
+  const isOfficialScope = scope === "official";
 
   const chat = chats.find(c => c.id === req.params.id);
   if (!chat) {
-    return res.json({ success:false });
+    return res.json({
+      success: false,
+      message: "responses.chats.chatNotFound"
+    });
   }
 
-  // проверка доступа
-if (!canViewChat(req.user, chat)) {
-  return res.json({
-    success: false,
-    message: "Нет доступа"
-  });
-}
+  if (isOfficialScope) {
+    if (!isOfficialChat(chat)) {
+      return res.status(403).json({
+        success: false,
+        message: "responses.official.notOfficialChat"
+      });
+    }
 
-  const otherEmail =
-    chat.buyerEmail === req.user.email
-      ? chat.sellerEmail
-      : chat.buyerEmail;
+    if (!canWriteOfficial(req.user)) {
+      return res.status(403).json({
+        success: false,
+        message: "responses.common.noAccess"
+      });
+    }
+  } else {
+    if (!canViewChat(req.user, chat)) {
+      return res.json({
+        success: false,
+        message: "responses.common.noAccess"
+      });
+    }
+  }
 
-const otherUser = getUserByEmailSafe(otherEmail);
+  const otherEmail = getChatOtherEmailForViewer(chat, req.user.email);
+  const otherUser = getUserByEmailSafe(otherEmail);
 
   res.json({
     success: true,
     chat: {
       ...chat,
-otherUser: buildPublicUserPayload(otherUser)
+      otherUser: buildPublicUserPayload(otherUser)
     }
   });
 });
@@ -3971,26 +4862,46 @@ otherUser: buildPublicUserPayload(otherUser)
 // ===== GET MESSAGES =====
 app.get("/api/chats/:id/messages", authRequired, (req, res) => {
   const chatId = req.params.id;
+  const scope = String(req.query.scope || "").trim().toLowerCase();
+  const isOfficialScope = scope === "official";
 
   const chat = chats.find(c => c.id === chatId);
   if (!chat) {
-    return res.json({ success:false });
+    return res.json({
+      success: false,
+      message: "responses.chats.chatNotFound"
+    });
   }
 
-  // проверяем доступ
-if (!canViewChat(req.user, chat)) {
-  return res.json({
-    success: false,
-    message: "Нет доступа"
-  });
-}
+  if (isOfficialScope) {
+    if (!isOfficialChat(chat)) {
+      return res.status(403).json({
+        success: false,
+        message: "responses.official.notOfficialChat"
+      });
+    }
+
+    if (!canWriteOfficial(req.user)) {
+      return res.status(403).json({
+        success: false,
+        message: "responses.common.noAccess"
+      });
+    }
+  } else {
+    if (!canViewChat(req.user, chat)) {
+      return res.json({
+        success: false,
+        message: "responses.common.noAccess"
+      });
+    }
+  }
 
   const chatMessages = messages
     .filter(m => m.chatId === chatId)
-    .sort((a,b)=>a.createdAt - b.createdAt);
+    .sort((a, b) => a.createdAt - b.createdAt);
 
   res.json({
-    success:true,
+    success: true,
     messages: chatMessages
   });
 });
@@ -3998,200 +4909,65 @@ if (!canViewChat(req.user, chat)) {
 /* ================== REVIEWS ================== */
 
 // создать отзыв
-app.post("/api/reviews", authRequired, (req, res) => {
+app.post("/api/reviews", authRequired, async (req, res) => {
   const { orderId, rating, text } = req.body;
 
   const order = orders.find(o => o.id === orderId);
   if (!order) {
-    return res.json({ success:false, message:"Заказ не найден" });
+    return res.json({ success:false, message:"responses.orders.orderNotFound" });
   }
 
-  // только покупатель
   if (order.buyerEmail !== req.user.email) {
-    return res.json({ success:false, message:"Нет доступа" });
+    return res.json({ success:false, message:"responses.common.noAccess" });
   }
 
-  // только завершённый заказ
   if (order.status !== "completed") {
-    return res.json({ success:false, message:"Отзыв можно оставить только после завершения сделки" });
+    return res.json({ success:false, message: "responses.reviews.onlyAfterCompletedOrder" });
   }
 
-  // только один отзыв
   const exists = reviews.find(r => r.orderId === orderId);
   if (exists) {
-    return res.json({ success:false, message:"Отзыв уже оставлен" });
+    return res.json({ success:false, message: "responses.reviews.alreadyExists" });
   }
 
-  const review = {
-    id: crypto.randomUUID(),
+  const review = await createDbReviewRecord({
     orderId,
     sellerEmail: order.sellerEmail,
     buyerEmail: order.buyerEmail,
     rating: Math.max(1, Math.min(5, Number(rating))),
     text: String(text || "").slice(0, 1000),
     createdAt: Date.now()
-  };
+  });
 
-  reviews.push(review);
+  await recalcSellerRating(order.sellerEmail);
 
-  // пересчёт рейтинга продавца
-const seller = users.get(order.sellerEmail);
-if (!seller) {
-  return res.json({ success:false, message:"Продавец не найден" });
-}
-const sellerReviews = reviews.filter(r => r.sellerEmail === seller.email);
-  seller.reviewsCount = sellerReviews.length;
+  const orderChat = chats.find(c => c.id === order.chatId);
 
-  if (seller.reviewsCount >= 10) {
-  const avg =
-    sellerReviews.reduce((s, r) => s + r.rating, 0) / sellerReviews.length;
+  if (orderChat) {
+    await pushSystemMessage({
+      chatId: orderChat.id,
+      systemType: "review_created",
+      actorEmail: req.user.email,
+      actorUserId: req.user.userId || "",
+      actorUsername: req.user.username || "",
+      actorRole: req.user.role || "user",
+      orderId: order.id,
+      orderNumber: order.orderNumber
+    });
+  }
 
-  seller.rating = Math.round(avg * 10) / 10; // ⭐ 1 знак после запятой
-} else {
-  seller.rating = 0; // ❓ рейтинг скрыт
-}
-const orderChat = chats.find(c => c.id === order.chatId);
-
-if (orderChat) {
-pushSystemMessage({
-  chatId: orderChat.id,
-  systemType: "review_created",
-  actorEmail: req.user.email,
-  actorUserId: req.user.userId || "",
-  actorUsername: req.user.username || "",
-  actorRole: req.user.role || "user",
-  orderId: order.id,
-  orderNumber: order.orderNumber
-});
-}
   res.json({ success:true, review });
 });
+
 /* ================== ORDERS ================== */
 
 // создать заказ
 app.post("/api/orders/create", authRequired, (req, res) => {
-  const { offerId } = req.body;
-
-  const offer = offers.find(o => o.id === offerId);
-  if (!offer) {
-    return res.json({ success: false, message: "Оффер не найден" });
-  }
-
-  // ❗ Нельзя купить у себя
-  if (offer.sellerEmail === req.user.email) {
-    return res.json({ success: false, message: "Нельзя купить у себя" });
-  }
-
-  // 🔒 ПРОВЕРКА БЛОКИРОВКИ
-  const seller = users.get(offer.sellerEmail);
-
-  if (seller?.blockedUsers?.includes(req.user.email)) {
-    return res.json({
-      success: false,
-      message: "Товар недоступен"
-    });
-  }
-
-  if (offer.status !== "active") {
-    return res.json({ success:false, message:"Оффер недоступен" });
-  }
-
-  if (offer.activeUntil && Date.now() > offer.activeUntil) {
-    offer.status = "inactive";
-    return res.json({ success:false, message:"Оффер истёк" });
-  }
-
-  const net = roundMoney(offer.priceNet ?? offer.price);
-  const gross = roundMoney(offer.price ?? calcGrossFromNet(net));
-  const commission = roundMoney(gross - net);
-
-  if (req.user.balance < gross) {
-    return res.json({ success: false, message: "Недостаточно средств" });
-  }
-
-  // 💰 Списываем средства
-req.user.balance = roundMoney((req.user.balance || 0) - gross);
-platformBalances.escrow = roundMoney((platformBalances.escrow || 0) + gross);
-  // 📩 Гарантируем чат
-  let chat = chats.find(c =>
-    (c.buyerEmail === req.user.email && c.sellerEmail === offer.sellerEmail) ||
-    (c.sellerEmail === req.user.email && c.buyerEmail === offer.sellerEmail)
-  );
-
-  if (!chat) {
-    chat = {
-      id: crypto.randomUUID(),
-      buyerEmail: req.user.email,
-      sellerEmail: offer.sellerEmail,
-      createdAt: Date.now(),
-      blocked: false
-    };
-    chats.push(chat);
-  }
-
-const order = {
-  id: crypto.randomUUID(),
-  orderNumber: generateOrderCode(),
-  offerId,
-  chatId: chat.id,
-  buyerEmail: req.user.email,
-  sellerEmail: offer.sellerEmail,
-  price: gross,
-  sellerAmount: net,
-  commission: commission,
-  status: "pending",
-  createdAt: Date.now(),
-
-  // ===== DISPUTE / RESOLUTION =====
-  disputeStatus: "none",          // none | requested | in_review | closed
-  disputeTicketId: null,
-  resolutionAssignedTo: null,
-  resolutionAssignedAt: null,
-  resolutionRequestedAt: null,
-
-  // ===== ORDER DATES =====
-  completedAt: null,
-  refundedAt: null,
-
-  // 🔥 СНИМОК ОФФЕРА НА МОМЕНТ ПОКУПКИ
-  offerSnapshot: {
-    id: offer.id,
-    title: offer.title,
-    description: offer.description,
-    imageUrl: offer.imageUrl,
-    price: offer.price
-  }
-};
-
-  orders.push(order);
-addWalletHistory(req.user.email, {
-  type: "purchase",
-  amount: -gross,
-  currency: BASE_CURRENCY,
-  status: "completed",
-  text: `Оплата заказа ${order.orderNumber}`
-});
-  offer.status = "closed";
-  offer.activeUntil = null;
-
-pushSystemMessage({
-  chatId: chat.id,
-  systemType: "order_created",
-  actorEmail: req.user.email,
-  actorUserId: req.user.userId || "",
-  actorUsername: req.user.username || "",
-  actorRole: req.user.role || "user",
-  orderId: order.id,
-  orderNumber: order.orderNumber
-});
-
-  const sellerUser = users.get(order.sellerEmail);
-  sendNotification(sellerUser, {
-    type: "order",
-    text: "У вас новый заказ на TyPlace"
+  return res.status(503).json({
+    success: false,
+    code: "CHECKOUT_NOT_IMPLEMENTED",
+    message: "responses.orders.checkoutNotImplemented"
   });
-
-  res.json({ success: true, order });
 });
 
 // получить заказ
@@ -4209,7 +4985,7 @@ const isAssignedResolutionViewer =
   order.resolutionAssignedTo === req.user.email;
 
 if (!isParticipant && !isAdminViewer && !isAssignedResolutionViewer) {
-  return res.json({ success:false, message:"Нет доступа" });
+  return res.json({ success:false, message:"responses.common.noAccess" });
 }
 
   const offer = offers.find(o => o.id === order.offerId);
@@ -4238,27 +5014,27 @@ res.json({
 });
 });
 
-app.post("/api/orders/:id/resolution-message", authRequired, (req, res) => {
+app.post("/api/orders/:id/resolution-message", authRequired, async (req, res) => {
   const order = orders.find(o => o.id === req.params.id);
 
   if (!order) {
     return res.json({
       success: false,
-      message: "Заказ не найден"
+      message: "responses.orders.orderNotFound"
     });
   }
 
   if (!isResolutionRole(req.user)) {
     return res.status(403).json({
       success: false,
-      message: "Только Resolution может писать в чат заказа от лица арбитража"
+      message: "responses.orders.onlyResolutionCanWrite"
     });
   }
 
   if (order.disputeStatus !== "requested" && order.disputeStatus !== "in_review") {
     return res.json({
       success: false,
-      message: "По этому заказу нет активного спора"
+      message: "responses.orders.noActiveDispute"
     });
   }
 
@@ -4268,7 +5044,7 @@ app.post("/api/orders/:id/resolution-message", authRequired, (req, res) => {
   ) {
     return res.status(403).json({
       success: false,
-      message: "Этот спор назначен другому сотруднику Resolution"
+      message: "responses.orders.disputeAssignedToAnotherResolution"
     });
   }
 
@@ -4278,11 +5054,11 @@ app.post("/api/orders/:id/resolution-message", authRequired, (req, res) => {
   if (!safeText && safeMedia.length === 0) {
     return res.json({
       success: false,
-      message: "Пустое сообщение"
+      message: "responses.common.emptyMessage"
     });
   }
 
-  const message = pushResolutionMessage({
+  const message = await pushResolutionMessage({
     order,
     actor: req.user,
     text: safeText,
@@ -4295,34 +5071,34 @@ app.post("/api/orders/:id/resolution-message", authRequired, (req, res) => {
   });
 });
 
-app.post("/api/orders/:id/resolution-decision", authRequired, (req, res) => {
+app.post("/api/orders/:id/resolution-decision", authRequired, async (req, res) => {
   const order = orders.find(o => o.id === req.params.id);
 
   if (!order) {
     return res.json({
       success: false,
-      message: "Заказ не найден"
+      message: "responses.orders.orderNotFound"
     });
   }
 
   if (!isResolutionRole(req.user)) {
     return res.status(403).json({
       success: false,
-      message: "Только Resolution может принимать решение по спору"
+      message: "responses.orders.onlyResolutionCanDecide"
     });
   }
 
   if (order.status !== "pending") {
     return res.json({
       success: false,
-      message: "Решение по этому заказу уже принято"
+      message: "responses.orders.decisionAlreadyMade"
     });
   }
 
   if (order.disputeStatus !== "requested" && order.disputeStatus !== "in_review") {
     return res.json({
       success: false,
-      message: "По этому заказу нет активного спора"
+      message: "responses.orders.noActiveDispute"
     });
   }
 
@@ -4332,7 +5108,7 @@ app.post("/api/orders/:id/resolution-decision", authRequired, (req, res) => {
   ) {
     return res.status(403).json({
       success: false,
-      message: "Этот спор назначен другому сотруднику Resolution"
+      message: "responses.orders.disputeAssignedToAnotherResolution"
     });
   }
 
@@ -4342,18 +5118,18 @@ app.post("/api/orders/:id/resolution-decision", authRequired, (req, res) => {
   if (!["confirm", "refund"].includes(decision)) {
     return res.json({
       success: false,
-      message: "Некорректное решение"
+      message: "responses.orders.invalidDecision"
     });
   }
 
   if (!safeText) {
     return res.json({
       success: false,
-      message: "Укажите текст решения"
+      message: "responses.orders.enterDecisionText"
     });
   }
 
-  const resolutionMessage = pushResolutionMessage({
+  const resolutionMessage = await pushResolutionMessage({
     order,
     actor: req.user,
     text: safeText,
@@ -4362,27 +5138,27 @@ app.post("/api/orders/:id/resolution-decision", authRequired, (req, res) => {
 
   try {
     if (decision === "confirm") {
-      applyOrderConfirm({
+      await applyOrderConfirm({
         order,
         actor: req.user,
         systemType: "resolution_confirmed"
       });
     } else {
-      applyOrderRefund({
+      await applyOrderRefund({
         order,
         actor: req.user,
         systemType: "resolution_refunded"
       });
     }
 
-    const disputeTicket = order.disputeTicketId
-      ? supportService.getTicketById(order.disputeTicketId)
-      : null;
+const disputeTicket = order.disputeTicketId
+  ? await supportService.getTicketById(order.disputeTicketId)
+  : null;
 
-    if (disputeTicket && disputeTicket.status !== "resolved") {
-      supportService.closeTicket(disputeTicket, req.user);
-      emitTicketUpdate(disputeTicket, "closed");
-    }
+if (disputeTicket && disputeTicket.status !== "resolved") {
+  const closedTicket = await supportService.closeTicket(disputeTicket, req.user);
+  emitTicketUpdate(closedTicket, "closed");
+}
 
     return res.json({
       success: true,
@@ -4405,13 +5181,13 @@ app.post("/api/orders/:id/resolution-decision", authRequired, (req, res) => {
 });
 
 // покупатель подтверждает заказ
-app.post("/api/orders/:id/confirm", authRequired, (req, res) => {
+app.post("/api/orders/:id/confirm", authRequired, async (req, res) => {
   const order = orders.find(o => o.id === req.params.id);
 
   if (!order) {
     return res.json({
       success: false,
-      message: "Заказ не найден"
+      message: "responses.orders.orderNotFound"
     });
   }
 
@@ -4419,17 +5195,17 @@ app.post("/api/orders/:id/confirm", authRequired, (req, res) => {
     return res.json({ success: false });
   }
 
-try {
-  applyOrderConfirm({
-    order,
-    actor: req.user,
-    systemType: "order_confirmed"
-  });
+  try {
+    await applyOrderConfirm({
+      order,
+      actor: req.user,
+      systemType: "order_confirmed"
+    });
 
-  closeLinkedDisputeTicket(order, req.user);
+    await closeLinkedDisputeTicket(order, req.user);
 
-  return res.json({ success: true });
-} catch (e) {
+    return res.json({ success: true });
+  } catch (e) {
     return res.json({
       success: false,
       message: e.message
@@ -4438,13 +5214,13 @@ try {
 });
 
 // продавец делает возврат
-app.post("/api/orders/:id/refund", authRequired, (req, res) => {
+app.post("/api/orders/:id/refund", authRequired, async (req, res) => {
   const order = orders.find(o => o.id === req.params.id);
 
   if (!order) {
     return res.json({
       success: false,
-      message: "Заказ не найден"
+      message: "responses.orders.orderNotFound"
     });
   }
 
@@ -4452,17 +5228,17 @@ app.post("/api/orders/:id/refund", authRequired, (req, res) => {
     return res.json({ success: false });
   }
 
-try {
-  applyOrderRefund({
-    order,
-    actor: req.user,
-    systemType: "order_refunded"
-  });
+  try {
+    await applyOrderRefund({
+      order,
+      actor: req.user,
+      systemType: "order_refunded"
+    });
 
-  closeLinkedDisputeTicket(order, req.user);
+    await closeLinkedDisputeTicket(order, req.user);
 
-  return res.json({ success: true });
-} catch (e) {
+    return res.json({ success: true });
+  } catch (e) {
     return res.json({
       success: false,
       message: e.message
@@ -4470,17 +5246,39 @@ try {
   }
 });
 
-// авто-деактивация офферов
-setInterval(() => {
-  const now = Date.now();
+setInterval(async () => {
+  const allTickets = await supportService.getAllTickets();
+  const FIVE_DAYS = 5 * 24 * 60 * 60 * 1000;
+  const nowTime = Date.now();
 
-  offers.forEach(o => {
-    if (o.status === "active" && o.activeUntil && now > o.activeUntil) {
-      o.status = "inactive";
-      o.activeUntil = null;   // 👈 добавляем это
+  for (const ticket of allTickets) {
+    if (ticket.status === "resolved") continue;
+    if (ticket.kind === "order_dispute") continue;
+
+    const messages = await supportService.getMessages(ticket.id);
+    if (!messages.length) continue;
+
+    const lastMessage = messages[messages.length - 1];
+
+    if (
+      lastMessage.from === "support" &&
+      nowTime - lastMessage.createdAt > FIVE_DAYS
+    ) {
+      const updatedTicket = await supportService.updateTicket(ticket.id, {
+        status: "resolved"
+      });
+
+      await supportService.addLog(ticket.id, "auto_closed", {
+        email: "system",
+        username: "System",
+        role: "system"
+      });
+
+      emitTicketUpdate(updatedTicket, "auto_closed");
     }
-  });
-}, 60 * 1000);
+  }
+}, 60 * 60 * 1000);
+
 app.get("/api/my-sales", authRequired, (req, res) => {
   const mySales = orders
     .filter(o => o.sellerEmail === req.user.email)
@@ -4555,7 +5353,7 @@ app.get("/api/users/:id/reviews-by-id", (req, res) => {
     .find(u => u.userId === userId);
 
   if (!user) {
-    return res.json({ success:false, message:"Пользователь не найден" });
+    return res.json({ success:false, message:"responses.common.userNotFound" });
   }
 
   const result = reviews
@@ -4603,7 +5401,7 @@ app.get("/api/users/by-id/:id", (req, res) => {
     .find(u => u.userId === userId);
 
   if (!user) {
-    return res.json({ success:false, message:"Пользователь не найден" });
+    return res.json({ success:false, message:"responses.common.userNotFound" });
   }
 
   // 🔥 берём активные офферы пользователя
@@ -4650,131 +5448,107 @@ app.get("/api/users/by-id/:id", (req, res) => {
 setInterval(updateRates, 60 * 60 * 1000);
 
 /* ================== UNREAD COUNT ================== */
-/* ================== MARK AS READ ================== */
 
-app.post("/api/chats/:id/read", authRequired, (req, res) => {
+app.post("/api/chats/:id/read", authRequired, async (req, res) => {
   const chatId = req.params.id;
   const myEmail = req.user.email;
+  const scope = String(req.query.scope || "").trim().toLowerCase();
+  const isOfficialScope = scope === "official";
 
   const chat = chats.find(c => c.id === chatId);
   if (!chat) {
-    return res.json({ success:false, message:"Чат не найден" });
+    return res.json({
+      success: false,
+      message: "responses.chats.chatNotFound"
+    });
   }
 
-if (!canViewChat(req.user, chat)) {
-  return res.json({ success: true, skipped: true });
-}
-
-  messages.forEach(m => {
-    if (
-      m.chatId === chatId &&
-      m.fromEmail !== myEmail &&
-      m.read === false
-    ) {
-      m.read = true;
+  if (isOfficialScope) {
+    if (!isOfficialChat(chat) || !canWriteOfficial(req.user)) {
+      return res.json({ success: true, skipped: true });
     }
-  });
+
+    return res.json({ success: true, skipped: true });
+  }
+
+  if (!canViewChat(req.user, chat)) {
+    return res.json({ success: true, skipped: true });
+  }
+
+  await markDbChatMessagesRead(chatId, myEmail);
 
   res.json({ success: true });
 });
 
-app.get("/api/chats/unread-count", authRequired, (req, res) => {
-  const myEmail = req.user.email;
-
-const myChats = chats.filter(c =>
-  (c.buyerEmail === myEmail || c.sellerEmail === myEmail) &&
-  !c.deletedBy?.includes(myEmail)
-);
-
-  const myChatIds = myChats.map(c => c.id);
-
-  const unread = messages.filter(m => {
-
-    if (!myChatIds.includes(m.chatId)) return false;
-    if (m.fromEmail === myEmail) return false;
-    if (m.read === true) return false;
-
-    // если я заблокировал этого пользователя — не считаем
-    if (req.user.blockedUsers?.includes(m.fromEmail)) {
-      return false;
-    }
-
-    return true;
-  });
-
-  res.json({
-    success: true,
-    count: unread.length
-  });
-});
-
 // ===== BLOCK / UNBLOCK USER =====
-app.post("/api/users/block", authRequired, (req, res) => {
-
+app.post("/api/users/block", authRequired, async (req, res) => {
   const { chatId } = req.body;
   const chat = chats.find(c => c.id === chatId);
 
   if (!chat) {
-    return res.json({ success:false });
+    return res.json({ success:false, message:"responses.chats.chatNotFound" });
   }
-if (
-  chat.buyerEmail !== req.user.email &&
-  chat.sellerEmail !== req.user.email
-) {
-  return res.json({
-    success: false,
-    message: "Нет доступа"
-  });
-}
+
+  if (
+    chat.buyerEmail !== req.user.email &&
+    chat.sellerEmail !== req.user.email
+  ) {
+    return res.json({
+      success: false,
+      message: "responses.common.noAccess"
+    });
+  }
 
   const myEmail = req.user.email;
-
   const otherEmail =
     chat.buyerEmail === myEmail
       ? chat.sellerEmail
       : chat.buyerEmail;
 
   if (!otherEmail) {
-    return res.json({ success:false });
+    return res.json({ success:false, message:"responses.common.userNotFound" });
   }
-if (isOfficialEmail(otherEmail)) {
-  return res.json({
-    success: false,
-    message: "Официальный аккаунт нельзя блокировать"
+
+  if (isOfficialEmail(otherEmail)) {
+    return res.json({
+      success: false,
+      message: "responses.users.cannotBlockOfficialAccount"
+    });
+  }
+
+  const otherUser = users.get(otherEmail);
+
+  if (otherUser && isProtectedStaffRole(otherUser.role)) {
+    return res.json({
+      success: false,
+      message: "responses.users.cannotBlockStaff"
+    });
+  }
+
+  const currentBlocked = Array.isArray(req.user.blockedUsers)
+    ? [...req.user.blockedUsers]
+    : [];
+
+  const alreadyBlocked = currentBlocked.includes(otherEmail);
+
+  const nextBlockedUsers = alreadyBlocked
+    ? currentBlocked.filter(e => e !== otherEmail)
+    : [...currentBlocked, otherEmail];
+
+  const updatedMe = await updateDbUserRecord(req.user.email, {
+    blockedUsers: nextBlockedUsers
   });
-}  
-const otherUser = users.get(otherEmail);
 
-if (
-  otherUser &&
-  isProtectedStaffRole(otherUser.role)
-) {
+  req.user = updatedMe;
+
   return res.json({
-    success: false,
-    message: "Сотрудников нельзя блокировать"
+    success:true,
+    blocked: !alreadyBlocked,
+    blockedUsers: updatedMe.blockedUsers || []
   });
-}
-  if (!req.user.blockedUsers) {
-    req.user.blockedUsers = [];
-  }
-
-  const alreadyBlocked = req.user.blockedUsers.includes(otherEmail);
-
-  if (alreadyBlocked) {
-    // разблокировать
-    req.user.blockedUsers =
-      req.user.blockedUsers.filter(e => e !== otherEmail);
-
-    return res.json({ success:true, blocked:false });
-  }
-
-  // заблокировать
-  req.user.blockedUsers.push(otherEmail);
-
-  return res.json({ success:true, blocked:true });
-
 });
-app.delete("/api/chats/:id", authRequired, (req, res) => {
+
+app.delete("/api/chats/:id", authRequired, async (req, res) => {
   const chat = chats.find(c => c.id === req.params.id);
   if (!chat) return res.json({ success:false });
 
@@ -4786,17 +5560,21 @@ app.delete("/api/chats/:id", authRequired, (req, res) => {
   ) {
     return res.json({
       success: false,
-      message: "Нет доступа"
+      message: "responses.common.noAccess"
     });
   }
 
-  if (!chat.deletedBy) chat.deletedBy = [];
+  const nextDeletedBy = Array.isArray(chat.deletedBy) ? [...chat.deletedBy] : [];
 
-  if (!chat.deletedBy.includes(myEmail)) {
-    chat.deletedBy.push(myEmail);
+  if (!nextDeletedBy.includes(myEmail)) {
+    nextDeletedBy.push(myEmail);
   }
 
-  res.json({ success:true });
+  const updatedChat = await updateDbChatRecord(chat.id, {
+    deletedBy: nextDeletedBy
+  });
+
+  res.json({ success:true, chat: updatedChat });
 });
 
 /* ================== SOCKET.IO ================== */
@@ -4908,14 +5686,14 @@ function canAccessSupportTicket(user, ticket) {
   return false;
 }
 
-function closeLinkedDisputeTicket(order, actor) {
+async function closeLinkedDisputeTicket(order, actor) {
   if (!order?.disputeTicketId) return;
 
-  const disputeTicket = supportService.getTicketById(order.disputeTicketId);
+  const disputeTicket = await supportService.getTicketById(order.disputeTicketId);
   if (!disputeTicket || disputeTicket.status === "resolved") return;
 
-  supportService.closeTicket(disputeTicket, actor);
-  emitTicketUpdate(disputeTicket, "closed");
+  const closedTicket = await supportService.closeTicket(disputeTicket, actor);
+  emitTicketUpdate(closedTicket, "closed");
 }
 
 /* ================== SUPPORT API ================== */
@@ -4931,8 +5709,9 @@ app.get("/api/support/config", authRequired, (req, res) => {
 app.post(
   "/api/support/tickets",
   authRequired,
-  upload.array("attachments", 10),
-  (req, res) => {
+  supportCreateLimiter,
+  uploadSupportAttachments.array("attachments", 10),
+  async (req, res) => {
 
 const subject = String(req.body.subject || "").trim().slice(0, 80);
 const category = String(req.body.category || "other").trim().slice(0, 30);
@@ -4951,14 +5730,14 @@ const offerId = formatPrefixedId(rawOfferId, "OID");
 if (category === "report" && !userIdDigits) {
   return res.json({
     success: false,
-    message: "Введите ID пользователя"
+    message: "responses.support.enterUserId"
   });
 }
 
 if (category === "report_offer" && !offerIdDigits) {
   return res.json({
     success: false,
-    message: "Введите ID объявления"
+    message: "responses.support.enterOfferId"
   });
 }
 
@@ -4969,7 +5748,7 @@ if (userIdDigits) {
   if (!targetUser) {
     return res.json({
       success: false,
-      message: "Пользователь не найден"
+      message: "responses.common.userNotFound"
     });
   }
 }
@@ -4983,7 +5762,7 @@ if (offerIdDigits) {
   if (!targetOffer) {
     return res.json({
       success: false,
-      message: "Объявление не найдено"
+      message: "responses.support.offerNotFound"
     });
   }
 }
@@ -5004,11 +5783,11 @@ if (category === "order") {
     }
 
     if (!subject) {
-      return res.json({ success: false, message: "Введите тему" });
+      return res.json({ success: false, message: "responses.support.enterSubject" });
     }
 
     if (!message) {
-      return res.json({ success: false, message: "Введите описание" });
+      return res.json({ success: false, message: "responses.support.enterDescription" });
     }
 // 🔐 Если указали заказ — проверяем его существование
 let finalOrderId = normalizedOrderId || rawOrderId;
@@ -5023,7 +5802,7 @@ if (rawOrderId) {
   if (!order) {
     return res.json({
       success: false,
-      message: "Заказ не найден"
+      message: "responses.orders.orderNotFound"
     });
   }
 
@@ -5033,7 +5812,7 @@ if (rawOrderId) {
   ) {
     return res.json({
       success: false,
-      message: "Вы не являетесь участником этого заказа"
+      message: "responses.support.notOrderParticipant"
     });
   }
 
@@ -5044,7 +5823,7 @@ if (rawOrderId) {
     ) {
       return res.json({
         success: false,
-        message: "По этому заказу спор уже открыт"
+        message: "responses.support.disputeAlreadyOpen"
       });
     }
 
@@ -5054,13 +5833,13 @@ if (rawOrderId) {
       if (!canBuyerOpenCompletedOrderAppeal(order, req.user)) {
         return res.json({
           success: false,
-          message: "Апелляцию по завершённому заказу можно открыть только покупателю в течение 72 часов после подтверждения"
+          message: "responses.support.completedOrderAppealOnlyBuyerWithin72h"
         });
       }
     } else {
       return res.json({
         success: false,
-        message: "По этому заказу нельзя открыть обращение в этой категории"
+        message: "responses.support.cannotOpenTicketForThisOrderCategory"
       });
     }
   }
@@ -5070,19 +5849,19 @@ if (rawOrderId) {
 }
 
 // максимум 3 активных тикета
-const activeTickets = supportService
-  .getTicketsForUser(req.user)
-  .filter(t => t.status !== "resolved");
+const activeTickets = (await supportService.getAllTickets()).filter(
+  t => t.userEmail === req.user.email && t.status !== "resolved"
+);
 
 if (activeTickets.length >= 3) {
   return res.json({
     success:false,
-    message:"У вас слишком много активных тикетов"
+    message: "responses.support.tooManyActiveTickets"
   });
 }
 try {
 
-const ticket = supportService.createTicket({
+let ticket = await supportService.createTicket({
   user: req.user,
   subject,
   category,
@@ -5095,9 +5874,12 @@ const ticket = supportService.createTicket({
 });
 
 if (category === "order" && linkedOrder && shouldOpenLiveDispute) {
-  ticket.kind = "order_dispute";
-  ticket.chatId = linkedOrder.chatId;
-  ticket.orderInternalId = linkedOrder.id;
+  ticket = await supportService.updateTicket(ticket.id, {
+    kind: "order_dispute",
+    chatId: linkedOrder.chatId,
+    orderInternalId: linkedOrder.id,
+    updatedAt: Date.now()
+  });
 
   linkedOrder.disputeStatus = "requested";
   linkedOrder.disputeTicketId = ticket.id;
@@ -5106,7 +5888,13 @@ if (category === "order" && linkedOrder && shouldOpenLiveDispute) {
     linkedOrder.resolutionRequestedAt = Date.now();
   }
 
-  pushSystemMessage({
+  await updateDbOrderRecord(linkedOrder.id, {
+    disputeStatus: linkedOrder.disputeStatus,
+    disputeTicketId: linkedOrder.disputeTicketId,
+    resolutionRequestedAt: linkedOrder.resolutionRequestedAt
+  });
+
+  await pushSystemMessage({
     chatId: linkedOrder.chatId,
     systemType: "resolution_requested",
     actorEmail: req.user.email,
@@ -5117,9 +5905,12 @@ if (category === "order" && linkedOrder && shouldOpenLiveDispute) {
     orderNumber: linkedOrder.orderNumber
   });
 } else if (category === "order" && linkedOrder && linkedOrder.status === "completed") {
-  ticket.kind = "completed_order_appeal";
-  ticket.chatId = linkedOrder.chatId;
-  ticket.orderInternalId = linkedOrder.id;
+  ticket = await supportService.updateTicket(ticket.id, {
+    kind: "completed_order_appeal",
+    chatId: linkedOrder.chatId,
+    orderInternalId: linkedOrder.id,
+    updatedAt: Date.now()
+  });
 }
 
 // 🔔 Уведомляем всех support онлайн
@@ -5137,7 +5928,10 @@ if (
     });
   }
 });
-
+  notifyUser(req.user, "support_ticket_created", {
+    ticketShortId: ticket.shortId,
+    subject: ticket.subject
+  });
   res.json({ success: true, ticket });
 
 } catch (e) {
@@ -5153,94 +5947,81 @@ if (
 );
 
 // Получить мои тикеты
-app.get("/api/support/tickets", authRequired, (req, res) => {
+app.get("/api/support/tickets", authRequired, async (req, res) => {
+  let tickets = await supportService.getTicketsForUser(req.user);
 
-  let tickets = supportService.getTicketsForUser(req.user);
-
-  // 🔐 Support видит:
-  // 1. неназначенные
-  // 2. назначенные ему
   if (req.user.role === ROLE.SUPPORT) {
     tickets = tickets.filter(t =>
       !t.assignedTo || t.assignedTo === req.user.email
     );
   }
 
-  // 🔎 фильтр "только мои"
   if (req.query.assigned === "me") {
     tickets = tickets.filter(t => t.assignedTo === req.user.email);
   }
 
-  // 🔎 фильтр по статусу
   const status = String(req.query.status || "").trim();
   if (status) {
     tickets = tickets.filter(t => t.status === status);
   }
-tickets = tickets.map(t => {
 
-let assignedUsername = null;
-let assignedUserId = null;
+  tickets = await Promise.all(
+    tickets.map(async (t) => {
+      let assignedUsername = null;
+      let assignedUserId = null;
 
-if (t.assignedTo) {
-  const u = users.get(t.assignedTo);
-  if (u) {
-    assignedUsername = u.username;
-    assignedUserId = u.userId || null;
-  }
-}
+      if (t.assignedTo) {
+        const u = users.get(t.assignedTo);
+        if (u) {
+          assignedUsername = u.username;
+          assignedUserId = u.userId || null;
+        }
+      }
 
-  const msgs = supportService.getMessages(t.id);
+      const msgs = await supportService.getMessages(t.id);
 
-  const unread = msgs.filter(m => 
-    m.from === "user" &&
-    req.user.role !== "user" &&
-    m.userEmail !== req.user.email
-  ).length;
+      const unread = msgs.filter(m =>
+        m.from === "user" &&
+        req.user.role !== "user" &&
+        m.userEmail !== req.user.email
+      ).length;
 
-  const lastMessage = msgs.length ? msgs[msgs.length - 1] : null;
+      const lastMessage = msgs.length ? msgs[msgs.length - 1] : null;
+      const creatorUser = users.get(t.userEmail);
+      const categoryConfig = SUPPORT_CONFIG[t.category];
 
-  const creatorUser = users.get(t.userEmail);
-
-  const categoryConfig = SUPPORT_CONFIG[t.category];
-
-return {
-  ...t,
-  unread,
-  assignedUsername,
-  assignedUserId,
-  categoryLabel: categoryConfig
-    ? categoryConfig.labelKey
-    : t.category,
-
-    creator: creatorUser ? {
-      username: creatorUser.username || "Пользователь",
-      userId: creatorUser.userId || null
-    } : {
-      username: "Пользователь",
-      userId: null
-    },
-
-    lastMessageFrom: !lastMessage
-      ? null
-      : (lastMessage.from === "user" ? "user" : "support")
-  };
-});
+      return {
+        ...t,
+        unread,
+        assignedUsername,
+        assignedUserId,
+        categoryLabel: categoryConfig ? categoryConfig.labelKey : t.category,
+        creator: creatorUser ? {
+          username: creatorUser.username || "Пользователь",
+          userId: creatorUser.userId || null
+        } : {
+          username: "Пользователь",
+          userId: null
+        },
+        lastMessageFrom: !lastMessage
+          ? null
+          : (lastMessage.from === "user" ? "user" : "support")
+      };
+    })
+  );
 
   res.json({
     success: true,
     tickets
   });
 });
+
 // Получить только МОИ тикеты (для страницы истории)
-app.get("/api/support/my", authRequired, (req, res) => {
-
-  let tickets = supportService.getTicketsForUser(req.user);
-
-  // оставляем только тикеты пользователя
+app.get("/api/support/my", authRequired, async (req, res) => {
+  let tickets = await supportService.getTicketsForUser(req.user);
   tickets = tickets.filter(t => t.userEmail === req.user.email);
 
   tickets = tickets.map(t => {
-
     let assignedUsername = null;
 
     if (t.assignedTo) {
@@ -5263,16 +6044,12 @@ app.get("/api/support/my", authRequired, (req, res) => {
     success: true,
     tickets
   });
-
 });
+
 // Статистика тикетов (только support/admin)
-app.get("/api/support/stats", authRequired, supportRequired, (req, res) => {
+app.get("/api/support/stats", authRequired, supportRequired, async (req, res) => {
+  let tickets = await supportService.getTicketsForUser(req.user);
 
-  let tickets = supportService.getTicketsForUser(req.user);
-
-  // support видит только:
-  // 1. неназначенные
-  // 2. назначенные ему
   if (req.user.role === ROLE.SUPPORT) {
     tickets = tickets.filter(t =>
       !t.assignedTo || t.assignedTo === req.user.email
@@ -5291,14 +6068,14 @@ app.get("/api/support/stats", authRequired, supportRequired, (req, res) => {
     stats
   });
 });
+
 // Назначить тикет сотруднику (только support/admin)
 app.post(
   "/api/support/tickets/:id/assign",
   authRequired,
   supportRequired,
-  (req, res) => {
-
-    const ticket = supportService.getTicketById(req.params.id);
+  async (req, res) => {
+    const ticket = await supportService.getTicketById(req.params.id);
 
     if (!ticket) {
       return res.json({ success:false, message:"Тикет не найден" });
@@ -5308,27 +6085,29 @@ app.post(
       return res.json({ success:false, message:"Тикет закрыт" });
     }
 
-    // если уже назначен другому и ты не admin
     if (
-ticket.assignedTo &&
-ticket.assignedTo !== req.user.email &&
-!isAdminPanelRole(req.user)
+      ticket.assignedTo &&
+      ticket.assignedTo !== req.user.email &&
+      !isAdminPanelRole(req.user)
     ) {
       return res.json({
         success:false,
-        message:"Тикет уже назначен другому сотруднику"
+        message: "responses.support.ticketAssignedToAnotherStaff"
       });
     }
 
-    ticket.assignedTo = req.user.email;
-    ticket.assignedAt = Date.now();
-    ticket.status = "in_progress";
-    ticket.updatedAt = Date.now();
+const updatedTicket = await supportService.updateTicket(ticket.id, {
+  assignedTo: req.user.email,
+  assignedAt: Date.now(),
+  status: "in_progress",
+  updatedAt: Date.now()
+});
 
-    supportService.addLog(ticket.id, "assigned", req.user);
-    emitTicketUpdate(ticket, "assigned");
+await supportService.addLog(ticket.id, "assigned", req.user);
 
-    res.json({ success:true, ticket });
+    emitTicketUpdate(updatedTicket, "assigned");
+
+    res.json({ success:true, ticket: updatedTicket });
   }
 );
 
@@ -5336,21 +6115,21 @@ app.post(
   "/api/support/tickets/:id/assign-resolution",
   authRequired,
   supportRequired,
-  (req, res) => {
-    const ticket = supportService.getTicketById(req.params.id);
+  async (req, res) => {
+    const ticket = await supportService.getTicketById(req.params.id);
 
     if (!ticket) {
-      return res.json({ success: false, message: "Тикет не найден" });
+      return res.json({ success: false, message: "responses.support.ticketNotFound" });
     }
 
     if (ticket.status === "resolved") {
-      return res.json({ success: false, message: "Тикет закрыт" });
+      return res.json({ success: false, message: "responses.support.ticketClosed" });
     }
 
     if (ticket.kind !== "order_dispute") {
       return res.json({
         success: false,
-        message: "Этот тикет не является спором по заказу"
+        message: "responses.support.ticketIsNotOrderDispute"
       });
     }
 
@@ -5363,7 +6142,7 @@ app.post(
     if (!linkedOrder) {
       return res.json({
         success: false,
-        message: "Связанный заказ не найден"
+        message: "responses.support.linkedOrderNotFound"
       });
     }
 
@@ -5372,7 +6151,7 @@ app.post(
     if (!resolutionEmail) {
       return res.json({
         success: false,
-        message: "Не указан сотрудник Resolution"
+        message: "responses.support.resolutionEmployeeRequired"
       });
     }
 
@@ -5381,35 +6160,44 @@ app.post(
     if (!resolutionUser) {
       return res.json({
         success: false,
-        message: "Сотрудник Resolution не найден"
+        message: "responses.support.resolutionEmployeeNotFound"
       });
     }
 
-if (
-  resolutionUser.role !== ROLE.RESOLUTION &&
-  resolutionUser.role !== ROLE.SUPER_ADMIN
-) {
+    if (
+      resolutionUser.role !== ROLE.RESOLUTION &&
+      resolutionUser.role !== ROLE.SUPER_ADMIN
+    ) {
       return res.json({
         success: false,
-        message: "Пользователь не имеет роли Resolution"
+        message: "responses.support.userHasNoResolutionRole"
       });
     }
 
-    ticket.assignedTo = resolutionUser.email;
-    ticket.assignedRole = ROLE.RESOLUTION;
-    ticket.status = "in_progress";
-    ticket.resolutionAssignedAt = Date.now();
-    ticket.updatedAt = Date.now();
+    const updatedTicket = await supportService.updateTicket(ticket.id, {
+      assignedTo: resolutionUser.email,
+      assignedRole: ROLE.RESOLUTION,
+      status: "in_progress",
+      resolutionAssignedAt: Date.now(),
+      updatedAt: Date.now()
+    });
 
     linkedOrder.disputeStatus = "in_review";
     linkedOrder.disputeTicketId = ticket.id;
     linkedOrder.resolutionAssignedTo = resolutionUser.email;
     linkedOrder.resolutionAssignedAt = Date.now();
 
-    supportService.addLog(ticket.id, "resolution_assigned", req.user);
-    emitTicketUpdate(ticket, "resolution_assigned");
+    await updateDbOrderRecord(linkedOrder.id, {
+      disputeStatus: linkedOrder.disputeStatus,
+      disputeTicketId: linkedOrder.disputeTicketId,
+      resolutionAssignedTo: linkedOrder.resolutionAssignedTo,
+      resolutionAssignedAt: linkedOrder.resolutionAssignedAt
+    });
 
-    pushSystemMessage({
+    await supportService.addLog(ticket.id, "resolution_assigned", req.user);
+    emitTicketUpdate(updatedTicket, "resolution_assigned");
+
+    await pushSystemMessage({
       chatId: linkedOrder.chatId,
       systemType: "resolution_assigned",
       actorEmail: resolutionUser.email,
@@ -5422,7 +6210,7 @@ if (
 
     return res.json({
       success: true,
-      ticket,
+      ticket: updatedTicket,
       order: {
         id: linkedOrder.id,
         orderNumber: linkedOrder.orderNumber,
@@ -5438,71 +6226,76 @@ app.post(
   "/api/support/tickets/:id/transfer",
   authRequired,
   supportRequired,
-  (req, res) => {
+  async (req, res) => {
+    const ticket = await supportService.getTicketById(req.params.id);
 
-    const ticket = supportService.getTicketById(req.params.id);
     if (!ticket) {
       return res.json({ success:false, message:"Тикет не найден" });
     }
-if (ticket.kind === "order_dispute") {
-  return res.json({
-    success: false,
-    message: "Спор по заказу нельзя переоткрыть вручную"
-  });
-}
-    const { newEmail } = req.body;
-if (newEmail === ticket.assignedTo) {
-  return res.json({
-    success:false,
-    message:"Тикет уже назначен этому сотруднику"
-  });
-}
+
+    if (ticket.kind === "order_dispute") {
+      return res.json({
+        success: false,
+        message: "responses.support.orderDisputeCannotBeTransferredManually"
+      });
+    }
+
+    const newEmail = String(req.body.newEmail || "").trim().toLowerCase();
+
+    if (newEmail === ticket.assignedTo) {
+      return res.json({
+        success:false,
+        message: "responses.support.ticketAlreadyAssignedToThisEmployee"
+      });
+    }
 
     if (!newEmail) {
-      return res.json({ success:false, message:"Не указан сотрудник" });
+      return res.json({ success:false, message: "responses.support.employeeRequired" });
     }
 
     const targetUser = users.get(newEmail);
+
     if (
-  !targetUser ||
-  (
-    targetUser.role !== ROLE.SUPPORT &&
-    targetUser.role !== ROLE.ADMIN &&
-    targetUser.role !== ROLE.SUPER_ADMIN
-  )
-) {
-      return res.json({ success:false, message:"Сотрудник не найден" });
+      !targetUser ||
+      (
+        targetUser.role !== ROLE.SUPPORT &&
+        targetUser.role !== ROLE.ADMIN &&
+        targetUser.role !== ROLE.SUPER_ADMIN
+      )
+    ) {
+      return res.json({ success:false, message: "responses.support.employeeNotFound" });
     }
 
-    // только admin может передавать
-if (!isAdminPanelRole(req.user)) {
-  return res.json({ success:false, message:"Только администратор может передавать тикеты" });
-}
+    if (!isAdminPanelRole(req.user)) {
+      return res.json({ success:false, message: "responses.support.onlyAdminCanTransferTickets" });
+    }
 
-    ticket.assignedTo = newEmail;
-    ticket.assignedAt = Date.now();
-    ticket.status = "in_progress";
-    ticket.updatedAt = Date.now();
+    const updatedTicket = await supportService.updateTicket(ticket.id, {
+      assignedTo: newEmail,
+      assignedAt: Date.now(),
+      status: "in_progress",
+      updatedAt: Date.now()
+    });
 
-    supportService.addLog(ticket.id, "transferred", req.user);
+    await supportService.addLog(ticket.id, "transferred", req.user);
 
-    emitTicketUpdate(ticket, "transferred");
+    emitTicketUpdate(updatedTicket, "transferred");
 
-    res.json({ success:true, ticket });
+    return res.json({ success:true, ticket: updatedTicket });
   }
 );
 
 // Получить тикет + сообщения
-app.get("/api/support/tickets/:id", authRequired, (req, res) => {
+app.get("/api/support/tickets/:id", authRequired, async (req, res) => {
 
-  const ticket = supportService.getTicketById(req.params.id);
+  const ticket = await supportService.getTicketById(req.params.id);
 
   if (!ticket) {
-    return res.json({ success: false, message: "Тикет не найден" });
+    return res.json({ success: false, message: "responses.support.ticketNotFound" });
   }
 
 if (!canAccessSupportTicket(req.user, ticket)) {
-  return res.json({ success:false, message:"Нет доступа" });
+  return res.json({ success:false, message:"responses.common.noAccess" });
 }
 
 let assignedUser = null;
@@ -5518,8 +6311,8 @@ if (ticket.assignedTo) {
   }
 }
 
-  const messages = supportService.getMessages(ticket.id);
-const logs = supportService.getLogs(ticket.id);
+const messages = await supportService.getMessages(ticket.id);
+const logs = await supportService.getLogs(ticket.id);
 
 const categoryConfig = SUPPORT_CONFIG[ticket.category];
 
@@ -5540,136 +6333,149 @@ res.json({
 app.post(
   "/api/support/tickets/:id/message",
   authRequired,
-  upload.array("attachments", 10),
-  (req, res) => {
+  supportMessageLimiter,
+  uploadSupportAttachments.array("attachments", 10),
+  async (req, res) => {
+    const ticket = await supportService.getTicketById(req.params.id);
 
-  const ticket = supportService.getTicketById(req.params.id);
+    if (!ticket) {
+      return res.json({ success: false, message: "responses.support.ticketNotFound" });
+    }
 
-  if (!ticket) {
-    return res.json({ success: false, message: "Тикет не найден" });
+    if (!canAccessSupportTicket(req.user, ticket)) {
+      return res.json({ success:false, message:"responses.common.noAccess" });
+    }
+
+    const text = String(req.body.text || "").trim().slice(0, 2000);
+    let attachments = [];
+
+    if (req.files && req.files.length > 0) {
+      attachments = req.files.map(file => "/uploads/" + file.filename);
+    }
+
+    if (!text && attachments.length === 0) {
+      return res.json({ success: false, message: "responses.common.emptyMessage" });
+    }
+
+    const isStaffReply =
+      req.user.role === ROLE.SUPPORT ||
+      req.user.role === ROLE.RESOLUTION ||
+      req.user.role === ROLE.ADMIN ||
+      req.user.role === ROLE.SUPER_ADMIN;
+
+    const wasUnassigned = !ticket.assignedTo;
+
+    try {
+      const updatedTicket = await supportService.addMessage({
+        ticket,
+        user: req.user,
+        text,
+        attachments
+      });
+
+      if (isStaffReply && wasUnassigned && updatedTicket.assignedTo === req.user.email) {
+        await supportService.addLog(ticket.id, "assigned", req.user);
+      }
+
+      emitTicketUpdate(updatedTicket, "message");
+
+      if (isStaffReply && updatedTicket.userEmail !== req.user.email) {
+        const ticketOwner = users.get(updatedTicket.userEmail);
+
+        notifyUser(ticketOwner, "support_new_reply", {
+          ticketShortId: updatedTicket.shortId,
+          subject: updatedTicket.subject,
+          preview: text || getAttachmentFallback(ticketOwner?.lang)
+        });
+      }
+
+      if (!isStaffReply && updatedTicket.assignedTo && updatedTicket.assignedTo !== req.user.email) {
+        const assignedUser = users.get(updatedTicket.assignedTo);
+
+        notifyUser(assignedUser, "support_new_user_message", {
+          ticketShortId: updatedTicket.shortId,
+          subject: updatedTicket.subject,
+          senderName: req.user.username || "Пользователь",
+          preview: text || getAttachmentFallback(assignedUser?.lang)
+        });
+      }
+
+      return res.json({ success: true, ticket: updatedTicket });
+    } catch (e) {
+      return res.json({ success: false, message: e.message });
+    }
   }
-
-if (!canAccessSupportTicket(req.user, ticket)) {
-  return res.json({ success:false, message:"Нет доступа" });
-}
-
-  const text = String(req.body.text || "").trim().slice(0, 2000);
-  let attachments = [];
-
-if (req.files && req.files.length > 0) {
-  attachments = req.files.map(file => "/uploads/" + file.filename);
-}
-
-if (!text && attachments.length === 0) {
-  return res.json({ success: false, message: "Пустое сообщение" });
-}
-
-  try {
-    if (ticket.status === "resolved") {
-  return res.json({
-    success: false,
-    message: "Тикет закрыт"
-  });
-}
-
-supportService.addMessage({
-  ticket,
-  user: req.user,
-  text,
-  attachments
-});
-
-// support/admin ответил → тикет в работе
-if (
-  req.user.role === ROLE.SUPPORT ||
-  req.user.role === ROLE.RESOLUTION ||
-  req.user.role === ROLE.ADMIN ||
-  req.user.role === ROLE.SUPER_ADMIN
-) {
-  if (!ticket.assignedTo) {
-    ticket.assignedTo = req.user.email;
-    ticket.assignedAt = Date.now();
-    supportService.addLog(ticket.id, "assigned", req.user);
-  }
-
-  ticket.status = "in_progress";
-} else {
-  ticket.status = "waiting";
-}
-
-ticket.updatedAt = Date.now();
-emitTicketUpdate(ticket, "message");
-
-res.json({ success: true });
-
-  } catch (e) {
-    res.json({ success: false, message: e.message });
-  }
-});
+);
 
 // Закрыть тикет
 app.post(
   "/api/support/tickets/:id/close",
   authRequired,
-  (req, res) => {
-
-    const ticket = supportService.getTicketById(req.params.id);
+  async (req, res) => {
+    const ticket = await supportService.getTicketById(req.params.id);
 
     if (!ticket) {
-      return res.json({ success: false, message: "Тикет не найден" });
+      return res.json({ success: false, message: "responses.support.ticketNotFound" });
     }
 
-    // 🔹 Если support / resolution / admin
-if (
-  req.user.role === ROLE.SUPPORT ||
-  req.user.role === ROLE.RESOLUTION ||
-  req.user.role === ROLE.ADMIN ||
-  req.user.role === ROLE.SUPER_ADMIN
-) {
-
+    if (
+      req.user.role === ROLE.SUPPORT ||
+      req.user.role === ROLE.RESOLUTION ||
+      req.user.role === ROLE.ADMIN ||
+      req.user.role === ROLE.SUPER_ADMIN
+    ) {
       if (
-(req.user.role === ROLE.SUPPORT || req.user.role === ROLE.RESOLUTION) &&
-ticket.assignedTo !== req.user.email
+        (req.user.role === ROLE.SUPPORT || req.user.role === ROLE.RESOLUTION) &&
+        ticket.assignedTo !== req.user.email
       ) {
         return res.json({
           success:false,
-          message:"Можно закрыть только назначенный вам тикет"
+          message: "responses.support.canCloseOnlyAssignedTicket"
         });
       }
-
-    }
-
-    // 🔹 Если обычный пользователь
-    else if (ticket.userEmail === req.user.email) {
-
+    } else if (ticket.userEmail === req.user.email) {
       if (ticket.status !== "in_progress") {
         return res.json({
           success:false,
-          message:"Закрыть можно только после ответа поддержки"
+          message: "responses.support.canCloseOnlyAfterSupportReply"
         });
       }
 
-      const messages = supportService.getMessages(ticket.id);
+      const messages = await supportService.getMessages(ticket.id);
+
       const hasSupportReply = messages.some(m =>
-        m.from === "support" ||
-        m.userEmail === ticket.assignedTo
+        m.from === "support" || m.userEmail === ticket.assignedTo
       );
 
       if (!hasSupportReply) {
         return res.json({
           success:false,
-          message:"Поддержка ещё не ответила"
+          message: "responses.support.supportHasNotRepliedYet"
         });
       }
-
     } else {
-      return res.json({ success:false, message:"Нет доступа" });
+      return res.json({ success:false, message:"responses.common.noAccess" });
     }
 
-    supportService.closeTicket(ticket, req.user);
-    emitTicketUpdate(ticket, "closed");
+    const closedTicket = await supportService.closeTicket(ticket, req.user);
+    emitTicketUpdate(closedTicket, "closed");
 
-    res.json({ success:true });
+    const closedByStaff =
+      req.user.role === ROLE.SUPPORT ||
+      req.user.role === ROLE.RESOLUTION ||
+      req.user.role === ROLE.ADMIN ||
+      req.user.role === ROLE.SUPER_ADMIN;
+
+    if (closedByStaff && ticket.userEmail !== req.user.email) {
+      const ticketOwner = users.get(ticket.userEmail);
+
+      notifyUser(ticketOwner, "support_ticket_closed", {
+        ticketShortId: ticket.shortId,
+        subject: ticket.subject
+      });
+    }
+
+    return res.json({ success:true, ticket: closedTicket });
   }
 );
 
@@ -5677,59 +6483,48 @@ ticket.assignedTo !== req.user.email
 app.post(
   "/api/support/tickets/:id/reopen",
   authRequired,
-  (req, res) => {
+  async (req, res) => {
+    const ticket = await supportService.getTicketById(req.params.id);
 
-    const ticket = supportService.getTicketById(req.params.id);
     if (!ticket) {
       return res.json({ success:false, message:"Тикет не найден" });
     }
 
     if (ticket.userEmail !== req.user.email) {
-      return res.json({ success:false, message:"Нет доступа" });
+      return res.json({ success:false, message:"responses.common.noAccess" });
     }
 
     if (ticket.status !== "resolved") {
       return res.json({
         success:false,
-        message:"Тикет не закрыт"
+        message: "responses.support.ticketNotClosed"
       });
     }
-// ❗️разрешаем переоткрыть только 1 раз
-ticket.reopenCount = Number(ticket.reopenCount || 0);
 
-if (ticket.reopenCount >= 1) {
-  return res.json({
-    success: false,
-    message: "Тикет уже переоткрывали. Создайте новый тикет."
-  });
-}
+    const reopenCount = Number(ticket.reopenCount || 0);
 
-ticket.reopenCount += 1;
+    if (reopenCount >= 1) {
+      return res.json({
+        success: false,
+        message: "responses.support.ticketAlreadyReopenedCreateNew"
+      });
+    }
 
-    ticket.status = "waiting";
-    ticket.updatedAt = Date.now();
-    supportService.addLog(ticket.id, "reopened", req.user);
-emitTicketUpdate(ticket, "reopened");
-    res.json({ success:true, ticket });
+    const updatedTicket = await supportService.updateTicket(ticket.id, {
+      reopenCount: reopenCount + 1,
+      status: "waiting"
+    });
+
+    await supportService.addLog(ticket.id, "reopened", req.user);
+    emitTicketUpdate(updatedTicket, "reopened");
+
+    res.json({ success:true, ticket: updatedTicket });
   }
 );
 
-app.get("/api/admin/platform-balances", authRequired, (req,res)=>{
-
-  if (!isAdminPanelRole(req.user)) {
-    return res.json({ success:false, message:"Нет доступа" });
-  }
-
-  res.json({
-    success:true,
-    balances: platformBalances
-  });
-
-});
-
 app.get("/api/admin/settings", authRequired, (req, res) => {
   if (!isAdminPanelRole(req.user)) {
-    return res.json({ success:false, message:"Нет доступа" });
+    return res.json({ success:false, message:"responses.common.noAccess" });
   }
 
   res.json({
@@ -5740,30 +6535,18 @@ app.get("/api/admin/settings", authRequired, (req, res) => {
 
 app.put("/api/admin/settings", authRequired, (req, res) => {
   if (!isAdminPanelRole(req.user)) {
-    return res.json({ success:false, message:"Нет доступа" });
+    return res.json({ success:false, message:"responses.common.noAccess" });
   }
 
-const marketplaceFeePercent = Number(req.body.marketplaceFeePercent);
-const minDepositUah = Number(req.body.minDepositUah ?? req.body.minDepositEur);
-const minWithdrawUah = Number(req.body.minWithdrawUah ?? req.body.minWithdrawEur);
-const maintenanceText = String(req.body.maintenanceText || "").trim();
+  const marketplaceFeePercent = Number(req.body.marketplaceFeePercent);
+  const maintenanceText = String(req.body.maintenanceText || "").trim();
 
-if (!Number.isFinite(marketplaceFeePercent) || marketplaceFeePercent < 0 || marketplaceFeePercent > 100) {
-  return res.json({ success:false, message:"Некорректная комиссия" });
-}
+  if (!Number.isFinite(marketplaceFeePercent) || marketplaceFeePercent < 0 || marketplaceFeePercent > 100) {
+    return res.json({ success:false, message: "responses.admin.invalidMarketplaceFee" });
+  }
 
-if (!Number.isFinite(minDepositUah) || minDepositUah < 0) {
-  return res.json({ success:false, message:"Некорректный минимум депозита" });
-}
-
-if (!Number.isFinite(minWithdrawUah) || minWithdrawUah < 0) {
-  return res.json({ success:false, message:"Некорректный минимум вывода" });
-}
-
-adminSettings.marketplaceFeePercent = marketplaceFeePercent;
-adminSettings.minDepositUah = minDepositUah;
-adminSettings.minWithdrawUah = minWithdrawUah;
-adminSettings.maintenanceText = maintenanceText;
+  adminSettings.marketplaceFeePercent = marketplaceFeePercent;
+  adminSettings.maintenanceText = maintenanceText;
 
   saveAdminSettings();
 
@@ -5785,7 +6568,7 @@ adminSettings.maintenanceText = maintenanceText;
 app.get("/api/admin/users", authRequired, (req, res) => {
 
   if (!isAdminPanelRole(req.user)) {
-    return res.json({ success:false, message:"Нет доступа" });
+    return res.json({ success:false, message:"responses.common.noAccess" });
   }
 
 const list = Array.from(users.values()).map(u => ({
@@ -5794,46 +6577,22 @@ const list = Array.from(users.values()).map(u => ({
   userId: u.userId || null,
   role: u.role || "user",
   banned: Boolean(u.banned),
-  balance: u.balance || 0,
   createdAt: u.createdAt
 }));
 
   res.json({ success:true, users:list });
 });
 
-app.get("/api/admin/stats", authRequired, (req, res) => {
-
+app.get("/api/admin/stats", authRequired, async (req, res) => {
   if (!isAdminPanelRole(req.user)) {
-    return res.json({ success:false, message:"Нет доступа" });
+    return res.json({ success:false, message:"responses.common.noAccess" });
   }
 
-  const allTickets = supportService.getAllTickets();
+  const allTickets = await supportService.getAllTickets();
 
   const commissions = orders
     .filter(o => o.status === "completed")
     .reduce((sum, o) => sum + Number(o.commission || 0), 0);
-
-  const deposits = (Array.from(walletHistory.values()).flat())
-    .filter(i => i.type === "deposit")
-    .reduce((sum, i) => sum + Number(i.amount || 0), 0);
-
-  const withdrawals = Math.abs(
-    (Array.from(walletHistory.values()).flat())
-      .filter(i =>
-        i.type === "withdraw" &&
-        Number(i.amount || 0) < 0
-      )
-      .reduce((sum, i) => sum + Number(i.amount || 0), 0)
-  );
-
-  const userBalances = Array.from(users.values())
-    .reduce((sum, u) => sum + Number(u.balance || 0), 0);
-
-  const lockedOrders = orders
-    .filter(o => o.status === "pending")
-    .reduce((sum, o) => sum + Number(o.price || 0), 0);
-
-  const platformBalance = userBalances + lockedOrders;
 
   const onlineUsers = Array.from(users.values())
     .filter(u => Boolean(u.online)).length;
@@ -5841,11 +6600,8 @@ app.get("/api/admin/stats", authRequired, (req, res) => {
   const bannedUsers = Array.from(users.values())
     .filter(u => Boolean(u.banned)).length;
 
-  const pendingWithdraws = withdrawRequests
-    .filter(w => w.status === "pending").length;
-
-  const pendingCryptoDeposits = cryptoDeposits
-    .filter(d => d.status === "pending").length;
+  const pendingOrders = orders
+    .filter(o => o.status === "pending").length;
 
   const stats = {
     users: users.size,
@@ -5853,20 +6609,9 @@ app.get("/api/admin/stats", authRequired, (req, res) => {
     orders: orders.length,
     revenue: commissions,
     openTickets: allTickets.filter(t => t.status !== "resolved").length,
-
     onlineUsers,
     bannedUsers,
-    pendingWithdraws,
-    pendingCryptoDeposits,
-
-    finances: {
-      platformBalance,
-      userBalances,
-      lockedOrders,
-      commissions,
-      deposits,
-      withdrawals
-    }
+    pendingOrders
   };
 
   res.json({
@@ -5878,7 +6623,7 @@ app.get("/api/admin/stats", authRequired, (req, res) => {
 app.get("/api/admin/logs", authRequired, (req, res) => {
 
   if (!isAdminPanelRole(req.user)) {
-    return res.json({ success:false, message:"Нет доступа" });
+    return res.json({ success:false, message:"responses.common.noAccess" });
   }
 
   const q = String(req.query.q || "").trim().toLowerCase();
@@ -5901,10 +6646,11 @@ app.get("/api/admin/logs", authRequired, (req, res) => {
     logs: items
   });
 });
-app.get("/api/admin/search", authRequired, (req, res) => {
+
+app.get("/api/admin/search", authRequired, async (req, res) => {
 
   if (!isAdminPanelRole(req.user)) {
-    return res.json({ success:false, message:"Нет доступа" });
+    return res.json({ success:false, message:"responses.common.noAccess" });
   }
 
   const q = String(req.query.q || "").trim();
@@ -5933,7 +6679,6 @@ app.get("/api/admin/search", authRequired, (req, res) => {
       userId: u.userId || null,
       role: u.role || "user",
       banned: Boolean(u.banned),
-      balance: Number(u.balance || 0),
       createdAt: u.createdAt || null
     }));
 
@@ -5971,41 +6716,43 @@ const foundOrders = orders
     };
   });
 
-  const foundTickets = supportService.getAllTickets()
-    .filter(t => {
-      const creator = users.get(t.userEmail);
+const allTickets = await supportService.getAllTickets();
 
-      return (
-        String(t.id || "").toLowerCase().includes(needle) ||
-        String(t.shortId || "").toLowerCase().includes(needle) ||
-        String(t.subject || "").toLowerCase().includes(needle) ||
-        String(t.userEmail || "").toLowerCase().includes(needle) ||
-        String(t.orderId || "").toLowerCase().includes(needle) ||
-        String(t.userId || "").toLowerCase().includes(needle) ||
-        String(creator?.username || "").toLowerCase().includes(needle)
-      );
-    })
-    .sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0))
-    .slice(0, 10)
-    .map(t => {
-      const creator = users.get(t.userEmail);
-      const assigned = t.assignedTo ? users.get(t.assignedTo) : null;
-      const categoryConfig = SUPPORT_CONFIG[t.category];
+const foundTickets = allTickets
+  .filter(t => {
+    const creator = users.get(t.userEmail);
 
-      return {
-        id: t.id,
-        shortId: t.shortId || t.id,
-        subject: t.subject || "",
-        categoryLabel: categoryConfig ? categoryConfig.labelKey : (t.category || "Без категории"),
-        status: t.status || "waiting",
-        creatorUsername: creator?.username || "Пользователь",
-        creatorUserId: creator?.userId || null,
-        assignedUsername: assigned?.username || null,
-        orderId: t.orderId || null,
-        userId: t.userId || null,
-        updatedAt: t.updatedAt || t.createdAt || null
-      };
-    });
+    return (
+      String(t.id || "").toLowerCase().includes(needle) ||
+      String(t.shortId || "").toLowerCase().includes(needle) ||
+      String(t.subject || "").toLowerCase().includes(needle) ||
+      String(t.userEmail || "").toLowerCase().includes(needle) ||
+      String(t.orderId || "").toLowerCase().includes(needle) ||
+      String(t.userId || "").toLowerCase().includes(needle) ||
+      String(creator?.username || "").toLowerCase().includes(needle)
+    );
+  })
+  .sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0))
+  .slice(0, 10)
+  .map(t => {
+    const creator = users.get(t.userEmail);
+    const assigned = t.assignedTo ? users.get(t.assignedTo) : null;
+    const categoryConfig = SUPPORT_CONFIG[t.category];
+
+    return {
+      id: t.id,
+      shortId: t.shortId || t.id,
+      subject: t.subject || "",
+      categoryLabel: categoryConfig ? categoryConfig.labelKey : (t.category || "Без категории"),
+      status: t.status || "waiting",
+      creatorUsername: creator?.username || "Пользователь",
+      creatorUserId: creator?.userId || null,
+      assignedUsername: assigned?.username || null,
+      orderId: t.orderId || null,
+      userId: t.userId || null,
+      updatedAt: t.updatedAt || t.createdAt || null
+    };
+  });
 
   const foundOffers = offers
     .filter(o => {
@@ -6051,82 +6798,11 @@ const foundOrders = orders
     offers: foundOffers
   });
 });
-app.get("/api/admin/finance/history", authRequired, (req, res) => {
 
-  if (!isAdminPanelRole(req.user)) {
-    return res.json({ success:false, message:"Нет доступа" });
-  }
-
-  const q = String(req.query.q || "").trim().toLowerCase();
-
-  let history = Array.from(walletHistory.entries()).flatMap(([email, items]) => {
-    const user = users.get(email);
-
-    return (items || []).map((item, index) => ({
-      id: `${email}-${item.createdAt || 0}-${index}`,
-      email,
-      username: user?.username || "Пользователь",
-      userId: user?.userId || null,
-      type: item.type || "",
-      amount: Number(item.amount || 0),
-      currency: item.currency || BASE_CURRENCY,
-      text: item.text || "",
-      createdAt: item.createdAt || null
-    }));
-  });
-
-const diskDeposits = listDeposits();
-const liveCryptoDeposits = cryptoDeposits.filter(dep => dep.status !== "completed");
-
-let cryptoList = [...liveCryptoDeposits, ...diskDeposits].map(dep => {
-  
-    const user = users.get(dep.email);
-
-    return {
-      id: dep.id,
-      email: dep.email,
-      username: user?.username || "Пользователь",
-      userId: user?.userId || null,
-      amountExpected: Number(dep.amountExpected || dep.amount || 0),
-      status: dep.status || "pending",
-      network: dep.network || "TRC20",
-      createdAt: dep.createdAt || null
-    };
-  });
-
-  if (q) {
-    history = history.filter(item =>
-      String(item.email || "").toLowerCase().includes(q) ||
-      String(item.username || "").toLowerCase().includes(q) ||
-      String(item.userId || "").toLowerCase().includes(q) ||
-      String(item.type || "").toLowerCase().includes(q) ||
-      String(item.currency || "").toLowerCase().includes(q) ||
-      String(item.text || "").toLowerCase().includes(q)
-    );
-
-    cryptoList = cryptoList.filter(item =>
-      String(item.id || "").toLowerCase().includes(q) ||
-      String(item.email || "").toLowerCase().includes(q) ||
-      String(item.username || "").toLowerCase().includes(q) ||
-      String(item.userId || "").toLowerCase().includes(q) ||
-      String(item.status || "").toLowerCase().includes(q) ||
-      String(item.network || "").toLowerCase().includes(q)
-    );
-  }
-
-  history.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-  cryptoList.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-  res.json({
-    success: true,
-    history,
-    cryptoDeposits: cryptoList
-  });
-});
 app.get("/api/admin/orders", authRequired, (req, res) => {
 
   if (!isAdminPanelRole(req.user)) {
-    return res.json({ success:false, message:"Нет доступа" });
+    return res.json({ success:false, message:"responses.common.noAccess" });
   }
 
   const list = orders
@@ -6156,115 +6832,27 @@ app.get("/api/admin/orders", authRequired, (req, res) => {
   });
 });
 
-app.post("/api/admin/crypto/:id/confirm", authRequired, requireCryptoEnabled, (req, res) => {
+app.post("/api/admin/orders/:id/confirm", authRequired, async (req, res) => {
   if (!isAdminPanelRole(req.user)) {
-    return res.json({ success: false, message: "Нет доступа" });
-  }
-
-  const deposit = cryptoDeposits.find(d => d.id === req.params.id);
-
-  if (!deposit) {
-    return res.json({ success: false, message: "Депозит не найден" });
-  }
-
-  if (deposit.status !== "pending") {
-    return res.json({ success: false, message: "Депозит уже обработан" });
-  }
-
-  const txHash = String(req.body.txHash || "").trim();
-  const amountUsdt = Number(req.body.amountUsdt || deposit.amountReceived || deposit.amountExpected || 0);
-
-  if (!txHash) {
-    return res.json({
-      success: false,
-      message: "Укажите txHash"
-    });
-  }
-
-  if (!amountUsdt || amountUsdt <= 0) {
-    return res.json({
-      success: false,
-      message: "Укажите фактическую сумму USDT"
-    });
-  }
-
-  const alreadyCredited = Array.from(walletHistory.values()).some(items =>
-    (items || []).some(item => item.txHash === txHash)
-  );
-
-  if (alreadyCredited) {
-    return res.json({
-      success: false,
-      message: "Этот txHash уже использован"
-    });
-  }
-
-  const user = users.get(deposit.email);
-
-  if (!user) {
-    return res.json({ success: false, message: "Пользователь не найден" });
-  }
-
-  const amountBase = convertUsdToBase(amountUsdt);
-
-  if (!amountBase || amountBase <= 0) {
-    return res.json({
-      success: false,
-      message: "Не удалось конвертировать сумму депозита"
-    });
-  }
-
-  user.balance = roundMoney((user.balance || 0) + amountBase);
-  platformBalances.crypto = roundMoney((platformBalances.crypto || 0) + amountUsdt);
-
-  addWalletHistory(user.email, {
-    type: "deposit",
-    amount: amountUsdt,
-    currency: "USDT",
-    status: "completed",
-    text: "Крипто пополнение (TRC20)",
-    txHash
-  });
-
-  deposit.status = "completed";
-  deposit.txHash = txHash;
-  deposit.amountReceived = amountUsdt;
-  deposit.confirmedAt = Date.now();
-
-  saveCryptoDeposits();
-
-  addAdminLog({
-    actor: req.user,
-    action: "crypto_confirm",
-    targetType: "deposit",
-    targetId: deposit.id,
-    text: `Подтвердил крипто депозит ${deposit.id}`
-  });
-
-  res.json({ success: true });
-});
-
-app.post("/api/admin/orders/:id/confirm", authRequired, (req, res) => {
-  if (!isAdminPanelRole(req.user)) {
-    return res.json({ success:false, message:"Нет доступа" });
+    return res.json({ success:false, message:"responses.common.noAccess" });
   }
 
   const order = orders.find(o => o.id === req.params.id);
 
   if (!order) {
-    return res.json({ success:false, message:"Заказ не найден" });
+    return res.json({ success:false, message:"responses.orders.orderNotFound" });
   }
 
-try {
-  applyOrderConfirm({
-    order,
-    actor: req.user,
-    systemType: "order_confirmed_admin"
-  });
+  try {
+    await applyOrderConfirm({
+      order,
+      actor: req.user,
+      systemType: "order_confirmed_admin"
+    });
 
-  closeLinkedDisputeTicket(order, req.user);
+    await closeLinkedDisputeTicket(order, req.user);
 
-  addAdminLog({
+    addAdminLog({
       actor: req.user,
       action: "confirm_order",
       targetType: "order",
@@ -6281,27 +6869,27 @@ try {
   }
 });
 
-app.post("/api/admin/orders/:id/refund", authRequired, (req, res) => {
+app.post("/api/admin/orders/:id/refund", authRequired, async (req, res) => {
   if (!isAdminPanelRole(req.user)) {
-    return res.json({ success:false, message:"Нет доступа" });
+    return res.json({ success:false, message:"responses.common.noAccess" });
   }
 
   const order = orders.find(o => o.id === req.params.id);
 
   if (!order) {
-    return res.json({ success:false, message:"Заказ не найден" });
+    return res.json({ success:false, message:"responses.orders.orderNotFound" });
   }
 
-try {
-  applyOrderRefund({
-    order,
-    actor: req.user,
-    systemType: "order_refunded_admin"
-  });
+  try {
+    await applyOrderRefund({
+      order,
+      actor: req.user,
+      systemType: "order_refunded_admin"
+    });
 
-  closeLinkedDisputeTicket(order, req.user);
+    await closeLinkedDisputeTicket(order, req.user);
 
-  addAdminLog({
+    addAdminLog({
       actor: req.user,
       action: "refund_order",
       targetType: "order",
@@ -6321,7 +6909,7 @@ try {
 app.get("/api/admin/offers", authRequired, (req, res) => {
 
   if (!isAdminPanelRole(req.user)) {
-    return res.json({ success:false, message:"Нет доступа" });
+    return res.json({ success:false, message:"responses.common.noAccess" });
   }
 
   const list = offers
@@ -6356,45 +6944,47 @@ app.get("/api/admin/offers", authRequired, (req, res) => {
   });
 });
 
-app.post("/api/admin/offers/:id/activate", authRequired, (req, res) => {
-
+app.post("/api/admin/offers/:id/activate", authRequired, async (req, res) => {
   if (!isAdminPanelRole(req.user)) {
-    return res.json({ success:false, message:"Нет доступа" });
+    return res.json({ success:false, message:"responses.common.noAccess" });
   }
 
   const offer = offers.find(o => o.id === req.params.id);
   if (!offer) {
-    return res.json({ success:false, message:"Объявление не найдено" });
+    return res.json({ success:false, message: "responses.admin.offerNotFound" });
   }
 
   if (offer.status === "deleted") {
-    return res.json({ success:false, message:"Удалённое объявление нельзя активировать" });
+    return res.json({ success:false, message: "responses.admin.deletedOfferCannotBeActivated" });
   }
 
   if (offer.status === "closed") {
-    return res.json({ success:false, message:"Проданное объявление нельзя активировать" });
+    return res.json({ success:false, message: "responses.admin.closedOfferCannotBeActivated" });
   }
 
   if (offer.status !== "inactive") {
-    return res.json({ success:false, message:"Объявление нельзя активировать" });
+    return res.json({ success:false, message: "responses.admin.offerCannotBeActivated" });
   }
 
-  offer.status = "active";
-  offer.activeUntil = Date.now() + 7 * 24 * 60 * 60 * 1000;
-addAdminLog({
-  actor: req.user,
-  action: "activate_offer",
-  targetType: "offer",
-  targetId: offer.id,
-  text: `Активировал объявление ${offer.id}`
-});
-  res.json({ success:true });
+  const updatedOffer = await updateDbOfferRecord(offer.id, {
+    status: "active",
+    activeUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+  });
+
+  addAdminLog({
+    actor: req.user,
+    action: "activate_offer",
+    targetType: "offer",
+    targetId: updatedOffer.id,
+    text: `Активировал объявление ${updatedOffer.id}`
+  });
+
+  res.json({ success:true, offer: updatedOffer });
 });
 
-app.post("/api/admin/offers/:id/deactivate", authRequired, (req, res) => {
-
+app.post("/api/admin/offers/:id/deactivate", authRequired, async (req, res) => {
   if (!isAdminPanelRole(req.user)) {
-    return res.json({ success:false, message:"Нет доступа" });
+    return res.json({ success:false, message:"responses.common.noAccess" });
   }
 
   const offer = offers.find(o => o.id === req.params.id);
@@ -6403,25 +6993,28 @@ app.post("/api/admin/offers/:id/deactivate", authRequired, (req, res) => {
   }
 
   if (offer.status !== "active") {
-    return res.json({ success:false, message:"Объявление уже не активно" });
+    return res.json({ success:false, message: "responses.admin.offerAlreadyInactive" });
   }
 
-  offer.status = "inactive";
-  offer.activeUntil = null;
-addAdminLog({
-  actor: req.user,
-  action: "deactivate_offer",
-  targetType: "offer",
-  targetId: offer.id,
-  text: `Выключил объявление ${offer.id}`
-});
-  res.json({ success:true });
+  const updatedOffer = await updateDbOfferRecord(offer.id, {
+    status: "inactive",
+    activeUntil: null
+  });
+
+  addAdminLog({
+    actor: req.user,
+    action: "deactivate_offer",
+    targetType: "offer",
+    targetId: updatedOffer.id,
+    text: `Выключил объявление ${updatedOffer.id}`
+  });
+
+  res.json({ success:true, offer: updatedOffer });
 });
 
-app.delete("/api/admin/offers/:id", authRequired, (req, res) => {
-
+app.delete("/api/admin/offers/:id", authRequired, async (req, res) => {
   if (!isAdminPanelRole(req.user)) {
-    return res.json({ success:false, message:"Нет доступа" });
+    return res.json({ success:false, message:"responses.common.noAccess" });
   }
 
   const offer = offers.find(o => o.id === req.params.id);
@@ -6430,26 +7023,30 @@ app.delete("/api/admin/offers/:id", authRequired, (req, res) => {
   }
 
   if (offer.status === "deleted") {
-    return res.json({ success:false, message:"Объявление уже удалено" });
+    return res.json({ success:false, message: "responses.admin.offerAlreadyDeleted" });
   }
 
-  offer.status = "deleted";
-  offer.activeUntil = null;
-addAdminLog({
-  actor: req.user,
-  action: "delete_offer",
-  targetType: "offer",
-  targetId: offer.id,
-  text: `Удалил объявление ${offer.id}`
+  const updatedOffer = await updateDbOfferRecord(offer.id, {
+    status: "deleted",
+    activeUntil: null
+  });
+
+  addAdminLog({
+    actor: req.user,
+    action: "delete_offer",
+    targetType: "offer",
+    targetId: updatedOffer.id,
+    text: `Удалил объявление ${updatedOffer.id}`
+  });
+
+  res.json({ success:true, offer: updatedOffer });
 });
-  res.json({ success:true });
-});
+
 // Забанить / разбанить
 
-app.post("/api/admin/ban", authRequired, (req,res)=>{
-
+app.post("/api/admin/ban", authRequired, async (req, res) => {
   if (!isAdminPanelRole(req.user)) {
-    return res.json({ success:false, message:"Нет доступа" });
+    return res.json({ success:false, message:"responses.common.noAccess" });
   }
 
   const email = String(req.body.email || "").trim().toLowerCase();
@@ -6457,143 +7054,68 @@ app.post("/api/admin/ban", authRequired, (req,res)=>{
 
   const target = users.get(email);
   if (!target) {
-    return res.json({ success:false, message:"Пользователь не найден" });
+    return res.json({ success:false, message:"responses.common.userNotFound" });
   }
 
   if (!canBanUser(req.user, target)) {
     return res.json({
       success:false,
-      message:"Недостаточно прав для блокировки этого пользователя"
+      message: "responses.admin.cannotBanThisUser"
     });
   }
 
-  target.banned = banned;
+  const updatedTarget = await updateDbUserRecord(target.email, { banned });
 
   addAdminLog({
     actor: req.user,
-    action: target.banned ? "ban" : "unban",
+    action: updatedTarget.banned ? "ban" : "unban",
     targetType: "user",
-    targetId: target.userId || target.email,
-    text: `${target.banned ? "Забанил" : "Разбанил"} пользователя ${target.username || target.email}`
+    targetId: updatedTarget.userId || updatedTarget.email,
+    text: `${updatedTarget.banned ? "Забанил" : "Разбанил"} пользователя ${updatedTarget.username || updatedTarget.email}`
   });
 
-  res.json({ success:true });
+  res.json({
+    success:true,
+    user: {
+      email: updatedTarget.email,
+      banned: Boolean(updatedTarget.banned)
+    }
+  });
 });
 
-// Авто-закрытие тикетов через 5 дней после ответа поддержки
-setInterval(() => {
-
-  const allTickets = supportService.getAllTickets();
-  const FIVE_DAYS = 5 * 24 * 60 * 60 * 1000;
-  const nowTime = Date.now();
-
-allTickets.forEach(ticket => {
-
-if (ticket.status === "resolved") return;
-if (ticket.kind === "order_dispute") return;
-
-    const messages = supportService.getMessages(ticket.id);
-    if (!messages.length) return;
-
-    const lastMessage = messages[messages.length - 1];
-
-    // если последнее сообщение от поддержки
-    if (
-      lastMessage.from === "support" &&
-      nowTime - lastMessage.createdAt > FIVE_DAYS
-    ) {
-      ticket.status = "resolved";
-      ticket.updatedAt = nowTime;
-
-      supportService.addLog(ticket.id, "auto_closed", {
-        email: "system",
-        username: "System",
-        role: "system"
-      });
-
-      emitTicketUpdate(ticket, "auto_closed");
-    }
-
-  });
-
-}, 60 * 60 * 1000);
-
-// ================= CRYPTO AUTO CHECK =================
-
-if (PAYMENTS_ENABLED && CRYPTO_ENABLED) {
-  setInterval(() => {
-    try {
-      cleanupExpiredCryptoDeposits();
-    } catch (e) {
-      console.log("cleanup crypto deposits error:", e.message);
-    }
-  }, 60 * 60 * 1000);
-
-  setInterval(async () => {
-    if (isDepositScanRunning) return;
-    isDepositScanRunning = true;
-
-    try {
-      await scanAllDepositWallets(autoCreditTronDeposit);
-    } catch (e) {
-      console.log("TRX deposit scan error:", e.message);
-    } finally {
-      isDepositScanRunning = false;
-    }
-  }, 30000);
-
-  setInterval(async () => {
-    if (isTrxTopupRunning) return;
-    isTrxTopupRunning = true;
-
-    try {
-      await topupAllWallets();
-    } catch (e) {
-      console.log("trx topup error:", e.message);
-    } finally {
-      isTrxTopupRunning = false;
-    }
-  }, 60000);
-
-  setInterval(async () => {
-    if (isSweepRunning) return;
-    isSweepRunning = true;
-
-    try {
-      await sweepAllWallets();
-    } catch (e) {
-      console.log("sweep error:", e.message);
-    } finally {
-      isSweepRunning = false;
-    }
-  }, 60000);
-}
 /* ================== START ================== */
 async function startServer() {
+  await cleanupExpiredAuthData();
+  await loadAuthCacheFromDb();
+  await loadOffersCacheFromDb();
+  await loadChatCacheFromDb();
+  await loadOrdersCacheFromDb();
+  await loadReviewsCacheFromDb();
+  await loadAdminLogsCacheFromDb();
   await updateRates();
 
-  server.listen(PORT, "0.0.0.0", () => {
-    console.log(`✅ Server running: http://localhost:${PORT}`);
-    console.log("platform flags:", {
-      paymentsEnabled: PAYMENTS_ENABLED,
-      cryptoEnabled: CRYPTO_ENABLED,
-      demoMode: DEMO_MODE
-    });
+  const HOST = process.env.HOST || "0.0.0.0";
+
+  server.listen(PORT, HOST, () => {
+    console.log(`✅ Server running on ${HOST}:${PORT}`);
     startTelegramPolling();
   });
 }
+
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === "LIMIT_FILE_SIZE") {
       return res.status(400).json({
         success: false,
-        message: "Файл слишком большой"
+        message: "responses.upload.fileTooLarge"
       });
     }
 
     return res.status(400).json({
       success: false,
-      message: err.message || "Ошибка загрузки файла"
+      message: isServerI18nKey(err.message)
+        ? err.message
+        : "responses.upload.uploadError"
     });
   }
 
@@ -6602,10 +7124,57 @@ app.use((err, req, res, next) => {
 
     return res.status(500).json({
       success: false,
-      message: err.message || "Внутренняя ошибка сервера"
+      message: isServerI18nKey(err.message)
+        ? err.message
+        : "responses.common.internalError"
     });
   }
 
   next();
 });
-startServer();
+
+let shuttingDown = false;
+
+async function gracefulShutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+
+  console.log(`⚠️ ${signal} received. Shutting down...`);
+
+  try {
+    io.close();
+  } catch (e) {
+    console.error("io.close error:", e.message);
+  }
+
+  server.close(async () => {
+    try {
+      await prisma.$disconnect();
+      console.log("✅ Server closed and Prisma disconnected");
+      process.exit(0);
+    } catch (err) {
+      console.error("❌ Shutdown error:", err);
+      process.exit(1);
+    }
+  });
+
+  setTimeout(async () => {
+    try {
+      await prisma.$disconnect();
+    } catch (_) {}
+    process.exit(1);
+  }, 10000).unref();
+}
+
+process.on("SIGINT", () => {
+  gracefulShutdown("SIGINT");
+});
+
+process.on("SIGTERM", () => {
+  gracefulShutdown("SIGTERM");
+});
+
+startServer().catch(err => {
+  console.error("❌ Failed to start server:", err);
+  process.exit(1);
+});

@@ -123,16 +123,20 @@ socket.on("new-message", (message) => {
   if (message.id === lastMessageId) return;
   lastMessageId = message.id;
 
-  const isInActiveChat =
-    isChatsPage() &&
-    window.tpActiveChatId === message.chatId &&
-    document.visibilityState === "visible";
+  const myEmail = localStorage.getItem("tp_user_email");
+  const safeMyEmail = String(myEmail || "").trim().toLowerCase();
+  const safeFromEmail = String(message.fromEmail || "").trim().toLowerCase();
+
+  const isMine = safeMyEmail && safeFromEmail === safeMyEmail;
+  const isInOpenChat = isChatActuallyOpen(message.chatId);
 
   if (shouldPlayMessageSound(message)) {
     playMessageSound();
   }
 
-  if (!isInActiveChat) {
+  // бейдж обновляем только для входящих сообщений,
+  // которые не открыты прямо сейчас в активном чате
+  if (!isMine && !isInOpenChat) {
     updateUnreadCount();
   }
 
@@ -149,6 +153,8 @@ socket.on("new-message", (message) => {
     const elRegister = document.getElementById("tpRegister");
     const elProfile  = document.getElementById("tpProfile");
     const elChats    = document.getElementById("tpChats");
+    const elProfileMobile = document.getElementById("tpProfileMobile");
+const elChatsMobile   = document.getElementById("tpChatsMobile");
     const elChatsBadges = [
   document.getElementById("tpChatsBadge"),
   document.getElementById("tpChatsBadgeMobile")
@@ -162,16 +168,40 @@ function isChatsPage(){
   return /\/chats(?:\.html)?$/i.test(location.pathname) || location.pathname.includes("chats");
 }
 
+function isMobileChatLayout(){
+  return window.matchMedia("(max-width: 640px)").matches;
+}
+
+function isChatActuallyOpen(chatId){
+  if (!chatId) return false;
+  if (!isChatsPage()) return false;
+  if (window.tpActiveChatId !== chatId) return false;
+  if (document.visibilityState !== "visible") return false;
+
+  // На телефоне чат считается реально открытым
+  // только когда открыта правая панель
+  if (isMobileChatLayout()) {
+    return document.body.classList.contains("tp-chat-open");
+  }
+
+  // На десктопе, если activeChatId совпадает — чат реально открыт
+  return true;
+}
+
 function shouldPlayMessageSound(message){
   if (!message || !message.chatId) return false;
 
   const myEmail = localStorage.getItem("tp_user_email");
-  const isMine = myEmail && message.fromEmail === myEmail;
+  const safeMyEmail = String(myEmail || "").trim().toLowerCase();
+  const safeFromEmail = String(message.fromEmail || "").trim().toLowerCase();
+
+  const isMine = safeMyEmail && safeFromEmail === safeMyEmail;
   const muted = isChatMuted(message.chatId);
+  const chatOpenNow = isChatActuallyOpen(message.chatId);
 
   if (isMine) return false;
   if (muted) return false;
-  if (isChatsPage()) return false;
+  if (chatOpenNow) return false;
 
   return true;
 }
@@ -471,69 +501,69 @@ document.addEventListener("click", (e) => {
   }
 });
 
-    async function applyAuthUI(){
+async function applyAuthUI(){
   const authed = isAuthed();
-  const lang = getLang();
 
-// всегда показываем профиль и чаты
-elProfile.style.display = "inline-flex";
-elChats.style.display   = "inline-flex";
+  if (elProfile) elProfile.style.display = "inline-flex";
+  if (elChats) elChats.style.display = "inline-flex";
 
-if(!authed){
-  if (elAvatar) {
-    elAvatar.src = DEFAULT_AVATAR;
+  if(!authed){
+    if (elAvatar) {
+      elAvatar.src = DEFAULT_AVATAR;
+    }
+
+    if (elProfile) elProfile.href = "/auth.html?mode=login";
+    if (elChats) elChats.href = "/auth.html?mode=login";
+    if (elProfileMobile) elProfileMobile.href = "/auth.html?mode=login";
+    if (elChatsMobile) elChatsMobile.href = "/auth.html?mode=login";
+
+    return;
   }
 
-  elProfile.href = "/auth.html?mode=login";
-  elChats.href   = "/auth.html?mode=login";
-  return;
-}
+  if (elProfile) elProfile.href = "/profile.html";
+  if (elChats) elChats.href = "/chats.html";
+  if (elProfileMobile) elProfileMobile.href = "/profile.html";
+  if (elChatsMobile) elChatsMobile.href = "/chats.html";
 
-// если авторизован — нормальные ссылки
-elProfile.href = "/profile.html";
-elChats.href   = "/chats.html";
+  const res = await fetch("/auth/me", {
+    headers:{
+      Authorization:"Bearer " + localStorage.getItem(TOKEN_KEY)
+    }
+  });
 
-  // 🔥 получаем реальные данные пользователя
-const res = await fetch("/auth/me", {
-  headers:{
-    Authorization:"Bearer " + localStorage.getItem(TOKEN_KEY)
+  if (res.status === 403) {
+    localStorage.removeItem(TOKEN_KEY);
+    window.location.href = "/banned.html";
+    return;
   }
-});
 
-if (res.status === 403) {
-  localStorage.removeItem(TOKEN_KEY);
-  window.location.href = "/banned.html";
-  return;
-}
+  const data = await res.json().catch(() => ({}));
 
-const data = await res.json();
-
-if(!data.success){
-  if (elAvatar) {
-    elAvatar.src = DEFAULT_AVATAR;
+  if(!data.success){
+    if (elAvatar) {
+      elAvatar.src = DEFAULT_AVATAR;
+    }
+    return;
   }
-  return;
-}
 
   const user = data.user;
-  // 🔥 СОХРАНЯЕМ МОЙ USER ID
-if (user.userId) {
-  localStorage.setItem("tp_user_id", user.userId);
-}
 
-if (elAvatar) {
-  elAvatar.src =
-    user.avatarDataUrl ||
-    user.avatarUrl ||
-    DEFAULT_AVATAR;
-}
-// 🔥 СОХРАНЯЕМ ДЛЯ ЧАТОВ
-localStorage.setItem("tp_user_email", user.email);
-localStorage.setItem(
-  "tp_avatar",
-  user.avatarUrl || user.avatarDataUrl || ""
-);
+  if (user.userId) {
+    localStorage.setItem("tp_user_id", user.userId);
+  }
 
+  if (elAvatar) {
+    elAvatar.src =
+      user.avatarDataUrl ||
+      user.avatarUrl ||
+      DEFAULT_AVATAR;
+  }
+
+  localStorage.setItem("tp_user_email", user.email);
+  localStorage.setItem(
+    "tp_avatar",
+    user.avatarUrl || user.avatarDataUrl || ""
+  );
 }
 
 (function initKeyboardAwareBottomBar(){
@@ -744,6 +774,19 @@ if (sClear) {
 applyLangAndCurrency();
 applyAuthUI();
 updateUnreadCount();
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    updateUnreadCount();
+  }
+});
+
+window.addEventListener("focus", () => {
+  updateUnreadCount();
+});
+
+window.addEventListener("pageshow", () => {
+  updateUnreadCount();
+});
 if (window.tpI18n?.apply) {
   window.tpI18n.apply();
 }

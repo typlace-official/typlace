@@ -1,22 +1,21 @@
 {
   "title": "Profile",
-  "myTitle": "My Profile",
-  "externalTitle": "User Profile",
-  "docTitleMy": "My Profile — TyPlace",
-  "docTitleExternal": "User Profile — TyPlace",
+  "myTitle": "My profile",
+  "externalTitle": "User profile",
+  "docTitleMy": "My profile — TyPlace",
+  "docTitleExternal": "User profile — TyPlace",
 
   "nav": {
-    "myOffers": "My Offers",
+    "myOffers": "My listings",
     "purchases": "Purchases",
     "sales": "Sales",
-    "favorites": "Favorites",
-    "wallet": "Balance"
+    "favorites": "Favorites"
   },
 
-  "offers": "Offers",
+  "offers": "Listings",
   "since": "On TyPlace since",
   "noReviews": "No reviews",
-  "copyId": "Click to copy ID",
+  "copyId": "Tap to copy ID",
 
   "reviews": {
     "one": "review",
@@ -25,28 +24,38 @@
   },
 
   "menu": {
-    "changePhoto": "Change Photo",
+    "changePhoto": "Change photo",
     "notifications": "Notifications",
-    "logout": "Log Out",
+    "logout": "Log out",
     "profile": "Profile",
     "nickname": "Nickname",
-    "changeNick": "Change Nickname",
+    "changeNick": "Change nickname",
     "nickHint": "You can change your nickname once every 30 days",
     "nickHintNext": "Your next nickname change will be available on {{date}}",
+    "site": "On site",
     "email": "Email",
     "telegram": "Telegram",
+    "telegramConnect": "Connect Telegram",
+    "telegramUnlink": "Disconnect Telegram",
+    "telegramLinked": "Telegram connected",
+    "telegramLinkedAs": "Telegram connected: {{username}}",
+    "telegramNotLinked": "Telegram not connected",
     "save": "Save"
   },
 
   "alerts": {
     "userNotFound": "User not found",
     "enterNickname": "Enter a nickname",
-    "nickTooShort": "Nickname must be at least 3 characters long",
-    "nickTooLong": "Nickname must be no more than 20 characters long",
+    "nickTooShort": "Nickname must be at least 3 characters",
+    "nickTooLong": "Nickname must be at most 20 characters",
     "nickWaitUntil": "You can change your nickname again on {{date}}",
     "nickSaveError": "Failed to save nickname",
     "avatarSaveError": "Failed to update photo",
-    "onlyImages": "Only image files can be uploaded",
-    "notifySaveError": "Failed to save notifications"
+    "onlyImages": "Only image files are allowed",
+    "notifySaveError": "Failed to save notification settings",
+    "telegramLinkStartError": "Failed to start Telegram connection",
+    "telegramUnlinkError": "Failed to disconnect Telegram",
+    "telegramLinkedSuccess": "Telegram connected successfully",
+    "telegramLinkInstructions": "Open Telegram, start the bot, and confirm the connection"
   }
 }

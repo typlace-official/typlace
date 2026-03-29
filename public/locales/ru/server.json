@@ -1,0 +1,227 @@
+{
+  "common": {
+    "attachmentFallback": "📎 Вложение",
+    "maintenanceTextDefault": "На сайте ведутся технические работы.",
+    "languageNames": {
+      "ru": "русский",
+      "uk": "украинский",
+      "en": "английский"
+    }
+  },
+  "official": {
+    "welcome": {
+      "line1": "Добро пожаловать в TyPlace!",
+      "line2": "Ваш аккаунт успешно создан.",
+      "line3": "В этом чате мы будем отправлять важные уведомления от платформы."
+    }
+  },
+  "email": {
+    "authCode": {
+      "subject": "TyPlace — код подтверждения",
+      "text": "Ваш код подтверждения TyPlace: {{code}}\n\nЕсли это были не вы — просто проигнорируйте письмо."
+    }
+  },
+  "telegram": {
+    "start": {
+      "connected": "TyPlace Telegram bot подключён. Вернитесь на сайт: Профиль → Уведомления → Telegram.",
+      "invalidLink": "Ссылка недействительна или устарела. Откройте TyPlace и запросите новую привязку Telegram.",
+      "userNotFound": "Пользователь TyPlace не найден. Запросите новую привязку на сайте.",
+      "alreadyLinked": "Этот Telegram уже привязан к другому аккаунту TyPlace.",
+      "success": "Telegram успешно подключён к вашему аккаунту TyPlace. Уведомления в Telegram включены."
+    }
+  },
+  "notifications": {
+    "brand": "TyPlace",
+    "userFallback": "Пользователь",
+    "defaultSubjectSuffix": "уведомление",
+    "manageHint": "Настройки уведомлений: Профиль → Уведомления",
+    "chat": {
+      "subject": "новое сообщение",
+      "title": "Новое сообщение",
+      "fromLabel": "От",
+      "messageLabel": "Сообщение",
+      "openLabel": "Открыть чат"
+    },
+    "official": {
+      "subject": "сообщение от платформы",
+      "title": "Сообщение от платформы",
+      "openLabel": "Открыть уведомления"
+    },
+    "supportCreated": {
+      "subject": "обращение создано",
+      "title": "Обращение в поддержку создано",
+      "ticketLabel": "Тикет",
+      "subjectLabel": "Тема",
+      "openLabel": "Открыть тикет"
+    },
+    "supportReply": {
+      "subject": "новый ответ поддержки",
+      "title": "Новый ответ поддержки",
+      "ticketLabel": "Тикет",
+      "subjectLabel": "Тема",
+      "messageLabel": "Сообщение",
+      "openLabel": "Открыть тикет"
+    },
+    "supportUserMessage": {
+      "subject": "новое сообщение в тикете",
+      "title": "Новое сообщение в тикете",
+      "ticketLabel": "Тикет",
+      "subjectLabel": "Тема",
+      "fromLabel": "От",
+      "messageLabel": "Сообщение",
+      "openLabel": "Открыть тикет"
+    },
+    "supportClosed": {
+      "subject": "обращение закрыто",
+      "title": "Обращение закрыто",
+      "ticketLabel": "Тикет",
+      "subjectLabel": "Тема",
+      "openLabel": "Открыть тикет"
+    }
+  },
+  "responses": {
+    "common": {
+      "noAccess": "Нет доступа",
+      "emptyMessage": "Пустое сообщение",
+      "userNotFound": "Пользователь не найден",
+      "internalServerError": "Внутренняя ошибка сервера"
+    },
+    "auth": {
+      "noToken": "Нет токена",
+      "sessionNotFound": "Сессия не найдена",
+      "sessionExpired": "Сессия истекла",
+      "accountBanned": "Аккаунт заблокирован",
+      "internalError": "Внутренняя ошибка авторизации",
+      "confirmRobot": "Подтвердите что вы не робот.",
+      "securityCheckFailed": "Проверка безопасности не пройдена.",
+      "securityCheckError": "Ошибка проверки безопасности.",
+      "enterValidEmail": "Введите корректный email.",
+      "invalidMode": "Неверный режим.",
+      "accountNotFoundGoRegister": "Аккаунт не найден. Перейдите в «Регистрация».",
+      "emailAlreadyRegisteredGoLogin": "Этот email уже зарегистрирован. Перейдите во «Вход».",
+      "enterUsernameMin": "Введите ник (минимум 3 символа).",
+      "usernameTooLongMax": "Ник слишком длинный (макс. 20).",
+      "codeSent": "Код отправлен.",
+      "sendCodeError": "Ошибка отправки кода.",
+      "invalidEmail": "Некорректный email.",
+      "codeMustBe6Digits": "Код должен быть из 6 цифр.",
+      "clickGetCodeFirst": "Сначала нажмите «Получить код».",
+      "codeForOtherAction": "Код был отправлен для другого действия.",
+      "codeExpired": "Код истёк. Нажмите «Получить код» ещё раз.",
+      "tooManyAttempts": "Слишком много попыток. Запросите новый код.",
+      "invalidCode": "Неверный код.",
+      "verifyCodeError": "Ошибка проверки кода.",
+      "waitBeforeRetry": "Подождите {{seconds}} сек. и попробуйте снова."
+    },
+    "profile": {
+      "usernameTooShort": "Ник минимум 3 символа.",
+      "usernameChangeTooEarly": "Ник можно менять только раз в 30 дней.",
+      "updateFailed": "Не удалось обновить профиль"
+    },
+    "settings": {
+      "notificationsLoadFailed": "Не удалось загрузить настройки уведомлений",
+      "telegramConnectFirst": "Сначала подключите Telegram",
+      "notificationsSaveFailed": "Не удалось сохранить уведомления",
+      "telegramNotConfigured": "Telegram не настроен на сервере",
+      "telegramUnlinkFailed": "Не удалось отвязать Telegram"
+    },
+    "official": {
+      "chatCreateFailed": "Не удалось создать официальный чат",
+      "sendFailed": "Не удалось отправить официальное сообщение",
+      "chatNotFound": "Официальный чат не найден",
+      "readOnlyInRegularList": "В обычном списке официальный чат доступен только для чтения",
+      "filesNotAllowed": "В официальный чат пока нельзя отправлять файлы",
+      "notOfficialChat": "Это не официальный чат"
+    },
+    "offers": {
+      "notFound": "Оффер не найден",
+      "cannotActivate": "Оффер нельзя активировать",
+      "alreadyInactive": "Оффер уже не активен",
+      "cloneOnlySold": "Можно клонировать только проданный оффер",
+      "notAllFieldsFilled": "Не все поля заполнены",
+      "invalidPrice": "Некорректная цена",
+      "imageProcessingError": "Ошибка обработки изображения",
+      "productUnavailable": "Товар недоступен",
+      "listingNotFound": "Объявление не найдено",
+      "deletedCannotActivate": "Удалённое объявление нельзя активировать",
+      "soldCannotActivate": "Проданное объявление нельзя активировать",
+      "adminCannotActivate": "Объявление нельзя активировать",
+      "adminAlreadyInactive": "Объявление уже не активно",
+      "adminAlreadyDeleted": "Объявление уже удалено",
+      "minPrice": "Минимальная цена {{price}} {{currency}}",
+      "maxPrice": "Максимальная цена {{price}} {{currency}}",
+      "fillTitleForLanguage": "Заполните название для языка: {{language}}",
+      "fillDescriptionForLanguage": "Заполните описание для языка: {{language}}"
+    },
+    "chats": {
+      "notFound": "Чат не найден",
+      "blockedByOther": "Вы заблокированы этим пользователем",
+      "userBlocked": "Пользователь заблокирован",
+      "cannotMessageSelf": "Нельзя писать самому себе",
+      "officialCannotBlock": "Официальный аккаунт нельзя блокировать",
+      "staffCannotBlock": "Сотрудников нельзя блокировать"
+    },
+    "orders": {
+      "notFound": "Заказ не найден",
+      "checkoutNotImplemented": "Новая логика оплаты ещё не подключена",
+      "notParticipant": "Вы не являетесь участником этого заказа",
+      "confirmImpossible": "Подтверждение невозможно",
+      "refundImpossible": "Возврат невозможен"
+    },
+    "reviews": {
+      "onlyAfterCompleted": "Отзыв можно оставить только после завершения сделки",
+      "alreadyCreated": "Отзыв уже оставлен"
+    },
+    "resolution": {
+      "onlyResolutionChat": "Только Resolution может писать в чат заказа от лица арбитража",
+      "noActiveDispute": "По этому заказу нет активного спора",
+      "assignedToOther": "Этот спор назначен другому сотруднику Resolution",
+      "onlyResolutionDecision": "Только Resolution может принимать решение по спору",
+      "alreadyDecided": "Решение по этому заказу уже принято",
+      "invalidDecision": "Некорректное решение",
+      "enterDecisionText": "Укажите текст решения",
+      "enterResolutionEmployee": "Не указан сотрудник Resolution",
+      "employeeNotFound": "Сотрудник Resolution не найден",
+      "userHasNoResolutionRole": "Пользователь не имеет роли Resolution"
+    },
+    "support": {
+      "onlySupport": "Только для поддержки",
+      "enterUserId": "Введите ID пользователя",
+      "enterOfferId": "Введите ID объявления",
+      "enterSubject": "Введите тему",
+      "enterDescription": "Введите описание",
+      "disputeAlreadyOpened": "По этому заказу спор уже открыт",
+      "completedAppealBuyer72h": "Апелляцию по завершённому заказу можно открыть только покупателю в течение 72 часов после подтверждения",
+      "cannotOpenThisCategory": "По этому заказу нельзя открыть обращение в этой категории",
+      "tooManyActiveTickets": "У вас слишком много активных тикетов",
+      "ticketNotFound": "Тикет не найден",
+      "ticketClosed": "Тикет закрыт",
+      "notOrderDispute": "Этот тикет не является спором по заказу",
+      "linkedOrderNotFound": "Связанный заказ не найден",
+      "cannotReopenOrderDisputeManually": "Спор по заказу нельзя переоткрыть вручную",
+      "ticketAlreadyAssignedToThisEmployee": "Тикет уже назначен этому сотруднику",
+      "enterEmployee": "Не указан сотрудник",
+      "employeeNotFound": "Сотрудник не найден",
+      "ticketAlreadyAssignedOther": "Тикет уже назначен другому сотруднику",
+      "onlyAssignedCanClose": "Можно закрыть только назначенный вам тикет",
+      "onlyAfterSupportReply": "Закрыть можно только после ответа поддержки",
+      "supportNotRepliedYet": "Поддержка ещё не ответила",
+      "ticketNotClosed": "Тикет не закрыт",
+      "ticketAlreadyReopened": "Тикет уже переоткрывали. Создайте новый тикет."
+    },
+    "admin": {
+      "invalidRole": "Неверная роль",
+      "notEnoughRightsSetRole": "Недостаточно прав для смены этой роли",
+      "onlyAdminCanTransferTickets": "Только администратор может передавать тикеты",
+      "invalidCommission": "Некорректная комиссия",
+      "notEnoughRightsBan": "Недостаточно прав для блокировки этого пользователя"
+    },
+    "uploads": {
+      "fileTooLarge": "Файл слишком большой",
+      "fileUploadError": "Ошибка загрузки файла",
+      "onlyImages": "Можно загружать только изображения",
+      "onlyImagesAndVideos": "Можно загружать только изображения и видео",
+      "onlyImagesVideosPdf": "Можно загружать только изображения, видео и PDF"
+    }
+  }
+}

@@ -6,14 +6,13 @@
   "docTitleExternal": "Профіль користувача — TyPlace",
 
   "nav": {
-    "myOffers": "Мої пропозиції",
+    "myOffers": "Мої оголошення",
     "purchases": "Покупки",
     "sales": "Продажі",
-    "favorites": "Обране",
-    "wallet": "Баланс"
+    "favorites": "Обране"
   },
 
-  "offers": "Пропозиції",
+  "offers": "Оголошення",
   "since": "На TyPlace з",
   "noReviews": "Немає відгуків",
   "copyId": "Натисніть, щоб скопіювати ID",
@@ -32,21 +31,31 @@
     "nickname": "Нікнейм",
     "changeNick": "Змінити нік",
     "nickHint": "Нік можна змінювати раз на 30 днів",
-    "nickHintNext": "Наступна зміна ніка буде доступна {{date}}",
+    "nickHintNext": "Наступна зміна ніку буде доступна {{date}}",
+    "site": "На сайті",
     "email": "Email",
     "telegram": "Telegram",
+    "telegramConnect": "Підключити Telegram",
+    "telegramUnlink": "Відключити Telegram",
+    "telegramLinked": "Telegram підключено",
+    "telegramLinkedAs": "Telegram підключено: {{username}}",
+    "telegramNotLinked": "Telegram не підключено",
     "save": "Зберегти"
   },
 
   "alerts": {
     "userNotFound": "Користувача не знайдено",
     "enterNickname": "Введіть нік",
-    "nickTooShort": "Нік має бути щонайменше 3 символи",
-    "nickTooLong": "Нік має бути не більше 20 символів",
+    "nickTooShort": "Нік має містити щонайменше 3 символи",
+    "nickTooLong": "Нік має містити не більше 20 символів",
     "nickWaitUntil": "Нік можна буде змінити знову {{date}}",
     "nickSaveError": "Не вдалося зберегти нік",
     "avatarSaveError": "Не вдалося оновити фото",
-    "onlyImages": "Можна завантажити лише зображення",
-    "notifySaveError": "Не вдалося зберегти сповіщення"
+    "onlyImages": "Можна завантажувати лише зображення",
+    "notifySaveError": "Не вдалося зберегти сповіщення",
+    "telegramLinkStartError": "Не вдалося розпочати підключення Telegram",
+    "telegramUnlinkError": "Не вдалося відключити Telegram",
+    "telegramLinkedSuccess": "Telegram успішно підключено",
+    "telegramLinkInstructions": "Відкрийте Telegram, запустіть бота та підтвердьте прив’язку"
   }
 }

@@ -1,0 +1,298 @@
+generator client {
+  provider = "prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  user
+  moderator
+  support
+  resolution
+  admin
+  super_admin
+}
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  username          String
+  userId            String    @unique
+  avatarUrl         String?
+  avatarDataUrl     String?
+  createdAt         DateTime  @default(now())
+  usernameChangedAt DateTime?
+  online            Boolean   @default(false)
+  lastSeenAt        DateTime?
+  banned            Boolean   @default(false)
+  role              UserRole  @default(user)
+
+  verified          Boolean   @default(false)
+  rating            Float     @default(0)
+  reviewsCount      Int       @default(0)
+
+  blockedUsers      String[]  @default([])
+
+  notifySite        Boolean   @default(true)
+  notifyEmail       Boolean   @default(true)
+  notifyTelegram    Boolean   @default(false)
+
+  telegramChatId    String?
+  telegramUsername  String?
+  telegramFirstName String?
+  telegramLinkedAt  DateTime?
+
+  lang              String    @default("ru")
+
+  sessions          Session[]
+  pendingCodes      PendingCode[]
+
+  @@index([username])
+  @@index([role])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  email     String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
+model PendingCode {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  code         String
+  mode         String
+  tempUsername String?
+  expiresAt    DateTime
+  lastSentAt   DateTime
+  tries        Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([expiresAt])
+}
+
+model Chat {
+  id          String        @id @default(cuid())
+  buyerEmail  String
+  sellerEmail String
+  offerId     String?
+  createdAt   DateTime      @default(now())
+  blocked     Boolean       @default(false)
+  official    Boolean       @default(false)
+  deletedBy   String[]      @default([])
+
+  messages    ChatMessage[]
+
+  @@index([buyerEmail])
+  @@index([sellerEmail])
+  @@index([offerId])
+  @@index([official])
+  @@index([createdAt])
+}
+
+model ChatMessage {
+  id           String   @id @default(cuid())
+  chatId       String
+  chat         Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  fromEmail    String
+  fromUserId   String?
+  fromUsername String?
+  fromRole     String?
+
+  kind         String   @default("user")
+  messageType  String   @default("user")
+  staffRole    String?
+
+  text         String   @default("")
+  media        String[] @default([])
+
+  officialType String?
+  systemType   String?
+  meta         Json?
+
+  createdAt    DateTime @default(now())
+  read         Boolean  @default(false)
+
+  @@index([chatId, createdAt])
+  @@index([fromEmail])
+  @@index([read])
+}
+
+model Offer {
+  id            String   @id @default(cuid())
+  offerId       String   @unique
+
+  game          String
+  mode          String
+  category      String?
+
+  title         Json
+  description   Json
+  extra         Json?
+
+  priceNet      Float
+  price         Float
+  amount        Float?
+
+  method        String?
+  country       String?
+  accountType   String?
+  accountRegion String?
+  voiceChat     Boolean?
+
+  images        String[] @default([])
+  imageUrl      String?
+
+  sellerEmail   String
+  sellerName    String
+
+  status        String
+  createdAt     DateTime @default(now())
+  activeUntil   DateTime?
+
+  @@index([sellerEmail])
+  @@index([status])
+  @@index([game])
+  @@index([mode])
+  @@index([category])
+  @@index([createdAt])
+}
+
+model Order {
+  id                    String   @id @default(cuid())
+  orderNumber           String   @unique
+  offerId               String
+  buyerEmail            String
+  sellerEmail           String
+  chatId                String
+  price                 Float
+  commission            Float
+  status                String   @default("pending")
+
+  disputeStatus         String   @default("none")
+  disputeTicketId       String?
+  resolutionAssignedTo  String?
+  resolutionRequestedAt DateTime?
+  resolutionAssignedAt  DateTime?
+
+  completedAt           DateTime?
+  refundedAt            DateTime?
+  createdAt             DateTime @default(now())
+
+  offerSnapshot         Json?
+
+  @@index([offerId])
+  @@index([buyerEmail])
+  @@index([sellerEmail])
+  @@index([chatId])
+  @@index([status])
+  @@index([disputeStatus])
+  @@index([createdAt])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  orderId     String   @unique
+  sellerEmail String
+  buyerEmail  String
+  rating      Float
+  text        String   @default("")
+  createdAt   DateTime @default(now())
+
+  @@index([sellerEmail])
+  @@index([buyerEmail])
+  @@index([createdAt])
+}
+
+model AdminLog {
+  id            String   @id @default(cuid())
+  actorEmail    String?
+  actorUsername String?
+  action        String
+  targetType    String?
+  targetId      String?
+  text          String?
+  createdAt     DateTime @default(now())
+
+  @@index([actorEmail])
+  @@index([action])
+  @@index([targetType])
+  @@index([targetId])
+  @@index([createdAt])
+}
+model SupportTicket {
+  id                   String           @id
+  shortId              String           @unique
+  kind                 String           @default("support")
+  userEmail            String
+  subject              String
+  category             String
+  orderId              String?
+  userId               String?
+  offerId              String?
+  chatId               String?
+  orderInternalId      String?
+  status               String           @default("waiting")
+  priority             String           @default("normal")
+  reopenCount          Int              @default(0)
+  assignedTo           String?
+  assignedRole         String?
+  assignedAt           DateTime?
+  resolutionAssignedAt DateTime?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  messages             SupportMessage[]
+  logs                 SupportLog[]
+
+  @@index([userEmail])
+  @@index([assignedTo])
+  @@index([status])
+  @@index([kind])
+}
+
+model SupportMessage {
+  id            String        @id
+  ticketId      String
+  from          String
+  userEmail     String
+  username      String
+  avatarUrl     String?
+  avatarDataUrl String?
+  text          String
+  attachments   Json
+  createdAt     DateTime      @default(now())
+
+  ticket        SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+}
+
+model SupportLog {
+  id        String        @id
+  ticketId  String
+  action    String
+  userEmail String
+  username  String
+  role      String
+  createdAt DateTime      @default(now())
+
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+}

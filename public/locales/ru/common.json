@@ -22,6 +22,7 @@
     "moderator": "Модератор",
     "support": "Поддержка",
     "resolution": "Арбитраж",
+    "resolution_entity": "Арбитраж",
     "official": "Официальный"
   },
 
@@ -88,7 +89,9 @@
 
   "lang_ru": "Русский",
   "lang_uk": "Украинский",
-  "lang_en": "English",
+  "lang_en": "Английский",
+
+  "and": "и",
 
   "system_messages": {
     "label": "СИСТЕМА",
@@ -101,11 +104,12 @@
     "order_refunded": "Продавец {{actor}} сделал возврат по заказу {{order}}.",
     "order_confirmed_admin": "Администратор подтвердил заказ {{order}}. Сделка завершена.",
     "order_refunded_admin": "Администратор сделал возврат по заказу {{order}}.",
-    "review_created": "Покупатель {{actor}} оставил отзыв по заказу {{order}}."
-  },
+    "review_created": "Покупатель {{actor}} оставил отзыв по заказу {{order}}.",
 
-    "common": {
-    "and": "и"
+    "resolution_requested": "По заказу {{order}} открыт спор. Обращение передано в арбитраж.",
+    "resolution_assigned": "Спор по заказу {{order}} назначен сотруднику арбитража {{actor}}.",
+    "resolution_confirmed": "Арбитраж принял решение в пользу подтверждения по заказу {{order}}. Сделка завершена.",
+    "resolution_refunded": "Арбитраж принял решение о возврате средств по заказу {{order}}."
   },
 
   "footer": {

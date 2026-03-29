@@ -392,6 +392,11 @@
       flex-shrink:0;
     }
 
+    .switch.is-disabled{
+  opacity:.5;
+  pointer-events:none;
+}
+
     .switch input{
       opacity:0;
       width:0;
@@ -444,36 +449,40 @@
       }
     }
 
-    @media(max-width:640px){
-      .container{
-        border:none;
-        border-radius:0;
-        background:transparent;
-        padding:16px;
-        margin:0;
-      }
+@media(max-width:640px){
+  .container{
+    border:none;
+    border-radius:0;
+    background:transparent;
+    padding:16px;
+    margin:0;
+  }
 
-      .profile-menu{
-        background:#fff;
-        align-items:stretch;
-      }
+  .profile-menu{
+    background:#fff;
+    align-items:stretch;
+  }
 
-      .profile-menu-inner{
-        width:100%;
-        height:100%;
-        max-width:none;
-        max-height:none;
-        border-radius:0;
-        box-shadow:none;
-        transform:none;
-      }
+  .profile-menu-inner{
+    width:100%;
+    height:100%;
+    max-width:none;
+    max-height:none;
+    border-radius:0;
+    box-shadow:none;
+    transform:none;
+  }
 
-      .menu-item{
-        height:56px;
-        padding:0 16px;
-        font-size:16px;
-      }
-    }
+  .menu-item{
+    height:56px;
+    padding:0 16px;
+    font-size:16px;
+  }
+
+  .nav-favorites-mobile-hide{
+    display:none;
+  }
+}
 
     @media(max-width:420px){
       .nav{
@@ -620,6 +629,7 @@
         width:min(100%, 300px);
       }
     }
+    
   </style>
 </head>
 
@@ -657,8 +667,7 @@
         <a class="nav-item" href="/my-offers.html" data-i18n="page.nav.myOffers"></a>
         <a class="nav-item" href="/purchases.html" data-i18n="page.nav.purchases"></a>
         <a class="nav-item" href="/sales.html" data-i18n="page.nav.sales"></a>
-        <a class="nav-item" href="/favorites.html" data-i18n="page.nav.favorites"></a>
-        <a class="nav-item" href="/wallet.html" data-i18n="page.nav.wallet"></a>
+        <a class="nav-item nav-favorites-mobile-hide" href="/favorites.html" data-i18n="page.nav.favorites"></a>
       </div>
     </div>
 
@@ -734,6 +743,14 @@
 
   <div class="menu-screen-body">
     <div class="menu-toggle">
+      <span>На сайте</span>
+      <label class="switch">
+        <input type="checkbox" id="notifySite">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="menu-toggle">
       <span data-i18n="page.menu.email"></span>
       <label class="switch">
         <input type="checkbox" id="notifyEmail">
@@ -743,7 +760,7 @@
 
     <div class="menu-toggle">
       <span data-i18n="page.menu.telegram"></span>
-      <label class="switch">
+      <label class="switch" id="telegramSwitchWrap">
         <input type="checkbox" id="notifyTelegram">
         <span class="slider"></span>
       </label>
@@ -1636,11 +1653,17 @@ function applyNotifyResponse(res) {
 }
 
 function syncNotifyControls() {
+  const siteInput = document.getElementById("notifySite");
   const emailInput = document.getElementById("notifyEmail");
   const telegramInput = document.getElementById("notifyTelegram");
   const telegramStatus = document.getElementById("telegramStatus");
   const telegramConnectBtn = document.getElementById("telegramConnectBtn");
   const telegramUnlinkBtn = document.getElementById("telegramUnlinkBtn");
+  const telegramSwitchWrap = document.getElementById("telegramSwitchWrap");
+
+  if (siteInput) {
+    siteInput.checked = !!state.notify.site;
+  }
 
   if (emailInput) {
     emailInput.checked = !!state.notify.email;
@@ -1648,6 +1671,11 @@ function syncNotifyControls() {
 
   if (telegramInput) {
     telegramInput.checked = !!state.telegramLinked && !!state.notify.telegram;
+    telegramInput.disabled = !state.telegramLinked;
+  }
+
+  if (telegramSwitchWrap) {
+    telegramSwitchWrap.classList.toggle("is-disabled", !state.telegramLinked);
   }
 
   if (telegramStatus) {
@@ -2120,6 +2148,7 @@ async function loadNotifyToMenu() {
 async function saveNotifyFromMenu() {
   if (state.isExternal || !getToken()) return;
 
+  const siteValue = !!document.getElementById("notifySite")?.checked;
   const emailValue = !!document.getElementById("notifyEmail")?.checked;
   const telegramValue = !!document.getElementById("notifyTelegram")?.checked;
 
@@ -2129,6 +2158,7 @@ async function saveNotifyFromMenu() {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
+      site: siteValue,
       email: emailValue,
       telegram: state.telegramLinked ? telegramValue : false
     })

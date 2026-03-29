@@ -26,6 +26,27 @@
   color: inherit;
 }
 
+html,
+body{
+  height: 100%;
+}
+
+html{
+  scrollbar-gutter: stable;
+}
+
+body{
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-top: 76px;
+}
+
+.page-content{
+  flex: 1;
+}
+
 /* ================= HEADER ================= */
 
 .tp-header{
@@ -33,34 +54,24 @@
   top: 12px;
   left: 50%;
   transform: translateX(-50%);
-
-  width: calc(100% - 24px);   /* ← ВАЖНО */
+  width: calc(100% - 24px);
   max-width: 900px;
-
   height: var(--header-h);
-
   background: rgba(255,255,255,.75);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-
   border: 1px solid rgba(255,255,255,.4);
   box-shadow: 0 6px 18px rgba(15,23,42,.06);
   border-radius: 16px;
-
   z-index: 1000;
 }
-
-body{
-  padding-top: 76px;
-}
-/* ================= INNER ================= */
 
 .tp-inner{
   height: 100%;
   display: flex;
   align-items: center;
-padding: 0 12px;
-gap: 12px;
+  padding: 0 12px;
+  gap: 12px;
 }
 
 /* ================= LOGO ================= */
@@ -69,8 +80,8 @@ gap: 12px;
   background: linear-gradient(135deg,#1e3a8a,#2563eb,#3b82f6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  font-size:22px;
-  font-weight:900;
+  font-size: 22px;
+  font-weight: 900;
 }
 
 .tp-logo-accent{
@@ -85,6 +96,7 @@ gap: 12px;
   position: relative;
   flex: 1 1 auto;
   min-width: 240px;
+  z-index: 1200;
 }
 
 .tp-searchbox{
@@ -98,8 +110,18 @@ gap: 12px;
   color: var(--text);
 }
 
+.tp-searchbox:focus{
+  outline: none;
+  box-shadow: none;
+}
+
+.tp-search:focus-within{
+  outline: none;
+  box-shadow: none;
+}
+
 .tp-search-icon{
-  position:absolute;
+  position: absolute;
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
@@ -111,7 +133,7 @@ gap: 12px;
 }
 
 .tp-clear{
-  position:absolute;
+  position: absolute;
   right: 10px;
   top: 50%;
   transform: translateY(-50%);
@@ -149,26 +171,18 @@ gap: 12px;
   align-items: center;
   justify-content: center;
   gap: 2px;
-
   padding: 4px 8px;
   border-radius: 8px;
-
   text-decoration: none;
   color: var(--muted);
-  transition: background .18s ease, color .18s ease;
-}
-
-.tp-help,
-.tp-chat,
-.tp-profile{
   transition: background .18s ease, color .18s ease;
 }
 
 .tp-help:hover,
 .tp-chat:hover,
 .tp-profile:hover{
-  background: transparent;        /* без фона */
-  color: #3b82f6;                 /* светло-серый */
+  background: transparent;
+  color: #3b82f6;
 }
 
 .tp-help-svg,
@@ -178,8 +192,8 @@ gap: 12px;
   fill: currentColor;
 }
 
-.tp-help span,
-.tp-chat span,
+.tp-help > span,
+#tpChatsLabel,
 .tp-profilelabel{
   font-size: 11.5px;
   font-weight: 600;
@@ -193,6 +207,7 @@ gap: 12px;
   height: var(--icon-size);
   fill: currentColor;
 }
+
 /* ================= AUTH ================= */
 
 .tp-btn{
@@ -206,7 +221,7 @@ gap: 12px;
   color: var(--accent);
   display: inline-flex;
   align-items: center;
-   text-decoration: none;
+  text-decoration: none;
 }
 
 .tp-btn.is-active{
@@ -225,8 +240,7 @@ gap: 12px;
   opacity: 0;
   pointer-events: none;
   transition: opacity .18s ease;
-
-  z-index: 900; /* ⬅️ КЛЮЧЕВО: НИЖЕ ХЕДЕРА */
+  z-index: 900;
 }
 
 .tp-overlay.show{
@@ -234,7 +248,7 @@ gap: 12px;
   pointer-events: auto;
 }
 
-/* ================= SEARCH DROP (UI) ================= */
+/* ================= SEARCH DROP ================= */
 
 .tp-drop{
   position: absolute;
@@ -247,6 +261,8 @@ gap: 12px;
   box-shadow: 0 20px 50px rgba(15,23,42,.18);
   display: none;
   overflow: hidden;
+  z-index: 1200;
+  animation: tpDropIn .18s ease;
 }
 
 .tp-drop.show{
@@ -265,6 +281,18 @@ gap: 12px;
   max-height: 420px;
   overflow-y: auto;
 }
+
+@keyframes tpDropIn{
+  from{
+    opacity: 0;
+    transform: translateY(-6px) scale(.98);
+  }
+  to{
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* ================= SEARCH ROW ================= */
 
 .tp-row{
@@ -308,41 +336,6 @@ gap: 12px;
   font-weight: 600;
   color: var(--muted);
 }
-.tp-drop{
-  animation: tpDropIn .18s ease;
-}
-
-@keyframes tpDropIn{
-  from{
-    opacity: 0;
-    transform: translateY(-6px) scale(.98);
-  }
-  to{
-    opacity: 1;
-    transform: none;
-  }
-}
-/* 🔍 SEARCH ABOVE OVERLAY */
-.tp-search{
-  position: relative;
-  z-index: 1200;
-}
-
-.tp-drop{
-  z-index: 1200;
-}
-/* === SEARCH MODE === */
-body.tp-search-open .tp-brand,
-body.tp-search-open .tp-actions{
-  opacity: .25;              /* визуально затемняем */
-  pointer-events: none;      /* блокируем клики */
-  transition: opacity .2s ease;
-}
-
-body.tp-search-open .tp-search{
-  opacity: 1;                /* поиск НЕ затемняется */
-  pointer-events: auto;
-}
 
 .tp-row-empty{
   padding: 16px;
@@ -352,64 +345,54 @@ body.tp-search-open .tp-search{
   text-align: center;
   cursor: default;
 }
-.tp-searchbox:focus {
-  outline: none;
-  box-shadow: none;
+
+/* ================= SEARCH MODE ================= */
+
+body.tp-search-open .tp-brand,
+body.tp-search-open .tp-actions{
+  opacity: .25;
+  pointer-events: none;
+  transition: opacity .2s ease;
 }
 
-.tp-search:focus-within {
-  outline: none;
-  box-shadow: none;
+body.tp-search-open .tp-search{
+  opacity: 1;
+  pointer-events: auto;
 }
-html {
-  scrollbar-gutter: stable;
-}
-/* ================== CHAT BADGE ================== */
 
-.tp-chat {
+/* ================= DESKTOP CHAT BADGE ================= */
+
+.tp-chat-icon-wrap{
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  overflow: visible;
 }
 
-.tp-badge{
+.tp-chat-badge{
   position: absolute;
-  top: 0;
-  right: 0;
-
+  top: -4px;
+  right: -8px;
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-
   border-radius: 999px;
   background: #ef4444;
   color: #fff;
-
   font-size: 11px;
   font-weight: 700;
-
-  display: flex;
+  line-height: 1;
+  display: none;
   align-items: center;
   justify-content: center;
-
-  line-height: 1;
-
-  transform: translate(40%, -40%);
-}
-html, body {
-  height: 100%;
+  z-index: 3;
 }
 
-body{
-  margin: 0;
-  min-height: 100vh;
-
-  display: flex;
-  flex-direction: column;
-}
-
-.page-content {
-  flex: 1;
-}
-/* ================= BURGER CLEAN ================= */
+/* ================= BURGER ================= */
 
 .tp-burger{
   background: none;
@@ -423,14 +406,9 @@ body{
   transition: color .2s ease;
 }
 
-.tp-burger{
-  color: var(--muted);
-}
-
 .tp-burger:hover{
   color: #3b82f6;
 }
-
 
 .tp-burger-svg{
   width: var(--icon-size);
@@ -441,24 +419,19 @@ body{
   fill: none;
 }
 
-/* ================= BURGER DROPDOWN CLEAN ================= */
-
 .tp-burger-wrap{
   position: relative;
 }
 
 .tp-burger-panel{
   position: fixed;
-  top: 76px; /* ниже header */
+  top: 76px;
   right: calc((100vw - 900px) / 2 + 24px);
-
   width: 240px;
-
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0,0,0,.12);
   overflow: hidden;
-
   opacity: 0;
   transform: translateY(-6px);
   pointer-events: none;
@@ -472,22 +445,17 @@ body{
   pointer-events: auto;
 }
 
-/* ================= BURGER ROW ================= */
-
 .tp-burger-row{
   width: 100%;
   padding: 16px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-
   background: #fff;
   border: none;
-
   font-size: 14px;
   font-weight: 600;
   color: var(--text);
-
   cursor: pointer;
   transition: background .18s ease;
 }
@@ -496,16 +464,10 @@ body{
   background: rgba(37,99,235,.06);
 }
 
-/* разделители */
-.tp-burger-row + .tp-burger-row{
-  border-top: 1px solid #f1f5f9;
-}
-
 .tp-burger-row + .tp-burger-row,
 .tp-burger-row + .tp-burger-sub{
-  border-top:1px solid var(--line);
+  border-top: 1px solid var(--line);
 }
-
 
 /* ================= SUBMENU ================= */
 
@@ -533,12 +495,10 @@ body{
   background: rgba(37,99,235,.08);
 }
 
-/* разделители */
 .tp-burger-sub .tp-item + .tp-item{
   border-top: 1px solid #eceff3;
 }
 
-/* стрелка */
 .tp-burger-caret{
   width: 14px;
   height: 14px;
@@ -549,12 +509,17 @@ body{
 .tp-burger-row.open .tp-burger-caret{
   transform: rotate(180deg);
 }
+
+/* ================= ACTIVE ================= */
+
 .tp-help.is-active,
 .tp-chat.is-active,
 .tp-profile.is-active,
 .tp-burger.is-active{
   color: var(--accent);
 }
+
+/* ================= MOBILE TOGGLES ================= */
 
 .tp-header{
   display: block;
@@ -581,6 +546,7 @@ body{
 }
 
 /* ================= PHONE STYLES ================= */
+
 @media (max-width: 640px) and (hover: none) and (pointer: coarse){
 
   .tp-header-mobile{
@@ -607,35 +573,44 @@ body{
   }
 
   .tp-mobile-logo{
-    display:inline-flex;
-    align-items:center;
-    text-decoration:none;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
   }
 
-.tp-mobile-logo .tp-logo{
-  font-size: 22px;
-  font-weight: 900;
-  letter-spacing: -0.5px;
-  line-height: 1.15;
-}
+  .tp-mobile-logo .tp-logo{
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    line-height: 1.15;
+  }
 
-  .tp-mobile-search{ flex: 1; position: relative; }
+  .tp-mobile-search{
+    flex: 1;
+    position: relative;
+  }
 
   .tp-mobile-search input{
     -webkit-tap-highlight-color: transparent;
     transition: none;
     -webkit-appearance: none;
-    outline:none;
-    box-shadow:none;
-    width:100%;
-    height:36px;
-    padding:0 36px;
-    border-radius:5px;
+    outline: none;
+    box-shadow: none;
+    width: 100%;
+    height: 36px;
+    padding: 0 36px;
+    border-radius: 5px;
     background: rgba(255,255,255,.35);
     backdrop-filter: blur(10px);
     border: 1px solid #e5e7eb;
-    font-size:16px;
+    font-size: 16px;
     color: var(--text);
+  }
+
+  .tp-mobile-search input::placeholder{
+    color: #7b7b7c;
+    opacity: 1;
+    font-weight: 500;
   }
 
   .tp-mobile-search-icon{
@@ -650,65 +625,66 @@ body{
     stroke-width: 2;
   }
 
-  .tp-mobile-burger{ background: none; border: none; padding: 6px; }
-  .tp-mobile-burger svg{ width: 26px; height: 26px; stroke: #111; stroke-width: 2; fill: none; }
-
-.tp-bottom-mobile{
-  will-change: transform, opacity;
-  transform: translate3d(0,0,0);
-  opacity: 1;
-
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-
-  z-index: 3000; /* ✅ ВАЖНО: чтобы было над карточками */
-  padding-bottom: env(safe-area-inset-bottom); /* ✅ iPhone */
-  height: calc(64px + env(safe-area-inset-bottom)); /* ✅ iPhone */
-
-  background: #fff;
-  border-top: 1px solid #eee;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-
-  transition: transform .22s ease, opacity .22s ease;
-}
-
-  /* ✅ только одна версия */
-  .tp-bottom-item{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:4px;
-    font-size:11px;
-    text-decoration:none;
-    color:#6b7280;
+  .tp-mobile-burger{
+    background: none;
+    border: none;
+    padding: 6px;
   }
+
+  .tp-mobile-burger svg{
+    width: 26px;
+    height: 26px;
+    stroke: #111;
+    stroke-width: 2;
+    fill: none;
+  }
+
+  .tp-bottom-mobile{
+    will-change: transform, opacity;
+    transform: translate3d(0,0,0);
+    opacity: 1;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 3000;
+    padding-bottom: env(safe-area-inset-bottom);
+    height: calc(64px + env(safe-area-inset-bottom));
+    background: #fff;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    transition: transform .22s ease, opacity .22s ease;
+  }
+
+  .tp-bottom-item{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    text-decoration: none;
+    color: #6b7280;
+    position: relative;
+  }
+
   .tp-bottom-item svg{
-  width:22px;
-  height:22px;
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    min-height: 22px;
+    display: block;
+    flex-shrink: 0;
+    fill: currentColor;
+  }
 
-  min-width:22px;
-  min-height:22px;
+  .tp-bottom-item.is-active{
+    color: var(--accent);
+  }
 
-  display:block;
-  flex-shrink:0;
-
-  fill:currentColor;
-}
-.tp-bottom-item.is-active{
-  color:var(--accent);
-}
-
-.tp-bottom-item.is-active svg{
-  fill:var(--accent);
-}
-  .tp-mobile-search input::placeholder{
-    color:#7b7b7c;
-    opacity:1;
-    font-weight:500;
+  .tp-bottom-item.is-active svg{
+    fill: var(--accent);
   }
 
   .tp-drop{
@@ -730,16 +706,53 @@ body{
     -webkit-overflow-scrolling: touch;
   }
 
-  .tp-row{ padding: 12px 14px; }
-  .tp-row-img{ width: 42px; height: 42px; border-radius: 12px; }
+  .tp-row{
+    padding: 12px 14px;
+  }
 
+  .tp-row-img{
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+  }
+
+.tp-bottom-chat-icon-wrap{
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  overflow: visible;
 }
 
-/* ✅ iOS fix только для телефона */
+.tp-bottom-chat-badge{
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+}
+}
+
+/* ================= iOS FIX ================= */
+
 @supports (-webkit-touch-callout: none) {
   @media (max-width: 640px) and (hover: none) and (pointer: coarse){
     .tp-header-mobile,
-    .tp-bottom-mobile {
+    .tp-bottom-mobile{
       position: fixed !important;
       transform: translate3d(0,0,0);
       -webkit-transform: translate3d(0,0,0);
@@ -761,29 +774,4 @@ body{
   body.tp-keyboard-open .tp-bottom-mobile{
     display: none !important;
   }
-}
-.tp-bottom-item{
-  position: relative;
-}
-
-.tp-bottom-badge{
-  position: absolute;
-  top: 2px;
-  right: 10px;
-
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-
-  border-radius: 999px;
-  background: #ef4444;
-  color: #fff;
-
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1;
-
-  display: none;
-  align-items: center;
-  justify-content: center;
 }

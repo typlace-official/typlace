@@ -2,7 +2,7 @@
   "sale": "Sale",
   "rent": "Rent",
 
-  "vc_yes": "VC available",
+  "vc_yes": "Has VC",
   "vc_no": "No VC",
 
   "other_amount": "Other amount",
@@ -21,7 +21,8 @@
     "super_admin": "Super Admin",
     "moderator": "Moderator",
     "support": "Support",
-    "resolution": "Dispute Resolution",
+    "resolution": "Resolution",
+    "resolution_entity": "Resolution",
     "official": "Official"
   },
 
@@ -35,12 +36,12 @@
   "price": "Price",
   "filters": "Filters",
   "amount": "Amount",
-  "search_by_name": "Search by name",
+  "search_by_name": "Search by title",
   "sell": "Sell",
 
-  "offers_found_one": "{{count}} listing found",
-  "offers_found_few": "{{count}} listings found",
-  "offers_found_many": "{{count}} listings found",
+  "offers_found_one": "{{count}} offer found",
+  "offers_found_few": "{{count}} offers found",
+  "offers_found_many": "{{count}} offers found",
 
   "no_reviews": "No reviews",
 
@@ -50,7 +51,7 @@
 
   "home": "Home",
   "favorites": "Favorites",
-  "no_favorites": "You don't have any favorite listings yet",
+  "no_favorites": "You have no favorite offers yet",
 
   "from": "From",
   "to": "To",
@@ -58,7 +59,7 @@
   "category_placeholder": "Category",
   "choose_category": "Choose a category",
 
-  "empty": "No listings yet",
+  "empty": "No offers yet",
 
   "back": "Back",
   "photo_product": "Product photo",
@@ -66,22 +67,22 @@
   "availability": "Availability",
 
   "language": "Language",
-  "offer_language": "Listing language",
-  "ad_language": "Listing language",
+  "offer_language": "Offer language",
+  "ad_language": "Offer language",
 
-  "create_offer": "Create listing",
-  "edit_offer": "Edit listing",
+  "create_offer": "Create offer",
+  "edit_offer": "Edit offer",
   "save_changes": "Save changes",
-  "delete_offer": "Delete listing",
+  "delete_offer": "Delete offer",
 
   "invalid_price": "Enter a valid price",
   "enter_title": "Enter a title in the selected language",
   "enter_description": "Enter a description in the selected language",
 
-  "offer_deleted": "Listing deleted",
-  "offer_not_found": "Listing not found",
+  "offer_deleted": "Offer deleted",
+  "offer_not_found": "Offer not found",
 
-  "buyer_pays": "Buyer will pay",
+  "buyer_pays": "Buyer pays",
 
   "title": "Title",
   "description": "Description",
@@ -90,22 +91,25 @@
   "lang_uk": "Ukrainian",
   "lang_en": "English",
 
+  "and": "and",
+
   "system_messages": {
     "label": "SYSTEM",
     "fallback_user": "User",
     "fallback_order": "Order",
     "fallback_text": "System message",
 
-    "order_created": "Buyer {{actor}} placed order {{order}}. Funds have been frozen.",
-    "order_confirmed": "Buyer {{actor}} confirmed receipt for order {{order}}. The deal has been completed.",
+    "order_created": "Buyer {{actor}} placed order {{order}}. Funds are on hold.",
+    "order_confirmed": "Buyer {{actor}} confirmed receipt for order {{order}}. The deal is completed.",
     "order_refunded": "Seller {{actor}} issued a refund for order {{order}}.",
-    "order_confirmed_admin": "Administrator confirmed order {{order}}. The deal has been completed.",
+    "order_confirmed_admin": "Administrator confirmed order {{order}}. The deal is completed.",
     "order_refunded_admin": "Administrator issued a refund for order {{order}}.",
-    "review_created": "Buyer {{actor}} left a review for order {{order}}."
-  },
+    "review_created": "Buyer {{actor}} left a review for order {{order}}.",
 
-    "common": {
-    "and": "and"
+    "resolution_requested": "A dispute has been opened for order {{order}}. The request has been forwarded to Resolution.",
+    "resolution_assigned": "The dispute for order {{order}} has been assigned to Resolution staff member {{actor}}.",
+    "resolution_confirmed": "Resolution decided in favor of confirmation for order {{order}}. The deal is completed.",
+    "resolution_refunded": "Resolution decided to refund the funds for order {{order}}."
   },
 
   "footer": {
@@ -116,7 +120,7 @@
       "terms": "User Agreement",
       "privacy": "Privacy Policy",
       "cookies": "Cookie Policy",
-      "about": "About the Platform",
+      "about": "About",
       "help": "Help Center",
       "contacts": "Contacts"
     }

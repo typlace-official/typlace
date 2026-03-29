@@ -1,0 +1,227 @@
+{
+  "common": {
+    "attachmentFallback": "📎 Attachment",
+    "maintenanceTextDefault": "The site is undergoing maintenance.",
+    "languageNames": {
+      "ru": "Russian",
+      "uk": "Ukrainian",
+      "en": "English"
+    }
+  },
+  "official": {
+    "welcome": {
+      "line1": "Welcome to TyPlace!",
+      "line2": "Your account has been created successfully.",
+      "line3": "In this chat, we will send important platform notifications."
+    }
+  },
+  "email": {
+    "authCode": {
+      "subject": "TyPlace — verification code",
+      "text": "Your TyPlace verification code: {{code}}\n\nIf this was not you, just ignore this email."
+    }
+  },
+  "telegram": {
+    "start": {
+      "connected": "TyPlace Telegram bot is connected. Return to the site: Profile → Notifications → Telegram.",
+      "invalidLink": "The link is invalid or expired. Open TyPlace and request a new Telegram link.",
+      "userNotFound": "TyPlace user not found. Request a new link on the website.",
+      "alreadyLinked": "This Telegram account is already linked to another TyPlace account.",
+      "success": "Telegram has been successfully linked to your TyPlace account. Telegram notifications are now enabled."
+    }
+  },
+  "notifications": {
+    "brand": "TyPlace",
+    "userFallback": "User",
+    "defaultSubjectSuffix": "notification",
+    "manageHint": "Notification settings: Profile → Notifications",
+    "chat": {
+      "subject": "new message",
+      "title": "New message",
+      "fromLabel": "From",
+      "messageLabel": "Message",
+      "openLabel": "Open chat"
+    },
+    "official": {
+      "subject": "platform message",
+      "title": "Platform message",
+      "openLabel": "Open notifications"
+    },
+    "supportCreated": {
+      "subject": "ticket created",
+      "title": "Support ticket created",
+      "ticketLabel": "Ticket",
+      "subjectLabel": "Subject",
+      "openLabel": "Open ticket"
+    },
+    "supportReply": {
+      "subject": "new support reply",
+      "title": "New support reply",
+      "ticketLabel": "Ticket",
+      "subjectLabel": "Subject",
+      "messageLabel": "Message",
+      "openLabel": "Open ticket"
+    },
+    "supportUserMessage": {
+      "subject": "new ticket message",
+      "title": "New ticket message",
+      "ticketLabel": "Ticket",
+      "subjectLabel": "Subject",
+      "fromLabel": "From",
+      "messageLabel": "Message",
+      "openLabel": "Open ticket"
+    },
+    "supportClosed": {
+      "subject": "ticket closed",
+      "title": "Support ticket closed",
+      "ticketLabel": "Ticket",
+      "subjectLabel": "Subject",
+      "openLabel": "Open ticket"
+    }
+  },
+  "responses": {
+    "common": {
+      "noAccess": "Access denied",
+      "emptyMessage": "Empty message",
+      "userNotFound": "User not found",
+      "internalServerError": "Internal server error"
+    },
+    "auth": {
+      "noToken": "No token",
+      "sessionNotFound": "Session not found",
+      "sessionExpired": "Session expired",
+      "accountBanned": "Account is banned",
+      "internalError": "Internal authorization error",
+      "confirmRobot": "Please confirm that you are not a robot.",
+      "securityCheckFailed": "Security verification failed.",
+      "securityCheckError": "Security verification error.",
+      "enterValidEmail": "Enter a valid email.",
+      "invalidMode": "Invalid mode.",
+      "accountNotFoundGoRegister": "Account not found. Go to “Sign up”.",
+      "emailAlreadyRegisteredGoLogin": "This email is already registered. Go to “Login”.",
+      "enterUsernameMin": "Enter a username (minimum 3 characters).",
+      "usernameTooLongMax": "Username is too long (max 20).",
+      "codeSent": "Code sent.",
+      "sendCodeError": "Failed to send code.",
+      "invalidEmail": "Invalid email.",
+      "codeMustBe6Digits": "The code must contain 6 digits.",
+      "clickGetCodeFirst": "First click “Get code”.",
+      "codeForOtherAction": "The code was sent for another action.",
+      "codeExpired": "The code has expired. Click “Get code” again.",
+      "tooManyAttempts": "Too many attempts. Request a new code.",
+      "invalidCode": "Invalid code.",
+      "verifyCodeError": "Code verification error.",
+      "waitBeforeRetry": "Please wait {{seconds}} seconds and try again."
+    },
+    "profile": {
+      "usernameTooShort": "Username must be at least 3 characters.",
+      "usernameChangeTooEarly": "You can change your username only once every 30 days.",
+      "updateFailed": "Failed to update profile"
+    },
+    "settings": {
+      "notificationsLoadFailed": "Failed to load notification settings",
+      "telegramConnectFirst": "Connect Telegram first",
+      "notificationsSaveFailed": "Failed to save notifications",
+      "telegramNotConfigured": "Telegram is not configured on the server",
+      "telegramUnlinkFailed": "Failed to unlink Telegram"
+    },
+    "official": {
+      "chatCreateFailed": "Failed to create official chat",
+      "sendFailed": "Failed to send official message",
+      "chatNotFound": "Official chat not found",
+      "readOnlyInRegularList": "In the regular list, the official chat is read-only",
+      "filesNotAllowed": "Files cannot be sent to the official chat yet",
+      "notOfficialChat": "This is not an official chat"
+    },
+    "offers": {
+      "notFound": "Offer not found",
+      "cannotActivate": "Offer cannot be activated",
+      "alreadyInactive": "Offer is already inactive",
+      "cloneOnlySold": "Only sold offers can be cloned",
+      "notAllFieldsFilled": "Not all fields are filled in",
+      "invalidPrice": "Invalid price",
+      "imageProcessingError": "Image processing error",
+      "productUnavailable": "Item is unavailable",
+      "listingNotFound": "Listing not found",
+      "deletedCannotActivate": "A deleted listing cannot be activated",
+      "soldCannotActivate": "A sold listing cannot be activated",
+      "adminCannotActivate": "Listing cannot be activated",
+      "adminAlreadyInactive": "Listing is already inactive",
+      "adminAlreadyDeleted": "Listing is already deleted",
+      "minPrice": "Minimum price is {{price}} {{currency}}",
+      "maxPrice": "Maximum price is {{price}} {{currency}}",
+      "fillTitleForLanguage": "Fill in the title for language: {{language}}",
+      "fillDescriptionForLanguage": "Fill in the description for language: {{language}}"
+    },
+    "chats": {
+      "notFound": "Chat not found",
+      "blockedByOther": "You are blocked by this user",
+      "userBlocked": "User is blocked",
+      "cannotMessageSelf": "You cannot message yourself",
+      "officialCannotBlock": "The official account cannot be blocked",
+      "staffCannotBlock": "Staff members cannot be blocked"
+    },
+    "orders": {
+      "notFound": "Order not found",
+      "checkoutNotImplemented": "The new payment flow has not been connected yet",
+      "notParticipant": "You are not a participant of this order",
+      "confirmImpossible": "Confirmation is not possible",
+      "refundImpossible": "Refund is not possible"
+    },
+    "reviews": {
+      "onlyAfterCompleted": "A review can only be left after the deal is completed",
+      "alreadyCreated": "Review has already been left"
+    },
+    "resolution": {
+      "onlyResolutionChat": "Only Resolution can write to the order chat on behalf of arbitration",
+      "noActiveDispute": "There is no active dispute for this order",
+      "assignedToOther": "This dispute is assigned to another Resolution employee",
+      "onlyResolutionDecision": "Only Resolution can make a decision on the dispute",
+      "alreadyDecided": "A decision has already been made for this order",
+      "invalidDecision": "Invalid decision",
+      "enterDecisionText": "Enter the decision text",
+      "enterResolutionEmployee": "Resolution employee is not specified",
+      "employeeNotFound": "Resolution employee not found",
+      "userHasNoResolutionRole": "The user does not have the Resolution role"
+    },
+    "support": {
+      "onlySupport": "Support only",
+      "enterUserId": "Enter user ID",
+      "enterOfferId": "Enter listing ID",
+      "enterSubject": "Enter subject",
+      "enterDescription": "Enter description",
+      "disputeAlreadyOpened": "A dispute has already been opened for this order",
+      "completedAppealBuyer72h": "Only the buyer can open an appeal for a completed order within 72 hours after confirmation",
+      "cannotOpenThisCategory": "A request in this category cannot be opened for this order",
+      "tooManyActiveTickets": "You have too many active tickets",
+      "ticketNotFound": "Ticket not found",
+      "ticketClosed": "Ticket is closed",
+      "notOrderDispute": "This ticket is not an order dispute",
+      "linkedOrderNotFound": "Linked order not found",
+      "cannotReopenOrderDisputeManually": "An order dispute cannot be reopened manually",
+      "ticketAlreadyAssignedToThisEmployee": "This ticket is already assigned to this employee",
+      "enterEmployee": "Employee is not specified",
+      "employeeNotFound": "Employee not found",
+      "ticketAlreadyAssignedOther": "This ticket is already assigned to another employee",
+      "onlyAssignedCanClose": "Only a ticket assigned to you can be closed",
+      "onlyAfterSupportReply": "You can close it only after support has replied",
+      "supportNotRepliedYet": "Support has not replied yet",
+      "ticketNotClosed": "Ticket is not closed",
+      "ticketAlreadyReopened": "This ticket has already been reopened. Create a new ticket."
+    },
+    "admin": {
+      "invalidRole": "Invalid role",
+      "notEnoughRightsSetRole": "Not enough permissions to change this role",
+      "onlyAdminCanTransferTickets": "Only an administrator can transfer tickets",
+      "invalidCommission": "Invalid commission",
+      "notEnoughRightsBan": "Not enough permissions to ban this user"
+    },
+    "uploads": {
+      "fileTooLarge": "File is too large",
+      "fileUploadError": "File upload error",
+      "onlyImages": "Only images can be uploaded",
+      "onlyImagesAndVideos": "Only images and videos can be uploaded",
+      "onlyImagesVideosPdf": "Only images, videos, and PDF files can be uploaded"
+    }
+  }
+}

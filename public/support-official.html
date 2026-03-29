@@ -31,7 +31,7 @@
     <div class="support-content-top">
       <div class="support-page-head">
         <h1>Официальные сообщения</h1>
-        <p>Поиск пользователя и отправка сообщений от имени TyPlace.</p>
+        <p>Поиск пользователя и переход в официальный чат от имени TyPlace.</p>
       </div>
 
       <div class="role-pill" id="rolePill">Роль: ...</div>
@@ -40,7 +40,7 @@
     <div class="tool-stack">
       <div class="card card-pad">
         <div class="card-title">Поиск пользователя</div>
-        <div class="card-subtitle">Введите email, ник или userId.</div>
+        <div class="card-subtitle">Введите email, ник или userId, чтобы открыть официальный чат.</div>
 
         <div class="search-row">
           <input
@@ -57,24 +57,6 @@
         </div>
       </div>
 
-      <div class="card card-pad hidden" id="officialChatCard">
-        <div class="card-title" id="officialChatTitle">Официальный чат</div>
-        <div class="card-subtitle" id="officialChatSubtitle">Выберите пользователя</div>
-
-        <div class="message-list" id="officialMessages">
-          <div class="empty">Сообщений пока нет</div>
-        </div>
-
-        <div class="message-compose">
-          <input
-            type="text"
-            id="officialMessageInput"
-            class="message-input"
-            placeholder="Напишите официальное сообщение"
-          >
-          <button class="btn btn-primary" id="officialSendBtn" type="button">Отправить</button>
-        </div>
-      </div>
     </div>
   </main>
 </div>
@@ -90,10 +72,6 @@ if(!token){
 
 const socket = io();
 let userRole = "";
-let officialChatState = {
-  chatId: null,
-  user: null
-};
 
 const OFFICIAL_PAGE_ROLES = new Set(["support", "admin", "super_admin"]);
 const ADMIN_PANEL_ROLES = new Set(["super_admin"]);
@@ -180,24 +158,58 @@ function renderOfficialUsers(users, query){
     const row = document.createElement("div");
     row.className = "user-row";
 
-    row.innerHTML = `
-      <div class="user-main">
-        <div class="user-name">${esc(user.username || "Пользователь")}</div>
+    const main = document.createElement("div");
+    main.className = "user-main";
 
-        <div class="user-meta">
-          <div class="meta-chip">${esc(user.email || "—")}</div>
-          ${user.userId ? `<div class="meta-chip">ID: ${esc(user.userId)}</div>` : ""}
-          ${user.role ? `<div class="meta-chip">Роль: ${esc(user.role)}</div>` : ""}
-          ${user.banned ? `<div class="meta-chip">Заблокирован</div>` : ""}
-        </div>
-      </div>
+    const name = document.createElement("div");
+    name.className = "user-name";
+    name.textContent = user.username || "Пользователь";
 
-      <div class="user-actions">
-        <button class="btn btn-primary" type="button" onclick="openOfficialChat('${esc(user.email || "").replaceAll("&#039;","\\'")}')">
-          Открыть чат
-        </button>
-      </div>
-    `;
+    const meta = document.createElement("div");
+    meta.className = "user-meta";
+
+    const emailChip = document.createElement("div");
+    emailChip.className = "meta-chip";
+    emailChip.textContent = user.email || "—";
+    meta.appendChild(emailChip);
+
+    if(user.userId){
+      const idChip = document.createElement("div");
+      idChip.className = "meta-chip";
+      idChip.textContent = "ID: " + user.userId;
+      meta.appendChild(idChip);
+    }
+
+    if(user.role){
+      const roleChip = document.createElement("div");
+      roleChip.className = "meta-chip";
+      roleChip.textContent = "Роль: " + user.role;
+      meta.appendChild(roleChip);
+    }
+
+    if(user.banned){
+      const bannedChip = document.createElement("div");
+      bannedChip.className = "meta-chip";
+      bannedChip.textContent = "Заблокирован";
+      meta.appendChild(bannedChip);
+    }
+
+    main.appendChild(name);
+    main.appendChild(meta);
+
+    const actions = document.createElement("div");
+    actions.className = "user-actions";
+
+    const btn = document.createElement("button");
+    btn.className = "btn btn-primary";
+    btn.type = "button";
+    btn.textContent = "Открыть чат";
+    btn.onclick = () => openOfficialChat(user.email);
+
+    actions.appendChild(btn);
+
+    row.appendChild(main);
+    row.appendChild(actions);
 
     list.appendChild(row);
   });
@@ -268,102 +280,11 @@ async function openOfficialChat(userEmail){
     return;
   }
 
-  officialChatState.chatId = d.chat.id;
-  officialChatState.user = d.chat.otherUser || null;
-
-  document.getElementById("officialChatCard").classList.remove("hidden");
-  document.getElementById("officialChatTitle").textContent =
-    "Официальный чат — " + (officialChatState.user?.username || "Пользователь");
-  document.getElementById("officialChatSubtitle").textContent =
-    officialChatState.user?.email || "";
-
-  document.getElementById("officialMessageInput").value = "";
-
-  await loadOfficialMessages();
-}
-
-async function loadOfficialMessages(){
-  if(!officialChatState.chatId) return;
-
-  const r = await fetch("/api/chats/" + encodeURIComponent(officialChatState.chatId) + "/messages", {
-    headers:{ Authorization:"Bearer " + token }
-  });
-
-  const d = await r.json().catch(() => ({}));
-  const box = document.getElementById("officialMessages");
-
-  if(!d.success){
-    box.innerHTML = '<div class="empty">Не удалось загрузить сообщения</div>';
-    return;
-  }
-
-  const items = Array.isArray(d.messages) ? d.messages : [];
-
-  if(!items.length){
-    box.innerHTML = '<div class="empty">Сообщений пока нет</div>';
-    return;
-  }
-
-  box.innerHTML = items.map(m => {
-    const text = esc(m.text || "");
-    const time = new Date(m.createdAt || Date.now()).toLocaleTimeString("ru-RU", {
-      hour:"2-digit",
-      minute:"2-digit"
-    });
-
-    const isOfficial = String(m.fromEmail || "").toLowerCase() === "__official__@typlace.local";
-
-    return `
-      <div class="message-row">
-        <div class="message-row-head">
-          ${isOfficial ? "TyPlace" : esc(officialChatState.user?.username || "Пользователь")} • ${time}
-        </div>
-        <div class="message-row-text">${text}</div>
-      </div>
-    `;
-  }).join("");
-
-  box.scrollTop = box.scrollHeight;
-}
-
-async function sendOfficialMessage(){
-  if(!officialChatState.chatId) return;
-
-  const input = document.getElementById("officialMessageInput");
-  const text = String(input.value || "").trim();
-
-  if(!text) return;
-
-  const r = await fetch("/api/official/chats/" + encodeURIComponent(officialChatState.chatId) + "/messages", {
-    method:"POST",
-    headers:{
-      Authorization:"Bearer " + token,
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify({
-      text,
-      officialType: "notice"
-    })
-  });
-
-  if(r.status === 401){
-    logout();
-    return;
-  }
-
-  const d = await r.json().catch(() => ({}));
-
-  if(!d.success){
-    alert(d.message || "Не удалось отправить сообщение");
-    return;
-  }
-
-  input.value = "";
-  await loadOfficialMessages();
+  location.href = "/chats.html?scope=official&id=" + encodeURIComponent(d.chat.id);
 }
 
 document.getElementById("officialSearchBtn").onclick = searchOfficialUsers;
-document.getElementById("officialSendBtn").onclick = sendOfficialMessage;
+
 document.getElementById("logoutBtn").onclick = logout;
 
 document.getElementById("officialSearchInput").addEventListener("keydown", (e) => {
@@ -373,20 +294,8 @@ document.getElementById("officialSearchInput").addEventListener("keydown", (e) =
   }
 });
 
-document.getElementById("officialMessageInput").addEventListener("keydown", (e) => {
-  if(e.key === "Enter"){
-    e.preventDefault();
-    sendOfficialMessage();
-  }
-});
-
 loadMe();
 
-socket.on("new-message", (message) => {
-  if(!officialChatState.chatId) return;
-  if(!message || message.chatId !== officialChatState.chatId) return;
-  loadOfficialMessages();
-});
 </script>
 </body>
 </html>

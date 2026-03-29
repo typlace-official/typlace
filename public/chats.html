@@ -125,9 +125,10 @@ body{
   min-height:0;
   overflow-y:auto;
   overflow-x:hidden;
-  padding:8px;
+  padding:0;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:none;
+  background:#fff;
 }
 
 .chat-list::-webkit-scrollbar{
@@ -137,19 +138,52 @@ body{
 .chat-item{
   display:flex;
   gap:10px;
-  padding:10px;
-  border-radius:14px;
+  padding:12px 14px;
   cursor:pointer;
   align-items:center;
   transition:background .15s ease;
+  border-radius:0;
+  margin:0;
+  border-top:1px solid var(--tp-border-soft);
+}
+
+.chat-item:last-child{
+  border-bottom:1px solid var(--tp-border-soft);
 }
 
 .chat-item:hover{
-  background:#f4f6ff;
+  background:#f5f9ff;
 }
 
 .chat-item.active{
-  background:#eef2ff;
+  background:#eaf3ff;
+}
+
+.chat-item.has-unread{
+  background:#dbeafe;
+}
+
+.chat-item.has-unread:hover{
+  background:#cfe5ff;
+}
+
+.chat-item.active.has-unread{
+  background:#cfe5ff;
+}
+
+.chat-unread-badge{
+  min-width:20px;
+  height:20px;
+  padding:0 6px;
+  border-radius:999px;
+  background:#1e50d4;
+  color:#fff;
+  font-size:11px;
+  font-weight:800;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
 }
 
 .chat-ava{
@@ -900,7 +934,29 @@ body{
   }
 
   .chat-list{
-    padding:8px 8px 12px;
+    padding:0;
+  }
+
+  .chat-item{
+    border-radius:0;
+    margin:0;
+  }
+
+  .chat-item.active,
+  .chat-item.active:hover{
+    background:transparent;
+  }
+
+  .chat-item.has-unread{
+    background:#dbeafe;
+  }
+
+  .chat-item.has-unread:hover{
+    background:#dbeafe;
+  }
+
+  .chat-item.active.has-unread{
+    background:#dbeafe;
   }
 
   .right{
@@ -1042,21 +1098,60 @@ body{
 body.tp-restoring-chat .right{
   transition:none !important;
 }
-.chat-profile-link{
+
+.scope-exit-btn{
+  margin-left:auto;
+  height:34px;
+  padding:0 12px;
+  border:1px solid var(--tp-border);
+  background:#fff;
+  border-radius:10px;
+  font-size:13px;
+  font-weight:700;
   cursor:pointer;
-  transition:opacity .15s ease;
+  display:none;
 }
 
-.chat-profile-link:hover{
-  opacity:.88;
+.scope-exit-btn:hover{
+  background:#f3f4f6;
+}
+#activeUserLink{
+  border-radius:12px;
+  padding:6px 8px;
+  margin:-6px -8px;
+  transition:background .15s ease;
 }
 
-.chat-profile-link.is-disabled{
+#activeUserLink.chat-profile-link{
+  cursor:pointer;
+}
+
+#activeUserLink.chat-profile-link:hover{
+  background:#f5f9ff;
+}
+
+#activeUserLink.chat-profile-link:active{
+  background:#eaf3ff;
+}
+
+#activeUserLink.is-disabled{
   cursor:default;
 }
 
-.chat-profile-link.is-disabled:hover{
-  opacity:1;
+.chat-time{
+  font-size:12px;
+  color:#888;
+  flex:0 0 auto;
+}
+
+.chat-time.is-unread{
+  color:#1d4ed8;
+  font-weight:800;
+}
+
+.chat-status-line.is-unread{
+  color:#111827;
+  font-weight:700;
 }
 </style>
 </head>
@@ -1072,9 +1167,10 @@ body.tp-restoring-chat .right{
     <div class="chat-shell">
       <!-- LEFT -->
       <div class="panel left">
-        <div class="left-top">
-         <div class="left-title" id="chatsTitle" data-i18n="page.title"></div>
-        </div>
+<div class="left-top">
+  <div class="left-title" id="chatsTitle" data-i18n="page.title"></div>
+  <button class="scope-exit-btn" id="scopeExitBtn" type="button">Обычные чаты</button>
+</div>
         <div class="chat-list" id="chatList"></div>
       </div>
 
@@ -1082,7 +1178,7 @@ body.tp-restoring-chat .right{
       <div class="panel right" id="rightPanel">
         <div class="right-top" id="rightTop">
           <button class="back-btn" id="backBtn" aria-label="Назад">←</button>
-<div class="right-title chat-profile-link is-disabled" id="activeUserLink">
+<div class="right-title" id="activeUserLink">
   <div class="chat-ava" id="activeAva">?</div>
 
   <div class="right-user-meta">
@@ -1177,7 +1273,35 @@ if(!token){
 }
 
 const urlParams = new URLSearchParams(window.location.search);
+
+const CHAT_SCOPE =
+  String(urlParams.get("scope") || "").trim().toLowerCase() === "official"
+    ? "official"
+    : "user";
+
+const IS_OFFICIAL_SCOPE = CHAT_SCOPE === "official";
 const directChatIdFromUrl = String(urlParams.get("id") || "").trim();
+
+const CHAT_ID_KEY = IS_OFFICIAL_SCOPE
+  ? "tp_official_active_chat"
+  : "tp_active_chat";
+
+const CHAT_VIEW_KEY = IS_OFFICIAL_SCOPE
+  ? "tp_official_chat_view"
+  : "tp_chat_view";
+
+function withScope(url){
+  if (!IS_OFFICIAL_SCOPE) return url;
+  return url + (url.includes("?") ? "&" : "?") + "scope=official";
+}
+
+function canWriteOfficialChatClient(){
+  return IS_OFFICIAL_SCOPE && [
+    "support",
+    "admin",
+    "super_admin"
+  ].includes(String(currentUser.role || "").trim().toLowerCase());
+}
 
 let currentUser = {
   email: "",
@@ -1214,6 +1338,23 @@ async function loadMe(){
 const meLoaded = await loadMe();
 if(!meLoaded) return;
 
+const chatsTitleEl = document.getElementById("chatsTitle");
+const scopeExitBtn = document.getElementById("scopeExitBtn");
+
+if (IS_OFFICIAL_SCOPE) {
+  if (chatsTitleEl) {
+    chatsTitleEl.textContent = "Официальные чаты";
+  }
+
+  if (scopeExitBtn) {
+    scopeExitBtn.style.display = "inline-flex";
+  }
+}
+
+scopeExitBtn?.addEventListener("click", () => {
+  location.href = "/chats.html";
+});
+
 function getLastSeenText(lastSeen){
   if(!lastSeen) return "Не в сети";
 
@@ -1241,29 +1382,38 @@ function isSystemProfileUser(user){
   );
 }
 
-function getPublicProfileUrl(user){
-  if (!user?.userId) return "";
-  if (isSystemProfileUser(user)) return "";
-
-  return PUBLIC_PROFILE_BASE + encodeURIComponent(user.userId);
-}
-
-function updateActiveProfileLink(user, chat){
+function updateActiveProfileLink(user){
   const el = document.getElementById("activeUserLink");
   if (!el) return;
 
-  const url = chat?.official ? "" : getPublicProfileUrl(user);
-
-  el.classList.toggle("is-disabled", !url);
-
   el.onclick = null;
+  el.onkeydown = null;
+  el.removeAttribute("role");
+  el.removeAttribute("tabindex");
+  el.classList.remove("chat-profile-link", "is-disabled");
 
-  if (url) {
-    el.onclick = () => {
-      location.href = url;
-    };
+  if (!user || !user.userId || isSystemProfileUser(user)) {
+    el.classList.add("is-disabled");
+    return;
   }
+
+  const goToProfile = () => {
+    location.href = PUBLIC_PROFILE_BASE + encodeURIComponent(user.userId);
+  };
+
+  el.classList.add("chat-profile-link");
+  el.setAttribute("role", "link");
+  el.setAttribute("tabindex", "0");
+
+  el.onclick = goToProfile;
+  el.onkeydown = (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      goToProfile();
+    }
+  };
 }
+
 function escapeHtml(value){
   return String(value || "")
     .replace(/&/g, "&amp;")
@@ -1288,39 +1438,11 @@ function isProtectedChatUser(role, email){
   ].includes(safeRole);
 }
 
-function canOpenUserProfileFromChat(user){
-  if (!user) return false;
-
-  const safeEmail = String(user.email || "").trim().toLowerCase();
-  const safeRole = String(user.role || "").trim().toLowerCase();
-  const safeUserId = String(user.userId || "").trim();
-
-  if (!safeUserId) return false;
-  if (safeEmail === "__official__@typlace.local") return false;
-  if (safeEmail === "__resolution__@typlace.local") return false;
-
-  if ([
-    "official",
-    "resolution_entity"
-  ].includes(safeRole)) {
-    return false;
-  }
-
-  return true;
-}
-
-function openUserProfileFromChat(user){
-  if (!canOpenUserProfileFromChat(user)) return;
-
-  location.href = `/profile.html?id=${encodeURIComponent(user.userId)}`;
-}
-
 let chats = [];
 let activeChatId = null;
-const CHAT_ID_KEY = "tp_active_chat";
-const CHAT_VIEW_KEY = "tp_chat_view"; // "list" | "chat"
+
 async function fetchChatById(chatId){
-  const res = await fetch(`/api/chats/${encodeURIComponent(chatId)}`,{
+const res = await fetch(withScope(`/api/chats/${encodeURIComponent(chatId)}`),{
     headers:{
       "Authorization":"Bearer " + token
     }
@@ -1454,7 +1576,7 @@ window.closeMiniOffer = function(offerId){
 
 /* ===== LOAD CHATS ===== */
 async function loadChats(){
-  const res = await fetch("/api/chats",{
+  const res = await fetch(withScope("/api/chats"),{
     headers:{
       "Authorization":"Bearer " + token
     }
@@ -1510,7 +1632,6 @@ function renderChatList(){
 
   chats.forEach(c => {
     const user = c.otherUser;
-    const canOpenProfile = canOpenUserProfileFromChat(user);
     const username = user?.username || "Пользователь";
     const userRole = user?.role || "user";
 
@@ -1541,58 +1662,62 @@ function renderChatList(){
         })
       : "";
 
+    const unreadCount = Number(c.unreadCount || 0);
+    const hasUnread = unreadCount > 0;
+
     const div = document.createElement("div");
-    div.className = "chat-item" + (c.id === activeChatId ? " active" : "");
+    div.className =
+      "chat-item" +
+      (c.id === activeChatId ? " active" : "") +
+      (hasUnread ? " has-unread" : "");
+
     div.onclick = () => openChat(c.id);
 
     const safeLastText = escapeHtml(lastText);
 
     div.innerHTML = `
-      <div class="chat-ava" data-open-profile="${canOpenProfile ? "1" : "0"}">
+      <div class="chat-ava">
         <img src="${avatar}">
         <span class="status-dot ${user?.online ? "online" : "offline"}"></span>
       </div>
 
       <div class="chat-meta">
-        <div style="display:flex;justify-content:space-between;gap:8px;">
-          <div class="chat-name-line" data-open-profile="${canOpenProfile ? "1" : "0"}">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
+          <div class="chat-name-line">
             ${window.tpBadges.renderNameWithBadge(username, userRole)}
           </div>
-          <div style="font-size:12px;color:#888;flex:0 0 auto;">${time}</div>
+
+          <div style="display:flex;align-items:center;gap:8px;flex:0 0 auto;">
+            ${hasUnread ? `<span class="chat-unread-badge">${unreadCount > 99 ? "99+" : unreadCount}</span>` : ""}
+            <div class="chat-time${hasUnread ? " is-unread" : ""}">${time}</div>
+          </div>
         </div>
 
-        <div class="chat-status-line" data-open-profile="${canOpenProfile ? "1" : "0"}">
+        <div class="chat-status-line${hasUnread ? " is-unread" : ""}">
           ${safeLastText}
         </div>
       </div>
     `;
-
-    if (canOpenProfile) {
-      div.querySelectorAll('[data-open-profile="1"]').forEach(el => {
-        el.style.cursor = "pointer";
-
-        el.addEventListener("click", (e) => {
-          e.stopPropagation();
-          openUserProfileFromChat(user);
-        });
-      });
-    }
 
     list.appendChild(div);
   });
 }
 
 /* ===== OPEN CHAT ===== */
-async function openChat(id){
+async function openChat(id, options = {}){
+  const { silent = false } = options;
+
   const chat = await ensureChatInState(id);
 
-if(!chat){
-  await tpAlert("Чат не найден или нет доступа", {
-    type: "error",
-    title: "Ошибка"
-  });
-  return;
-}
+  if(!chat){
+    if (!silent) {
+      await tpAlert("Чат не найден или нет доступа", {
+        type: "error",
+        title: "Ошибка"
+      });
+    }
+    return false;
+  }
 
   document.getElementById("rightPanel").style.display = "flex";
 
@@ -1605,8 +1730,12 @@ if(!chat){
 
   activeChatId = id;
   window.tpActiveChatId = id;
-  updateChatNotifyButton();
 
+  if (chat) {
+    chat.unreadCount = 0;
+  }
+
+  updateChatNotifyButton();
   renderChatList();
 
   const user = chat.otherUser;
@@ -1623,22 +1752,26 @@ if(!chat){
   const blockedNotice = document.getElementById("blockedNotice");
   const msgInput = document.getElementById("msgInput");
 
-if (isOfficialChat) {
-  chatActions.style.display = "none";
-  chatNotifyBtnEl.style.display = "none";
-  chatMenuWrapper.style.display = "none";
-  btnReport.style.display = "none";
-  btnBlock.style.display = "none";
-  btnDelete.style.display = "none";
-  blockedNotice.style.display = "none";
-  attachBtn.style.display = "none";
-  composer.style.display = "none";
+  if (isOfficialChat) {
+    const canWriteOfficial = canWriteOfficialChatClient();
 
-  if (msgInput) {
-    msgInput.value = "";
-    msgInput.placeholder = "Официальный чат доступен только для чтения";
-  }
-} else {
+    chatActions.style.display = "none";
+    chatNotifyBtnEl.style.display = "none";
+    chatMenuWrapper.style.display = "none";
+    btnReport.style.display = "none";
+    btnBlock.style.display = "none";
+    btnDelete.style.display = "none";
+    blockedNotice.style.display = "none";
+    attachBtn.style.display = "none";
+    composer.style.display = canWriteOfficial ? "flex" : "none";
+
+    if (msgInput) {
+      msgInput.value = "";
+      msgInput.placeholder = canWriteOfficial
+        ? "Напишите официальное сообщение"
+        : "Официальный чат доступен только для чтения";
+    }
+  } else {
     chatActions.style.display = "flex";
     chatNotifyBtnEl.style.display = "flex";
     chatMenuWrapper.style.display = "block";
@@ -1669,36 +1802,36 @@ if (isOfficialChat) {
     }
   }
 
-if(user){
-  const ava = document.getElementById("activeAva");
-  const avatar =
-    user?.avatarUrl ||
-    user?.avatarDataUrl ||
-    DEFAULT_AVATAR;
+  if(user){
+    const ava = document.getElementById("activeAva");
+    const avatar =
+      user?.avatarUrl ||
+      user?.avatarDataUrl ||
+      DEFAULT_AVATAR;
 
-  ava.innerHTML = `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;">`;
+    ava.innerHTML = `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;">`;
 
-  window.tpBadges.applyNameWithBadge(
-    document.getElementById("activeName"),
-    user.username || "Пользователь",
-    user.role || "user"
-  );
+    window.tpBadges.applyNameWithBadge(
+      document.getElementById("activeName"),
+      user.username || "Пользователь",
+      user.role || "user"
+    );
 
-  if (isOfficialChat && user?.email === "__official__@typlace.local") {
-    document.getElementById("activeSub").textContent = "Официальный аккаунт";
-  } else if (isOfficialChat) {
-    document.getElementById("activeSub").textContent = "";
+    if (isOfficialChat && user?.email === "__official__@typlace.local") {
+      document.getElementById("activeSub").textContent = "Официальный аккаунт";
+    } else if (isOfficialChat) {
+      document.getElementById("activeSub").textContent = "";
+    } else {
+      document.getElementById("activeSub").textContent =
+        user.online ? "В сети" : getLastSeenText(user.lastSeen);
+    }
+
+    updateActiveProfileLink(user);
   } else {
-    document.getElementById("activeSub").textContent =
-      user.online ? "В сети" : getLastSeenText(user.lastSeen);
+    updateActiveProfileLink(null);
   }
 
-  updateActiveProfileLink(user, chat);
-} else {
-  updateActiveProfileLink(null, null);
-}
-
-  await fetch(`/api/chats/${id}/read`, {
+  await fetch(withScope(`/api/chats/${id}/read`), {
     method: "POST",
     headers: {
       "Authorization": "Bearer " + token
@@ -1774,6 +1907,7 @@ if(user){
   }
 
   loadMessages();
+  return true;
 }
 
 function formatDateDivider(date){
@@ -1905,7 +2039,14 @@ function renderMessageItem(m, myEmail){
     return renderResolutionMessageItem(m);
   }
 
-  const isMe = m.fromEmail === myEmail;
+  const safeFromEmail = String(m.fromEmail || "").trim().toLowerCase();
+
+  const isMe =
+    m.fromEmail === myEmail ||
+    (
+      IS_OFFICIAL_SCOPE &&
+      safeFromEmail === "__official__@typlace.local"
+    );
 
   return `
     <div class="msg ${isMe ? "me" : "other"}" data-msg-id="${m.id}">
@@ -1918,7 +2059,7 @@ function renderMessageItem(m, myEmail){
 async function loadMessages(){
   if(!activeChatId) return;
 
-  const res = await fetch(`/api/chats/${activeChatId}/messages`,{
+  const res = await fetch(withScope(`/api/chats/${activeChatId}/messages`),{
     headers:{
       "Authorization":"Bearer " + token
     }
@@ -2011,32 +2152,44 @@ document.getElementById("sendBtn").onclick = async ()=>{
 
   const chat = chats.find(c => c.id === activeChatId);
   const isOfficialChat = Boolean(chat?.official);
+  const canWriteOfficial = isOfficialChat && canWriteOfficialChatClient();
 
-  if (isOfficialChat) {
+  if (isOfficialChat && !canWriteOfficial) {
     return;
   }
 
-  const res = await fetch(`/api/chats/${activeChatId}/messages`,{
+  const endpoint = isOfficialChat
+    ? `/api/official/chats/${encodeURIComponent(activeChatId)}/messages`
+    : `/api/chats/${encodeURIComponent(activeChatId)}/messages`;
+
+  const payload = isOfficialChat
+    ? { text, officialType: "notice" }
+    : { text };
+
+  const res = await fetch(endpoint,{
     method:"POST",
     headers:{
       "Content-Type":"application/json",
       "Authorization":"Bearer " + token
     },
-    body: JSON.stringify({ text })
+    body: JSON.stringify(payload)
   });
 
-  const data = await res.json();
+  const data = await res.json().catch(() => ({}));
 
-if(!data.success){
-  await tpAlert(data.message || "Не удалось отправить сообщение", {
-    type: "error",
-    title: "Ошибка"
-  });
-  return;
-}
+  if(!data.success){
+    await tpAlert(data.message || "Не удалось отправить сообщение", {
+      type: "error",
+      title: "Ошибка"
+    });
+    return;
+  }
 
-  addMessageToUI(data.message);
-  updateChatPreviewLocally(data.message);
+  if (data.message) {
+    addMessageToUI(data.message);
+    updateChatPreviewLocally(data.message);
+  }
+
   input.value = "";
 };
 
@@ -2047,6 +2200,7 @@ document.getElementById("msgInput").addEventListener("keydown", e => {
 });
 
 async function updateUnreadBadge(){
+  if (IS_OFFICIAL_SCOPE) return;
   const res = await fetch("/api/chats/unread-count",{
     headers:{
       "Authorization":"Bearer " + token
@@ -2070,22 +2224,62 @@ async function updateUnreadBadge(){
 updateUnreadBadge();
 await loadChats();
 
-const savedChatId = localStorage.getItem(CHAT_ID_KEY);
-const savedView = localStorage.getItem(CHAT_VIEW_KEY) || "list";
-const startupChatId = directChatIdFromUrl || savedChatId;
+function getPreferredStartupChatId(){
+  const officialChat = chats.find(c => c.official === true);
+  if (officialChat?.id) return officialChat.id;
 
-if (startupChatId && (directChatIdFromUrl || savedView === "chat")) {
+  return chats[0]?.id || "";
+}
+
+const IS_MOBILE_CHAT_LAYOUT = window.matchMedia("(max-width: 640px)").matches;
+
+const savedChatId = localStorage.getItem(CHAT_ID_KEY);
+const savedChatExists =
+  Boolean(savedChatId) &&
+  chats.some(c => c.id === savedChatId);
+
+// если в localStorage лежит битый чат — чистим
+if (savedChatId && !savedChatExists) {
+  localStorage.removeItem(CHAT_ID_KEY);
+  localStorage.setItem(CHAT_VIEW_KEY, "list");
+}
+
+let startupChatId = "";
+
+// если чат передан явно через ?id=..., открываем его всегда
+if (directChatIdFromUrl) {
+  startupChatId = directChatIdFromUrl;
+}
+// если это десктоп — при входе в чаты сразу открываем официальный чат
+else if (!IS_MOBILE_CHAT_LAYOUT) {
+  startupChatId = getPreferredStartupChatId();
+}
+// если это телефон — всегда остаёмся на списке чатов
+else {
+  localStorage.setItem(CHAT_VIEW_KEY, "list");
+}
+
+if (startupChatId) {
   document.body.classList.add("tp-restoring-chat");
-  await openChat(startupChatId);
+
+  await openChat(startupChatId, {
+    silent: !directChatIdFromUrl
+  });
 
   if (directChatIdFromUrl) {
-    window.history.replaceState({}, "", "/chat.html");
+    window.history.replaceState(
+      {},
+      "",
+      IS_OFFICIAL_SCOPE ? "/chats.html?scope=official" : "/chats.html"
+    );
   }
 
   requestAnimationFrame(() => {
     document.body.classList.remove("tp-restoring-chat");
   });
 } else {
+  activeChatId = null;
+  window.tpActiveChatId = null;
   document.body.classList.remove("tp-chat-open");
 }
 
@@ -2172,15 +2366,24 @@ if(!data.success){
   return;
 }
 
-  activeChatId = null;
-  localStorage.removeItem(CHAT_ID_KEY);
-  localStorage.setItem(CHAT_VIEW_KEY, "list");
+activeChatId = null;
+window.tpActiveChatId = null;
+localStorage.removeItem(CHAT_ID_KEY);
+localStorage.setItem(CHAT_VIEW_KEY, "list");
 
+document.body.classList.remove("tp-chat-open");
+document.getElementById("chatActions").style.display = "none";
+
+if (window.matchMedia("(max-width: 640px)").matches) {
   document.getElementById("rightPanel").style.display = "none";
-  document.body.classList.remove("tp-chat-open");
-  document.getElementById("chatActions").style.display = "none";
+} else {
+  document.getElementById("rightPanel").style.display = "flex";
+  document.getElementById("messages").innerHTML =
+    `<div class="empty-right" data-i18n="page.pickChat"></div>`;
+  window.tpI18n.apply(document.getElementById("messages"));
+}
 
-  await loadChats();
+await loadChats();
 };
 
 document.getElementById("btnBlock").onclick = async () => {
@@ -2251,30 +2454,51 @@ window.addEventListener("tp:new-message", async (e) => {
 
   const myEmail = localStorage.getItem("tp_user_email");
 
-  const exists = chats.some(c => c.id === message.chatId);
+const chat = chats.find(c => c.id === message.chatId);
 
-  if (!exists) {
-    await loadChats();
-  } else {
-    updateChatPreviewLocally(message);
+if (!chat) {
+  await loadChats();
+} else {
+  updateChatPreviewLocally(message);
+
+  const safeFromEmail = String(message.fromEmail || "").trim().toLowerCase();
+  const isIncomingForCurrentScope =
+    message.fromEmail !== myEmail &&
+    !(IS_OFFICIAL_SCOPE && safeFromEmail === "__official__@typlace.local");
+
+  if (message.chatId !== activeChatId && isIncomingForCurrentScope) {
+    chat.unreadCount = Number(chat.unreadCount || 0) + 1;
+    renderChatList();
   }
+}
 
-  updateUnreadBadge();
+updateUnreadBadge();
 
-  if (!activeChatId || message.chatId !== activeChatId) {
-    return;
+if (!activeChatId || message.chatId !== activeChatId) {
+  return;
+}
+
+const safeFromEmail = String(message.fromEmail || "").trim().toLowerCase();
+const isMineInCurrentScope =
+  message.fromEmail === myEmail ||
+  (IS_OFFICIAL_SCOPE && safeFromEmail === "__official__@typlace.local");
+
+if (isMineInCurrentScope) return;
+
+addMessageToUI(message);
+
+const activeChat = chats.find(c => c.id === activeChatId);
+if (activeChat) {
+  activeChat.unreadCount = 0;
+  renderChatList();
+}
+
+fetch(withScope(`/api/chats/${activeChatId}/read`), {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer " + token
   }
-
-  if (message.fromEmail === myEmail) return;
-
-  addMessageToUI(message);
-
-  fetch(`/api/chats/${activeChatId}/read`, {
-    method: "POST",
-    headers: {
-      "Authorization": "Bearer " + token
-    }
-  }).catch(()=>{});
+}).catch(()=>{});
 });
 
 const backBtn = document.getElementById("backBtn");

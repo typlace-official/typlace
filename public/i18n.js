@@ -1,95 +1,185 @@
-window.tpI18n = {
-  translations: {},
-  currentLang: localStorage.getItem("tp_lang") || "ru",
+(() => {
+  const SUPPORTED_LANGS = ["ru", "uk", "en"];
+  const DEFAULT_LANG = "ru";
+  const CACHE = new Map();
 
-  async load(lang) {
-    this.currentLang = lang;
+  function normalizeLang(lang) {
+    const safeLang = String(lang || "").trim().toLowerCase();
+    return SUPPORTED_LANGS.includes(safeLang) ? safeLang : DEFAULT_LANG;
+  }
 
-    // загружаем common
-    const commonRes = await fetch(`/locales/${lang}/common.json`, { cache: "no-cache" });
-    const common = await commonRes.json();
+  function getPageName() {
+    const fileName = location.pathname.split("/").pop() || "";
+    const pageName = fileName.replace(".html", "").trim();
+    return pageName || "index";
+  }
 
-    // загружаем roblox (если существует)
-    let roblox = {};
+  async function fetchJson(url, { optional = false } = {}) {
     try {
-      const robloxRes = await fetch(`/locales/${lang}/roblox.json`, { cache: "no-cache" });
-      if (robloxRes.ok) {
-        roblox = await robloxRes.json();
+      const res = await fetch(url, { cache: "no-cache" });
+
+      if (!res.ok) {
+        if (optional) return {};
+        throw new Error(`HTTP ${res.status}`);
       }
-    } catch(e){}
 
-// имя страницы (cookie, privacy, index и т.д.)
-const pageName =
-  location.pathname.split("/").pop().replace(".html", "") || "index";
-
-// пробуем загрузить json страницы
-let page = {};
-try {
-  const pageRes = await fetch(`/locales/${lang}/${pageName}.json`, { cache: "no-cache" });
-  if (pageRes.ok) {
-    page = await pageRes.json();
-  }
-} catch (e) {}
-
-this.translations = { common, roblox, page };
-
-this.apply();
-},
-
-async setLang(lang) {
-  localStorage.setItem("tp_lang", lang);
-  await this.load(lang);
-},
-
-t(key, params = {}) {
-  const parts = key.split(".");
-  let value = this.translations;
-
-  for (const p of parts) {
-    value = value?.[p];
+      return await res.json();
+    } catch (err) {
+      if (!optional) {
+        console.error(`i18n load failed: ${url}`, err);
+      }
+      return {};
+    }
   }
 
-  if (value == null) return key;
-
-  Object.keys(params).forEach(k => {
-    value = value.replace(new RegExp(`{{\\s*${k}\\s*}}`, "g"), params[k]);
-  });
-
-  return value;
-},
-
-plural(n, one, few, many) {
-  n = Math.abs(n) % 100;
-  const n1 = n % 10;
-
-  if (n > 10 && n < 20) return many;
-  if (n1 > 1 && n1 < 5) return few;
-  if (n1 === 1) return one;
-  return many;
-},
-
-pluralKey(baseKey, count) {
-  const form = this.plural(count, "one", "few", "many");
-  return this.t(`${baseKey}_${form}`, { count });
-},
-apply(root = document) {
-  root.querySelectorAll("[data-i18n]").forEach(el => {
-    el.innerHTML = this.t(el.dataset.i18n);
-  });
-
-  root.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
-    el.placeholder = this.t(el.dataset.i18nPlaceholder);
-  });
-
-  // ✅ перевод <title data-i18n="">
-  const titleEl = document.querySelector("title[data-i18n]");
-  if (titleEl) {
-    document.title = this.t(titleEl.dataset.i18n);
+  function resolvePath(obj, key) {
+    return String(key || "")
+      .split(".")
+      .reduce((acc, part) => acc?.[part], obj);
   }
-}
-};
 
-// первая загрузка
-document.addEventListener("DOMContentLoaded", async () => {
-  await window.tpI18n.load(window.tpI18n.currentLang);
-});
+  function interpolate(value, params = {}) {
+    if (typeof value !== "string") return value;
+
+    return value.replace(/{{\s*([\w.-]+)\s*}}/g, (_, key) => {
+      const replacement = params[key];
+      return replacement == null ? "" : String(replacement);
+    });
+  }
+
+  function getPluralForm(lang, count) {
+    const n = Math.abs(Number(count) || 0);
+
+    if (lang === "en") {
+      return n === 1 ? "one" : "many";
+    }
+
+    const mod100 = n % 100;
+    const mod10 = n % 10;
+
+    if (mod100 > 10 && mod100 < 20) return "many";
+    if (mod10 === 1) return "one";
+    if (mod10 >= 2 && mod10 <= 4) return "few";
+    return "many";
+  }
+
+  window.tpI18n = {
+    translations: {
+      common: {},
+      roblox: {},
+      page: {}
+    },
+
+    currentLang: normalizeLang(localStorage.getItem("tp_lang")),
+
+    async load(lang) {
+      const safeLang = normalizeLang(lang);
+      const pageName = getPageName();
+      const cacheKey = `${safeLang}:${pageName}`;
+
+      let loaded = CACHE.get(cacheKey);
+
+      if (!loaded) {
+        const [common, roblox, page] = await Promise.all([
+          fetchJson(`/locales/${safeLang}/common.json`),
+          fetchJson(`/locales/${safeLang}/roblox.json`, { optional: true }),
+          fetchJson(`/locales/${safeLang}/${pageName}.json`, { optional: true })
+        ]);
+
+        loaded = { common, roblox, page };
+        CACHE.set(cacheKey, loaded);
+      }
+
+      this.currentLang = safeLang;
+      this.translations = loaded;
+
+      localStorage.setItem("tp_lang", safeLang);
+      document.documentElement.lang = safeLang;
+
+      this.apply();
+
+      document.dispatchEvent(
+        new CustomEvent("tp:lang-change", {
+          detail: { lang: safeLang }
+        })
+      );
+
+      return this.translations;
+    },
+
+    async setLang(lang) {
+      return await this.load(lang);
+    },
+
+    get(key, fallback = null) {
+      const value = resolvePath(this.translations, key);
+      return value == null ? fallback : value;
+    },
+
+    t(key, params = {}) {
+      const value = this.get(key);
+
+      if (value == null) {
+        return key;
+      }
+
+      if (typeof value !== "string") {
+        return String(value);
+      }
+
+      return interpolate(value, params);
+    },
+
+    plural(count, one, few, many) {
+      const form = getPluralForm(this.currentLang, count);
+
+      if (form === "one") return one;
+      if (form === "few") return few;
+      return many;
+    },
+
+    pluralKey(baseKey, count, params = {}) {
+      const form = getPluralForm(this.currentLang, count);
+      return this.t(`${baseKey}_${form}`, { count, ...params });
+    },
+
+    apply(root = document) {
+      root.querySelectorAll("[data-i18n]").forEach(el => {
+        el.textContent = this.t(el.dataset.i18n);
+      });
+
+      root.querySelectorAll("[data-i18n-html]").forEach(el => {
+        el.innerHTML = this.t(el.dataset.i18nHtml);
+      });
+
+      root.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+        el.placeholder = this.t(el.dataset.i18nPlaceholder);
+      });
+
+      root.querySelectorAll("[data-i18n-title]").forEach(el => {
+        el.title = this.t(el.dataset.i18nTitle);
+      });
+
+      root.querySelectorAll("[data-i18n-aria-label]").forEach(el => {
+        el.setAttribute("aria-label", this.t(el.dataset.i18nAriaLabel));
+      });
+
+      root.querySelectorAll("[data-i18n-value]").forEach(el => {
+        el.value = this.t(el.dataset.i18nValue);
+      });
+
+      const titleEl = document.querySelector("title[data-i18n]");
+      if (titleEl) {
+        document.title = this.t(titleEl.dataset.i18n);
+      }
+    }
+  };
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    try {
+      await window.tpI18n.load(window.tpI18n.currentLang);
+    } catch (err) {
+      console.error("tpI18n init failed:", err);
+    }
+  });
+})();

@@ -1,0 +1,227 @@
+{
+  "common": {
+    "attachmentFallback": "📎 Вкладення",
+    "maintenanceTextDefault": "На сайті проводяться технічні роботи.",
+    "languageNames": {
+      "ru": "російська",
+      "uk": "українська",
+      "en": "англійська"
+    }
+  },
+  "official": {
+    "welcome": {
+      "line1": "Ласкаво просимо до TyPlace!",
+      "line2": "Ваш акаунт успішно створено.",
+      "line3": "У цьому чаті ми будемо надсилати важливі повідомлення від платформи."
+    }
+  },
+  "email": {
+    "authCode": {
+      "subject": "TyPlace — код підтвердження",
+      "text": "Ваш код підтвердження TyPlace: {{code}}\n\nЯкщо це були не ви — просто проігноруйте лист."
+    }
+  },
+  "telegram": {
+    "start": {
+      "connected": "TyPlace Telegram bot підключено. Поверніться на сайт: Профіль → Сповіщення → Telegram.",
+      "invalidLink": "Посилання недійсне або застаріло. Відкрийте TyPlace і запросіть нову прив’язку Telegram.",
+      "userNotFound": "Користувача TyPlace не знайдено. Запросіть нову прив’язку на сайті.",
+      "alreadyLinked": "Цей Telegram уже прив’язаний до іншого акаунта TyPlace.",
+      "success": "Telegram успішно підключено до вашого акаунта TyPlace. Сповіщення в Telegram увімкнено."
+    }
+  },
+  "notifications": {
+    "brand": "TyPlace",
+    "userFallback": "Користувач",
+    "defaultSubjectSuffix": "сповіщення",
+    "manageHint": "Налаштування сповіщень: Профіль → Сповіщення",
+    "chat": {
+      "subject": "нове повідомлення",
+      "title": "Нове повідомлення",
+      "fromLabel": "Від",
+      "messageLabel": "Повідомлення",
+      "openLabel": "Відкрити чат"
+    },
+    "official": {
+      "subject": "повідомлення від платформи",
+      "title": "Повідомлення від платформи",
+      "openLabel": "Відкрити сповіщення"
+    },
+    "supportCreated": {
+      "subject": "звернення створено",
+      "title": "Звернення до підтримки створено",
+      "ticketLabel": "Тікет",
+      "subjectLabel": "Тема",
+      "openLabel": "Відкрити тікет"
+    },
+    "supportReply": {
+      "subject": "нова відповідь підтримки",
+      "title": "Нова відповідь підтримки",
+      "ticketLabel": "Тікет",
+      "subjectLabel": "Тема",
+      "messageLabel": "Повідомлення",
+      "openLabel": "Відкрити тікет"
+    },
+    "supportUserMessage": {
+      "subject": "нове повідомлення в тікеті",
+      "title": "Нове повідомлення в тікеті",
+      "ticketLabel": "Тікет",
+      "subjectLabel": "Тема",
+      "fromLabel": "Від",
+      "messageLabel": "Повідомлення",
+      "openLabel": "Відкрити тікет"
+    },
+    "supportClosed": {
+      "subject": "звернення закрито",
+      "title": "Звернення закрито",
+      "ticketLabel": "Тікет",
+      "subjectLabel": "Тема",
+      "openLabel": "Відкрити тікет"
+    }
+  },
+  "responses": {
+    "common": {
+      "noAccess": "Немає доступу",
+      "emptyMessage": "Порожнє повідомлення",
+      "userNotFound": "Користувача не знайдено",
+      "internalServerError": "Внутрішня помилка сервера"
+    },
+    "auth": {
+      "noToken": "Немає токена",
+      "sessionNotFound": "Сесію не знайдено",
+      "sessionExpired": "Сесія закінчилася",
+      "accountBanned": "Акаунт заблоковано",
+      "internalError": "Внутрішня помилка авторизації",
+      "confirmRobot": "Підтвердіть, що ви не робот.",
+      "securityCheckFailed": "Перевірку безпеки не пройдено.",
+      "securityCheckError": "Помилка перевірки безпеки.",
+      "enterValidEmail": "Введіть коректний email.",
+      "invalidMode": "Невірний режим.",
+      "accountNotFoundGoRegister": "Акаунт не знайдено. Перейдіть до «Реєстрація».",
+      "emailAlreadyRegisteredGoLogin": "Цей email уже зареєстрований. Перейдіть до «Вхід».",
+      "enterUsernameMin": "Введіть нік (мінімум 3 символи).",
+      "usernameTooLongMax": "Нік занадто довгий (макс. 20).",
+      "codeSent": "Код надіслано.",
+      "sendCodeError": "Помилка надсилання коду.",
+      "invalidEmail": "Некоректний email.",
+      "codeMustBe6Digits": "Код має складатися з 6 цифр.",
+      "clickGetCodeFirst": "Спочатку натисніть «Отримати код».",
+      "codeForOtherAction": "Код було надіслано для іншої дії.",
+      "codeExpired": "Термін дії коду закінчився. Натисніть «Отримати код» ще раз.",
+      "tooManyAttempts": "Занадто багато спроб. Запросіть новий код.",
+      "invalidCode": "Невірний код.",
+      "verifyCodeError": "Помилка перевірки коду.",
+      "waitBeforeRetry": "Зачекайте {{seconds}} с. і спробуйте ще раз."
+    },
+    "profile": {
+      "usernameTooShort": "Нік мінімум 3 символи.",
+      "usernameChangeTooEarly": "Нік можна змінювати лише раз на 30 днів.",
+      "updateFailed": "Не вдалося оновити профіль"
+    },
+    "settings": {
+      "notificationsLoadFailed": "Не вдалося завантажити налаштування сповіщень",
+      "telegramConnectFirst": "Спочатку підключіть Telegram",
+      "notificationsSaveFailed": "Не вдалося зберегти сповіщення",
+      "telegramNotConfigured": "Telegram не налаштований на сервері",
+      "telegramUnlinkFailed": "Не вдалося відв’язати Telegram"
+    },
+    "official": {
+      "chatCreateFailed": "Не вдалося створити офіційний чат",
+      "sendFailed": "Не вдалося надіслати офіційне повідомлення",
+      "chatNotFound": "Офіційний чат не знайдено",
+      "readOnlyInRegularList": "У звичайному списку офіційний чат доступний лише для читання",
+      "filesNotAllowed": "В офіційний чат поки не можна надсилати файли",
+      "notOfficialChat": "Це не офіційний чат"
+    },
+    "offers": {
+      "notFound": "Офер не знайдено",
+      "cannotActivate": "Офер не можна активувати",
+      "alreadyInactive": "Офер уже неактивний",
+      "cloneOnlySold": "Можна клонувати лише проданий офер",
+      "notAllFieldsFilled": "Не всі поля заповнені",
+      "invalidPrice": "Некоректна ціна",
+      "imageProcessingError": "Помилка обробки зображення",
+      "productUnavailable": "Товар недоступний",
+      "listingNotFound": "Оголошення не знайдено",
+      "deletedCannotActivate": "Видалене оголошення не можна активувати",
+      "soldCannotActivate": "Продане оголошення не можна активувати",
+      "adminCannotActivate": "Оголошення не можна активувати",
+      "adminAlreadyInactive": "Оголошення вже неактивне",
+      "adminAlreadyDeleted": "Оголошення вже видалено",
+      "minPrice": "Мінімальна ціна {{price}} {{currency}}",
+      "maxPrice": "Максимальна ціна {{price}} {{currency}}",
+      "fillTitleForLanguage": "Заповніть назву для мови: {{language}}",
+      "fillDescriptionForLanguage": "Заповніть опис для мови: {{language}}"
+    },
+    "chats": {
+      "notFound": "Чат не знайдено",
+      "blockedByOther": "Вас заблокував цей користувач",
+      "userBlocked": "Користувача заблоковано",
+      "cannotMessageSelf": "Не можна писати самому собі",
+      "officialCannotBlock": "Офіційний акаунт не можна блокувати",
+      "staffCannotBlock": "Співробітників не можна блокувати"
+    },
+    "orders": {
+      "notFound": "Замовлення не знайдено",
+      "checkoutNotImplemented": "Нова логіка оплати ще не підключена",
+      "notParticipant": "Ви не є учасником цього замовлення",
+      "confirmImpossible": "Підтвердження неможливе",
+      "refundImpossible": "Повернення неможливе"
+    },
+    "reviews": {
+      "onlyAfterCompleted": "Відгук можна залишити лише після завершення угоди",
+      "alreadyCreated": "Відгук уже залишено"
+    },
+    "resolution": {
+      "onlyResolutionChat": "Лише Resolution може писати в чат замовлення від імені арбітражу",
+      "noActiveDispute": "За цим замовленням немає активного спору",
+      "assignedToOther": "Цей спір призначено іншому співробітнику Resolution",
+      "onlyResolutionDecision": "Лише Resolution може приймати рішення за спором",
+      "alreadyDecided": "Рішення за цим замовленням уже прийнято",
+      "invalidDecision": "Некоректне рішення",
+      "enterDecisionText": "Вкажіть текст рішення",
+      "enterResolutionEmployee": "Не вказано співробітника Resolution",
+      "employeeNotFound": "Співробітника Resolution не знайдено",
+      "userHasNoResolutionRole": "Користувач не має ролі Resolution"
+    },
+    "support": {
+      "onlySupport": "Лише для підтримки",
+      "enterUserId": "Введіть ID користувача",
+      "enterOfferId": "Введіть ID оголошення",
+      "enterSubject": "Введіть тему",
+      "enterDescription": "Введіть опис",
+      "disputeAlreadyOpened": "За цим замовленням спір уже відкрито",
+      "completedAppealBuyer72h": "Апеляцію за завершеним замовленням може відкрити лише покупець протягом 72 годин після підтвердження",
+      "cannotOpenThisCategory": "За цим замовленням не можна відкрити звернення в цій категорії",
+      "tooManyActiveTickets": "У вас занадто багато активних тікетів",
+      "ticketNotFound": "Тікет не знайдено",
+      "ticketClosed": "Тікет закрито",
+      "notOrderDispute": "Цей тікет не є спором за замовленням",
+      "linkedOrderNotFound": "Пов’язане замовлення не знайдено",
+      "cannotReopenOrderDisputeManually": "Спір за замовленням не можна пере відкрити вручну",
+      "ticketAlreadyAssignedToThisEmployee": "Тікет уже призначено цьому співробітнику",
+      "enterEmployee": "Не вказано співробітника",
+      "employeeNotFound": "Співробітника не знайдено",
+      "ticketAlreadyAssignedOther": "Тікет уже призначено іншому співробітнику",
+      "onlyAssignedCanClose": "Закрити можна лише тікет, призначений вам",
+      "onlyAfterSupportReply": "Закрити можна лише після відповіді підтримки",
+      "supportNotRepliedYet": "Підтримка ще не відповіла",
+      "ticketNotClosed": "Тікет не закрито",
+      "ticketAlreadyReopened": "Тікет уже пере відкривали. Створіть новий тікет."
+    },
+    "admin": {
+      "invalidRole": "Невірна роль",
+      "notEnoughRightsSetRole": "Недостатньо прав для зміни цієї ролі",
+      "onlyAdminCanTransferTickets": "Лише адміністратор може передавати тікети",
+      "invalidCommission": "Некоректна комісія",
+      "notEnoughRightsBan": "Недостатньо прав для блокування цього користувача"
+    },
+    "uploads": {
+      "fileTooLarge": "Файл занадто великий",
+      "fileUploadError": "Помилка завантаження файлу",
+      "onlyImages": "Можна завантажувати лише зображення",
+      "onlyImagesAndVideos": "Можна завантажувати лише зображення та відео",
+      "onlyImagesVideosPdf": "Можна завантажувати лише зображення, відео та PDF"
+    }
+  }
+}
