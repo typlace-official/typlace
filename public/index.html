@@ -1,9 +1,39 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" class="tp-preload">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>TyPlace</title>
+
+  <style>
+    html.tp-preload body{
+      opacity:0;
+      visibility:hidden;
+    }
+
+    html.tp-ready body{
+      opacity:1;
+      visibility:visible;
+      transition:opacity .12s ease;
+    }
+  </style>
+
+  <script>
+    (function () {
+      let finished = false;
+
+      window.tpFinishBoot = function () {
+        if (finished) return;
+        finished = true;
+        document.documentElement.classList.remove("tp-preload");
+        document.documentElement.classList.add("tp-ready");
+      };
+
+      window.tpBootFailsafeTimer = setTimeout(() => {
+        window.tpFinishBoot();
+      }, 4000);
+    })();
+  </script>
 
   <link rel="stylesheet" href="/header.css">
   <link rel="stylesheet" href="/footer.css">
@@ -62,19 +92,19 @@
     }
 
     .letter-title{
-  font-size:18px;
-  font-weight:700;
-  color:#9ca3af;
-  margin-bottom:14px;
-  padding-left:4px;
-}
+      font-size:18px;
+      font-weight:700;
+      color:#9ca3af;
+      margin-bottom:14px;
+      padding-left:4px;
+    }
 
     /* ===== games grid ===== */
     .games-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill, minmax(90px,1fr));
-  gap:14px;
-}
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(90px,1fr));
+      gap:14px;
+    }
 
     .game-card{
       display:flex;
@@ -85,163 +115,163 @@
     }
 
     .game-icon{
-  width:96px;
-  height:96px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
+      width:96px;
+      height:96px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
 
     .game-icon img{
-  width:72px;
-  height:72px;
-  object-fit:contain;
-  border-radius:16px;
-}
+      width:72px;
+      height:72px;
+      object-fit:contain;
+      border-radius:16px;
+    }
 
     .game-card span{
-  font-size:12px;
-  font-weight:700;
-  text-align:center;
-}
+      font-size:12px;
+      font-weight:700;
+      text-align:center;
+    }
 
     @media(max-width:700px){
       .alphabet{
         display:none;
       }
     }
+
     @media (max-width: 768px){
+      .page{
+        display:block;
+        padding:16px 12px 40px;
+      }
 
-  .page{
-    display: block;
-    padding:16px 12px 40px;
-  }
+      .letter-block{
+        margin-bottom:32px;
+      }
 
-  .letter-block{
-    margin-bottom:32px;
-  }
+      .letter-title{
+        font-size:16px;
+      }
 
-  .letter-title{
-    font-size:16px;
-  }
+      .games-grid{
+        grid-template-columns:repeat(3,1fr);
+        gap:12px;
+      }
 
-  .games-grid{
-    grid-template-columns:repeat(3,1fr);
-    gap:12px;
-  }
+      .game-icon{
+        width:100%;
+        height:auto;
+      }
 
-  .game-icon{
-    width:100%;
-    height:auto;
-  }
+      .game-icon img{
+        width:64px;
+        height:64px;
+      }
 
-  .game-icon img{
-    width:64px;
-    height:64px;
-  }
+      .game-card span{
+        font-size:11px;
+      }
+    }
 
-  .game-card span{
-    font-size:11px;
-  }
-}
-html, body{
-  overflow-x: hidden;
-}
+    html, body{
+      overflow-x:hidden;
+    }
 
-.page{
-  width: 100%;
-  box-sizing: border-box;
-}
+    .page{
+      width:100%;
+      box-sizing:border-box;
+    }
 
-.content{
-  min-width: 0;
-}
-img{ max-width:100%; }
-/* ===== HOME ===== */
+    .content{
+      min-width:0;
+    }
 
-.section-title{
-  font-size:20px;
-  font-weight:800;
-  margin-bottom:18px;
-}
+    img{
+      max-width:100%;
+    }
 
-.games-home{
-  display:flex;
-  gap:20px;
-}
+    /* ===== HOME ===== */
 
-.game-home-card{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:2px;
-  cursor:pointer;
-}
+    .section-title{
+      font-size:20px;
+      font-weight:800;
+      margin-bottom:18px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
 
-.game-home-icon{
-  width:96px;
-  height:96px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
+    .games-home{
+      display:flex;
+      gap:20px;
+    }
 
-.game-home-icon img{
-  width:72px;
-  height:72px;
-  border-radius:18px;
-}
+    .game-home-card{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:2px;
+      cursor:pointer;
+    }
 
-.game-home-card span{
-  font-size:14px;
-  font-weight:500;
-  margin-top:-2px;
-}
+    .game-home-icon{
+      width:96px;
+      height:96px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
 
-.home-note{
-  margin-top:26px;
-  font-size:13px;
-  color:#9ca3af;
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
+    .game-home-icon img{
+      width:72px;
+      height:72px;
+      border-radius:18px;
+    }
 
-.home-note-icon{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  flex-shrink:0;
-}
+    .game-home-card span{
+      font-size:14px;
+      font-weight:500;
+      margin-top:-2px;
+    }
 
-.home-note-icon svg{
-  width:16px;
-  height:16px;
-  stroke:currentColor;
-  fill:none;
-  stroke-width:2;
-}
+    .home-note{
+      margin-top:26px;
+      font-size:13px;
+      color:#9ca3af;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
 
-.home-note-text{
-  font-weight:500;
-  line-height:1.4;
-}
-.section-title{
-  font-size:20px;
-  font-weight:800;
-  margin-bottom:18px;
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
+    .home-note-icon{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      flex-shrink:0;
+    }
 
-.section-icon svg{
-  width:20px;
-  height:20px;
-  stroke:#1E50D4;
-  fill:none;
-  stroke-width:1.6;
-}
+    .home-note-icon svg{
+      width:16px;
+      height:16px;
+      stroke:currentColor;
+      fill:none;
+      stroke-width:2;
+    }
+
+    .home-note-text{
+      font-weight:500;
+      line-height:1.4;
+    }
+
+    .section-icon svg{
+      width:20px;
+      height:20px;
+      stroke:#1E50D4;
+      fill:none;
+      stroke-width:1.6;
+    }
   </style>
 </head>
 
@@ -252,78 +282,149 @@ img{ max-width:100%; }
 
   <!-- PAGE -->
   <main class="page-content">
-  <div class="page">
+    <div class="page">
+      <div class="content">
 
-<div class="content">
+        <h2 class="section-title">
+          <span class="section-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M7 7h10v10H7z"/>
+              <path d="M3 3h6v6H3z"/>
+              <path d="M15 15h6v6h-6z"/>
+            </svg>
+          </span>
 
-<h2 class="section-title">
+          <span data-i18n="page.games"></span>
+        </h2>
 
-<span class="section-icon">
-<svg viewBox="0 0 24 24">
-<path d="M7 7h10v10H7z"/>
-<path d="M3 3h6v6H3z"/>
-<path d="M15 15h6v6h-6z"/>
-</svg>
-</span>
+        <div class="games-home" id="gamesHome"></div>
 
-<span data-i18n="page.games"></span>
+        <div class="home-note">
+          <span class="home-note-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9"></circle>
+              <line x1="12" y1="10" x2="12" y2="16"></line>
+              <circle cx="12" cy="7" r="1"></circle>
+            </svg>
+          </span>
 
-</h2>
-<div class="games-home" id="gamesHome"></div>
+          <span class="home-note-text" data-i18n="page.categories_coming"></span>
+        </div>
 
-<div class="home-note">
-  <span class="home-note-icon" aria-hidden="true">
-    <svg viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="9"></circle>
-      <line x1="12" y1="10" x2="12" y2="16"></line>
-      <circle cx="12" cy="7" r="1"></circle>
-    </svg>
-  </span>
-
-<span class="home-note-text" data-i18n="page.categories_coming"></span>
-</div>
-
-</div>
-  </div>
+      </div>
+    </div>
   </main>
 
   <div id="footer-container"></div>
 
-<script src="/socket.io/socket.io.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/i18n.js"></script>
+  <script src="/header.js"></script>
+  <script type="module" src="/games/index.js"></script>
+  <script src="/footer.js"></script>
 
-<script src="/i18n.js"></script>
-
-<script src="/header.js"></script>
-<script type="module" src="/games/index.js"></script>
-<script src="/footer.js"></script>
   <script>
-document.addEventListener("DOMContentLoaded", () => {
+    function waitForContainerContent(selector, timeout = 4000) {
+      return new Promise((resolve) => {
+        const el = document.querySelector(selector);
 
-  const container = document.getElementById("gamesHome");
+        if (!el) {
+          resolve();
+          return;
+        }
 
-  const games = window.GAMES || {};
+        const hasContent = () => {
+          return el.children.length > 0 || el.innerHTML.trim().length > 0;
+        };
 
-  Object.entries(games).forEach(([id, game]) => {
+        if (hasContent()) {
+          resolve();
+          return;
+        }
 
-    const card = document.createElement("div");
-    card.className = "game-home-card";
+        const observer = new MutationObserver(() => {
+          if (hasContent()) {
+            observer.disconnect();
+            resolve();
+          }
+        });
 
-    card.onclick = () => {
-      location.href = "/game.html?game=" + id;
-    };
+        observer.observe(el, {
+          childList: true,
+          subtree: true
+        });
 
-    card.innerHTML = `
-      <div class="game-home-icon">
-        <img src="${game.icon}" alt="${game.title}">
-      </div>
-      <span>${game.title}</span>
-    `;
+        setTimeout(() => {
+          observer.disconnect();
+          resolve();
+        }, timeout);
+      });
+    }
 
-    container.appendChild(card);
+    function renderGamesHome() {
+      const container = document.getElementById("gamesHome");
+      if (!container) return;
 
-  });
+      container.innerHTML = "";
 
-});
+      const games = window.GAMES || {};
+
+      Object.entries(games).forEach(([id, game]) => {
+        const card = document.createElement("div");
+        card.className = "game-home-card";
+
+        card.onclick = () => {
+          location.href = "/game.html?game=" + id;
+        };
+
+        card.innerHTML = `
+          <div class="game-home-icon">
+            <img src="${game.icon}" alt="${game.title}">
+          </div>
+          <span>${game.title}</span>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+        const currentLang = localStorage.getItem("tp_lang") || "ru";
+
+        if (window.tpI18n && typeof window.tpI18n.load === "function") {
+          await window.tpI18n.load(currentLang);
+        }
+
+        renderGamesHome();
+
+await Promise.all([
+  (window.tpI18nReady && typeof window.tpI18nReady.then === "function")
+    ? window.tpI18nReady
+    : Promise.resolve(),
+
+  (window.tpHeaderReady && typeof window.tpHeaderReady.then === "function")
+    ? window.tpHeaderReady
+    : waitForContainerContent("#header-container"),
+
+  waitForContainerContent("#footer-container")
+]);
+      } catch (err) {
+        console.error("Home boot error:", err);
+      } finally {
+        if (window.tpBootFailsafeTimer) {
+          clearTimeout(window.tpBootFailsafeTimer);
+        }
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (typeof window.tpFinishBoot === "function") {
+              window.tpFinishBoot();
+            }
+          });
+        });
+      }
+    });
   </script>
 
 </body>

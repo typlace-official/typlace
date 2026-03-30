@@ -1,0 +1,20 @@
+{
+  "title": "История обращений — TyPlace",
+  "nav": {
+    "home": "Главная",
+    "current": "История обращений"
+  },
+  "heading": "История обращений",
+  "filters": {
+    "all": "Статус",
+    "waiting": "Ожидает ответа",
+    "in_progress": "В процессе",
+    "resolved": "Решено"
+  },
+  "ticketLabel": "Обращение",
+  "orderLabel": "Заказ",
+  "empty": "Обращений нет",
+  "errors": {
+    "loadFailed": "Ошибка"
+  }
+}

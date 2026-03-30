@@ -1,0 +1,11 @@
+{
+  "page": {
+    "title": "Account blocked — TyPlace",
+    "brand": "TyPlace",
+    "heading": "Account blocked",
+    "text": "Access to your account has been restricted due to a violation of platform rules.",
+    "note": "If you believe this block was made by mistake, contact support and describe the situation in detail.",
+    "supportButton": "Contact support",
+    "homeButton": "Go to home"
+  }
+}

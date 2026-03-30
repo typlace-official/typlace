@@ -2,7 +2,7 @@
   "title": "Створити звернення",
 
   "category": "Категорія",
-  "chooseCategory": "Виберіть категорію",
+  "chooseCategory": "Оберіть категорію",
 
   "categories": {
     "order": "Проблема із замовленням",
@@ -21,13 +21,14 @@
     "cancel_order": "Хочу скасувати замовлення",
 
     "buyer_not_confirm": "Покупець не підтверджує замовлення",
-    "delivery_or_service_problem": "Проблема з передачею товару або виконанням послуги",
+    "delivery_problem": "Проблема з передачею товару або наданням послуги",
+    "buyer_abuse_or_false_claim": "Покупець зловживає системою або подав неправдиву скаргу",
 
     "deposit_problem": "Проблема з поповненням",
     "withdraw_problem": "Проблема з виведенням",
     "payment_failed": "Платіж не проходить",
 
-    "account_hacked": "Мій акаунт зламали",
+    "account_hacked": "Мій акаунт зламано",
     "restore_access": "Відновити доступ до акаунта",
     "appeal_ban": "Оскаржити блокування акаунта",
 
@@ -53,14 +54,14 @@
   },
 
   "role": "Хто ви?",
-  "choose": "Виберіть",
+  "choose": "Оберіть",
 
   "roleBuyer": "Я покупець",
   "roleSeller": "Я продавець",
 
   "subject": "Тема звернення",
-  "chooseSubject": "Виберіть тему",
-  "selectRoleFirst": "Спочатку виберіть роль",
+  "chooseSubject": "Оберіть тему",
+  "selectRoleFirst": "Спочатку оберіть роль",
 
   "orderId": "Номер замовлення",
 

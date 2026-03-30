@@ -1,0 +1,51 @@
+{
+  "title": "Звернення — TyPlace",
+  "nav": {
+    "adminBack": "Панель підтримки",
+    "historyBack": "Історія звернень"
+  },
+  "messagePlaceholder": "Повідомлення",
+  "supportName": "Підтримка TyPlace",
+  "ticketLabel": "Звернення",
+  "fileName": "photo.{{ext}}",
+  "status": {
+    "waiting": "Очікує відповіді",
+    "in_progress": "У процесі",
+    "resolved": "Вирішено"
+  },
+  "sidebar": {
+    "status": "Статус",
+    "created": "Створено",
+    "details": "Деталі звернення",
+    "category": "Категорія",
+    "subject": "Тема",
+    "orderId": "Номер замовлення",
+    "userId": "ID користувача",
+    "offerId": "ID оголошення",
+    "priority": "Пріоритет",
+    "assigned": "Відповідальний"
+  },
+  "priority": {
+    "high": "Високий"
+  },
+  "actions": {
+    "assign": "Взяти тікет",
+    "resolve": "Позначити як вирішене",
+    "close": "Закрити звернення",
+    "reopen": "Повторно відкрити звернення",
+    "backToList": "До списку тікетів"
+  },
+  "confirm": {
+    "close": "Закрити звернення?",
+    "reopen": "Повторно відкрити звернення?"
+  },
+  "errors": {
+    "loadFailed": "Помилка завантаження",
+    "messageTooLong": "Повідомлення занадто довге",
+    "sendFailed": "Помилка",
+    "assignFailed": "Не вдалося взяти тікет",
+    "closeFailed": "Помилка закриття",
+    "reopenFailed": "Помилка повторного відкриття",
+    "fileTooLarge": "Максимальний розмір файлу 5MB"
+  }
+}

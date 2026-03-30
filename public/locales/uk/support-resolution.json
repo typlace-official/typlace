@@ -1,0 +1,86 @@
+{
+  "page": {
+    "title": "Підтримка — Арбітраж — TyPlace",
+    "brand": {
+      "subtitle": "Support Panel"
+    },
+    "nav": {
+      "tickets": "Тікети",
+      "resolution": "Арбітраж",
+      "official": "Офіційні повідомлення"
+    },
+    "sidebar": {
+      "adminBack": "В адмінку",
+      "logout": "Вийти"
+    },
+    "heading": "Арбітраж",
+    "subheading": "Черга спорів по замовленнях і призначення співробітників resolution.",
+    "rolePrefix": "Роль",
+    "stats": {
+      "total": "Усього спорів",
+      "waiting": "Очікують",
+      "in_progress": "У процесі",
+      "resolved": "Вирішені"
+    },
+    "filters": {
+      "allStatuses": "Усі статуси",
+      "waiting": "Очікують відповіді",
+      "in_progress": "У процесі",
+      "resolved": "Вирішені",
+      "allDisputes": "Усі спори",
+      "onlyMine": "Тільки мої"
+    },
+    "status": {
+      "waiting": "Очікує відповіді",
+      "in_progress": "У процесі",
+      "resolved": "Вирішено"
+    },
+    "wait": {
+      "label": "Чекає",
+      "minutes": "{{count}} хв.",
+      "hoursMinutes": "{{hours}} год. {{minutes}} хв."
+    },
+    "assign": {
+      "title": "Призначення арбітражу",
+      "titleWithId": "Призначення арбітражу — {{id}}",
+      "subtitle": "Виберіть співробітника resolution",
+      "orderSubtitle": "Замовлення: {{orderId}}",
+      "searchPlaceholder": "Email, нік або ID співробітника resolution",
+      "searchBtn": "Знайти",
+      "closeBtn": "Закрити",
+      "enterQuery": "Введіть email, нік або ID співробітника resolution",
+      "searching": "Пошук...",
+      "notFound": "Арбітраж не знайдено",
+      "assignBtn": "Призначити",
+      "success": "Арбітраж призначено",
+      "staffFallback": "Співробітник",
+      "disputeFallback": "спір"
+    },
+    "meta": {
+      "dispute": "Спір",
+      "disputeFallback": "Спір по замовленню",
+      "order": "Замовлення",
+      "userId": "ID користувача",
+      "role": "Роль",
+      "newCount": "Нових: {{count}}",
+      "createdBy": "Створив",
+      "createdByFallback": "Користувач",
+      "userIdShort": "ID {{id}}",
+      "resolutionUnassigned": "Арбітраж: не призначено",
+      "resolutionAssigned": "Арбітраж: {{value}}"
+    },
+    "actions": {
+      "assignResolution": "Призначити арбітра",
+      "openTicket": "Відкрити тікет"
+    },
+    "empty": {
+      "loading": "Завантаження...",
+      "loadFailed": "Помилка завантаження спорів",
+      "noDisputes": "Спорів немає"
+    },
+    "errors": {
+      "searchFailed": "Помилка пошуку співробітників",
+      "assignFailed": "Не вдалося призначити арбітраж"
+    }
+  }
+}

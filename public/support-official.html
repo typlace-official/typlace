@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Поддержка — Официальные сообщения — TyPlace</title>
+<script>
+  document.titleKey = "page.title";
+</script>
+<title data-i18n="page.title"></title>
 <link rel="stylesheet" href="/support-panel.css">
 </head>
 <body>
@@ -12,56 +15,56 @@
   <aside class="support-sidebar">
     <div class="support-brand">
       <div class="support-brand-title">TyPlace</div>
-      <div class="support-brand-subtitle">Support Panel</div>
+      <div class="support-brand-subtitle" data-i18n="page.brand.subtitle"></div>
     </div>
 
     <nav class="support-nav">
-      <a class="support-nav-link" href="/support-admin.html">Тикеты</a>
-      <a class="support-nav-link" href="/support-resolution.html">Арбитраж</a>
-      <a class="support-nav-link active" href="/support-official.html">Официальные сообщения</a>
+      <a class="support-nav-link" href="/support-admin.html" data-i18n="page.nav.tickets"></a>
+      <a class="support-nav-link" href="/support-resolution.html" data-i18n="page.nav.resolution"></a>
+      <a class="support-nav-link active" href="/support-official.html" data-i18n="page.nav.official"></a>
     </nav>
 
     <div class="support-sidebar-bottom">
-      <a class="support-side-btn" id="adminBackBtn" href="/admin">В админку</a>
-      <button class="support-side-btn danger" id="logoutBtn" type="button">Выйти</button>
+      <a class="support-side-btn" id="adminBackBtn" href="/admin" data-i18n="page.sidebar.adminBack"></a>
+      <button class="support-side-btn danger" id="logoutBtn" type="button" data-i18n="page.sidebar.logout"></button>
     </div>
   </aside>
 
   <main class="support-content">
     <div class="support-content-top">
       <div class="support-page-head">
-        <h1>Официальные сообщения</h1>
-        <p>Поиск пользователя и переход в официальный чат от имени TyPlace.</p>
+        <h1 data-i18n="page.heading"></h1>
+        <p data-i18n="page.subheading"></p>
       </div>
 
-      <div class="role-pill" id="rolePill">Роль: ...</div>
+      <div class="role-pill" id="rolePill"></div>
     </div>
 
     <div class="tool-stack">
       <div class="card card-pad">
-        <div class="card-title">Поиск пользователя</div>
-        <div class="card-subtitle">Введите email, ник или userId, чтобы открыть официальный чат.</div>
+        <div class="card-title" data-i18n="page.search.title"></div>
+        <div class="card-subtitle" data-i18n="page.search.subtitle"></div>
 
         <div class="search-row">
           <input
             type="text"
             id="officialSearchInput"
             class="search-input"
-            placeholder="Email, ник или ID пользователя"
+            data-i18n-placeholder="page.search.placeholder"
           >
-          <button class="btn btn-primary" id="officialSearchBtn" type="button">Найти</button>
+          <button class="btn btn-primary" id="officialSearchBtn" type="button" data-i18n="page.search.button"></button>
         </div>
 
         <div class="user-results" id="officialSearchResults">
-          <div class="empty">Введите email, ник или ID пользователя</div>
+          <div class="empty" data-i18n="page.empty.enterQuery"></div>
         </div>
       </div>
-
     </div>
   </main>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
+<script src="/i18n.js"></script>
 <script>
 const token = localStorage.getItem("tp_token");
 
@@ -85,18 +88,78 @@ function esc(s){
     .replaceAll("'","&#039;");
 }
 
+function tr(key, params = {}, fallback = ""){
+  if(typeof key !== "string" || !key.trim()){
+    return fallback;
+  }
+
+  if(window.tpI18n && typeof window.tpI18n.t === "function"){
+    const translated = window.tpI18n.t(key, params);
+    if(translated && translated !== key){
+      return translated;
+    }
+  }
+
+  return fallback || key;
+}
+
 function getRoleLabel(role){
-  const map = {
-    support: "Support",
-    admin: "Admin",
-    super_admin: "Super Admin"
+  const keyMap = {
+    support: "common.badges.support",
+    admin: "common.badges.admin",
+    super_admin: "common.badges.super_admin"
   };
-  return map[role] || role || "—";
+
+  return tr(keyMap[role] || "", {}, role || "—");
 }
 
 function logout(){
   localStorage.removeItem("tp_token");
+  localStorage.removeItem("tp_user_email");
+  localStorage.removeItem("tp_user_id");
   location.href = "/auth.html?mode=login";
+}
+
+function handleMeStatus(status){
+  if(status === 401){
+    logout();
+    return true;
+  }
+
+  if(status === 403){
+    localStorage.removeItem("tp_token");
+    localStorage.removeItem("tp_user_email");
+    localStorage.removeItem("tp_user_id");
+    location.href = "/banned.html";
+    return true;
+  }
+
+  return false;
+}
+
+function handlePanelStatus(status){
+  if(status === 401){
+    logout();
+    return true;
+  }
+
+  if(status === 403){
+    location.href = "/";
+    return true;
+  }
+
+  return false;
+}
+
+function applyStaticTexts(){
+  if(window.tpI18n && typeof window.tpI18n.apply === "function"){
+    window.tpI18n.apply();
+  }
+
+  const rolePill = document.getElementById("rolePill");
+  if(rolePill){
+    rolePill.textContent = `${tr("page.rolePrefix", {}, "Роль")}: ${getRoleLabel(userRole)}`;
+  }
 }
 
 async function loadMe(){
@@ -104,14 +167,7 @@ async function loadMe(){
     headers:{ Authorization:"Bearer " + token }
   });
 
-  if(r.status === 401){
-    logout();
-    return false;
-  }
-
-  if(r.status === 403){
-    localStorage.removeItem("tp_token");
-    location.href = "/banned.html";
+  if(handleMeStatus(r.status)){
     return false;
   }
 
@@ -123,7 +179,6 @@ async function loadMe(){
   }
 
   userRole = d.user.role || "";
-  document.getElementById("rolePill").textContent = "Роль: " + getRoleLabel(userRole);
 
   if(!OFFICIAL_PAGE_ROLES.has(userRole)){
     location.href = "/";
@@ -135,7 +190,9 @@ async function loadMe(){
     adminBackBtn.classList.add("hidden");
   }
 
+  applyStaticTexts();
   socket.emit("auth", { token });
+
   return true;
 }
 
@@ -143,12 +200,12 @@ function renderOfficialUsers(users, query){
   const list = document.getElementById("officialSearchResults");
 
   if(!query){
-    list.innerHTML = '<div class="empty">Введите email, ник или ID пользователя</div>';
+    list.innerHTML = '<div class="empty">' + esc(tr("page.empty.enterQuery", {}, "Введите email, ник или ID пользователя")) + '</div>';
     return;
   }
 
   if(!Array.isArray(users) || !users.length){
-    list.innerHTML = '<div class="empty">Пользователи не найдены</div>';
+    list.innerHTML = '<div class="empty">' + esc(tr("page.empty.notFound", {}, "Пользователи не найдены")) + '</div>';
     return;
   }
 
@@ -163,7 +220,7 @@ function renderOfficialUsers(users, query){
 
     const name = document.createElement("div");
     name.className = "user-name";
-    name.textContent = user.username || "Пользователь";
+    name.textContent = user.username || tr("page.meta.userFallback", {}, "Пользователь");
 
     const meta = document.createElement("div");
     meta.className = "user-meta";
@@ -176,21 +233,21 @@ function renderOfficialUsers(users, query){
     if(user.userId){
       const idChip = document.createElement("div");
       idChip.className = "meta-chip";
-      idChip.textContent = "ID: " + user.userId;
+      idChip.textContent = `${tr("page.meta.userId", {}, "ID")}: ${user.userId}`;
       meta.appendChild(idChip);
     }
 
     if(user.role){
       const roleChip = document.createElement("div");
       roleChip.className = "meta-chip";
-      roleChip.textContent = "Роль: " + user.role;
+      roleChip.textContent = `${tr("page.meta.role", {}, "Роль")}: ${getRoleLabel(user.role)}`;
       meta.appendChild(roleChip);
     }
 
     if(user.banned){
       const bannedChip = document.createElement("div");
       bannedChip.className = "meta-chip";
-      bannedChip.textContent = "Заблокирован";
+      bannedChip.textContent = tr("page.meta.banned", {}, "Заблокирован");
       meta.appendChild(bannedChip);
     }
 
@@ -203,7 +260,7 @@ function renderOfficialUsers(users, query){
     const btn = document.createElement("button");
     btn.className = "btn btn-primary";
     btn.type = "button";
-    btn.textContent = "Открыть чат";
+    btn.textContent = tr("page.actions.openChat", {}, "Открыть чат");
     btn.onclick = () => openOfficialChat(user.email);
 
     actions.appendChild(btn);
@@ -225,27 +282,20 @@ async function searchOfficialUsers(){
     return;
   }
 
-  list.innerHTML = '<div class="empty">Поиск...</div>';
+  list.innerHTML = '<div class="empty">' + esc(tr("page.empty.searching", {}, "Поиск...")) + '</div>';
 
   const r = await fetch("/api/support/users/search?q=" + encodeURIComponent(query), {
     headers:{ Authorization:"Bearer " + token }
   });
 
-  if(r.status === 401){
-    logout();
-    return;
-  }
-
-  if(r.status === 403){
-    localStorage.removeItem("tp_token");
-    location.href = "/banned.html";
+  if(handlePanelStatus(r.status)){
     return;
   }
 
   const d = await r.json().catch(() => ({}));
 
   if(!d.success){
-    list.innerHTML = '<div class="empty">Ошибка поиска пользователей</div>';
+    list.innerHTML = '<div class="empty">' + esc(tr("page.errors.searchFailed", {}, "Ошибка поиска пользователей")) + '</div>';
     return;
   }
 
@@ -262,29 +312,21 @@ async function openOfficialChat(userEmail){
     body: JSON.stringify({ userEmail })
   });
 
-  if(r.status === 401){
-    logout();
-    return;
-  }
-
-  if(r.status === 403){
-    localStorage.removeItem("tp_token");
-    location.href = "/banned.html";
+  if(handlePanelStatus(r.status)){
     return;
   }
 
   const d = await r.json().catch(() => ({}));
 
   if(!d.success || !d.chat || !d.chat.id){
-    alert(d.message || "Не удалось открыть официальный чат");
+    alert(d.message || tr("page.errors.openChatFailed", {}, "Не удалось открыть официальный чат"));
     return;
   }
 
-  location.href = "/chats.html?scope=official&id=" + encodeURIComponent(d.chat.id);
+  location.href = "/chats.html?scope=official&chat=" + encodeURIComponent(d.chat.id);
 }
 
 document.getElementById("officialSearchBtn").onclick = searchOfficialUsers;
-
 document.getElementById("logoutBtn").onclick = logout;
 
 document.getElementById("officialSearchInput").addEventListener("keydown", (e) => {
@@ -294,8 +336,19 @@ document.getElementById("officialSearchInput").addEventListener("keydown", (e) =
   }
 });
 
-loadMe();
+window.addEventListener("tp:lang-change", () => {
+  applyStaticTexts();
+});
 
+Promise.resolve(window.tpI18nReady)
+  .catch(() => {})
+  .finally(() => {
+    applyStaticTexts();
+
+    loadMe().then((ok) => {
+      if(!ok) return;
+    });
+  });
 </script>
 </body>
 </html>

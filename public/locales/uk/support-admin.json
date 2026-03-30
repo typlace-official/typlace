@@ -1,0 +1,73 @@
+{
+  "page": {
+    "title": "Підтримка — Тікети — TyPlace",
+    "brand": {
+      "subtitle": "Support Panel"
+    },
+    "nav": {
+      "tickets": "Тікети",
+      "resolution": "Арбітраж",
+      "official": "Офіційні повідомлення"
+    },
+    "sidebar": {
+      "adminBack": "В адмінку",
+      "logout": "Вийти"
+    },
+    "heading": "Тікети підтримки",
+    "subheading": "Черга звернень користувачів і модераторів.",
+    "rolePrefix": "Роль",
+    "stats": {
+      "waiting": "Очікують",
+      "in_progress": "У процесі",
+      "resolved": "Вирішені",
+      "total": "Усього"
+    },
+    "filters": {
+      "allStatuses": "Усі статуси",
+      "waiting": "Очікують відповіді",
+      "in_progress": "У процесі",
+      "resolved": "Вирішені",
+      "allTickets": "Усі тікети",
+      "onlyMine": "Тільки мої"
+    },
+    "status": {
+      "waiting": "Очікує відповіді",
+      "in_progress": "У процесі",
+      "resolved": "Вирішено"
+    },
+    "wait": {
+      "label": "Чекає",
+      "minutes": "{{count}} хв.",
+      "hoursMinutes": "{{hours}} год. {{minutes}} хв."
+    },
+    "priority": {
+      "highLabel": "Високий пріоритет"
+    },
+    "meta": {
+      "order": "Замовлення",
+      "userId": "ID користувача",
+      "offerId": "ID оголошення",
+      "newCount": "Нових: {{count}}",
+      "createdBy": "Створив",
+      "createdByFallback": "Користувач",
+      "lastReplyUser": "Остання відповідь: користувач",
+      "lastReplySupport": "Остання відповідь: підтримка",
+      "noMessages": "Повідомлень поки немає",
+      "assignedTo": "Відповідальний",
+      "unassigned": "не призначено",
+      "userIdShort": "ID {{id}}"
+    },
+    "actions": {
+      "assign": "Взяти",
+      "open": "Відкрити"
+    },
+    "empty": {
+      "loading": "Завантаження...",
+      "loadFailed": "Помилка завантаження тікетів",
+      "noTickets": "Тікетів немає"
+    },
+    "errors": {
+      "assignFailed": "Не вдалося взяти тікет"
+    }
+  }
+}

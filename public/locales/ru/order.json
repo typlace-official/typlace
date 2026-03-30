@@ -1,14 +1,69 @@
 {
+  "title": "Заказ — TyPlace",
+  "loading": "Загрузка…",
+  "showFull": "Показать полностью",
+  "descriptionTitle": "Описание",
+  "order": {
+    "numberLabel": "Заказ",
+    "createdLabel": "Создан",
+    "completedLabel": "Завершён",
+    "refundedLabel": "Возврат",
+    "descriptionEmpty": "Описание не указано.",
+    "status": {
+      "pending": "В процессе",
+      "completed": "Завершено",
+      "refunded": "Возврат"
+    },
+    "confirmReceiptBtn": "Подтвердить получение",
+    "confirmReceiptConfirm": "Подтвердить получение? Деньги будут переведены продавцу.",
+    "appealBtn": "Подать апелляцию",
+    "appealAvailable": "Апелляция доступна ещё {{time}}",
+    "refundBtn": "Вернуть деньги",
+    "refundConfirm": "Вернуть деньги покупателю?"
+  },
   "chat": {
     "writeMessage": "Написать сообщение...",
-    "report": "Пожаловаться",
-    "mute": "Выключить уведомления",
+    "resolutionWriteMessage": "Напишите сообщение от лица арбитража",
+    "orderChatTitle": "Чат заказа",
+    "resolutionChatSub": "Арбитражный чат",
+    "readOnlyChatSub": "Просмотр сообщений",
+    "report": "Открыть спор",
+    "mute": "Отключить уведомления",
     "unmute": "Включить уведомления",
+    "attach": "Прикрепить",
+    "send": "Отправить",
     "online": "В сети",
     "offline": "Не в сети",
     "justNow": "Только что",
-    "minutesAgo": "Был(а) {{count}} мин назад",
-    "hoursAgo": "Был(а) {{count}} ч назад",
-    "daysAgo": "Был(а) {{count}} д назад"
+    "minutesAgo": "{{count}} мин. назад",
+    "hoursAgo": "{{count}} ч. назад",
+    "daysAgo": "{{count}} д. назад",
+    "today": "Сегодня",
+    "yesterday": "Вчера"
+  },
+  "resolution": {
+    "title": "Решение арбитража",
+    "placeholder": "Напишите итоговое решение по спору",
+    "confirmBtn": "Подтвердить заказ",
+    "refundBtn": "Сделать возврат",
+    "decisionTextRequired": "Напишите текст решения",
+    "confirmDecisionConfirm": "Подтвердить заказ решением арбитража?",
+    "refundDecisionConfirm": "Сделать возврат решением арбитража?"
+  },
+  "review": {
+    "title": "Оставить отзыв",
+    "placeholder": "Напишите отзыв о сделке",
+    "submit": "Опубликовать",
+    "ratingRequired": "Поставьте оценку"
+  },
+  "alerts": {
+    "orderIdMissing": "Не указан заказ",
+    "orderNotFound": "Заказ не найден",
+    "sendMessageError": "Ошибка отправки сообщения",
+    "confirmOrderError": "Ошибка подтверждения заказа",
+    "refundOrderError": "Ошибка возврата",
+    "resolutionDecisionError": "Ошибка решения по спору",
+    "fileSendError": "Ошибка отправки файла",
+    "reviewSendError": "Ошибка при отправке отзыва"
   }
 }

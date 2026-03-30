@@ -2,8 +2,9 @@
   "sale": "Sale",
   "rent": "Rent",
 
-  "vc_yes": "Has VC",
-  "vc_no": "No VC",
+"vc_yes": "VC available",
+"vc_no": "No VC",
+"offer_fallback": "Offer",
 
   "other_amount": "Other amount",
 
@@ -18,7 +19,7 @@
 
   "badges": {
     "admin": "Admin",
-    "super_admin": "Super Admin",
+    "super_admin": "Super admin",
     "moderator": "Moderator",
     "support": "Support",
     "resolution": "Resolution",
@@ -36,7 +37,7 @@
   "price": "Price",
   "filters": "Filters",
   "amount": "Amount",
-  "search_by_name": "Search by title",
+  "search_by_name": "Search by name",
   "sell": "Sell",
 
   "offers_found_one": "{{count}} offer found",
@@ -51,7 +52,7 @@
 
   "home": "Home",
   "favorites": "Favorites",
-  "no_favorites": "You have no favorite offers yet",
+  "no_favorites": "You do not have any favorite offers yet",
 
   "from": "From",
   "to": "To",
@@ -76,8 +77,8 @@
   "delete_offer": "Delete offer",
 
   "invalid_price": "Enter a valid price",
-  "enter_title": "Enter a title in the selected language",
-  "enter_description": "Enter a description in the selected language",
+  "enter_title": "Enter the title in the selected language",
+  "enter_description": "Enter the description in the selected language",
 
   "offer_deleted": "Offer deleted",
   "offer_not_found": "Offer not found",
@@ -93,20 +94,70 @@
 
   "and": "and",
 
+  "page": {
+    "categories": {
+      "order": "Order issue",
+      "finance": "Payments and withdrawals",
+      "account": "Account issue",
+      "report": "Report a user",
+      "report_offer": "Report an offer",
+      "bug": "Report a bug",
+      "other": "Other"
+    },
+    "topics": {
+      "seller_not_complete": "Seller is not completing the order",
+      "wrong_item": "I received the wrong item",
+      "seller_took_back_item_or_access": "Seller took back the item or access",
+      "cancel_order": "I want to cancel the order",
+
+      "buyer_not_confirm": "Buyer is not confirming the order",
+      "delivery_problem": "Problem with item delivery or service completion",
+      "buyer_abuse_or_false_claim": "Buyer is abusing the system or filed a false claim",
+
+      "deposit_problem": "Deposit problem",
+      "withdraw_problem": "Withdrawal problem",
+      "payment_failed": "Payment failed",
+
+      "account_hacked": "My account was hacked",
+      "restore_access": "Restore account access",
+      "appeal_ban": "Appeal account ban",
+
+      "rule_violation": "Rule violation",
+      "scam": "Scam",
+      "insults": "Insults",
+      "spam": "Spam",
+
+      "fake_description": "Fake or incorrect description",
+      "wrong_category": "Wrong offer category",
+      "prohibited_item": "Prohibited item",
+      "price_manipulation": "Price manipulation",
+
+      "page_bug": "Page bug",
+      "chat_bug": "Chat bug",
+      "filters_bug": "Filters bug",
+
+      "general_question": "General question",
+      "site_suggestion": "Website suggestion",
+      "not_in_list": "Issue not in the list",
+
+      "other": "Other"
+    }
+  },
+
   "system_messages": {
     "label": "SYSTEM",
     "fallback_user": "User",
     "fallback_order": "Order",
     "fallback_text": "System message",
 
-    "order_created": "Buyer {{actor}} placed order {{order}}. Funds are on hold.",
+    "order_created": "Buyer {{actor}} created order {{order}}. Funds are frozen.",
     "order_confirmed": "Buyer {{actor}} confirmed receipt for order {{order}}. The deal is completed.",
     "order_refunded": "Seller {{actor}} issued a refund for order {{order}}.",
     "order_confirmed_admin": "Administrator confirmed order {{order}}. The deal is completed.",
     "order_refunded_admin": "Administrator issued a refund for order {{order}}.",
     "review_created": "Buyer {{actor}} left a review for order {{order}}.",
 
-    "resolution_requested": "A dispute has been opened for order {{order}}. The request has been forwarded to Resolution.",
+    "resolution_requested": "A dispute has been opened for order {{order}}. The case has been sent to Resolution.",
     "resolution_assigned": "The dispute for order {{order}} has been assigned to Resolution staff member {{actor}}.",
     "resolution_confirmed": "Resolution decided in favor of confirmation for order {{order}}. The deal is completed.",
     "resolution_refunded": "Resolution decided to refund the funds for order {{order}}."
@@ -116,12 +167,12 @@
     "copyLine1": "© 2026 TyPlace — marketplace for digital goods and services.",
     "copyLine2": "All rights reserved.",
     "links": {
-      "rules": "Platform Rules",
-      "terms": "User Agreement",
-      "privacy": "Privacy Policy",
-      "cookies": "Cookie Policy",
-      "about": "About",
-      "help": "Help Center",
+      "rules": "Platform rules",
+      "terms": "User agreement",
+      "privacy": "Privacy policy",
+      "cookies": "Cookie policy",
+      "about": "About platform",
+      "help": "Help center",
       "contacts": "Contacts"
     }
   }

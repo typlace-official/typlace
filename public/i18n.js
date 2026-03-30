@@ -16,7 +16,7 @@
 
   async function fetchJson(url, { optional = false } = {}) {
     try {
-      const res = await fetch(url, { cache: "no-cache" });
+      const res = await fetch(url);
 
       if (!res.ok) {
         if (optional) return {};
@@ -63,7 +63,7 @@
     return "many";
   }
 
-  window.tpI18n = {
+  const tpI18n = {
     translations: {
       common: {},
       roblox: {},
@@ -98,11 +98,10 @@
 
       this.apply();
 
-      document.dispatchEvent(
-        new CustomEvent("tp:lang-change", {
-          detail: { lang: safeLang }
-        })
-      );
+      const detail = { lang: safeLang };
+
+      document.dispatchEvent(new CustomEvent("tp:lang-change", { detail }));
+      window.dispatchEvent(new CustomEvent("tp:lang-change", { detail }));
 
       return this.translations;
     },
@@ -111,10 +110,37 @@
       return await this.load(lang);
     },
 
-    get(key, fallback = null) {
-      const value = resolvePath(this.translations, key);
-      return value == null ? fallback : value;
-    },
+get(key, fallback = null) {
+  const safeKey = String(key || "").trim();
+  if (!safeKey) return fallback;
+
+  // 1) обычный поиск:
+  // common.home -> translations.common.home
+  // page.title  -> translations.page.title
+  const direct = resolvePath(this.translations, safeKey);
+  if (direct != null) {
+    return direct;
+  }
+
+  // 2) fallback-поиск внутри common/page/roblox,
+  // чтобы работали ключи, которые лежат в common.json
+  const fromCommon = resolvePath(this.translations.common, safeKey);
+  if (fromCommon != null) {
+    return fromCommon;
+  }
+
+  const fromPage = resolvePath(this.translations.page, safeKey);
+  if (fromPage != null) {
+    return fromPage;
+  }
+
+  const fromRoblox = resolvePath(this.translations.roblox, safeKey);
+  if (fromRoblox != null) {
+    return fromRoblox;
+  }
+
+  return fallback;
+},
 
     t(key, params = {}) {
       const value = this.get(key);
@@ -144,6 +170,8 @@
     },
 
     apply(root = document) {
+      if (!root || !root.querySelectorAll) return;
+
       root.querySelectorAll("[data-i18n]").forEach(el => {
         el.textContent = this.t(el.dataset.i18n);
       });
@@ -175,11 +203,16 @@
     }
   };
 
-  document.addEventListener("DOMContentLoaded", async () => {
-    try {
-      await window.tpI18n.load(window.tpI18n.currentLang);
-    } catch (err) {
+  window.tpI18n = tpI18n;
+
+  document.documentElement.lang = tpI18n.currentLang;
+
+  window.tpI18nReady = tpI18n
+    .load(tpI18n.currentLang)
+    .catch(err => {
       console.error("tpI18n init failed:", err);
-    }
-  });
+    })
+    .finally(() => {
+      window.dispatchEvent(new CustomEvent("tp:i18n-ready"));
+    });
 })();

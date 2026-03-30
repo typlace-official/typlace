@@ -1,10 +1,9 @@
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum UserRole {
@@ -17,38 +16,39 @@ enum UserRole {
 }
 
 model User {
-  id                String    @id @default(cuid())
-  email             String    @unique
-  username          String
-  userId            String    @unique
-  avatarUrl         String?
-  avatarDataUrl     String?
-  createdAt         DateTime  @default(now())
-  usernameChangedAt DateTime?
-  online            Boolean   @default(false)
-  lastSeenAt        DateTime?
-  banned            Boolean   @default(false)
-  role              UserRole  @default(user)
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  username           String
+  usernameNormalized String    @unique
+  userId             String    @unique
+  avatarUrl          String?
+  avatarDataUrl      String?
+  createdAt          DateTime  @default(now())
+  usernameChangedAt  DateTime?
+  online             Boolean   @default(false)
+  lastSeenAt         DateTime?
+  banned             Boolean   @default(false)
+  role               UserRole  @default(user)
 
-  verified          Boolean   @default(false)
-  rating            Float     @default(0)
-  reviewsCount      Int       @default(0)
+  verified     Boolean @default(false)
+  rating       Float   @default(0)
+  reviewsCount Int     @default(0)
 
-  blockedUsers      String[]  @default([])
+  blockedUsers String[] @default([])
 
-  notifySite        Boolean   @default(true)
-  notifyEmail       Boolean   @default(true)
-  notifyTelegram    Boolean   @default(false)
+  notifySite     Boolean @default(true)
+  notifyEmail    Boolean @default(true)
+  notifyTelegram Boolean @default(false)
 
   telegramChatId    String?
   telegramUsername  String?
   telegramFirstName String?
   telegramLinkedAt  DateTime?
 
-  lang              String    @default("ru")
+  lang String @default("ru")
 
-  sessions          Session[]
-  pendingCodes      PendingCode[]
+  sessions     Session[]
+  pendingCodes PendingCode[]
 
   @@index([username])
   @@index([role])
@@ -61,8 +61,8 @@ model Session {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([email])
   @@index([expiresAt])
@@ -79,23 +79,23 @@ model PendingCode {
   tries        Int      @default(0)
   createdAt    DateTime @default(now())
 
-  userId       String?
-  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([expiresAt])
 }
 
 model Chat {
-  id          String        @id @default(cuid())
+  id          String   @id @default(cuid())
   buyerEmail  String
   sellerEmail String
   offerId     String?
-  createdAt   DateTime      @default(now())
-  blocked     Boolean       @default(false)
-  official    Boolean       @default(false)
-  deletedBy   String[]      @default([])
+  createdAt   DateTime @default(now())
+  blocked     Boolean  @default(false)
+  official    Boolean  @default(false)
+  deletedBy   String[] @default([])
 
-  messages    ChatMessage[]
+  messages ChatMessage[]
 
   @@index([buyerEmail])
   @@index([sellerEmail])
@@ -105,28 +105,28 @@ model Chat {
 }
 
 model ChatMessage {
-  id           String   @id @default(cuid())
-  chatId       String
-  chat         Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  chatId String
+  chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
   fromEmail    String
   fromUserId   String?
   fromUsername String?
   fromRole     String?
 
-  kind         String   @default("user")
-  messageType  String   @default("user")
-  staffRole    String?
+  kind        String  @default("user")
+  messageType String  @default("user")
+  staffRole   String?
 
-  text         String   @default("")
-  media        String[] @default([])
+  text  String   @default("")
+  media String[] @default([])
 
   officialType String?
   systemType   String?
   meta         Json?
 
-  createdAt    DateTime @default(now())
-  read         Boolean  @default(false)
+  createdAt DateTime @default(now())
+  read      Boolean  @default(false)
 
   @@index([chatId, createdAt])
   @@index([fromEmail])
@@ -134,20 +134,20 @@ model ChatMessage {
 }
 
 model Offer {
-  id            String   @id @default(cuid())
-  offerId       String   @unique
+  id      String @id @default(cuid())
+  offerId String @unique
 
-  game          String
-  mode          String
-  category      String?
+  game     String
+  mode     String
+  category String?
 
-  title         Json
-  description   Json
-  extra         Json?
+  title       Json
+  description Json
+  extra       Json?
 
-  priceNet      Float
-  price         Float
-  amount        Float?
+  priceNet Float
+  price    Float
+  amount   Float?
 
   method        String?
   country       String?
@@ -155,15 +155,15 @@ model Offer {
   accountRegion String?
   voiceChat     Boolean?
 
-  images        String[] @default([])
-  imageUrl      String?
+  images   String[] @default([])
+  imageUrl String?
 
-  sellerEmail   String
-  sellerName    String
+  sellerEmail String
+  sellerName  String
 
-  status        String
-  createdAt     DateTime @default(now())
-  activeUntil   DateTime?
+  status      String
+  createdAt   DateTime  @default(now())
+  activeUntil DateTime?
 
   @@index([sellerEmail])
   @@index([status])
@@ -174,27 +174,27 @@ model Offer {
 }
 
 model Order {
-  id                    String   @id @default(cuid())
-  orderNumber           String   @unique
-  offerId               String
-  buyerEmail            String
-  sellerEmail           String
-  chatId                String
-  price                 Float
-  commission            Float
-  status                String   @default("pending")
+  id          String @id @default(cuid())
+  orderNumber String @unique
+  offerId     String
+  buyerEmail  String
+  sellerEmail String
+  chatId      String
+  price       Float
+  commission  Float
+  status      String @default("pending")
 
-  disputeStatus         String   @default("none")
+  disputeStatus         String    @default("none")
   disputeTicketId       String?
   resolutionAssignedTo  String?
   resolutionRequestedAt DateTime?
   resolutionAssignedAt  DateTime?
 
-  completedAt           DateTime?
-  refundedAt            DateTime?
-  createdAt             DateTime @default(now())
+  completedAt DateTime?
+  refundedAt  DateTime?
+  createdAt   DateTime  @default(now())
 
-  offerSnapshot         Json?
+  offerSnapshot Json?
 
   @@index([offerId])
   @@index([buyerEmail])
@@ -235,10 +235,11 @@ model AdminLog {
   @@index([targetId])
   @@index([createdAt])
 }
+
 model SupportTicket {
-  id                   String           @id
-  shortId              String           @unique
-  kind                 String           @default("support")
+  id                   String    @id
+  shortId              String    @unique
+  kind                 String    @default("support")
   userEmail            String
   subject              String
   category             String
@@ -247,18 +248,18 @@ model SupportTicket {
   offerId              String?
   chatId               String?
   orderInternalId      String?
-  status               String           @default("waiting")
-  priority             String           @default("normal")
-  reopenCount          Int              @default(0)
+  status               String    @default("waiting")
+  priority             String    @default("normal")
+  reopenCount          Int       @default(0)
   assignedTo           String?
   assignedRole         String?
   assignedAt           DateTime?
   resolutionAssignedAt DateTime?
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
-  messages             SupportMessage[]
-  logs                 SupportLog[]
+  messages SupportMessage[]
+  logs     SupportLog[]
 
   @@index([userEmail])
   @@index([assignedTo])
@@ -267,7 +268,7 @@ model SupportTicket {
 }
 
 model SupportMessage {
-  id            String        @id
+  id            String   @id
   ticketId      String
   from          String
   userEmail     String
@@ -276,23 +277,23 @@ model SupportMessage {
   avatarDataUrl String?
   text          String
   attachments   Json
-  createdAt     DateTime      @default(now())
+  createdAt     DateTime @default(now())
 
-  ticket        SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   @@index([ticketId, createdAt])
 }
 
 model SupportLog {
-  id        String        @id
+  id        String   @id
   ticketId  String
   action    String
   userEmail String
   username  String
   role      String
-  createdAt DateTime      @default(now())
+  createdAt DateTime @default(now())
 
-  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   @@index([ticketId, createdAt])
 }

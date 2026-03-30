@@ -1,0 +1,86 @@
+{
+  "page": {
+    "title": "Поддержка — Арбитраж — TyPlace",
+    "brand": {
+      "subtitle": "Support Panel"
+    },
+    "nav": {
+      "tickets": "Тикеты",
+      "resolution": "Арбитраж",
+      "official": "Официальные сообщения"
+    },
+    "sidebar": {
+      "adminBack": "В админку",
+      "logout": "Выйти"
+    },
+    "heading": "Арбитраж",
+    "subheading": "Очередь споров по заказам и назначение сотрудников resolution.",
+    "rolePrefix": "Роль",
+    "stats": {
+      "total": "Всего споров",
+      "waiting": "Ожидают",
+      "in_progress": "В процессе",
+      "resolved": "Решены"
+    },
+    "filters": {
+      "allStatuses": "Все статусы",
+      "waiting": "Ожидают ответа",
+      "in_progress": "В процессе",
+      "resolved": "Решены",
+      "allDisputes": "Все споры",
+      "onlyMine": "Только мои"
+    },
+    "status": {
+      "waiting": "Ожидает ответа",
+      "in_progress": "В процессе",
+      "resolved": "Решено"
+    },
+    "wait": {
+      "label": "Ждёт",
+      "minutes": "{{count}} мин.",
+      "hoursMinutes": "{{hours}} ч. {{minutes}} мин."
+    },
+    "assign": {
+      "title": "Назначение арбитража",
+      "titleWithId": "Назначение арбитража — {{id}}",
+      "subtitle": "Выберите сотрудника resolution",
+      "orderSubtitle": "Заказ: {{orderId}}",
+      "searchPlaceholder": "Email, ник или ID сотрудника resolution",
+      "searchBtn": "Найти",
+      "closeBtn": "Закрыть",
+      "enterQuery": "Введите email, ник или ID сотрудника resolution",
+      "searching": "Поиск...",
+      "notFound": "Арбитраж не найден",
+      "assignBtn": "Назначить",
+      "success": "Арбитраж назначен",
+      "staffFallback": "Сотрудник",
+      "disputeFallback": "спор"
+    },
+    "meta": {
+      "dispute": "Спор",
+      "disputeFallback": "Спор по заказу",
+      "order": "Заказ",
+      "userId": "ID пользователя",
+      "role": "Роль",
+      "newCount": "Новых: {{count}}",
+      "createdBy": "Создал",
+      "createdByFallback": "Пользователь",
+      "userIdShort": "ID {{id}}",
+      "resolutionUnassigned": "Арбитраж: не назначен",
+      "resolutionAssigned": "Арбитраж: {{value}}"
+    },
+    "actions": {
+      "assignResolution": "Назначить арбитража",
+      "openTicket": "Открыть тикет"
+    },
+    "empty": {
+      "loading": "Загрузка...",
+      "loadFailed": "Ошибка загрузки споров",
+      "noDisputes": "Споров нет"
+    },
+    "errors": {
+      "searchFailed": "Ошибка поиска сотрудников",
+      "assignFailed": "Не удалось назначить арбитраж"
+    }
+  }
+}

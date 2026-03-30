@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TyPlace</title>
+  <title data-i18n="page.title"></title>
 
   <link rel="stylesheet" href="/header.css">
   <link rel="stylesheet" href="/game.css">
@@ -116,38 +116,88 @@
 <script>
 (async () => {
 
-  // ✅ ждём пока /games/index.js успеет создать window.GAMES
-  await new Promise(resolve => {
-    const check = () => {
-      if (window.GAMES) resolve();
-      else setTimeout(check, 10);
-    };
-    check();
-  });
+const urlParams = new URLSearchParams(location.search);
+const extraFilterValues = {};
 
-  // ===== GAME FROM URL =====
-  const urlParams = new URLSearchParams(location.search);
-    const extraFilterValues = {};
 function getCurrentLang() {
   const lang = localStorage.getItem("tp_lang") || "ru";
   return ["ru", "uk", "en"].includes(lang) ? lang : "ru";
 }
-    // 🔥 ВОССТАНАВЛЕНИЕ ФИЛЬТРОВ ИЗ URL
-urlParams.forEach((value, key) => {
-  if (["game", "mode"].includes(key)) return;
 
-  extraFilterValues[key] = value;
-});
-const GAME_ID = urlParams.get("game");
-const MODE_FROM_URL = urlParams.get("mode");
+function pageT(key, params = {}) {
+  if (!window.tpI18n?.t) {
+    return key;
+  }
 
-    if(!GAME_ID || !window.GAMES || !window.GAMES[GAME_ID]){
-      document.body.innerHTML =
-  `<h2 style="padding:24px">${window.tpI18n?.t("errors.game_not_found") || ""}</h2>`;
-      throw new Error("Game not specified / unknown");
+  const candidates = [key, `page.${key}`];
+
+  for (const candidate of candidates) {
+    const value = window.tpI18n.t(candidate, params);
+
+    if (value != null && value !== candidate) {
+      return value;
     }
+  }
 
-    const GAME = window.GAMES[GAME_ID];
+  return key;
+}
+
+  urlParams.forEach((value, key) => {
+    if (["game", "mode"].includes(key)) return;
+    extraFilterValues[key] = value;
+  });
+
+  const GAME_ID = urlParams.get("game");
+  const MODE_FROM_URL = urlParams.get("mode");
+
+  async function waitForGameConfig(gameId, requestedMode, timeoutMs = 7000){
+    const startedAt = Date.now();
+
+    while (true) {
+      const game = window.GAMES?.[gameId];
+      const resolvedMode = requestedMode || game?.defaultMode;
+
+      const isReady = !!(
+        game &&
+        game.title &&
+        game.icon &&
+        game.modes &&
+        typeof game.modes === "object" &&
+        Object.keys(game.modes).length > 0 &&
+        resolvedMode &&
+        game.modes[resolvedMode]
+      );
+
+      if (isReady) {
+        return game;
+      }
+
+      if (Date.now() - startedAt >= timeoutMs) {
+        throw new Error(`Game config not ready: ${gameId}/${requestedMode || ""}`);
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 25));
+    }
+  }
+
+  if (window.tpI18n?.load) {
+    await window.tpI18n.load(getCurrentLang());
+  }
+
+  if (!GAME_ID) {
+    document.body.innerHTML = `<h2 style="padding:24px">${pageT("errors.gameNotFound")}</h2>`;
+    throw new Error("Game id not found");
+  }
+
+  let GAME;
+
+  try {
+    GAME = await waitForGameConfig(GAME_ID, MODE_FROM_URL);
+  } catch (err) {
+    console.error("game page init error:", err);
+    document.body.innerHTML = `<h2 style="padding:24px">${pageT("errors.gameNotFound")}</h2>`;
+    throw err;
+  }
 
     // ===== set breadcrumb game =====
     const crumbIcon = document.getElementById("crumbIcon");
@@ -155,8 +205,8 @@ const MODE_FROM_URL = urlParams.get("mode");
     const crumbMode = document.getElementById("crumbMode");
 
     crumbIcon.src = GAME.icon || "/img/game-default.png";
-    crumbIcon.alt = GAME.title || "Game";
-    crumbGame.textContent = GAME.title || "Game";
+crumbIcon.alt = GAME.title || "";
+crumbGame.textContent = GAME.title || "";
 
     // ===== Roblox-only defaults (пока) =====
     // позже мы вынесем FILTERS в config для каждой игры
@@ -248,7 +298,6 @@ stockSort.addEventListener("click", ()=>{
   loadOffers();
 });
 
-
 function updateBreadcrumb(){
   const modeData = GAME.modes?.[currentMode];
 
@@ -257,7 +306,9 @@ function updateBreadcrumb(){
       ? window.tpI18n.t(modeData.labelKey)
       : currentMode;
 
-  document.title = (GAME.title || "Game") + " — TyPlace";
+  document.title = pageT("dynamicTitle", {
+    game: GAME.title || ""
+  });
 }
 
 function updateCategoryFilter() {
@@ -336,194 +387,242 @@ function renderModes(){
 }
 
 const extraFiltersWrap = document.getElementById("extraFilters");
+
+function hasFieldDependency(field) {
+  return Boolean(field?.showIf) || Boolean(field?.showIfValue);
+}
+
+function matchesFieldCondition(actualValue, expectedValue) {
+  if (Array.isArray(expectedValue)) {
+    return expectedValue.includes(actualValue);
+  }
+
+  return String(actualValue || "") === String(expectedValue || "");
+}
+
+function getCurrentFilterValues() {
+  const modeConfig = GAME.modes?.[currentMode];
+  const values = {};
+
+  if (!modeConfig?.filters) {
+    return values;
+  }
+
+  Object.keys(modeConfig.filters).forEach((key) => {
+    const wrap = extraFiltersWrap.querySelector(`[data-key="${key}"]`);
+    if (!wrap) return;
+
+    const select = wrap.querySelector("select");
+    if (select) {
+      values[key] = select.value || "";
+      return;
+    }
+
+    const singleInput = wrap.querySelector('input:not([data-role="from"]):not([data-role="to"])');
+    if (singleInput) {
+      values[key] = singleInput.value || "";
+      return;
+    }
+
+    const fromInput = wrap.querySelector('[data-role="from"]');
+    const toInput = wrap.querySelector('[data-role="to"]');
+
+    if (fromInput || toInput) {
+      values[key] = {
+        from: fromInput?.value || "",
+        to: toInput?.value || ""
+      };
+    }
+  });
+
+  return values;
+}
+
+function syncDependentFilterVisibility() {
+  const modeConfig = GAME.modes?.[currentMode];
+  if (!modeConfig?.filters) return;
+
+  const currentValues = getCurrentFilterValues();
+
+  Object.entries(modeConfig.filters).forEach(([key, field]) => {
+    const wrap = extraFiltersWrap.querySelector(`[data-key="${key}"]`);
+    if (!wrap) return;
+
+    if (!hasFieldDependency(field)) {
+      wrap.style.display = "";
+      return;
+    }
+
+    let visible = false;
+
+    if (field.showIf) {
+      visible = Object.entries(field.showIf).some(([depKey, expectedValue]) => {
+        return matchesFieldCondition(currentValues[depKey], expectedValue);
+      });
+    }
+
+    if (!visible && field.showIfValue) {
+      visible = Object.entries(field.showIfValue).some(([depKey, expectedValue]) => {
+        return matchesFieldCondition(currentValues[depKey], expectedValue);
+      });
+    }
+
+    wrap.style.display = visible ? "" : "none";
+
+    if (!visible) {
+      const select = wrap.querySelector("select");
+      const singleInput = wrap.querySelector('input:not([data-role="from"]):not([data-role="to"])');
+      const fromInput = wrap.querySelector('[data-role="from"]');
+      const toInput = wrap.querySelector('[data-role="to"]');
+
+      if (select) {
+        select.value = "";
+        delete extraFilterValues[key];
+      }
+
+      if (singleInput) {
+        singleInput.value = "";
+        delete extraFilterValues[key];
+      }
+
+      if (fromInput) {
+        fromInput.value = "";
+        delete extraFilterValues[key + "_from"];
+      }
+
+      if (toInput) {
+        toInput.value = "";
+        delete extraFilterValues[key + "_to"];
+      }
+    }
+  });
+}
+
 function renderExtraFilters() {
-  const t = (key, fallback="") => (window.tpI18n?.t ? window.tpI18n.t(key) : (fallback || key || ""));
+  const t = (key, fallback = "") =>
+    window.tpI18n?.t ? window.tpI18n.t(key) : (fallback || key || "");
+
   extraFiltersWrap.innerHTML = "";
 
-const modeConfig = GAME.modes?.[currentMode];
-if (!modeConfig || !modeConfig.filters) return;
+  const modeConfig = GAME.modes?.[currentMode];
+  if (!modeConfig?.filters) return;
 
+  Object.entries(modeConfig.filters).forEach(([key, field]) => {
+    const wrap = document.createElement("div");
+    wrap.dataset.key = key;
 
-Object.entries(modeConfig.filters).forEach(([key, field]) => {
-    // ❌ YouTube: subscribers НЕ рендерим как обычное поле
-if (
-  GAME_ID === "youtube" &&
-  currentMode === "Каналы" &&
-  key === "subscribers"
-) {
-  return;
-}
-    let el;
-if (field.type === "range") {
+    const defaultDisplay = hasFieldDependency(field) ? "none" : "";
 
-  const wrap = document.createElement("div");
-  wrap.className = "filter-range";
-  wrap.dataset.key = key;
+    if (field.type === "range") {
+      wrap.className = "filter-range";
+      wrap.style.display = defaultDisplay;
 
-  // 🔥 ВСЕГДА скрываем range по умолчанию
-  wrap.style.display = "none";
+      const label = document.createElement("div");
+      label.className = "range-label";
+      label.textContent =
+        field.labelKey ? t(field.labelKey, field.label) : (field.label || "");
 
-  const label = document.createElement("div");
-  label.className = "range-label";
-  label.textContent = field.labelKey ? t(field.labelKey, field.label) : (field.label || "");
+      const row = document.createElement("div");
+      row.className = "filter-range-row";
 
-  const row = document.createElement("div");
-  row.className = "filter-range-row";
+      const from = document.createElement("input");
+      from.type = "number";
+      from.placeholder = window.tpI18n?.t("common.from") || "From";
+      from.className = "select range-input";
+      from.dataset.role = "from";
+      from.value = extraFilterValues[key + "_from"] || "";
 
-  const from = document.createElement("input");
-  from.type = "number";
-  from.placeholder = window.tpI18n?.t("common.from") || "From";
-  from.className = "select range-input";
+      const to = document.createElement("input");
+      to.type = "number";
+      to.placeholder = window.tpI18n?.t("common.to") || "To";
+      to.className = "select range-input";
+      to.dataset.role = "to";
+      to.value = extraFilterValues[key + "_to"] || "";
 
-  const to = document.createElement("input");
-  to.type = "number";
-  to.placeholder   = window.tpI18n?.t("common.to") || "To";
-  to.className = "select range-input";
+      from.addEventListener("input", () => {
+        extraFilterValues[key + "_from"] = from.value || null;
+        loadOffers();
+      });
 
-  from.addEventListener("input", () => {
-extraFilterValues[key + "_from"] = from.value || null;
-    loadOffers();
+      to.addEventListener("input", () => {
+        extraFilterValues[key + "_to"] = to.value || null;
+        loadOffers();
+      });
+
+      row.appendChild(from);
+      row.appendChild(to);
+
+      wrap.appendChild(label);
+      wrap.appendChild(row);
+      extraFiltersWrap.appendChild(wrap);
+      return;
+    }
+
+    if (field.type === "number") {
+      wrap.style.display = defaultDisplay;
+
+      const input = document.createElement("input");
+      input.type = "number";
+      input.className = "select";
+      input.placeholder =
+        field.labelKey ? t(field.labelKey, field.label) : (field.label || "");
+      input.value = extraFilterValues[key] || "";
+
+      input.addEventListener("input", () => {
+        extraFilterValues[key] = input.value || null;
+        syncDependentFilterVisibility();
+        loadOffers();
+      });
+
+      wrap.appendChild(input);
+      extraFiltersWrap.appendChild(wrap);
+      return;
+    }
+
+    if (field.type === "select") {
+      wrap.style.display = defaultDisplay;
+
+      const select = document.createElement("select");
+      select.className = "select";
+
+      const firstOptionText =
+        field.labelKey ? t(field.labelKey, field.label) : (field.label || "");
+
+      select.innerHTML = `<option value="">${firstOptionText}</option>`;
+
+      field.options.forEach((opt) => {
+        const option = document.createElement("option");
+
+        if (typeof opt === "object") {
+          option.value = opt.value;
+          option.textContent = opt.labelKey
+            ? t(opt.labelKey, opt.label)
+            : (opt.label ?? opt.value);
+        } else {
+          option.value = opt;
+          option.textContent = opt;
+        }
+
+        select.appendChild(option);
+      });
+
+      select.value = extraFilterValues[key] || "";
+
+      select.addEventListener("change", () => {
+        extraFilterValues[key] = select.value || null;
+        syncDependentFilterVisibility();
+        loadOffers();
+      });
+
+      wrap.appendChild(select);
+      extraFiltersWrap.appendChild(wrap);
+      return;
+    }
   });
 
-  to.addEventListener("input", () => {
-extraFilterValues[key + "_to"] = to.value || null;
-
-    loadOffers();
-  });
-
-  row.appendChild(from);
-  row.appendChild(to);
-
-  wrap.appendChild(label);
-  wrap.appendChild(row);
-
-  extraFiltersWrap.appendChild(wrap);
-  return;
+  syncDependentFilterVisibility();
 }
 
-if (field.type === "number") {
-  return;
-}
-
-if (field.type === "select") {
-  const wrap = document.createElement("div");
-  wrap.dataset.key = key;
-
-  const el = document.createElement("select");
-  el.className = "select";
-const first = t(field.labelKey) || field.label || "";
-el.innerHTML = `<option value="">${first}</option>`;
-
-field.options.forEach(opt => {
-  if (typeof opt === "object") {
-    const text = opt.labelKey ? t(opt.labelKey, opt.label) : (opt.label ?? opt.value);
-    el.innerHTML += `<option value="${opt.value}">${text}</option>`;
-  } else {
-    el.innerHTML += `<option value="${opt}">${opt}</option>`;
-  }
-});
-
-  if (field.showIf) {
-    wrap.style.display = "none";
-  }
-
-  el.addEventListener("change", () => {
-    extraFilterValues[key] = el.value || null;
-    // ===== Показ range-фильтров по showIfValue =====
-Object.entries(modeConfig.filters).forEach(([fKey, fField]) => {
-  if (fField.type !== "range") return;
-  if (!fField.showIfValue) return;
-
-  const need = fField.showIfValue[key];
-  if (!need) return;
-
-  const rangeWrap = extraFiltersWrap.querySelector(
-    `[data-key="${fKey}"]`
-  );
-  if (!rangeWrap) return;
-
-  if (el.value === need) {
-    rangeWrap.style.display = "";
-  } else {
-    rangeWrap.style.display = "none";
-    delete extraFilterValues[fKey + "_from"];
-    delete extraFilterValues[fKey + "_to"];
-  }
-});
-// ===== Показ range-фильтров по showIf (method) =====
-Object.entries(modeConfig.filters).forEach(([fKey, fField]) => {
-  if (fField.type !== "range") return;
-  if (!fField.showIf) return;
-
-  const need = fField.showIf[key];
-  if (!need) return;
-
-  const rangeWrap = extraFiltersWrap.querySelector(
-    `[data-key="${fKey}"]`
-  );
-  if (!rangeWrap) return;
-
-  const match =
-    (Array.isArray(need) && need.includes(el.value)) ||
-    el.value === need;
-
-  if (match) {
-    rangeWrap.style.display = "";
-  } else {
-    rangeWrap.style.display = "none";
-    delete extraFilterValues[fKey + "_from"];
-    delete extraFilterValues[fKey + "_to"];
-  }
-});
-    Object.entries(modeConfig.filters).forEach(([otherKey, otherField]) => {
-      if (!otherField.showIf) return;
-      if (otherField.showIf[key] === undefined) return;
-
-      const otherWrap = extraFiltersWrap.querySelector(
-        `[data-key="${otherKey}"]`
-      );
-      if (!otherWrap) return;
-
-      let ok = false;
-
-// обычный showIf
-if (otherField.showIf && otherField.showIf[key] !== undefined) {
-  const cond = otherField.showIf[key];
-  ok =
-    (Array.isArray(cond) && cond.includes(el.value)) ||
-    el.value === cond;
-}
-
-// showIfValue (другое количество)
-if (
-  !ok &&
-  otherField.showIfValue &&
-  otherField.showIfValue[key] === el.value
-) {
-  ok = true;
-}
-
-      if (ok) {
-        otherWrap.style.display = "";
-      } else {
-        otherWrap.style.display = "none";
-        delete extraFilterValues[otherKey];
-        delete extraFilterValues[otherKey + "_from"];
-        delete extraFilterValues[otherKey + "_to"];
-      }
-    });
-    loadOffers();
-  });
-
-  wrap.appendChild(el);
-  extraFiltersWrap.appendChild(wrap);
-  return;
-}
-
-    extraFiltersWrap.appendChild(el);
-  });
-}
-    // ===== OFFERS LOAD (минимально, твоё API уже есть) =====
 async function loadOffers() {
   const params = new URLSearchParams();
 
@@ -630,28 +729,31 @@ function hasActiveOffersFilters() {
   return hasSearch || hasCategory || hasExtraFilters;
 }
 
-function buildOffersCountText(count) {
-  const lang = getCurrentLang();
+function getOffersWord(count) {
   const safeCount = Math.max(0, Number(count) || 0);
-  const prefix = hasActiveOffersFilters();
+  const lang = getCurrentLang();
 
   if (lang === "en") {
-    return prefix
-      ? `Found ${safeCount} ${safeCount === 1 ? "offer" : "offers"}`
-      : `Total ${safeCount} ${safeCount === 1 ? "offer" : "offers"}`;
+    return safeCount === 1
+      ? pageT("offersWords.one")
+      : pageT("offersWords.many");
   }
 
-  if (lang === "uk") {
-    const word = getPluralForm(safeCount, "оголошення", "оголошення", "оголошень");
-    return prefix
-      ? `Знайдено ${safeCount} ${word}`
-      : `Усього ${safeCount} ${word}`;
-  }
+  return getPluralForm(
+    safeCount,
+    pageT("offersWords.one"),
+    pageT("offersWords.few"),
+    pageT("offersWords.many")
+  );
+}
 
-  const word = getPluralForm(safeCount, "объявление", "объявления", "объявлений");
-  return prefix
-    ? `Найдено ${safeCount} ${word}`
-    : `Всего ${safeCount} ${word}`;
+function buildOffersCountText(count) {
+  const safeCount = Math.max(0, Number(count) || 0);
+  const word = getOffersWord(safeCount);
+
+  return hasActiveOffersFilters()
+    ? pageT("offersCount.found", { count: safeCount, word })
+    : pageT("offersCount.total", { count: safeCount, word });
 }
 
 function renderOffers(offers){
@@ -731,18 +833,6 @@ if (selectedCategory) {
   subcatSelect.value = selectedCategory;
 }
 
-// 🔥 восстановление фильтров
-Object.entries(extraFilterValues).forEach(([key, value]) => {
-  const wrap = document.querySelector(`[data-key="${key}"]`);
-  if (!wrap) return;
-
-  const select = wrap.querySelector("select");
-  if (select) select.value = value;
-
-  const input = wrap.querySelector("input");
-  if (input) input.value = value;
-});
-
 window.addEventListener("tp:currency-change", () => {
   const list = document.getElementById("offersList");
   window.tpOfferCard.updatePrices(list);
@@ -772,18 +862,6 @@ window.addEventListener("tp:lang-change", async (e) => {
   updateBreadcrumb();
   updateCategoryFilter();
   renderExtraFilters();
-
-  // 🔥 восстановить значения фильтров
-  Object.entries(extraFilterValues).forEach(([key, value]) => {
-    const wrap = document.querySelector(`[data-key="${key}"]`);
-    if (!wrap) return;
-
-    const select = wrap.querySelector("select");
-    if (select) select.value = value;
-
-    const input = wrap.querySelector("input");
-    if (input) input.value = value;
-  });
 
   loadOffers();
 });

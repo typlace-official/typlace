@@ -1,0 +1,54 @@
+{
+  "title": "Створити оголошення — TyPlace",
+  "back": "Назад",
+"fieldLabels": {
+  "ru": {
+    "title": "Название",
+    "description": "Описание"
+  },
+  "uk": {
+    "title": "Назва",
+    "description": "Опис"
+  },
+  "en": {
+    "title": "Title",
+    "description": "Description"
+  }
+},
+  "languageTargets": {
+    "ru": "російською",
+    "uk": "українською",
+    "en": "англійською"
+  },
+  "langRules": {
+    "ru": "Заповніть оголошення <strong>російською</strong> та <strong>українською</strong>. <strong>Англійську</strong> можна додати додатково.",
+    "uk": "Заповніть оголошення <strong>українською</strong> та <strong>російською</strong>. <strong>Англійську</strong> можна додати додатково.",
+    "en": "Заповніть оголошення <strong>англійською</strong>. <strong>Російську</strong> та <strong>українську</strong> можна додати додатково."
+  },
+  "errors": {
+    "gameNotFound": "Гру не знайдено",
+    "fillField": "Заповніть поле",
+    "chooseCategory": "Вкажіть категорію",
+    "enterPrice": "Вкажіть ціну",
+    "minPrice": "Мінімальна ціна {{price}} {{currency}}",
+    "maxPrice": "Максимальна ціна {{price}} {{currency}}",
+    "fillTitleForLanguage": "Заповніть назву {{language}}",
+    "fillDescriptionForLanguage": "Заповніть опис {{language}}",
+    "generic": "Помилка"
+  },
+  "toasts": {
+    "saved": "Зміни збережено",
+    "created": "Оголошення створено"
+  },
+  "deleteConfirm": {
+    "title": "Підтвердження",
+    "text": "Ви впевнені, що хочете видалити оголошення?",
+    "confirm": "Видалити",
+    "cancel": "Скасувати"
+  },
+  "alerts": {
+    "successTitle": "Успішно",
+    "errorTitle": "Помилка",
+    "deleteError": "Помилка видалення"
+  }
+}

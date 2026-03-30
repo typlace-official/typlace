@@ -1,57 +1,48 @@
 {
   "title": "About the Platform",
-
   "meta": {
     "line1": "Information page about the TyPlace platform.",
     "line2": "The current version is published on this page."
   },
-
-  "intro": "TyPlace is an online platform for posting listings, making user-to-user transactions, and using safe transaction tools for digital goods and services.",
-
+  "intro": "TyPlace is an online platform for posting listings, entering into transactions between users, and using safe transaction tools for digital goods and services.",
   "section1": {
     "title": "1. What TyPlace is",
-    "p1": "The TyPlace platform is designed for interaction between users who sell and buy digital goods and services.",
-    "p2": "TyPlace provides an interface for listing offers, communicating through chat, creating orders, using internal balance functions, support tools, and dispute resolution features."
+    "p1": "The TyPlace platform is intended for interaction between users who sell and buy digital goods and services.",
+    "p2": "TyPlace provides an interface for posting listings, communicating through chat, creating orders, paying for a specific transaction, support, and resolving disputed situations."
   },
-
   "section2": {
     "title": "2. How the platform works",
-    "p1": "Platform functions may include:",
+    "p1": "The platform functions may include:",
     "l1": "posting listings by sellers;",
     "l2": "purchasing digital goods and services through the platform interface;",
-    "l3": "using internal balance and safe transaction mechanisms;",
-    "l4": "chat, reviews, support, disputes, and other related service features."
+    "l3": "paying for a specific order and using the safe transaction mechanism;",
+    "l4": "chat, reviews, support, disputes, and other related service functions."
   },
-
   "section3": {
     "title": "3. Platform status",
-    "p1": "TyPlace is a platform and information intermediary that provides users with technical tools for interaction and making transactions.",
-    "p2": "The platform is not the seller of digital goods and services offered in user listings and does not become a party to the transaction between users unless expressly stated otherwise in separate service terms."
+    "p1": "TyPlace is a platform and information intermediary that provides users with technical tools for interaction and entering into transactions.",
+    "p2": "The platform does not act as the seller of digital goods and services under user listings, is not an electronic wallet or a service for freely storing user funds, and does not become a party to a transaction between users unless otherwise expressly stated in отдельные service terms."
   },
-
   "section4": {
-    "title": "4. Safety and control",
-    "p1": "To improve safety, the platform may use various protection and control measures, including:",
-    "l1": "safe transaction mechanisms and temporary holding of funds until the order is completed;",
-    "l2": "a support request and dispute handling system;",
+    "title": "4. Security and control",
+    "p1": "To improve security, the platform may use various protection and control measures, including:",
+    "l1": "the safe transaction mechanism and holding the amount for a specific order until the transaction is completed, refunded, or resolved in a dispute;",
+    "l2": "a support request and dispute review system;",
     "l3": "moderation, anti-fraud checks, and restrictions in case of suspicious activity;",
-    "l4": "technical activity logs and internal security measures."
+    "l4": "technical action logs and internal security measures."
   },
-
   "section5": {
-    "title": "5. International use",
-    "p1": "The platform may be used by users from different countries. The user is solely responsible for complying with the laws of their jurisdiction, as well as the rules of the digital services, games, and platforms that may relate to the subject of the transaction."
+    "title": "5. International nature of use",
+    "p1": "The platform may be used by users from different countries. The user is solely responsible for complying with the laws of their jurisdiction, as well as the rules of the digital services, games, and platforms to which the subject matter of the transaction may relate."
   },
-
   "section6": {
     "title": "6. Related documents",
-    "l1": "Terms of Use",
+    "l1": "User Agreement",
     "l2": "Privacy Policy",
     "l3": "Cookie Policy",
     "l4": "Platform Rules",
     "l5": "Contacts"
   },
-
   "footer": {
     "text1": "If you have questions about the platform, please use the",
     "link1": "Contacts",

@@ -5,7 +5,12 @@
     order_refunded: "common.system_messages.order_refunded",
     order_confirmed_admin: "common.system_messages.order_confirmed_admin",
     order_refunded_admin: "common.system_messages.order_refunded_admin",
-    review_created: "common.system_messages.review_created"
+    review_created: "common.system_messages.review_created",
+
+    resolution_requested: "common.system_messages.resolution_requested",
+    resolution_assigned: "common.system_messages.resolution_assigned",
+    resolution_confirmed: "common.system_messages.resolution_confirmed",
+    resolution_refunded: "common.system_messages.resolution_refunded"
   });
 
   const SYSTEM_LABEL_KEY = "common.system_messages.label";
@@ -114,19 +119,18 @@
     return `<a class="tp-system-link" href="/order.html?id=${encodeURIComponent(orderId)}">${safeLabel}</a>`;
   }
 
-function buildSystemHtml(message) {
-  const data = extractSystemData(message);
+  function buildSystemHtml(message) {
+    const data = extractSystemData(message);
+    const key = SYSTEM_TEXT_KEYS[data.systemType] || FALLBACK_TEXT_KEY;
 
-  const key = SYSTEM_TEXT_KEYS[data.systemType] || FALLBACK_TEXT_KEY;
-
-  return (
-    t(key, {
-      actor: renderUserLink(data.actorUserId, data.actorUsername),
-      order: renderOrderLink(data.orderId, data.orderNumber)
-    }) ||
-    t(FALLBACK_TEXT_KEY)
-  );
-}
+    return (
+      t(key, {
+        actor: renderUserLink(data.actorUserId, data.actorUsername),
+        order: renderOrderLink(data.orderId, data.orderNumber)
+      }) ||
+      t(FALLBACK_TEXT_KEY)
+    );
+  }
 
   function renderSystemMessage(message) {
     return `

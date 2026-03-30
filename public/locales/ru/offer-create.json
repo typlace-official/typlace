@@ -1,0 +1,54 @@
+{
+  "title": "Создать объявление — TyPlace",
+  "back": "Назад",
+  "fieldLabels": {
+    "ru": {
+      "title": "Название",
+      "description": "Описание"
+    },
+    "uk": {
+      "title": "Назва",
+      "description": "Опис"
+    },
+    "en": {
+      "title": "Title",
+      "description": "Description"
+    }
+  },
+  "languageTargets": {
+    "ru": "на русском",
+    "uk": "на украинском",
+    "en": "на английском"
+  },
+  "langRules": {
+    "ru": "Заполните объявление на <strong>русском</strong> и <strong>украинском</strong>. <strong>Английский</strong> можно добавить дополнительно.",
+    "uk": "Заполните объявление на <strong>украинском</strong> и <strong>русском</strong>. <strong>Английский</strong> можно добавить дополнительно.",
+    "en": "Заполните объявление на <strong>английском</strong>. <strong>Русский</strong> и <strong>украинский</strong> можно добавить дополнительно."
+  },
+  "errors": {
+    "gameNotFound": "Игра не найдена",
+    "fillField": "Заполните поле",
+    "chooseCategory": "Укажите категорию",
+    "enterPrice": "Укажите цену",
+    "minPrice": "Минимальная цена {{price}} {{currency}}",
+    "maxPrice": "Максимальная цена {{price}} {{currency}}",
+    "fillTitleForLanguage": "Заполните название {{language}}",
+    "fillDescriptionForLanguage": "Заполните описание {{language}}",
+    "generic": "Ошибка"
+  },
+  "toasts": {
+    "saved": "Изменения сохранены",
+    "created": "Объявление создано"
+  },
+  "deleteConfirm": {
+    "title": "Подтверждение",
+    "text": "Вы уверены, что хотите удалить объявление?",
+    "confirm": "Удалить",
+    "cancel": "Отмена"
+  },
+  "alerts": {
+    "successTitle": "Успешно",
+    "errorTitle": "Ошибка",
+    "deleteError": "Ошибка удаления"
+  }
+}

@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Поддержка — Тикеты — TyPlace</title>
+<script>
+  document.titleKey = "page.title";
+</script>
+<title data-i18n="page.title"></title>
 <link rel="stylesheet" href="/support-panel.css">
 </head>
 <body>
@@ -12,74 +15,75 @@
   <aside class="support-sidebar">
     <div class="support-brand">
       <div class="support-brand-title">TyPlace</div>
-      <div class="support-brand-subtitle">Support Panel</div>
+      <div class="support-brand-subtitle" data-i18n="page.brand.subtitle"></div>
     </div>
 
     <nav class="support-nav">
-      <a class="support-nav-link active" href="/support-admin.html">Тикеты</a>
-      <a class="support-nav-link" href="/support-resolution.html">Арбитраж</a>
-      <a class="support-nav-link" href="/support-official.html">Официальные сообщения</a>
+      <a class="support-nav-link active" href="/support-admin.html" data-i18n="page.nav.tickets"></a>
+      <a class="support-nav-link" href="/support-resolution.html" data-i18n="page.nav.resolution"></a>
+      <a class="support-nav-link" href="/support-official.html" data-i18n="page.nav.official"></a>
     </nav>
 
     <div class="support-sidebar-bottom">
-      <a class="support-side-btn" id="adminBackBtn" href="/admin">В админку</a>
-      <button class="support-side-btn danger" id="logoutBtn" type="button">Выйти</button>
+      <a class="support-side-btn" id="adminBackBtn" href="/admin" data-i18n="page.sidebar.adminBack"></a>
+      <button class="support-side-btn danger" id="logoutBtn" type="button" data-i18n="page.sidebar.logout"></button>
     </div>
   </aside>
 
   <main class="support-content">
     <div class="support-content-top">
       <div class="support-page-head">
-        <h1>Тикеты поддержки</h1>
-        <p>Очередь обращений пользователей и модераторов.</p>
+        <h1 data-i18n="page.heading"></h1>
+        <p data-i18n="page.subheading"></p>
       </div>
 
-      <div class="role-pill" id="rolePill">Роль: ...</div>
+      <div class="role-pill" id="rolePill"></div>
     </div>
 
     <div class="stats">
       <div class="stat-box">
-        <div class="stat-label">Ожидают</div>
+        <div class="stat-label" data-i18n="page.stats.waiting"></div>
         <div class="stat-value" id="statWaiting">0</div>
       </div>
 
       <div class="stat-box">
-        <div class="stat-label">В процессе</div>
+        <div class="stat-label" data-i18n="page.stats.in_progress"></div>
         <div class="stat-value" id="statInProgress">0</div>
       </div>
 
       <div class="stat-box">
-        <div class="stat-label">Решены</div>
+        <div class="stat-label" data-i18n="page.stats.resolved"></div>
         <div class="stat-value" id="statResolved">0</div>
       </div>
 
       <div class="stat-box">
-        <div class="stat-label">Всего</div>
+        <div class="stat-label" data-i18n="page.stats.total"></div>
         <div class="stat-value" id="statTotal">0</div>
       </div>
     </div>
 
     <div class="filters">
       <select class="select" id="statusFilter">
-        <option value="">Все статусы</option>
-        <option value="waiting">Ожидают ответа</option>
-        <option value="in_progress">В процессе</option>
-        <option value="resolved">Решены</option>
+        <option value="" data-i18n="page.filters.allStatuses"></option>
+        <option value="waiting" data-i18n="page.filters.waiting"></option>
+        <option value="in_progress" data-i18n="page.filters.in_progress"></option>
+        <option value="resolved" data-i18n="page.filters.resolved"></option>
       </select>
 
       <select class="select" id="assignedFilter">
-        <option value="">Все тикеты</option>
-        <option value="me">Только мои</option>
+        <option value="" data-i18n="page.filters.allTickets"></option>
+        <option value="me" data-i18n="page.filters.onlyMine"></option>
       </select>
     </div>
 
     <div class="card" id="ticketList">
-      <div class="empty">Загрузка...</div>
+      <div class="empty" data-i18n="page.empty.loading"></div>
     </div>
   </main>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
+<script src="/i18n.js"></script>
 <script>
 const token = localStorage.getItem("tp_token");
 
@@ -103,40 +107,123 @@ function esc(s){
     .replaceAll("'","&#039;");
 }
 
-function getRoleLabel(role){
-  const map = {
-    support: "Support",
-    admin: "Admin",
-    super_admin: "Super Admin"
-  };
-  return map[role] || role || "—";
+function tr(key, params = {}, fallback = ""){
+  if(typeof key !== "string" || !key.trim()){
+    return fallback;
+  }
+
+  if(window.tpI18n && typeof window.tpI18n.t === "function"){
+    const translated = window.tpI18n.t(key, params);
+    if(translated && translated !== key){
+      return translated;
+    }
+  }
+
+  return fallback || key;
+}
+
+function resolveMaybeI18n(value, fallback = ""){
+  if(typeof value !== "string" || !value.trim()){
+    return fallback;
+  }
+
+  if(
+    value.startsWith("page.") ||
+    value.startsWith("common.") ||
+    value.startsWith("support.")
+  ){
+    return tr(value, {}, fallback || value);
+  }
+
+  return value;
 }
 
 function logout(){
   localStorage.removeItem("tp_token");
+  localStorage.removeItem("tp_user_email");
+  localStorage.removeItem("tp_user_id");
   location.href = "/auth.html?mode=login";
+}
+
+function handleAuthMeStatus(status){
+  if(status === 401){
+    logout();
+    return true;
+  }
+
+  if(status === 403){
+    localStorage.removeItem("tp_token");
+    localStorage.removeItem("tp_user_email");
+    localStorage.removeItem("tp_user_id");
+    location.href = "/banned.html";
+    return true;
+  }
+
+  return false;
+}
+
+function handlePanelStatus(status){
+  if(status === 401){
+    logout();
+    return true;
+  }
+
+  if(status === 403){
+    location.href = "/";
+    return true;
+  }
+
+  return false;
+}
+
+function getRoleLabel(role){
+  const keyMap = {
+    support: "common.badges.support",
+    admin: "common.badges.admin",
+    super_admin: "common.badges.super_admin"
+  };
+
+  return tr(keyMap[role] || "", {}, role || "—");
+}
+
+function applyStaticTexts(){
+  if(window.tpI18n && typeof window.tpI18n.apply === "function"){
+    window.tpI18n.apply();
+  }
+
+  const rolePill = document.getElementById("rolePill");
+  if(rolePill){
+    rolePill.textContent = `${tr("page.rolePrefix", {}, "Роль")}: ${getRoleLabel(userRole)}`;
+  }
 }
 
 function formatWait(ts){
   const diff = Date.now() - Number(ts || 0);
   const minutes = Math.floor(diff / 60000);
 
-  if(minutes < 60) return minutes + " мин.";
+  if(minutes < 60){
+    return tr("page.wait.minutes", { count: minutes }, `${minutes} мин.`);
+  }
 
   const hours = Math.floor(minutes / 60);
   const restMinutes = minutes % 60;
 
-  return hours + " ч. " + restMinutes + " мин.";
+  return tr(
+    "page.wait.hoursMinutes",
+    { hours, minutes: restMinutes },
+    `${hours} ч. ${restMinutes} мин.`
+  );
+}
+
+function getStatusText(status){
+  if(status === "waiting") return tr("page.status.waiting", {}, "Ожидает ответа");
+  if(status === "in_progress") return tr("page.status.in_progress", {}, "В процессе");
+  if(status === "resolved") return tr("page.status.resolved", {}, "Решено");
+  return status;
 }
 
 function badge(status){
-  const map = {
-    waiting: "Ожидает ответа",
-    in_progress: "В процессе",
-    resolved: "Решено"
-  };
-
-  return '<span class="badge ' + status + '">' + (map[status] || status) + '</span>';
+  return '<span class="badge ' + esc(status) + '">' + esc(getStatusText(status)) + '</span>';
 }
 
 async function loadMe(){
@@ -144,14 +231,7 @@ async function loadMe(){
     headers:{ Authorization:"Bearer " + token }
   });
 
-  if(r.status === 401){
-    logout();
-    return false;
-  }
-
-  if(r.status === 403){
-    localStorage.removeItem("tp_token");
-    location.href = "/banned.html";
+  if(handleAuthMeStatus(r.status)){
     return false;
   }
 
@@ -163,7 +243,6 @@ async function loadMe(){
   }
 
   userRole = d.user.role || "";
-  document.getElementById("rolePill").textContent = "Роль: " + getRoleLabel(userRole);
 
   if(!SUPPORT_PANEL_ROLES.has(userRole)){
     location.href = "/";
@@ -175,7 +254,9 @@ async function loadMe(){
     adminBackBtn.classList.add("hidden");
   }
 
+  applyStaticTexts();
   socket.emit("auth", { token });
+
   return true;
 }
 
@@ -184,14 +265,7 @@ async function loadStats(){
     headers:{ Authorization:"Bearer " + token }
   });
 
-  if(r.status === 401){
-    logout();
-    return;
-  }
-
-  if(r.status === 403){
-    localStorage.removeItem("tp_token");
-    location.href = "/banned.html";
+  if(handlePanelStatus(r.status)){
     return;
   }
 
@@ -216,14 +290,7 @@ async function loadTickets(){
     headers:{ Authorization:"Bearer " + token }
   });
 
-  if(r.status === 401){
-    logout();
-    return;
-  }
-
-  if(r.status === 403){
-    localStorage.removeItem("tp_token");
-    location.href = "/banned.html";
+  if(handlePanelStatus(r.status)){
     return;
   }
 
@@ -231,7 +298,7 @@ async function loadTickets(){
   const list = document.getElementById("ticketList");
 
   if(!d.success){
-    list.innerHTML = '<div class="empty">Ошибка загрузки тикетов</div>';
+    list.innerHTML = `<div class="empty">${tr("page.empty.loadFailed", {}, "Ошибка загрузки тикетов")}</div>`;
     return;
   }
 
@@ -248,7 +315,7 @@ async function loadTickets(){
   });
 
   if(!tickets.length){
-    list.innerHTML = '<div class="empty">Тикетов нет</div>';
+    list.innerHTML = `<div class="empty">${tr("page.empty.noTickets", {}, "Тикетов нет")}</div>`;
     return;
   }
 
@@ -262,59 +329,70 @@ async function loadTickets(){
     const isLate = t.status === "waiting" && (Date.now() - waitBase > 10 * 60 * 1000);
 
     const waitLine = t.status === "waiting"
-      ? '<div class="wait-time ' + (isLate ? 'late' : '') + '">Ждёт: ' + formatWait(waitBase) + '</div>'
+      ? '<div class="wait-time ' + (isLate ? 'late' : '') + '">' +
+          esc(tr("page.wait.label", {}, "Ждёт")) + ': ' + esc(formatWait(waitBase)) +
+        '</div>'
       : '';
 
-    const categoryLabel = esc(t.categoryLabel || t.category || "Без категории");
-    const subjectText = esc(t.subject || "");
-    const shortIdText = esc(t.shortId || t.id || "");
+    const categoryLabel = resolveMaybeI18n(
+      t.categoryLabel || t.category,
+      tr("common.uncategorized", {}, "Без категории")
+    );
+
+    const subjectText = resolveMaybeI18n(
+      t.subject,
+      tr("common.untitled", {}, "Без названия")
+    );
 
     const priorityChip = t.priority === "high"
-      ? '<div class="meta-chip priority-high">Высокий приоритет</div>'
+      ? '<div class="meta-chip priority-high">' + esc(tr("page.priority.highLabel", {}, "Высокий приоритет")) + '</div>'
       : '';
 
     const orderChip = t.orderId
-      ? `<div class="meta-chip">Заказ: ${esc(t.orderId)}</div>`
+      ? `<div class="meta-chip">${esc(tr("page.meta.order", {}, "Заказ"))}: ${esc(t.orderId)}</div>`
       : '';
 
     const reportChip = t.userId
-      ? `<div class="meta-chip">ID пользователя: ${esc(t.userId)}</div>`
+      ? `<div class="meta-chip">${esc(tr("page.meta.userId", {}, "ID пользователя"))}: ${esc(t.userId)}</div>`
       : '';
 
     const offerChip = t.offerId
-      ? `<div class="meta-chip">ID объявления: ${esc(t.offerId)}</div>`
+      ? `<div class="meta-chip">${esc(tr("page.meta.offerId", {}, "ID объявления"))}: ${esc(t.offerId)}</div>`
       : '';
 
     const unreadChip = t.unread > 0
-      ? `<div class="meta-chip unread">Новых: ${t.unread}</div>`
+      ? `<div class="meta-chip unread">${esc(tr("page.meta.newCount", { count: t.unread }, `Новых: ${t.unread}`))}</div>`
       : '';
 
-    const creatorLine = t.creator
-      ? `Создал: ${esc(t.creator.username)}${t.creator.userId ? ` (ID ${esc(t.creator.userId)})` : ""}`
-      : "Создал: Пользователь";
+    const creatorName = t.creator?.username || tr("page.meta.createdByFallback", {}, "Пользователь");
+    const creatorId = t.creator?.userId
+      ? ` (${esc(tr("page.meta.userIdShort", { id: t.creator.userId }, `ID ${t.creator.userId}`))})`
+      : "";
+
+    const creatorLine = `${tr("page.meta.createdBy", {}, "Создал")}: ${creatorName}${creatorId}`;
 
     const lastMessageLine =
       t.lastMessageFrom === "user"
-        ? "Последний ответ: пользователь"
+        ? tr("page.meta.lastReplyUser", {}, "Последний ответ: пользователь")
         : t.lastMessageFrom === "support"
-          ? "Последний ответ: поддержка"
-          : "Сообщений пока нет";
+          ? tr("page.meta.lastReplySupport", {}, "Последний ответ: поддержка")
+          : tr("page.meta.noMessages", {}, "Сообщений пока нет");
 
     const assignedText = t.assignedTo
-      ? `Ответственный: ${esc(t.assignedUsername || t.assignedTo)}${t.assignedUserId ? ` (ID ${esc(t.assignedUserId)})` : ""}`
-      : "Ответственный: не назначен";
+      ? `${tr("page.meta.assignedTo", {}, "Ответственный")}: ${esc(t.assignedUsername || t.assignedTo)}${t.assignedUserId ? ` (${esc(tr("page.meta.userIdShort", { id: t.assignedUserId }, `ID ${t.assignedUserId}`))})` : ""}`
+      : `${tr("page.meta.assignedTo", {}, "Ответственный")}: ${tr("page.meta.unassigned", {}, "не назначен")}`;
 
     div.innerHTML = `
       <div class="ticket-main">
         <div class="ticket-top">
-          <div class="ticket-id">${shortIdText}</div>
+          <div class="ticket-id">${esc(t.shortId || t.id || "")}</div>
           ${badge(t.status)}
         </div>
 
-        <div class="ticket-subject">${subjectText}</div>
+        <div class="ticket-subject">${esc(subjectText)}</div>
 
         <div class="ticket-meta">
-          <div class="meta-chip">${categoryLabel}</div>
+          <div class="meta-chip">${esc(categoryLabel)}</div>
           ${priorityChip}
           ${orderChip}
           ${reportChip}
@@ -324,16 +402,16 @@ async function loadTickets(){
 
         ${waitLine}
         <div class="assigned-line">${creatorLine}</div>
-        <div class="assigned-line">${lastMessageLine}</div>
+        <div class="assigned-line">${esc(lastMessageLine)}</div>
         <div class="assigned-line">${assignedText}</div>
       </div>
 
       <div class="ticket-actions">
         ${!t.assignedTo && t.status !== "resolved"
-          ? `<button class="btn btn-primary" onclick="assignTicket('${t.id}')">Взять</button>`
+          ? `<button class="btn btn-primary" onclick="assignTicket('${esc(t.id)}')">${esc(tr("page.actions.assign", {}, "Взять"))}</button>`
           : ''}
 
-        <button class="btn" onclick="openTicket('${t.id}')">Открыть</button>
+        <button class="btn" onclick="openTicket('${esc(t.id)}')">${esc(tr("page.actions.open", {}, "Открыть"))}</button>
       </div>
     `;
 
@@ -347,15 +425,14 @@ async function assignTicket(id){
     headers:{ Authorization:"Bearer " + token }
   });
 
-  if(r.status === 401){
-    logout();
+  if(handlePanelStatus(r.status)){
     return;
   }
 
   const d = await r.json().catch(() => ({}));
 
   if(!d.success){
-    alert(d.message || "Не удалось взять тикет");
+    alert(d.message || tr("page.errors.assignFailed", {}, "Не удалось взять тикет"));
     return;
   }
 
@@ -371,11 +448,23 @@ document.getElementById("statusFilter").onchange = loadTickets;
 document.getElementById("assignedFilter").onchange = loadTickets;
 document.getElementById("logoutBtn").onclick = logout;
 
-loadMe().then((ok) => {
-  if(!ok) return;
-  loadTickets();
-  loadStats();
+window.addEventListener("tp:lang-change", async () => {
+  applyStaticTexts();
+  await loadTickets();
+  await loadStats();
 });
+
+Promise.resolve(window.tpI18nReady)
+  .catch(() => {})
+  .finally(() => {
+    applyStaticTexts();
+
+    loadMe().then((ok) => {
+      if(!ok) return;
+      loadTickets();
+      loadStats();
+    });
+  });
 
 socket.on("new-support-ticket", () => {
   loadTickets();

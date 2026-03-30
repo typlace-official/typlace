@@ -1,13 +1,38 @@
 function getCurrentLang() {
-  const lang = (localStorage.getItem("tp_lang") || "ru").trim().toLowerCase();
-  return ["ru", "uk", "en"].includes(lang) ? lang : "ru";
+  const lang =
+    window.tpI18n?.currentLang ||
+    localStorage.getItem("tp_lang") ||
+    "ru";
+
+  return ["ru", "uk", "en"].includes(String(lang).trim().toLowerCase())
+    ? String(lang).trim().toLowerCase()
+    : "ru";
+}
+
+function tOrEmpty(key, params = {}) {
+  const text = window.tpI18n?.t?.(key, params);
+
+  if (!text || text === key) {
+    return "";
+  }
+
+  return String(text).trim();
 }
 
 function getTextByLang(value) {
   const lang = getCurrentLang();
 
-  if (typeof value === "string") return value.trim();
-  return String(value?.[lang] || "").trim();
+  if (typeof value === "string") {
+    return value.trim();
+  }
+
+  return String(
+    value?.[lang] ??
+    value?.ru ??
+    value?.uk ??
+    value?.en ??
+    ""
+  ).trim();
 }
 
 function getModeConfig(o) {
@@ -22,7 +47,7 @@ function translateCategory(o) {
     const tr = window.tpI18n.t(key);
 
     if (tr && tr !== key) {
-      return tr.trim();
+      return String(tr).trim();
     }
   }
 
@@ -36,16 +61,23 @@ function getFilterOptionLabel(modeConfig, filterKey, value) {
   const options = Array.isArray(filter.options) ? filter.options : [];
 
   const found = options.find(opt => {
-    if (typeof opt === "object") return String(opt.value) === String(value);
+    if (typeof opt === "object") {
+      return String(opt.value) === String(value);
+    }
     return String(opt) === String(value);
   });
 
-  if (!found) return String(value).trim();
+  if (!found) {
+    return String(value).trim();
+  }
 
   if (typeof found === "object") {
     if (found.labelKey && window.tpI18n?.t) {
       const tr = window.tpI18n.t(found.labelKey);
-      if (tr && tr !== found.labelKey) return tr.trim();
+
+      if (tr && tr !== found.labelKey) {
+        return String(tr).trim();
+      }
     }
 
     return String(found.label || found.value || "").trim();
@@ -62,8 +94,12 @@ function resolveAmount(o) {
   const extra = o.extra || {};
 
   if (extra.amount_exact) return String(extra.amount_exact).trim();
-  if (extra.amount_official && extra.amount_official !== "other") return String(extra.amount_official).trim();
-  if (extra.amount_giftcard && extra.amount_giftcard !== "other") return String(extra.amount_giftcard).trim();
+  if (extra.amount_official && extra.amount_official !== "other") {
+    return String(extra.amount_official).trim();
+  }
+  if (extra.amount_giftcard && extra.amount_giftcard !== "other") {
+    return String(extra.amount_giftcard).trim();
+  }
   if (extra.amount_premium) return String(extra.amount_premium).trim();
 
   return "";
@@ -79,11 +115,13 @@ function resolveTitlePart(o, part, modeConfig) {
 
     case "voiceChat":
       if (o.voiceChat === true) {
-        return window.tpI18n?.t?.("common.vc_yes") || "Есть VC";
+        return tOrEmpty("common.vc_yes");
       }
+
       if (o.voiceChat === false) {
-        return window.tpI18n?.t?.("common.vc_no") || "Нету VC";
+        return tOrEmpty("common.vc_no");
       }
+
       return "";
 
     case "amount":
@@ -142,7 +180,9 @@ function buildOfferTitle(o) {
 
   const finalParts = [...new Set(parts)];
 
-  return finalParts.length ? finalParts.join(", ") : "Предложение";
+return finalParts.length
+  ? finalParts.join(", ")
+  : tOrEmpty("common.offer_fallback");
 }
 
 window.buildOfferTitle = buildOfferTitle;

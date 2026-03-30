@@ -1,0 +1,69 @@
+{
+  "title": "Замовлення — TyPlace",
+  "loading": "Завантаження…",
+  "showFull": "Показати повністю",
+  "descriptionTitle": "Опис",
+  "order": {
+    "numberLabel": "Замовлення",
+    "createdLabel": "Створено",
+    "completedLabel": "Завершено",
+    "refundedLabel": "Повернення",
+    "descriptionEmpty": "Опис не вказано.",
+    "status": {
+      "pending": "У процесі",
+      "completed": "Завершено",
+      "refunded": "Повернення"
+    },
+    "confirmReceiptBtn": "Підтвердити отримання",
+    "confirmReceiptConfirm": "Підтвердити отримання? Гроші будуть перераховані продавцю.",
+    "appealBtn": "Подати апеляцію",
+    "appealAvailable": "Апеляція доступна ще {{time}}",
+    "refundBtn": "Повернути кошти",
+    "refundConfirm": "Повернути кошти покупцю?"
+  },
+  "chat": {
+    "writeMessage": "Написати повідомлення...",
+    "resolutionWriteMessage": "Напишіть повідомлення від імені арбітражу",
+    "orderChatTitle": "Чат замовлення",
+    "resolutionChatSub": "Арбітражний чат",
+    "readOnlyChatSub": "Перегляд повідомлень",
+    "report": "Відкрити спір",
+    "mute": "Вимкнути сповіщення",
+    "unmute": "Увімкнути сповіщення",
+    "attach": "Прикріпити",
+    "send": "Надіслати",
+    "online": "У мережі",
+    "offline": "Не в мережі",
+    "justNow": "Щойно",
+    "minutesAgo": "{{count}} хв. тому",
+    "hoursAgo": "{{count}} год. тому",
+    "daysAgo": "{{count}} дн. тому",
+    "today": "Сьогодні",
+    "yesterday": "Вчора"
+  },
+  "resolution": {
+    "title": "Рішення арбітражу",
+    "placeholder": "Напишіть підсумкове рішення по спору",
+    "confirmBtn": "Підтвердити замовлення",
+    "refundBtn": "Зробити повернення",
+    "decisionTextRequired": "Напишіть текст рішення",
+    "confirmDecisionConfirm": "Підтвердити замовлення рішенням арбітражу?",
+    "refundDecisionConfirm": "Зробити повернення рішенням арбітражу?"
+  },
+  "review": {
+    "title": "Залишити відгук",
+    "placeholder": "Напишіть відгук про угоду",
+    "submit": "Опублікувати",
+    "ratingRequired": "Поставте оцінку"
+  },
+  "alerts": {
+    "orderIdMissing": "Не вказано замовлення",
+    "orderNotFound": "Замовлення не знайдено",
+    "sendMessageError": "Помилка надсилання повідомлення",
+    "confirmOrderError": "Помилка підтвердження замовлення",
+    "refundOrderError": "Помилка повернення коштів",
+    "resolutionDecisionError": "Помилка рішення по спору",
+    "fileSendError": "Помилка надсилання файлу",
+    "reviewSendError": "Помилка під час надсилання відгуку"
+  }
+}

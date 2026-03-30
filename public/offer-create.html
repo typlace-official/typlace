@@ -3,16 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Создать объявление — TyPlace</title>
+<title data-i18n="page.title"></title>
 
 <link rel="stylesheet" href="/header.css">
 <link rel="stylesheet" href="/gallery.css">
-<link rel="stylesheet" href="/footer.css">
 <link rel="stylesheet" href="/tp-ui.css">
 
 <style>
+html,
 body{
   margin:0;
+  overflow-x:hidden;
+}
+
+body{
   font-family: Inter, Arial, sans-serif;
   background:#f6f7f9;
 }
@@ -642,6 +646,10 @@ textarea{
   background:#374151;
 }
 
+.tp-toast:empty{
+  display:none !important;
+}
+
 @media (max-width:768px){
   .tp-toast{
     bottom:100px;
@@ -650,10 +658,19 @@ textarea{
     border-radius:12px;
   }
 }
-body.keyboard-open #footer-container{
-  display:none !important;
+
+html:not(.i18n-ready) body{
+  visibility:hidden;
 }
 </style>
+<script>
+function markPageReady() {
+  document.documentElement.classList.add("i18n-ready");
+}
+
+window.addEventListener("load", markPageReady, { once: true });
+window.addEventListener("pageshow", markPageReady);
+</script>
 </head>
 
 <body>
@@ -668,7 +685,7 @@ body.keyboard-open #footer-container{
 
 <!-- TOP -->
 <div class="top-row">
-<button class="back-btn" id="backBtn" aria-label="Back">
+<button class="back-btn" id="backBtn" data-i18n-aria-label="page.back">
 <svg viewBox="0 0 24 24">
 <path d="M15 6L9 12L15 18"/>
 </svg>
@@ -696,7 +713,7 @@ body.keyboard-open #footer-container{
 <div class="form-group" id="categoryGroup" style="display:none; max-width:260px;">
   <label data-i18n="common.category_placeholder"></label>
   <select id="categoryInput">
-    <option value="">Выберите категорию</option>
+    <option value="" data-i18n="common.choose_category"></option>
   </select>
 </div>
 
@@ -811,50 +828,21 @@ body.keyboard-open #footer-container{
 </div>
 </main>
 
-
-
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
-<script src="/header.js"></script>
 <script src="/i18n.js"></script>
+<script src="/header.js"></script>
 <script type="module" src="/games/index.js"></script>
 <script src="/tp-money.js"></script>
-<script src="/footer.js"></script>
 <script src="/tp-ui.js"></script>
 
 <script type="module">
 const langSelect = document.getElementById("langSelect");
-
-const savedLang = getInterfaceLang();
-
-function fillOfferLangSelect(selectedLang = getInterfaceLang()) {
-  langSelect.innerHTML = `
-    <option value="ru">${window.tpI18n.t("common.lang_ru")}</option>
-    <option value="uk">${window.tpI18n.t("common.lang_uk")}</option>
-    <option value="en">${window.tpI18n.t("common.lang_en")}</option>
-  `;
-
-  langSelect.value = ["ru", "uk", "en"].includes(selectedLang)
-    ? selectedLang
-    : "ru";
-}
-
-// показать нужные блоки текста
-function applyLangBlocks(lang){
-  document.querySelectorAll(".lang-block").forEach(el => el.style.display = "none");
-  document.querySelectorAll(".lang-" + lang).forEach(el => el.style.display = "");
-}
-function updateOfferFieldLabels(lang){
-  let titleText = "Title";
-  let descText  = "Description";
-
-  if (lang === "ru") { titleText = "Название"; descText = "Описание"; }
-  if (lang === "uk") { titleText = "Назва";    descText = "Опис"; }
-
-  // ставим текст во ВСЕ лейблы (во всех языковых блоках)
-  document.querySelectorAll(".offer-title-label").forEach(el => el.textContent = titleText);
-  document.querySelectorAll(".offer-desc-label").forEach(el => el.textContent = descText);
-}
+const pageT = (key, params = {}) => {
+  const fullKey = `page.${key}`;
+  const tr = window.tpI18n?.t ? window.tpI18n.t(fullKey, params) : "";
+  return tr && tr !== fullKey ? tr : key;
+};
 
 function getInterfaceLang(){
   const lang = (localStorage.getItem("tp_lang") || "ru").trim().toLowerCase();
@@ -875,59 +863,59 @@ function getRequiredOfferLangs(){
 }
 
 function switchOfferEditorLang(lang){
-  langSelect.value = lang;
-  applyLangBlocks(lang);
-  updateOfferFieldLabels(lang);
+  const safeLang = ["ru", "uk", "en"].includes(lang) ? lang : "ru";
+  langSelect.value = safeLang;
+  applyLangBlocks(safeLang);
+  updateOfferFieldLabels(safeLang);
+}
+
+function fillOfferLangSelect(selectedLang = getInterfaceLang()) {
+  langSelect.innerHTML = `
+    <option value="ru">${window.tpI18n.t("common.lang_ru")}</option>
+    <option value="uk">${window.tpI18n.t("common.lang_uk")}</option>
+    <option value="en">${window.tpI18n.t("common.lang_en")}</option>
+  `;
+
+  langSelect.value = ["ru", "uk", "en"].includes(selectedLang)
+    ? selectedLang
+    : "ru";
+}
+
+// показать нужные блоки текста
+function applyLangBlocks(lang){
+  document.querySelectorAll(".lang-block").forEach(el => el.style.display = "none");
+  document.querySelectorAll(".lang-" + lang).forEach(el => el.style.display = "");
+}
+
+function updateOfferFieldLabels(lang = langSelect.value || getInterfaceLang()){
+  const safeLang = ["ru", "uk", "en"].includes(lang) ? lang : "ru";
+
+  const titleText = pageT(`fieldLabels.${safeLang}.title`);
+  const descText = pageT(`fieldLabels.${safeLang}.description`);
+
+  document.querySelectorAll(".offer-title-label").forEach(el => {
+    el.textContent = titleText;
+  });
+
+  document.querySelectorAll(".offer-desc-label").forEach(el => {
+    el.textContent = descText;
+  });
 }
 
 function getLangName(lang){
-  const uiLang = getInterfaceLang();
-
-  if (uiLang === "uk") {
-    if (lang === "ru") return "російською";
-    if (lang === "uk") return "українською";
-    if (lang === "en") return "англійською";
-  }
-
-  if (uiLang === "en") {
-    if (lang === "ru") return "Russian";
-    if (lang === "uk") return "Ukrainian";
-    if (lang === "en") return "English";
-  }
-
-  if (lang === "ru") return "на русском";
-  if (lang === "uk") return "на украинском";
-  if (lang === "en") return "на английском";
-
-  return lang;
+  return pageT(`languageTargets.${lang}`);
 }
 
 function getTitleErrorText(lang){
-  const uiLang = getInterfaceLang();
-
-  if (uiLang === "uk") {
-    return `Заповніть назву ${getLangName(lang)}`;
-  }
-
-  if (uiLang === "en") {
-    return `Fill in the title in ${getLangName(lang)}`;
-  }
-
-  return `Заполните название ${getLangName(lang)}`;
+  return pageT("errors.fillTitleForLanguage", {
+    language: getLangName(lang)
+  });
 }
 
 function getDescErrorText(lang){
-  const uiLang = getInterfaceLang();
-
-  if (uiLang === "uk") {
-    return `Заповніть опис ${getLangName(lang)}`;
-  }
-
-  if (uiLang === "en") {
-    return `Fill in the description in ${getLangName(lang)}`;
-  }
-
-  return `Заполните описание ${getLangName(lang)}`;
+  return pageT("errors.fillDescriptionForLanguage", {
+    language: getLangName(lang)
+  });
 }
 
 function updateLangRulesHint(){
@@ -935,27 +923,7 @@ function updateLangRulesHint(){
   if (!box) return;
 
   const interfaceLang = getInterfaceLang();
-
-  if (interfaceLang === "ru") {
-    box.innerHTML = `
-      Заполните объявление на <strong>русском</strong> и <strong>украинском</strong>.
-      <strong>Английский</strong> можно добавить дополнительно.
-    `;
-    return;
-  }
-
-  if (interfaceLang === "uk") {
-    box.innerHTML = `
-      Заповніть оголошення <strong>українською</strong> та <strong>російською</strong>.
-      <strong>Англійську</strong> можна додати додатково.
-    `;
-    return;
-  }
-
-  box.innerHTML = `
-    Fill in the listing in <strong>English</strong>.
-    <strong>Russian</strong> and <strong>Ukrainian</strong> can be added optionally.
-  `;
+  box.innerHTML = pageT(`langRules.${interfaceLang}`);
 }
 
 langSelect.addEventListener("change", () => {
@@ -973,21 +941,66 @@ const gameId = params.get("game");
 const mode = params.get("mode");
 const editId = params.get("edit");
 const isEditMode = !!editId;
-await new Promise(resolve => {
-  const check = () => {
-    if (window.GAMES) resolve();
-    else setTimeout(check, 10);
-  };
-  check();
-});
-if(!gameId || !window.GAMES[gameId]){
-  document.body.innerHTML = "<h2 style='padding:24px'>Игра не найдена</h2>";
-  throw new Error("Game not found");
+
+async function waitForGameConfig(gameId, requestedMode, timeoutMs = 7000){
+  const startedAt = Date.now();
+
+  while (true) {
+    const game = window.GAMES?.[gameId];
+    const resolvedMode = requestedMode || game?.defaultMode;
+
+    const isReady =
+      game &&
+      game.title &&
+      game.icon &&
+      game.modes &&
+      typeof game.modes === "object" &&
+      Object.keys(game.modes).length > 0 &&
+      resolvedMode &&
+      game.modes[resolvedMode];
+
+    if (isReady) {
+      return game;
+    }
+
+    if (Date.now() - startedAt >= timeoutMs) {
+      throw new Error(`Game config not ready: ${gameId}/${requestedMode || ""}`);
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 25));
+  }
 }
 
-const GAME = window.GAMES[gameId];
-const activeMode = mode || GAME.defaultMode;
-const modeCfg = GAME.modes?.[activeMode] || {};
+let GAME;
+let activeMode;
+let modeCfg;
+
+try {
+  if (window.tpI18n?.load) {
+    await window.tpI18n.load(getInterfaceLang());
+  }
+
+  if (!gameId) {
+    document.body.innerHTML = `<h2 style="padding:24px">${pageT("errors.gameNotFound")}</h2>`;
+    markPageReady();
+    throw new Error("Game id not found");
+  }
+
+  GAME = await waitForGameConfig(gameId, mode);
+  activeMode = mode || GAME.defaultMode;
+  modeCfg = GAME.modes?.[activeMode] || {};
+
+  if (!modeCfg || !Object.keys(modeCfg).length) {
+    document.body.innerHTML = `<h2 style="padding:24px">${pageT("errors.gameNotFound")}</h2>`;
+    markPageReady();
+    throw new Error(`Mode not found: ${activeMode}`);
+  }
+} catch (err) {
+  console.error("offer-create init error:", err);
+  document.body.innerHTML = `<h2 style="padding:24px">${pageT("errors.generic")}</h2>`;
+  markPageReady();
+  throw err;
+}
 
 let priceBase = null;
 const extraFieldsWrap = document.getElementById("extraFields");
@@ -1002,7 +1015,11 @@ function renderExtraFields(gameId, mode) {
   const game = window.GAMES?.[gameId];
   const modeCfg = game?.modes?.[mode];
   if (!modeCfg) return;
-const t = (key, fallback="") => (window.tpI18n?.t ? window.tpI18n.t(key) : (fallback || key || ""));
+const t = (key, fallback = "") => {
+  if (!window.tpI18n?.t) return fallback || key || "";
+  const tr = window.tpI18n.t(key);
+  return tr && tr !== key ? tr : (fallback || key || "");
+};
 
 // ===== CATEGORIES =====
 if (Array.isArray(modeCfg.categories) && modeCfg.categories.length) {
@@ -1206,9 +1223,13 @@ async function updatePricePreview(){
   pricePreview.innerHTML = `
     <div>${window.tpI18n.t("common.buyer_pays")}</div>
     <div><b>${currentVal} ${symbols[cur]}</b></div>
-    ${cur !== "UAH" ? `<div>≈ ${Math.round(uahVal).toLocaleString("ru-RU")} грн</div>` : ""}
-    ${cur !== "USD" ? `<div>≈ ${usdVal} $</div>` : ""}
-    ${cur !== "EUR" ? `<div>≈ ${eurVal} €</div>` : ""}
+${cur !== "UAH" ? `<div>≈ ${Math.round(uahVal).toLocaleString(
+  getInterfaceLang() === "uk" ? "uk-UA" :
+  getInterfaceLang() === "en" ? "en-US" :
+  "ru-RU"
+)} ₴</div>` : ""}
+${cur !== "USD" ? `<div>≈ ${usdVal} $</div>` : ""}
+${cur !== "EUR" ? `<div>≈ ${eurVal} €</div>` : ""}
   `;
 
   pricePreview.style.display = "block";
@@ -1578,7 +1599,7 @@ function validateDynamicFields(){
     const value = String(input.value || "").trim();
 
     if (!value) {
-      showError(input, "Заполните поле");
+      showError(input, pageT("errors.fillField"));
       if (!firstInvalidInput) {
         firstInvalidInput = input;
       }
@@ -1613,19 +1634,29 @@ const hasCategories = Array.isArray(modeCfg.categories) && modeCfg.categories.le
 
 // категория
 if (hasCategories && !categoryInput.value) {
-  showError(categoryInput, "Укажите категорию");
+  showError(categoryInput, pageT("errors.chooseCategory"));
   hasError = true;
 }
 
 // цена
 if (!priceBase || priceBase <= 0) {
-  showError(priceInput, "Укажите цену");
+  showError(priceInput, pageT("errors.enterPrice"));
   hasError = true;
 } else if (priceBase < MIN_OFFER_PRICE) {
-  showError(priceInput, `Минимальная цена ${MIN_OFFER_PRICE} ₴`);
+  showError(priceInput, pageT("errors.minPrice", {
+  price: MIN_OFFER_PRICE,
+  currency: "₴"
+}));
   hasError = true;
 } else if (priceBase > MAX_OFFER_PRICE) {
-  showError(priceInput, `Максимальная цена ${MAX_OFFER_PRICE.toLocaleString("ru-RU")} ₴`);
+showError(priceInput, pageT("errors.maxPrice", {
+  price: MAX_OFFER_PRICE.toLocaleString(
+    getInterfaceLang() === "uk" ? "uk-UA" :
+    getInterfaceLang() === "en" ? "en-US" :
+    "ru-RU"
+  ),
+  currency: "₴"
+}));
   hasError = true;
 }
 
@@ -1817,7 +1848,7 @@ sessionStorage.setItem(
   "tp_toast",
   JSON.stringify({
     type: "success",
-    text: isEditMode ? "Изменения сохранены" : "Объявление создано"
+    text: isEditMode ? pageT("toasts.saved") : pageT("toasts.created")
   })
 );
 
@@ -1825,7 +1856,7 @@ location.href =
   `/game.html?game=${gameId}&mode=${encodeURIComponent(mode || GAME.defaultMode)}`;
 
 } else {
-  showToast(data.message || "Ошибка", "error");
+  showToast(data.message || pageT("errors.generic"), "error");
 }
 };
 function updateCurrencySymbol(){
@@ -1859,10 +1890,24 @@ function showError(input, message){
 const tpToast = document.getElementById("tpToast");
 let tpToastTimer = null;
 
+function hideToast(){
+  if (!tpToast) return;
+
+  tpToast.className = "tp-toast";
+  tpToast.textContent = "";
+}
+
 function showToast(message, type = "success", duration = 2200){
   if (!tpToast) return;
 
-  tpToast.textContent = message;
+  const safeMessage = String(message || "").trim();
+
+  if (!safeMessage) {
+    hideToast();
+    return;
+  }
+
+  tpToast.textContent = safeMessage;
   tpToast.className = `tp-toast ${type}`;
 
   requestAnimationFrame(() => {
@@ -1871,7 +1916,7 @@ function showToast(message, type = "success", duration = 2200){
 
   clearTimeout(tpToastTimer);
   tpToastTimer = setTimeout(() => {
-    tpToast.classList.remove("show");
+    hideToast();
   }, duration);
 }
 
@@ -1897,12 +1942,12 @@ submitBtn.setAttribute("data-i18n", "common.save_changes");
   deleteBtn.style.display = "block";
 
 deleteBtn.onclick = async () => {
-  const confirmed = await tpConfirm("Вы уверены, что хотите удалить объявление?", {
-    title: "Подтверждение",
-    confirmText: "Удалить",
-    cancelText: "Отмена",
-    dangerConfirm: true
-  });
+const confirmed = await tpConfirm(pageT("deleteConfirm.text"), {
+  title: pageT("deleteConfirm.title"),
+  confirmText: pageT("deleteConfirm.confirm"),
+  cancelText: pageT("deleteConfirm.cancel"),
+  dangerConfirm: true
+});
 
   if (!confirmed) return;
 
@@ -1918,16 +1963,16 @@ deleteBtn.onclick = async () => {
   const data = await res.json();
 
   if (data.success) {
-    await tpAlert(window.tpI18n.t("common.offer_deleted"), {
-      type: "success",
-      title: "Успешно"
-    });
+await tpAlert(window.tpI18n.t("common.offer_deleted"), {
+  type: "success",
+  title: pageT("alerts.successTitle")
+});
     location.href = "/my-offers.html";
   } else {
-    await tpAlert(data.message || "Ошибка удаления", {
-      type: "error",
-      title: "Ошибка"
-    });
+await tpAlert(data.message || pageT("alerts.deleteError"), {
+  type: "error",
+  title: pageT("alerts.errorTitle")
+});
   }
 };
 }
@@ -1953,10 +1998,10 @@ async function loadOfferForEdit(id){
 
   const data = await res.json();
 if (!data.success || data.deleted || !data.offer) {
-  await tpAlert(window.tpI18n.t("common.offer_not_found"), {
-    type: "error",
-    title: "Ошибка"
-  });
+await tpAlert(window.tpI18n.t("common.offer_not_found"), {
+  type: "error",
+  title: pageT("alerts.errorTitle")
+});
   location.href = "/my-offers.html";
   return;
 }
@@ -2049,6 +2094,9 @@ document.getElementById("counterUk").textContent = `${titleUkEl.value.length} / 
 document.getElementById("counterDescUk").textContent = `${descUkEl.value.length} / 1000`;
 document.getElementById("counterEn").textContent = `${titleEnEl.value.length} / 70`;
 document.getElementById("counterDescEn").textContent = `${descEnEl.value.length} / 1000`;
+
+switchOfferEditorLang(langSelect.value || getInterfaceLang());
+
   // 🔧 extra поля
   if (o.extra) {
     Object.entries(o.extra).forEach(([key, value]) => {
@@ -2123,89 +2171,91 @@ initDescCounter("descRu", "counterDescRu");
 initDescCounter("descUk", "counterDescUk");
 initDescCounter("descEn", "counterDescEn");
 
-window.addEventListener("DOMContentLoaded", async () => {
+async function initOfferCreatePage() {
+  try {
+    const lang = getInterfaceLang();
 
-  const lang = localStorage.getItem("tp_lang") || "ru";
+    await loadPlatformSettings();
 
-  if (window.tpI18n?.load) {
-    await window.tpI18n.load(lang);
+    fillOfferLangSelect(lang);
+    applyLangBlocks(langSelect.value);
+    updateOfferFieldLabels(langSelect.value);
+    updateLangRulesHint();
+
+    if (window.tpI18n?.apply) {
+      window.tpI18n.apply(document);
+    }
+
+    const modeData = GAME.modes?.[activeMode];
+    document.getElementById("crumbMode").textContent =
+      (modeData?.labelKey && window.tpI18n?.t)
+        ? window.tpI18n.t(modeData.labelKey)
+        : activeMode;
+
+    renderExtraFields(gameId, activeMode);
+    updateVisibilityByConfig();
+
+    if (isEditMode) {
+      await loadOfferForEdit(editId);
+    }
+
+    if (window.tpI18n?.apply) {
+      window.tpI18n.apply(document);
+    }
+
+    extraFieldsWrap.addEventListener("change", updateVisibilityByConfig);
+    setupKeyboardFooterHide();
+
+    window.addEventListener("tp:lang-change", async (e) => {
+      const savedExtraValues = {};
+
+      extraFieldsWrap.querySelectorAll("[data-key]").forEach(wrap => {
+        const key = wrap.dataset.key;
+        const input = wrap.querySelector("select, input, textarea");
+        if (input) savedExtraValues[key] = input.value;
+      });
+
+      const savedCategory = categoryInput.value;
+
+      const lang = ["ru", "uk", "en"].includes(e.detail?.lang)
+        ? e.detail.lang
+        : getInterfaceLang();
+
+      if (window.tpI18n?.load) {
+        await window.tpI18n.load(lang);
+      }
+
+      fillOfferLangSelect(langSelect.value || lang);
+      applyLangBlocks(langSelect.value || lang);
+      updateOfferFieldLabels(langSelect.value || lang);
+      updateLangRulesHint();
+
+      if (window.tpI18n?.apply) {
+        window.tpI18n.apply(document);
+      }
+
+      const modeData = GAME.modes?.[activeMode];
+
+      document.getElementById("crumbMode").textContent =
+        (modeData?.labelKey && window.tpI18n?.t)
+          ? window.tpI18n.t(modeData.labelKey)
+          : activeMode;
+
+      renderExtraFields(gameId, activeMode);
+
+      Object.entries(savedExtraValues).forEach(([key, value]) => {
+        setDynamicFieldValue(key, value);
+      });
+
+      categoryInput.value = savedCategory;
+      updateVisibilityByConfig();
+    });
+  } finally {
+    markPageReady();
   }
-
-  await loadPlatformSettings();
-
-const interfaceLang = getInterfaceLang();
-
-fillOfferLangSelect(interfaceLang);
-applyLangBlocks(interfaceLang);
-updateOfferFieldLabels(interfaceLang);
-updateLangRulesHint();
-
-if (window.tpI18n?.apply) window.tpI18n.apply(document);
-  if (!window.GAMES || !window.GAMES[gameId]) {
-    console.error("GAMES not ready");
-    return;
-  }
-const modeData = GAME.modes?.[activeMode];
-document.getElementById("crumbMode").textContent =
-  (modeData?.labelKey && window.tpI18n?.t)
-    ? window.tpI18n.t(modeData.labelKey)
-    : activeMode;
-
-renderExtraFields(gameId, activeMode);
-updateVisibilityByConfig();
-
-if (isEditMode) {
-  await loadOfferForEdit(editId);
 }
 
-if (window.tpI18n?.apply) {
-  window.tpI18n.apply(document);
-}
-if (window.tpI18n?.apply) window.tpI18n.apply(document);
-// 👇 ВОТ ЭТУ СТРОКУ ДОБАВЬ
-extraFieldsWrap.addEventListener("change", updateVisibilityByConfig);
-window.addEventListener("tp:lang-change", async (e) => {
-const savedExtraValues = {};
-extraFieldsWrap.querySelectorAll("[data-key]").forEach(wrap => {
-  const key = wrap.dataset.key;
-  const input = wrap.querySelector("select, input, textarea");
-  if (input) savedExtraValues[key] = input.value;
-});
-
-const savedCategory = categoryInput.value;
-
-  const lang = e.detail?.lang || localStorage.getItem("tp_lang") || "ru";
-
-  if (window.tpI18n?.load) {
-    await window.tpI18n.load(lang);
-  }
-
-fillOfferLangSelect(lang);
-applyLangBlocks(lang);
-updateOfferFieldLabels(lang);
-updateLangRulesHint();
-
-  if (window.tpI18n?.apply) {
-    window.tpI18n.apply(document);
-  }
-
-  const modeData = GAME.modes?.[activeMode];
-
-  document.getElementById("crumbMode").textContent =
-    (modeData?.labelKey && window.tpI18n?.t)
-      ? window.tpI18n.t(modeData.labelKey)
-      : activeMode;
-renderExtraFields(gameId, activeMode);
-
-Object.entries(savedExtraValues).forEach(([key, value]) => {
-  setDynamicFieldValue(key, value);
-});
-
-categoryInput.value = savedCategory;
-updateVisibilityByConfig();
-setupKeyboardFooterHide();
-});
-});
+initOfferCreatePage();
 
 function setupKeyboardFooterHide(){
   const KEYBOARD_THRESHOLD = 160;

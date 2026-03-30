@@ -2,7 +2,10 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>История обращений — TyPlace</title>
+  <script>
+  document.titleKey = "page.title";
+</script>
+<title data-i18n="page.title"></title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="/header.css">
@@ -401,14 +404,15 @@ h1{
 
 <div id="header-container"></div>
 <main class="page-content">
+
 <div class="support-nav">
-  <a href="/help.html">Главная</a>
+  <a href="/help.html" data-i18n="page.nav.home"></a>
   <span>/</span>
-  <span class="current">История обращений</span>
+  <span class="current" data-i18n="page.nav.current"></span>
 </div>
 
 <div class="page">
-  <h1>История обращений</h1>
+  <h1 data-i18n="page.heading"></h1>
 
 <div style="margin-bottom:20px;">
 <select id="statusFilter" style="
@@ -423,10 +427,10 @@ h1{
   outline:none;
   max-width:180px;
 ">
-    <option value="all">Статус</option>
-    <option value="waiting">Ожидает ответа</option>
-    <option value="in_progress">В процессе</option>
-    <option value="resolved">Решено</option>
+    <option value="all" data-i18n="page.filters.all"></option>
+    <option value="waiting" data-i18n="page.filters.waiting"></option>
+    <option value="in_progress" data-i18n="page.filters.in_progress"></option>
+    <option value="resolved" data-i18n="page.filters.resolved"></option>
   </select>
 </div>
 
@@ -442,7 +446,6 @@ h1{
 <script src="/header.js"></script>
 <script src="/footer.js"></script>
 
-
 <script>
 const token = localStorage.getItem("tp_token");
 if(!token){
@@ -450,115 +453,181 @@ if(!token){
 }
 
 const ticketListEl = document.getElementById("ticketList");
+const statusFilter = document.getElementById("statusFilter");
 
 let tickets = [];
 let currentFilter = "all";
 
+function getCurrentLang(){
+  return window.tpI18n?.currentLang || localStorage.getItem("tp_lang") || "ru";
+}
+
+function getLocaleByLang(lang){
+  if(lang === "uk") return "uk-UA";
+  if(lang === "en") return "en-US";
+  return "ru-RU";
+}
+
+function t(key, fallback = ""){
+  if(typeof key !== "string" || !key.trim()){
+    return fallback;
+  }
+
+  if(window.tpI18n && typeof window.tpI18n.t === "function"){
+    const translated = window.tpI18n.t(key);
+    if(translated && translated !== key){
+      return translated;
+    }
+  }
+
+  return fallback || key;
+}
+
+function resolveMaybeI18n(value, fallback = ""){
+  if(typeof value !== "string" || !value.trim()){
+    return fallback;
+  }
+
+  if(
+    value.startsWith("page.") ||
+    value.startsWith("common.") ||
+    value.startsWith("support.")
+  ){
+    return t(value, fallback || value);
+  }
+
+  return value;
+}
+
 function getStatusText(status){
-  if(status === "waiting") return "Ожидает ответа";
-  if(status === "in_progress") return "В процессе";
-  if(status === "resolved") return "Решено";
+  if(status === "waiting") return t("page.filters.waiting", "Ожидает ответа");
+  if(status === "in_progress") return t("page.filters.in_progress", "В процессе");
+  if(status === "resolved") return t("page.filters.resolved", "Решено");
   return status;
 }
+
 function formatDate(ts){
   const d = new Date(ts);
-  return d.toLocaleDateString("ru-RU") + " " +
-         d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});
+  const locale = getLocaleByLang(getCurrentLang());
+
+  return d.toLocaleDateString(locale) + " " +
+         d.toLocaleTimeString(locale, { hour:"2-digit", minute:"2-digit" });
 }
 
 async function loadTickets(){
-
-const r = await fetch("/api/support/my",{
+  const r = await fetch("/api/support/my", {
     headers:{ Authorization:"Bearer " + token }
   });
 
   const d = await r.json();
 
   if(!d.success){
-    ticketListEl.innerHTML = "<div class='empty'>Ошибка</div>";
+    ticketListEl.innerHTML = `<div class="empty">${t("page.errors.loadFailed", "Ошибка")}</div>`;
     return;
   }
 
   tickets = d.tickets || [];
-
   renderTickets();
 }
 
 function renderTickets(){
-
   tickets.sort((a,b)=>{
     if(a.status === "resolved" && b.status !== "resolved") return 1;
     if(a.status !== "resolved" && b.status === "resolved") return -1;
-    return b.createdAt - a.createdAt;
+    return (b.createdAt || 0) - (a.createdAt || 0);
   });
 
   let filtered = tickets;
 
   if(currentFilter !== "all"){
-    filtered = tickets.filter(t => t.status === currentFilter);
+    filtered = tickets.filter(tk => tk.status === currentFilter);
   }
 
   if(!filtered.length){
-    ticketListEl.innerHTML = "<div class='empty'>Обращений нет</div>";
+    ticketListEl.innerHTML = `<div class="empty">${t("page.empty", "Обращений нет")}</div>`;
     return;
   }
 
   ticketListEl.innerHTML = "";
 
-  filtered.forEach(t => {
-
+  filtered.forEach(ticket => {
     const card = document.createElement("div");
     card.className = "ticket-card";
 
-card.innerHTML = `
-  <div class="ticket-top">
-    <div class="ticket-id">
-      Обращение ${t.shortId || t.id}
-    </div>
+    const categoryText = resolveMaybeI18n(
+      ticket.categoryLabel || ticket.category,
+      t("common.uncategorized", "Без категории")
+    );
 
-    <div class="ticket-status ${t.status}">
-      ${getStatusText(t.status)}
-    </div>
-  </div>
+    const subjectText = resolveMaybeI18n(
+      ticket.subject,
+      t("common.untitled", "Без названия")
+    );
 
-  <div class="ticket-category">
-    ${t.categoryLabel || t.category || "Без категории"}
-  </div>
+    const orderHtml = ticket.orderId
+      ? `<div class="ticket-order">${t("page.orderLabel", "Заказ")}: ${ticket.orderId}</div>`
+      : "";
 
-  <div class="ticket-subject">
-    ${t.subject}
-  </div>
+    card.innerHTML = `
+      <div class="ticket-top">
+        <div class="ticket-id">
+          ${t("page.ticketLabel", "Обращение")} ${ticket.shortId || ticket.id}
+        </div>
 
-  <div class="ticket-bottom">
-    <div>
-      ${formatDate(t.createdAt)}
-    </div>
+        <div class="ticket-status ${ticket.status}">
+          ${getStatusText(ticket.status)}
+        </div>
+      </div>
 
-    ${
-      t.orderId
-        ? `<div class="ticket-order">Заказ: ${t.orderId}</div>`
-        : ""
-    }
-  </div>
-`;
+      <div class="ticket-category">
+        ${categoryText}
+      </div>
+
+      <div class="ticket-subject">
+        ${subjectText}
+      </div>
+
+      <div class="ticket-bottom">
+        <div>
+          ${formatDate(ticket.createdAt)}
+        </div>
+
+        ${orderHtml}
+      </div>
+    `;
 
     card.onclick = () => {
-      location.href = "/support-ticket.html?id=" + t.id;
+      location.href = "/support-ticket.html?id=" + ticket.id;
     };
 
     ticketListEl.appendChild(card);
   });
 }
 
-/* FILTER LOGIC */
-const statusFilter = document.getElementById("statusFilter");
-
 statusFilter.addEventListener("change", () => {
   currentFilter = statusFilter.value;
   renderTickets();
 });
 
-loadTickets();
+async function initPage(){
+  if(window.tpI18n && typeof window.tpI18n.load === "function"){
+    await window.tpI18n.load(getCurrentLang());
+    window.tpI18n.apply();
+  }
+
+  await loadTickets();
+}
+
+window.addEventListener("tp:lang-change", async () => {
+  if(window.tpI18n && typeof window.tpI18n.load === "function"){
+    await window.tpI18n.load(getCurrentLang());
+    window.tpI18n.apply();
+  }
+
+  renderTickets();
+});
+
+initPage();
 
 const socket = io();
 
@@ -573,7 +642,6 @@ socket.on("new-support-message", () => {
 socket.on("support-ticket-updated", () => {
   loadTickets();
 });
-
 </script>
 
 </body>

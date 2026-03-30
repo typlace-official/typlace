@@ -1,16 +1,16 @@
 {
-  "title": "Create Request",
+  "title": "Create a ticket",
 
   "category": "Category",
-  "chooseCategory": "Choose category",
+  "chooseCategory": "Choose a category",
 
   "categories": {
-    "order": "Order Issue",
-    "finance": "Payments and Withdrawals",
-    "account": "Account Issue",
-    "report": "Report a User",
-    "report_offer": "Report a Listing",
-    "bug": "Report a Bug",
+    "order": "Order issue",
+    "finance": "Payments and withdrawals",
+    "account": "Account issue",
+    "report": "Report a user",
+    "report_offer": "Report a listing",
+    "bug": "Report a bug",
     "other": "Other"
   },
 
@@ -21,7 +21,8 @@
     "cancel_order": "I want to cancel the order",
 
     "buyer_not_confirm": "Buyer is not confirming the order",
-    "delivery_or_service_problem": "Problem with item delivery or service completion",
+    "delivery_problem": "Problem with item delivery or service fulfillment",
+    "buyer_abuse_or_false_claim": "Buyer is abusing the system or filed a false claim",
 
     "deposit_problem": "Deposit problem",
     "withdraw_problem": "Withdrawal problem",
@@ -46,8 +47,8 @@
     "filters_bug": "Filters bug",
 
     "general_question": "General question",
-    "site_suggestion": "Site suggestion",
-    "not_in_list": "Issue not in the list",
+    "site_suggestion": "Website suggestion",
+    "not_in_list": "Issue is not in the list",
 
     "other": "Other"
   },
@@ -55,12 +56,12 @@
   "role": "Who are you?",
   "choose": "Choose",
 
-  "roleBuyer": "I am the buyer",
-  "roleSeller": "I am the seller",
+  "roleBuyer": "I am a buyer",
+  "roleSeller": "I am a seller",
 
-  "subject": "Request topic",
-  "chooseSubject": "Choose topic",
-  "selectRoleFirst": "Choose role first",
+  "subject": "Ticket subject",
+  "chooseSubject": "Choose a subject",
+  "selectRoleFirst": "Choose a role first",
 
   "orderId": "Order number",
 
@@ -70,10 +71,10 @@
   "offerId": "Listing ID",
   "enterOfferId": "Enter listing ID",
 
-  "description": "Request description",
+  "description": "Ticket description",
 
   "addFiles": "Add files",
-  "send": "Send request",
+  "send": "Send ticket",
 
   "file": "File",
 

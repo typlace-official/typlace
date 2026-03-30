@@ -2,8 +2,17 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title data-i18n="page.title">Профиль</title>
+  <title data-i18n="page.title"></title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  (() => {
+    const lang = localStorage.getItem("tp_lang");
+    const safeLang = ["ru", "uk", "en"].includes(lang) ? lang : "ru";
+    document.documentElement.lang = safeLang;
+    document.documentElement.setAttribute("data-page-ready", "0");
+  })();
+</script>
 
   <link rel="stylesheet" href="/header.css">
   <link rel="stylesheet" href="/footer.css">
@@ -20,12 +29,21 @@
       --radius:12px;
     }
 
-    body{
-      margin:0;
-      font-family:Arial, sans-serif;
-      background:var(--bg);
-      color:var(--text);
-    }
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+html[data-page-ready="0"] body{
+  opacity:0;
+}
+
+html[data-page-ready="1"] body{
+  opacity:1;
+  transition:opacity .12s ease;
+}
 
     .container{
       max-width:960px;
@@ -653,7 +671,7 @@
       </div>
 
       <div class="profile-top">
-        <img id="avatar" class="avatar" alt="avatar">
+        <img id="avatar" class="avatar" alt="">
 
         <div class="info">
           <div id="username" class="username"></div>
@@ -690,7 +708,7 @@
 
         <div class="mobile-avatar-block">
           <div class="menu-avatar-wrap big-avatar" onclick="editAvatar()">
-            <img id="menuAvatar" class="menu-avatar" alt="avatar">
+            <img id="menuAvatar" class="menu-avatar" alt="">
           </div>
 
           <div class="menu-change-photo" onclick="editAvatar()" data-i18n="page.menu.changePhoto"></div>
@@ -743,7 +761,7 @@
 
   <div class="menu-screen-body">
     <div class="menu-toggle">
-      <span>На сайте</span>
+      <span data-i18n="page.menu.site"></span>
       <label class="switch">
         <input type="checkbox" id="notifySite">
         <span class="slider"></span>
@@ -800,27 +818,25 @@
   <div id="avatarCropModal" class="avatar-crop-modal">
     <div class="avatar-crop-card">
       <div class="avatar-crop-head">
-        <div id="avatarCropTitle" class="avatar-crop-title">Редактирование аватарки</div>
-        <button
-          type="button"
-          class="avatar-crop-close"
-          onclick="closeAvatarCropModal()"
-          aria-label="Close"
-        >✕</button>
+        <div id="avatarCropTitle" class="avatar-crop-title" data-i18n="page.avatar.cropTitle"></div>
+<button
+  type="button"
+  class="avatar-crop-close"
+  onclick="closeAvatarCropModal()"
+  data-i18n-aria-label="page.common.close"
+>✕</button>
       </div>
 
       <div class="avatar-crop-body">
         <div id="avatarCropStage" class="avatar-crop-stage">
-          <img id="avatarCropImage" class="avatar-crop-image" alt="crop">
+          <img id="avatarCropImage" class="avatar-crop-image" alt="">
           <div class="avatar-crop-circle"></div>
         </div>
 
-        <div id="avatarCropTip" class="avatar-crop-tip">
-          Перетащите фото и выберите масштаб
-        </div>
+<div id="avatarCropTip" class="avatar-crop-tip" data-i18n="page.avatar.tip"></div>
 
         <div class="avatar-crop-controls">
-          <label id="avatarZoomLabel" class="avatar-crop-label" for="avatarZoomRange">Масштаб</label>
+          <label id="avatarZoomLabel" class="avatar-crop-label" for="avatarZoomRange" data-i18n="page.avatar.zoom"></label>
           <input
             id="avatarZoomRange"
             class="avatar-crop-range"
@@ -833,19 +849,21 @@
         </div>
 
         <div class="avatar-crop-actions">
-          <button
-            type="button"
-            id="avatarCropCancelBtn"
-            class="menu-btn menu-btn-secondary"
-            onclick="closeAvatarCropModal()"
-          >Отмена</button>
+<button
+  type="button"
+  id="avatarCropCancelBtn"
+  class="menu-btn menu-btn-secondary"
+  onclick="closeAvatarCropModal()"
+  data-i18n="page.avatar.cancel"
+></button>
 
-          <button
-            type="button"
-            id="avatarCropSaveBtn"
-            class="menu-btn"
-            onclick="saveAvatarFromCrop()"
-          >Сохранить</button>
+<button
+  type="button"
+  id="avatarCropSaveBtn"
+  class="menu-btn"
+  onclick="saveAvatarFromCrop()"
+  data-i18n="page.avatar.save"
+></button>
         </div>
       </div>
     </div>
@@ -891,33 +909,6 @@ const state = {
   telegramPollStartedAt: 0
 };
 
-const PROFILE_LOCAL_TEXTS = {
-  ru: {
-    copyIdError: "Не удалось скопировать ID",
-    avatarEditTitle: "Редактирование аватарки",
-    avatarTip: "Перетащите фото и выберите масштаб",
-    avatarZoom: "Масштаб",
-    avatarCancel: "Отмена",
-    avatarSave: "Сохранить"
-  },
-  uk: {
-    copyIdError: "Не вдалося скопіювати ID",
-    avatarEditTitle: "Редагування аватарки",
-    avatarTip: "Перетягніть фото та виберіть масштаб",
-    avatarZoom: "Масштаб",
-    avatarCancel: "Скасувати",
-    avatarSave: "Зберегти"
-  },
-  en: {
-    copyIdError: "Failed to copy ID",
-    avatarEditTitle: "Edit avatar",
-    avatarTip: "Drag the photo and choose zoom",
-    avatarZoom: "Zoom",
-    avatarCancel: "Cancel",
-    avatarSave: "Save"
-  }
-};
-
 const avatarCropState = {
   objectUrl: "",
   naturalWidth: 0,
@@ -940,10 +931,6 @@ const avatarCropState = {
   pinchAnchorY: 0
 };
 
-function localText(key) {
-  const lang = getCurrentLang();
-  return PROFILE_LOCAL_TEXTS[lang]?.[key] || PROFILE_LOCAL_TEXTS.ru[key] || key;
-}
     function pageT(key, params = {}) {
       return window.tpI18n.t(`page.${key}`, params);
     }
@@ -1105,19 +1092,14 @@ function localText(key) {
       return copied;
     }
 
-    function setAvatarEditorTexts() {
-      const title = document.getElementById("avatarCropTitle");
-      const tip = document.getElementById("avatarCropTip");
-      const zoom = document.getElementById("avatarZoomLabel");
-      const cancelBtn = document.getElementById("avatarCropCancelBtn");
-      const saveBtn = document.getElementById("avatarCropSaveBtn");
+function setAvatarEditorTexts() {
+  const root = document.getElementById("avatarCropModal");
+  if (!root) return;
 
-      if (title) title.textContent = localText("avatarEditTitle");
-      if (tip) tip.textContent = localText("avatarTip");
-      if (zoom) zoom.textContent = localText("avatarZoom");
-      if (cancelBtn) cancelBtn.textContent = localText("avatarCancel");
-      if (saveBtn) saveBtn.textContent = localText("avatarSave");
-    }
+  if (window.tpI18n?.apply) {
+    window.tpI18n.apply(root);
+  }
+}
 
     function getAvatarCropStageSize() {
       const stage = document.getElementById("avatarCropStage");
@@ -1550,9 +1532,13 @@ function endAvatarDrag(e) {
         : pageT("docTitleMy");
     }
 
-    function updateHtmlLang() {
-      document.documentElement.lang = getCurrentLang();
-    }
+function updateHtmlLang() {
+  document.documentElement.lang = getCurrentLang();
+}
+
+function markPageReady() {
+  document.documentElement.setAttribute("data-page-ready", "1");
+}
 
     function updateEditButtonVisibility() {
       const btn = document.getElementById("profileEditBtn");
@@ -1603,7 +1589,7 @@ function endAvatarDrag(e) {
             return;
           }
 
-          alert(localText("copyIdError"));
+          alert(pageT("alerts.copyIdError"));
         };
       } else {
         userIdEl.style.display = "none";
@@ -2180,16 +2166,19 @@ async function saveNotifyFromMenu() {
 
     window.addEventListener("tp:currency-change", updatePrices);
 
-    document.addEventListener("DOMContentLoaded", async () => {
-      bindAvatarCropEvents();
-      await window.tpI18n.load(window.tpI18n.currentLang);
-      await init();
-    });
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    bindAvatarCropEvents();
+    await window.tpI18n.load(window.tpI18n.currentLang);
+    await init();
+  } finally {
+    markPageReady();
+  }
+});
 
-    window.addEventListener("tp:lang-change", async () => {
-      await window.tpI18n.load(window.tpI18n.currentLang);
-      await init();
-    });
+window.addEventListener("tp:lang-change", async () => {
+  await init();
+});
   </script>
 </body>
 </html>

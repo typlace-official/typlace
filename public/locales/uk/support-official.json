@@ -1,0 +1,44 @@
+{
+  "page": {
+    "title": "Підтримка — Офіційні повідомлення — TyPlace",
+    "brand": {
+      "subtitle": "Support Panel"
+    },
+    "nav": {
+      "tickets": "Тікети",
+      "resolution": "Арбітраж",
+      "official": "Офіційні повідомлення"
+    },
+    "sidebar": {
+      "adminBack": "В адмінку",
+      "logout": "Вийти"
+    },
+    "heading": "Офіційні повідомлення",
+    "subheading": "Пошук користувача і перехід в офіційний чат від імені TyPlace.",
+    "rolePrefix": "Роль",
+    "search": {
+      "title": "Пошук користувача",
+      "subtitle": "Введіть email, нік або userId, щоб відкрити офіційний чат.",
+      "placeholder": "Email, нік або ID користувача",
+      "button": "Знайти"
+    },
+    "meta": {
+      "userFallback": "Користувач",
+      "userId": "ID",
+      "role": "Роль",
+      "banned": "Заблокований"
+    },
+    "actions": {
+      "openChat": "Відкрити чат"
+    },
+    "empty": {
+      "enterQuery": "Введіть email, нік або ID користувача",
+      "searching": "Пошук...",
+      "notFound": "Користувачів не знайдено"
+    },
+    "errors": {
+      "searchFailed": "Помилка пошуку користувачів",
+      "openChatFailed": "Не вдалося відкрити офіційний чат"
+    }
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "title": "Offer — TyPlace",
+  "loading": "Loading…",
+  "copyOfferId": "Click to copy ID",
+  "common": {
+    "back": "Back"
+  },
+  "buttons": {
+    "buy": "Buy",
+    "writeSeller": "Message seller",
+    "edit": "Edit",
+    "creatingOrder": "Creating order..."
+  },
+  "tools": {
+    "share": "Share",
+    "shareDone": "Link copied",
+    "shareFail": "Unable to share",
+    "report": "Report",
+    "reportLogin": "Please log in first"
+  },
+  "sections": {
+    "description": "Description"
+  },
+  "expand": {
+    "showFull": "Show full"
+  },
+  "alerts": {
+    "offerNotFound": "Offer not found",
+    "orderCreateError": "Failed to create order",
+    "chatOpenError": "Failed to open chat"
+  },
+  "status": {
+    "deleted": "Offer deleted",
+    "sold": "Item sold",
+    "unavailable": "Temporarily unavailable"
+  },
+  "reviews": {
+    "one": "review",
+    "few": "reviews",
+    "many": "reviews"
+  },
+  "seller": {
+    "noReviews": "No reviews",
+    "onSite": {
+      "lessMinute": "On TyPlace for less than a minute",
+      "minutes": "On TyPlace for {{count}} {{word}}",
+      "hours": "On TyPlace for {{count}} {{word}}",
+      "days": "On TyPlace for {{count}} {{word}}",
+      "weeks": "On TyPlace for {{count}} {{word}}",
+      "months": "On TyPlace for {{count}} {{word}}",
+      "years": "On TyPlace for {{count}} {{word}}"
+    },
+    "words": {
+      "minute": {
+        "one": "minute",
+        "few": "minutes",
+        "many": "minutes"
+      },
+      "hour": {
+        "one": "hour",
+        "few": "hours",
+        "many": "hours"
+      },
+      "day": {
+        "one": "day",
+        "few": "days",
+        "many": "days"
+      },
+      "week": {
+        "one": "week",
+        "few": "weeks",
+        "many": "weeks"
+      },
+      "month": {
+        "one": "month",
+        "few": "months",
+        "many": "months"
+      },
+      "year": {
+        "one": "year",
+        "few": "years",
+        "many": "years"
+      }
+    }
+  }
+}

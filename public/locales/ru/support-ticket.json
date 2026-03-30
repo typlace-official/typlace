@@ -1,0 +1,51 @@
+{
+  "title": "Обращение — TyPlace",
+  "nav": {
+    "adminBack": "Панель поддержки",
+    "historyBack": "История обращений"
+  },
+  "messagePlaceholder": "Сообщение",
+  "supportName": "Поддержка TyPlace",
+  "ticketLabel": "Обращение",
+  "fileName": "photo.{{ext}}",
+  "status": {
+    "waiting": "Ожидает ответа",
+    "in_progress": "В процессе",
+    "resolved": "Решено"
+  },
+  "sidebar": {
+    "status": "Статус",
+    "created": "Создано",
+    "details": "Детали обращения",
+    "category": "Категория",
+    "subject": "Тема",
+    "orderId": "Номер заказа",
+    "userId": "ID пользователя",
+    "offerId": "ID объявления",
+    "priority": "Приоритет",
+    "assigned": "Ответственный"
+  },
+  "priority": {
+    "high": "Высокий"
+  },
+  "actions": {
+    "assign": "Взять тикет",
+    "resolve": "Отметить как решено",
+    "close": "Закрыть обращение",
+    "reopen": "Переоткрыть обращение",
+    "backToList": "К списку тикетов"
+  },
+  "confirm": {
+    "close": "Закрыть обращение?",
+    "reopen": "Переоткрыть обращение?"
+  },
+  "errors": {
+    "loadFailed": "Ошибка загрузки",
+    "messageTooLong": "Сообщение слишком длинное",
+    "sendFailed": "Ошибка",
+    "assignFailed": "Не удалось взять тикет",
+    "closeFailed": "Ошибка закрытия",
+    "reopenFailed": "Ошибка переоткрытия",
+    "fileTooLarge": "Максимальный размер файла 5MB"
+  }
+}

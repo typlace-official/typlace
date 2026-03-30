@@ -1,0 +1,16 @@
+{
+  "title": "TyPlace",
+  "dynamicTitle": "{{game}} — TyPlace",
+  "errors": {
+    "gameNotFound": "Game not found"
+  },
+  "offersWords": {
+    "one": "offer",
+    "few": "offers",
+    "many": "offers"
+  },
+  "offersCount": {
+    "found": "Found {{count}} {{word}}",
+    "total": "Total {{count}} {{word}}"
+  }
+}

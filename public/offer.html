@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TyPlace — Предложение</title>
+  <title data-i18n="page.title"></title>
 
   <link rel="stylesheet" href="/header.css">
   <link rel="stylesheet" href="/gallery.css">
@@ -408,7 +408,15 @@ body{
     padding-top:0 !important;
   }
 }
+html:not(.i18n-ready) body{
+  visibility:hidden;
+}
 </style>
+<script>
+function markPageReady() {
+  document.documentElement.classList.add("i18n-ready");
+}
+</script>
 </head>
 
 <body>
@@ -424,7 +432,7 @@ body{
       <!-- ГАЛЕРЕЯ -->
 <div class="tp-gallery" id="gallery">
 
-  <button class="gallery-back-btn" onclick="history.back()" aria-label="Назад">
+  <button class="gallery-back-btn" onclick="history.back()" data-i18n-aria-label="page.common.back">
     <svg viewBox="0 0 24 24">
       <path d="M15 6L9 12L15 18"/>
     </svg>
@@ -448,8 +456,8 @@ body{
       <!-- ЗАГОЛОВОК -->
       <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:24px; margin-top:16px;">
         <div style="flex:1;">
-          <div class="title" id="title">Загрузка…</div>
-          <div class="offer-public-id" id="offerPublicId" title="Нажмите, чтобы скопировать"></div>
+          <div class="title" id="title" data-i18n="page.loading"></div>
+          <div class="offer-public-id" id="offerPublicId" data-i18n-title="page.copyOfferId"></div>
         </div>
 
         <div id="favoriteBtn" class="offer-page-heart">
@@ -462,19 +470,17 @@ body{
         </div>
       </div>
 
-      <button id="expandTitleBtn"
-        style="display:none;background:none;border:none;color:#1E50D4;font-weight:600;padding:0;margin-top:4px;cursor:pointer;">
-        Показать полностью
-      </button>
+<button id="expandTitleBtn"
+  data-i18n="page.expand.showFull"
+  style="display:none;background:none;border:none;color:#1E50D4;font-weight:600;padding:0;margin-top:4px;cursor:pointer;"></button>
 
       <div class="offer-page-price" id="price" data-price=""></div>
 
 <div id="actionButtons">
-  <button class="buybtn buy-primary" id="buyBtn">Купить</button>
-  <button class="buybtn buy-secondary"
-          onclick="openChatWithSeller(offerId)">
-    Написать продавцу
-  </button>
+<button class="buybtn buy-primary" id="buyBtn" data-i18n="page.buttons.buy"></button>
+<button class="buybtn buy-secondary"
+        onclick="openChatWithSeller(offerId)"
+        data-i18n="page.buttons.writeSeller"></button>
 </div>
 <div class="offer-tools">
   <button type="button" class="offer-tool-btn" id="shareOfferBtn">
@@ -485,7 +491,7 @@ body{
       <circle cx="18" cy="6" r="2"></circle>
       <circle cx="18" cy="18" r="2"></circle>
     </svg>
-    <span id="shareOfferBtnText">Поделиться</span>
+    <span id="shareOfferBtnText" data-i18n="page.tools.share"></span>
   </button>
 
   <button type="button" class="offer-tool-btn" id="reportOfferBtn">
@@ -494,7 +500,7 @@ body{
       <path d="M12 17h.01"></path>
       <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
     </svg>
-    <span id="reportOfferBtnText">Пожаловаться</span>
+    <span id="reportOfferBtnText" data-i18n="page.tools.report"></span>
   </button>
 </div>
       <!-- ПРОДАВЕЦ -->
@@ -515,12 +521,11 @@ body{
 
       <!-- ОПИСАНИЕ -->
       <div class="section" id="descSection">
-        <div class="section-title">Описание</div>
+        <div class="section-title" data-i18n="page.sections.description"></div>
         <div class="desc" id="desc"></div>
-        <button id="expandDescBtn"
-          style="display:none;background:none;border:none;color:#1E50D4;font-weight:600;padding:0;margin-top:6px;cursor:pointer;">
-          Показать полностью
-        </button>
+<button id="expandDescBtn"
+  data-i18n="page.expand.showFull"
+  style="display:none;background:none;border:none;color:#1E50D4;font-weight:600;padding:0;margin-top:6px;cursor:pointer;"></button>
       </div>
 
     </div>
@@ -551,37 +556,12 @@ function getTextByLang(obj){
   return obj?.[lang] || obj?.ru || obj?.uk || obj?.en || "";
 }
 
-function getOfferUiText(){
-  const lang = getCurrentPageLang();
-
-  if (lang === "uk") {
-    return {
-      share: "Поділитися",
-      shareDone: "Посилання скопійовано",
-      shareFail: "Не вдалося поділитися",
-      report: "Поскаржитися",
-      reportLogin: "Спочатку увійдіть в акаунт"
-    };
-  }
-
-  if (lang === "en") {
-    return {
-      share: "Share",
-      shareDone: "Link copied",
-      shareFail: "Unable to share",
-      report: "Report",
-      reportLogin: "Please log in first"
-    };
-  }
-
-  return {
-    share: "Поделиться",
-    shareDone: "Ссылка скопирована",
-    shareFail: "Не удалось поделиться",
-    report: "Пожаловаться",
-    reportLogin: "Сначала войдите в аккаунт"
-  };
+function pageT(key, params = {}){
+  const fullKey = `page.${key}`;
+  const tr = window.tpI18n?.t ? window.tpI18n.t(fullKey, params) : "";
+  return tr && tr !== fullKey ? tr : key;
 }
+
 </script>
 
 <script>
@@ -597,7 +577,6 @@ const sellerAvatarEl = document.getElementById("sellerAvatar");
 const sellerRatingEl = document.getElementById("sellerRating");
 const sellerOnSiteEl = document.getElementById("sellerOnSite");
 const shareOfferBtn = document.getElementById("shareOfferBtn");
-const shareOfferBtnText = document.getElementById("shareOfferBtnText");
 const reportOfferBtn = document.getElementById("reportOfferBtn");
 const reportOfferBtnText = document.getElementById("reportOfferBtnText");
 
@@ -608,17 +587,6 @@ let currentOffer = null;
 if (!offerId) {
   history.back();
   throw new Error("Offer ID not found");
-}
-
-function formatReviewsCount(n){
-  const abs = Math.abs(Number(n) || 0);
-  const lastTwo = abs % 100;
-  const last = abs % 10;
-
-  if (lastTwo >= 11 && lastTwo <= 14) return n + " отзывов";
-  if (last === 1) return n + " отзыв";
-  if (last >= 2 && last <= 4) return n + " отзыва";
-  return n + " отзывов";
 }
 
 function renderStars(avg){
@@ -663,27 +631,26 @@ const res = await fetch(`/api/offers/${offerId}`, {
 const data = await res.json();
 
 if (!data.success) {
-  alert("Оффер не найден");
+  alert(pageT("alerts.offerNotFound"));
   return;
 }
 
 if (data.deleted || !data.offer) {
-  renderUnavailable("Предложение удалено");
+  renderUnavailable(pageT("status.deleted"));
   return;
 }
 
 const o = data.offer;
 currentOffer = o;
-setupOfferToolTexts();
 
 let unavailableMessage = null;
 
 if (data.deleted === true) {
-  unavailableMessage = "Предложение удалено";
+  unavailableMessage = pageT("status.deleted");
 } else if (o.status !== "active") {
-  unavailableMessage = "Товар продан";
+  unavailableMessage = pageT("status.sold");
 } else if (data.blockedBySeller === true) {
-  unavailableMessage = "Временно недоступно";
+  unavailableMessage = pageT("status.unavailable");
 }
 
 if (unavailableMessage) {
@@ -714,23 +681,23 @@ if(isOwner){
       edit: o.id
     });
 
-    actions.innerHTML = `
-      <button class="buybtn"
-              style="background:#fff;color:#1E50D4;border:2px solid #1E50D4;"
-              onclick="location.href='/offer-create.html?${params.toString()}'">
-        Редактировать
-      </button>
-    `;
+actions.innerHTML = `
+  <button class="buybtn"
+          style="background:#fff;color:#1E50D4;border:2px solid #1E50D4;"
+          onclick="location.href='/offer-create.html?${params.toString()}'">
+    ${pageT("buttons.edit")}
+  </button>
+`;
 
   } else {
-    renderUnavailable("Товар продан");
+    renderUnavailable(pageT("status.sold"));
   }
 
 } else {
 
   // 👇 ДЛЯ ОБЫЧНОГО ПОЛЬЗОВАТЕЛЯ
   if(o.status !== "active"){
-    renderUnavailable("Товар продан");
+    renderUnavailable(pageT("status.sold"));
   }
 
 }
@@ -749,7 +716,7 @@ if (buyBtn) {
     }
 
     buyBtn.disabled = true;
-    buyBtn.textContent = "Создание заказа...";
+    buyBtn.textContent = pageT("buttons.creatingOrder");
 
     const res = await fetch("/api/orders/create", {
       method: "POST",
@@ -763,9 +730,9 @@ if (buyBtn) {
     const data = await res.json();
 
     if (!data.success) {
-      alert(data.message || "Ошибка создания заказа");
+      alert(data.message || pageT("alerts.orderCreateError"));
       buyBtn.disabled = false;
-      buyBtn.textContent = "Купить";
+      buyBtn.textContent = pageT("buttons.buy");
       return;
     }
 
@@ -790,6 +757,7 @@ titleEl.textContent = buildOfferTitle(o);
 
 if (o.offerId) {
   offerPublicId.textContent = "OID: " + o.offerId;
+offerPublicId.title = pageT("copyOfferId");
 
   offerPublicId.onclick = async () => {
     try {
@@ -847,7 +815,7 @@ sellerAvatarEl.onclick = goToSellerProfile;
 const count = Number(o.seller.reviewsCount || 0);
 
 if (count === 0) {
-sellerRatingEl.textContent = "Нет отзывов";
+sellerRatingEl.textContent = pageT("seller.noReviews");
 } else {
 sellerRatingEl.innerHTML = `
   ${renderStars(o.seller.rating)}
@@ -863,6 +831,31 @@ function parseDateToMs(v){
   }
   const ms = Date.parse(v);
   return Number.isNaN(ms) ? 0 : ms;
+}
+
+function pluralText(count, one, few, many){
+  return window.tpI18n?.plural(count, one, few, many) || many;
+}
+
+function formatReviewsCount(n){
+  const count = Math.abs(Number(n) || 0);
+  const word = pluralText(
+    count,
+    pageT("reviews.one"),
+    pageT("reviews.few"),
+    pageT("reviews.many")
+  );
+
+  return `${count} ${word}`;
+}
+
+function getTimeWord(unit, count){
+  return pluralText(
+    count,
+    pageT(`seller.words.${unit}.one`),
+    pageT(`seller.words.${unit}.few`),
+    pageT(`seller.words.${unit}.many`)
+  );
 }
 
 function formatOnSite(ms){
@@ -883,62 +876,49 @@ function formatOnSite(ms){
   const months = Math.floor(diff / month);
   const years = Math.floor(diff / year);
 
-if (minutes < 1) return "На TyPlace меньше минуты";
-if (minutes < 60) return `На TyPlace уже ${minutes} ${getMinutesWord(minutes)}`;
-if (hours < 24) return `На TyPlace уже ${hours} ${getHoursWord(hours)}`;
-if (days < 7) return `На TyPlace уже ${days} ${getDaysWord(days)}`;
-if (weeks < 5) return `На TyPlace уже ${weeks} ${getWeeksWord(weeks)}`;
-if (months < 12) return `На TyPlace уже ${months} ${getMonthsWord(months)}`;
+  if (minutes < 1) {
+    return pageT("seller.onSite.lessMinute");
+  }
 
-return `На TyPlace уже ${years} ${getYearsWord(years)}`;
-}
+  if (minutes < 60) {
+    return pageT("seller.onSite.minutes", {
+      count: minutes,
+      word: getTimeWord("minute", minutes)
+    });
+  }
 
-function getMinutesWord(n){
-  const d10 = n % 10;
-  const d100 = n % 100;
-  if (d10 === 1 && d100 !== 11) return "минуту";
-  if (d10 >= 2 && d10 <= 4 && !(d100 >= 12 && d100 <= 14)) return "минуты";
-  return "минут";
-}
+  if (hours < 24) {
+    return pageT("seller.onSite.hours", {
+      count: hours,
+      word: getTimeWord("hour", hours)
+    });
+  }
 
-function getHoursWord(n){
-  const d10 = n % 10;
-  const d100 = n % 100;
-  if (d10 === 1 && d100 !== 11) return "час";
-  if (d10 >= 2 && d10 <= 4 && !(d100 >= 12 && d100 <= 14)) return "часа";
-  return "часов";
-}
+  if (days < 7) {
+    return pageT("seller.onSite.days", {
+      count: days,
+      word: getTimeWord("day", days)
+    });
+  }
 
-function getDaysWord(n){
-  const d10 = n % 10;
-  const d100 = n % 100;
-  if (d10 === 1 && d100 !== 11) return "день";
-  if (d10 >= 2 && d10 <= 4 && !(d100 >= 12 && d100 <= 14)) return "дня";
-  return "дней";
-}
+  if (weeks < 5) {
+    return pageT("seller.onSite.weeks", {
+      count: weeks,
+      word: getTimeWord("week", weeks)
+    });
+  }
 
-function getWeeksWord(n){
-  const d10 = n % 10;
-  const d100 = n % 100;
-  if (d10 === 1 && d100 !== 11) return "неделю";
-  if (d10 >= 2 && d10 <= 4 && !(d100 >= 12 && d100 <= 14)) return "недели";
-  return "недель";
-}
+  if (months < 12) {
+    return pageT("seller.onSite.months", {
+      count: months,
+      word: getTimeWord("month", months)
+    });
+  }
 
-function getMonthsWord(n){
-  const d10 = n % 10;
-  const d100 = n % 100;
-  if (d10 === 1 && d100 !== 11) return "месяц";
-  if (d10 >= 2 && d10 <= 4 && !(d100 >= 12 && d100 <= 14)) return "месяца";
-  return "месяцев";
-}
-
-function getYearsWord(n){
-  const d10 = n % 10;
-  const d100 = n % 100;
-  if (d10 === 1 && d100 !== 11) return "год";
-  if (d10 >= 2 && d10 <= 4 && !(d100 >= 12 && d100 <= 14)) return "года";
-  return "лет";
+  return pageT("seller.onSite.years", {
+    count: years,
+    word: getTimeWord("year", years)
+  });
 }
 
 // пробуем найти дату регистрации в разных возможных полях (на всякий)
@@ -1044,21 +1024,27 @@ function waitForGames(){
 }
 
 async function initOfferPage(){
-  const lang = getCurrentPageLang();
+  try {
+    const lang = getCurrentPageLang();
 
-  await waitForGames();
+    await waitForGames();
 
-  if (window.tpI18n?.load) {
-    await window.tpI18n.load(lang);
+    if (window.tpI18n?.load) {
+      await window.tpI18n.load(lang);
+    }
+
+    await loadOffer();
+  } finally {
+    markPageReady();
   }
-
-  await loadOffer();
 }
 
 initOfferPage();
 
 window.addEventListener("tp:lang-change", async (e) => {
-  const lang = (e.detail?.lang || getCurrentPageLang()).trim().toLowerCase();
+  const lang = ["ru", "uk", "en"].includes(String(e.detail?.lang || "").trim().toLowerCase())
+    ? String(e.detail.lang).trim().toLowerCase()
+    : getCurrentPageLang();
 
   if (window.tpI18n?.load) {
     await window.tpI18n.load(lang);
@@ -1080,6 +1066,8 @@ async function updatePrice(){
 function cleanupOfferUI(o){
   const descText = getTextByLang(o.description);
   const section = document.getElementById("descSection");
+
+  if (!section) return;
 
   if (!descText) {
     section.style.display = "none";
@@ -1133,13 +1121,6 @@ function setupDescExpand(){
   };
 }
 
-function setupOfferToolTexts(){
-  const t = getOfferUiText();
-
-  if (shareOfferBtnText) shareOfferBtnText.textContent = t.share;
-  if (reportOfferBtnText) reportOfferBtnText.textContent = t.report;
-}
-
 function getOfferAbsoluteUrl(){
   return new URL(`/offer.html?id=${offerId}`, window.location.origin).toString();
 }
@@ -1164,7 +1145,8 @@ function flashToolButton(btn, text){
 async function shareOffer(){
   if (!currentOffer) return;
 
-  const t = getOfferUiText();
+  const shareDoneText = pageT("tools.shareDone");
+const shareFailText = pageT("tools.shareFail");
   const url = getOfferAbsoluteUrl();
   const title = getTextByLang(currentOffer.title) || document.title;
 
@@ -1187,9 +1169,9 @@ async function shareOffer(){
 
   try {
     await navigator.clipboard.writeText(url);
-    flashToolButton(shareOfferBtn, t.shareDone);
+    flashToolButton(shareOfferBtn, shareDoneText);
   } catch (e) {
-    alert(t.shareFail);
+    alert(shareFailText);
   }
 }
 
@@ -1197,10 +1179,9 @@ function openOfferReportPage(){
   if (!currentOffer) return;
 
   const token = localStorage.getItem("tp_token");
-  const t = getOfferUiText();
 
   if (!token) {
-    alert(t.reportLogin);
+    alert(pageT("tools.reportLogin"));
     location.href = "/auth.html?mode=login";
     return;
   }
@@ -1265,7 +1246,7 @@ async function openChatWithSeller(offerId){
   const data = await res.json();
 
   if(!data.success){
-    alert("Не удалось открыть чат");
+    alert(pageT("alerts.chatOpenError"));
     return;
   }
 

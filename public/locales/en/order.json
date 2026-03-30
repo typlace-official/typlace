@@ -1,0 +1,69 @@
+{
+  "title": "Order — TyPlace",
+  "loading": "Loading…",
+  "showFull": "Show full",
+  "descriptionTitle": "Description",
+  "order": {
+    "numberLabel": "Order",
+    "createdLabel": "Created",
+    "completedLabel": "Completed",
+    "refundedLabel": "Refunded",
+    "descriptionEmpty": "Description is not provided.",
+    "status": {
+      "pending": "In progress",
+      "completed": "Completed",
+      "refunded": "Refunded"
+    },
+    "confirmReceiptBtn": "Confirm receipt",
+    "confirmReceiptConfirm": "Confirm receipt? The money will be transferred to the seller.",
+    "appealBtn": "Submit appeal",
+    "appealAvailable": "Appeal is available for {{time}} more",
+    "refundBtn": "Refund",
+    "refundConfirm": "Refund the buyer?"
+  },
+  "chat": {
+    "writeMessage": "Write a message...",
+    "resolutionWriteMessage": "Write a message on behalf of resolution",
+    "orderChatTitle": "Order chat",
+    "resolutionChatSub": "Resolution chat",
+    "readOnlyChatSub": "Read-only view",
+    "report": "Open dispute",
+    "mute": "Mute notifications",
+    "unmute": "Unmute notifications",
+    "attach": "Attach",
+    "send": "Send",
+    "online": "Online",
+    "offline": "Offline",
+    "justNow": "Just now",
+    "minutesAgo": "{{count}} min ago",
+    "hoursAgo": "{{count}} h ago",
+    "daysAgo": "{{count}} d ago",
+    "today": "Today",
+    "yesterday": "Yesterday"
+  },
+  "resolution": {
+    "title": "Resolution decision",
+    "placeholder": "Write the final dispute decision",
+    "confirmBtn": "Confirm order",
+    "refundBtn": "Issue refund",
+    "decisionTextRequired": "Write the decision text",
+    "confirmDecisionConfirm": "Confirm the order by resolution decision?",
+    "refundDecisionConfirm": "Issue a refund by resolution decision?"
+  },
+  "review": {
+    "title": "Leave a review",
+    "placeholder": "Write a review about the deal",
+    "submit": "Publish",
+    "ratingRequired": "Please select a rating"
+  },
+  "alerts": {
+    "orderIdMissing": "Order is not specified",
+    "orderNotFound": "Order not found",
+    "sendMessageError": "Failed to send message",
+    "confirmOrderError": "Failed to confirm order",
+    "refundOrderError": "Failed to refund order",
+    "resolutionDecisionError": "Failed to make dispute decision",
+    "fileSendError": "Failed to send file",
+    "reviewSendError": "Failed to submit review"
+  }
+}

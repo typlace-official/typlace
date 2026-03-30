@@ -1,0 +1,73 @@
+{
+  "page": {
+    "title": "Support — Tickets — TyPlace",
+    "brand": {
+      "subtitle": "Support Panel"
+    },
+    "nav": {
+      "tickets": "Tickets",
+      "resolution": "Resolution",
+      "official": "Official messages"
+    },
+    "sidebar": {
+      "adminBack": "To admin panel",
+      "logout": "Log out"
+    },
+    "heading": "Support tickets",
+    "subheading": "Queue of user and moderator requests.",
+    "rolePrefix": "Role",
+    "stats": {
+      "waiting": "Waiting",
+      "in_progress": "In progress",
+      "resolved": "Resolved",
+      "total": "Total"
+    },
+    "filters": {
+      "allStatuses": "All statuses",
+      "waiting": "Waiting for reply",
+      "in_progress": "In progress",
+      "resolved": "Resolved",
+      "allTickets": "All tickets",
+      "onlyMine": "Only mine"
+    },
+    "status": {
+      "waiting": "Waiting for reply",
+      "in_progress": "In progress",
+      "resolved": "Resolved"
+    },
+    "wait": {
+      "label": "Waiting",
+      "minutes": "{{count}} min.",
+      "hoursMinutes": "{{hours}} h. {{minutes}} min."
+    },
+    "priority": {
+      "highLabel": "High priority"
+    },
+    "meta": {
+      "order": "Order",
+      "userId": "User ID",
+      "offerId": "Offer ID",
+      "newCount": "New: {{count}}",
+      "createdBy": "Created by",
+      "createdByFallback": "User",
+      "lastReplyUser": "Last reply: user",
+      "lastReplySupport": "Last reply: support",
+      "noMessages": "No messages yet",
+      "assignedTo": "Assigned to",
+      "unassigned": "unassigned",
+      "userIdShort": "ID {{id}}"
+    },
+    "actions": {
+      "assign": "Take",
+      "open": "Open"
+    },
+    "empty": {
+      "loading": "Loading...",
+      "loadFailed": "Failed to load tickets",
+      "noTickets": "No tickets"
+    },
+    "errors": {
+      "assignFailed": "Failed to take the ticket"
+    }
+  }
+}

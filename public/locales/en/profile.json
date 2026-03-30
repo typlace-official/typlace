@@ -5,6 +5,10 @@
   "docTitleMy": "My profile — TyPlace",
   "docTitleExternal": "User profile — TyPlace",
 
+  "common": {
+    "close": "Close"
+  },
+
   "nav": {
     "myOffers": "My listings",
     "purchases": "Purchases",
@@ -15,7 +19,7 @@
   "offers": "Listings",
   "since": "On TyPlace since",
   "noReviews": "No reviews",
-  "copyId": "Tap to copy ID",
+  "copyId": "Click to copy ID",
 
   "reviews": {
     "one": "review",
@@ -31,7 +35,7 @@
     "nickname": "Nickname",
     "changeNick": "Change nickname",
     "nickHint": "You can change your nickname once every 30 days",
-    "nickHintNext": "Your next nickname change will be available on {{date}}",
+    "nickHintNext": "Next nickname change will be available on {{date}}",
     "site": "On site",
     "email": "Email",
     "telegram": "Telegram",
@@ -43,6 +47,14 @@
     "save": "Save"
   },
 
+  "avatar": {
+    "cropTitle": "Edit avatar",
+    "tip": "Drag the photo and choose zoom",
+    "zoom": "Zoom",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+
   "alerts": {
     "userNotFound": "User not found",
     "enterNickname": "Enter a nickname",
@@ -51,11 +63,12 @@
     "nickWaitUntil": "You can change your nickname again on {{date}}",
     "nickSaveError": "Failed to save nickname",
     "avatarSaveError": "Failed to update photo",
-    "onlyImages": "Only image files are allowed",
-    "notifySaveError": "Failed to save notification settings",
+    "onlyImages": "Only images can be uploaded",
+    "notifySaveError": "Failed to save notifications",
     "telegramLinkStartError": "Failed to start Telegram connection",
     "telegramUnlinkError": "Failed to disconnect Telegram",
     "telegramLinkedSuccess": "Telegram connected successfully",
-    "telegramLinkInstructions": "Open Telegram, start the bot, and confirm the connection"
+    "telegramLinkInstructions": "Open Telegram, start the bot, and confirm the link",
+    "copyIdError": "Failed to copy ID"
   }
 }

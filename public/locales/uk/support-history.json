@@ -1,0 +1,20 @@
+{
+  "title": "Історія звернень — TyPlace",
+  "nav": {
+    "home": "Головна",
+    "current": "Історія звернень"
+  },
+  "heading": "Історія звернень",
+  "filters": {
+    "all": "Статус",
+    "waiting": "Очікує відповіді",
+    "in_progress": "У процесі",
+    "resolved": "Вирішено"
+  },
+  "ticketLabel": "Звернення",
+  "orderLabel": "Замовлення",
+  "empty": "Звернень немає",
+  "errors": {
+    "loadFailed": "Помилка"
+  }
+}

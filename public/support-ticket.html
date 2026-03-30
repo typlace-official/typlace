@@ -2,7 +2,10 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Обращение — TyPlace</title>
+<script>
+  document.titleKey = "page.title";
+</script>
+<title data-i18n="page.title"></title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="stylesheet" href="/header.css">
@@ -566,9 +569,9 @@ body{
 <main class="page-content">
 
 <div class="support-nav">
-  <a href="/help.html">Главная</a>
+<a href="/help.html" data-i18n="common.home"></a>
   <span>/</span>
-  <a href="/support-history.html" id="breadcrumbBackLink">История обращений</a>
+<a href="/support-history.html" id="breadcrumbBackLink"></a>
   <span>/</span>
   <span class="current" id="breadcrumbTicket"></span>
 </div>
@@ -588,10 +591,10 @@ body{
     +
   </label>
 
-  <textarea 
-    placeholder="Сообщение"
-    id="chatText"
-  ></textarea>
+<textarea 
+  data-i18n-placeholder="page.messagePlaceholder"
+  id="chatText"
+></textarea>
 
 <button class="send-btn" id="chatSendBtn">
 <svg width="20" height="20" viewBox="0 0 24 24">
@@ -693,6 +696,68 @@ const messagesEl = document.getElementById("messages");
 const sidebarEl = document.getElementById("sidebar");
 let currentUserRole = "user";
 let currentUserEmail = "";
+const breadcrumbBackLink = document.getElementById("breadcrumbBackLink");
+
+function getCurrentLang(){
+  return localStorage.getItem("tp_lang") || "ru";
+}
+
+function getLocaleByLang(lang){
+  if(lang === "uk") return "uk-UA";
+  if(lang === "en") return "en-US";
+  return "ru-RU";
+}
+
+function tr(key, params = {}){
+  if(typeof key !== "string" || !key.trim()){
+    return "";
+  }
+
+  if(window.tpI18n && typeof window.tpI18n.t === "function"){
+    return window.tpI18n.t(key, params);
+  }
+
+  return key;
+}
+
+function resolveMaybeI18n(value, fallback = ""){
+  if(typeof value !== "string" || !value.trim()){
+    return fallback;
+  }
+
+  if(
+    value.startsWith("page.") ||
+    value.startsWith("common.") ||
+    value.startsWith("support.")
+  ){
+    return tr(value, fallback || value);
+  }
+
+  return value;
+}
+
+function applyStaticTexts(){
+  const titleEl = document.querySelector("title[data-i18n]");
+  if(titleEl){
+    document.title = tr(titleEl.dataset.i18n);
+  }
+
+  if(breadcrumbBackLink){
+    const isStaff =
+      currentUserRole === "support" ||
+      currentUserRole === "resolution" ||
+      currentUserRole === "admin" ||
+      currentUserRole === "super_admin";
+
+    breadcrumbBackLink.textContent = isStaff
+      ? tr("page.nav.adminBack")
+      : tr("page.nav.historyBack");
+  }
+
+  if(window.tpI18n && typeof window.tpI18n.apply === "function"){
+    window.tpI18n.apply();
+  }
+}
 
 async function loadMe(){
   const r = await fetch("/auth/me", {
@@ -723,8 +788,11 @@ if (
   currentUserRole === "super_admin"
 ) {
   breadcrumbBackLink.href = "/support-admin.html";
-  breadcrumbBackLink.textContent = "Панель поддержки";
+} else {
+  breadcrumbBackLink.href = "/support-history.html";
 }
+
+applyStaticTexts();
 
 return true;
 }
@@ -754,7 +822,7 @@ chatAttachmentsInput.onchange = () => {
 files.slice(0, spaceLeft).forEach(file=>{
 
   if(file.size > 5 * 1024 * 1024){
-    alert("Максимальный размер файла 5MB");
+    alert(tr("page.errors.fileTooLarge"));
     return;
   }
 
@@ -773,7 +841,7 @@ function renderChatFiles(){
   selectedChatFiles.forEach((file, index) => {
 
     const extension = file.name.split(".").pop();
-    const shortName = "photo." + extension;
+    const shortName = tr("page.fileName", { ext: extension });
 
     const fileLink = document.createElement("div");
     fileLink.className = "file-link";
@@ -822,8 +890,10 @@ if(selectedChatFiles.length >= 2){
 
 function formatDate(ts){
   const d = new Date(ts);
-  return d.toLocaleDateString("ru-RU") + " " +
-         d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});
+  const locale = getLocaleByLang(getCurrentLang());
+
+  return d.toLocaleDateString(locale) + " " +
+         d.toLocaleTimeString(locale, { hour:"2-digit", minute:"2-digit" });
 }
 
 function esc(s){
@@ -848,18 +918,28 @@ async function loadTicket(){
   const d = await r.json().catch(() => ({}));
 
   if(!d.success){
-    alert(d.message || "Ошибка загрузки");
+    alert(d.message || tr("page.errors.loadFailed"));
     return;
   }
 
-  const t = d.ticket;
-  const msgs = d.messages || [];
+const ticket = d.ticket;
+const msgs = d.messages || [];
 
-  currentUserRole = d.userRole || currentUserRole || "user";
+currentUserRole = d.userRole || currentUserRole || "user";
+applyStaticTexts();
 
-  // Заголовок
-  const short = t.shortId || t.id;
-breadcrumb.textContent = "Обращение " + short;
+const short = ticket.shortId || ticket.id;
+breadcrumb.textContent = tr("page.ticketLabel", "Обращение") + " " + short;
+
+const categoryText = resolveMaybeI18n(
+  ticket.categoryLabel || ticket.category,
+  tr("common.uncategorized", "Без категории")
+);
+
+const subjectText = resolveMaybeI18n(
+  ticket.subject,
+  tr("common.untitled", "Без названия")
+);
 
   // Сообщения
   messagesEl.innerHTML = "";
@@ -884,7 +964,7 @@ msgs.forEach(m=>{
   name.className = "msg-name";
 name.textContent = m.from === "user"
   ? m.username
-  : m.username || "Поддержка TyPlace";
+  : (m.username || tr("page.supportName"));
 
   const text = document.createElement("div");
   text.className = "message " + (m.from === "user" ? "user" : "support");
@@ -899,7 +979,7 @@ attachmentsBlock.className = "msg-attachments";
 
     const fileName = url.split("/").pop();
     const extension = fileName.split(".").pop();
-    const shortName = "photo." + extension;
+    const shortName = tr("page.fileName", { ext: extension });
 
     const fileLink = document.createElement("div");
     fileLink.className = "file-link";
@@ -944,8 +1024,8 @@ content.appendChild(time);
 const chatInput = document.querySelector(".chat-input");
 
 const canAssignToMe =
-  t.status !== "resolved" &&
-  !t.assignedTo &&
+  ticket.status !== "resolved" &&
+  !ticket.assignedTo &&
   (
     currentUserRole === "support" ||
     currentUserRole === "admin" ||
@@ -953,131 +1033,132 @@ const canAssignToMe =
   );
 
 const canWrite =
-  t.status !== "resolved" &&
+  ticket.status !== "resolved" &&
   (
     ADMIN_PANEL_ROLES.has(currentUserRole) ||
     currentUserRole === "user" ||
     (
       currentUserRole === "support" &&
-      (!t.assignedTo || t.assignedTo === currentUserEmail)
+      (!ticket.assignedTo || ticket.assignedTo === currentUserEmail)
     ) ||
     (
       currentUserRole === "resolution" &&
-      t.assignedTo === currentUserEmail
+      ticket.assignedTo === currentUserEmail
     )
   );
 
 chatInput.style.display = canWrite ? "flex" : "none";
 
 const canCloseAsStaff =
-  t.status !== "resolved" &&
+  ticket.status !== "resolved" &&
   (
     ADMIN_PANEL_ROLES.has(currentUserRole) ||
     (
       (currentUserRole === "support" || currentUserRole === "resolution") &&
-      t.assignedTo === currentUserEmail
+      ticket.assignedTo === currentUserEmail
     )
   );
 
 const canCloseAsUser =
-  t.status === "in_progress" && currentUserRole === "user";
+  ticket.status === "in_progress" && currentUserRole === "user";
 
 const canReopenAsUser =
-  t.status === "resolved" &&
+  ticket.status === "resolved" &&
   currentUserRole === "user" &&
-  Number(t.reopenCount || 0) < 1;
+  Number(ticket.reopenCount || 0) < 1;
 
   // Sidebar
 sidebarEl.innerHTML = `
 <div class="sidebar-inner">
 
   <div class="sidebar-section">
-    <div class="sidebar-label">Статус</div>
-    <div class="ticket-status ${t.status}">
-      ${getStatusText(t.status)}
+    <div class="sidebar-label">${tr("page.sidebar.status")}</div>
+    <div class="ticket-status ${ticket.status}">
+      ${getStatusText(ticket.status)}
     </div>
 
     <div class="sidebar-meta">
-      <div><b>Создано:</b> ${formatDate(t.createdAt)}</div>
+      <div><b>${tr("page.sidebar.created")}:</b> ${formatDate(ticket.createdAt)}</div>
     </div>
   </div>
 
   <div class="sidebar-divider"></div>
 
   <div class="sidebar-section">
-    <div class="sidebar-label">Детали обращения</div>
+    <div class="sidebar-label">${tr("page.sidebar.details")}</div>
 
-<div class="sidebar-meta">
-  <div><b>Категория:</b> ${esc(t.categoryLabel || t.category)}</div>
-  <div><b>Тема:</b> ${esc(t.subject)}</div>
-  ${t.orderId ? `<div><b>Номер заказа:</b> ${esc(t.orderId)}</div>` : ""}
-  ${t.userId ? `<div><b>ID пользователя:</b> ${esc(t.userId)}</div>` : ""}
-  ${t.offerId ? `<div><b>ID объявления:</b> ${esc(t.offerId)}</div>` : ""}
-  ${t.priority === "high" ? `<div><b>Приоритет:</b> Высокий</div>` : ""}
-</div>
+    <div class="sidebar-meta">
+      <div><b>${tr("page.sidebar.category")}:</b> ${esc(categoryText)}</div>
+      <div><b>${tr("page.sidebar.subject")}:</b> ${esc(subjectText)}</div>
+      ${ticket.orderId ? `<div><b>${tr("page.sidebar.orderId")}:</b> ${esc(ticket.orderId)}</div>` : ""}
+      ${ticket.userId ? `<div><b>${tr("page.sidebar.userId")}:</b> ${esc(ticket.userId)}</div>` : ""}
+      ${ticket.offerId ? `<div><b>${tr("page.sidebar.offerId")}:</b> ${esc(ticket.offerId)}</div>` : ""}
+      ${ticket.priority === "high" ? `<div><b>${tr("page.sidebar.priority")}:</b> ${tr("page.priority.high")}</div>` : ""}
+    </div>
   </div>
 
   ${
-    t.assignedUser 
+    ticket.assignedUser
       ? `
       <div class="sidebar-divider"></div>
       <div class="sidebar-section">
-        <div class="sidebar-label">Ответственный</div>
+        <div class="sidebar-label">${tr("page.sidebar.assigned")}</div>
         <div class="sidebar-meta">
-          ${esc(t.assignedUser.username)}
+          ${esc(ticket.assignedUser.username)}
         </div>
       </div>
       `
       : ""
   }
 
-${
-  canAssignToMe
-    ? `<button class="close-ticket-btn" onclick="assignTicket()">Взять тикет</button>`
-    : ""
-}
+  ${
+    canAssignToMe
+      ? `<button class="close-ticket-btn" onclick="assignTicket()">${tr("page.actions.assign")}</button>`
+      : ""
+  }
 
-${
-  canCloseAsStaff
-    ? `<button class="close-ticket-btn" onclick="closeTicket()">Отметить как решено</button>`
-    : ""
-}
+  ${
+    canCloseAsStaff
+      ? `<button class="close-ticket-btn" onclick="closeTicket()">${tr("page.actions.resolve")}</button>`
+      : ""
+  }
 
-${
-  canCloseAsUser
-    ? `<button class="close-ticket-btn" onclick="closeTicket()">Закрыть обращение</button>`
-    : ""
-}
+  ${
+    canCloseAsUser
+      ? `<button class="close-ticket-btn" onclick="closeTicket()">${tr("page.actions.close")}</button>`
+      : ""
+  }
 
-${
-  canReopenAsUser
-    ? `<button class="close-ticket-btn" onclick="reopenTicket()">Переоткрыть обращение</button>`
-    : ""
-}
+  ${
+    canReopenAsUser
+      ? `<button class="close-ticket-btn" onclick="reopenTicket()">${tr("page.actions.reopen")}</button>`
+      : ""
+  }
 
-${
-  (
-    currentUserRole === "support" ||
-    currentUserRole === "resolution" ||
-    currentUserRole === "admin" ||
-    currentUserRole === "super_admin"
-  )
-    ? `
+  ${
+    (
+      currentUserRole === "support" ||
+      currentUserRole === "resolution" ||
+      currentUserRole === "admin" ||
+      currentUserRole === "super_admin"
+    )
+      ? `
       <a href="/support-admin.html" class="close-ticket-btn" style="text-decoration:none;text-align:center;">
-        К списку тикетов
+        ${tr("page.actions.backToList")}
       </a>
-    `
-    : ""
-}
+      `
+      : ""
+  }
 
 </div>
 `;
 
 }
+
 function getStatusText(status){
-  if(status === "waiting") return "Ожидает ответа";
-  if(status === "in_progress") return "В процессе";
-  if(status === "resolved") return "Решено";
+  if(status === "waiting") return tr("page.status.waiting", "Ожидает ответа");
+  if(status === "in_progress") return tr("page.status.in_progress", "В процессе");
+  if(status === "resolved") return tr("page.status.resolved", "Решено");
   return status;
 }
 
@@ -1086,10 +1167,10 @@ async function sendMessage(){
 
   if (!text && selectedChatFiles.length === 0) return;
 
-  if (text.length > 2000) {
-    alert("Сообщение слишком длинное");
-    return;
-  }
+if (text.length > 2000) {
+  alert(tr("page.errors.messageTooLong"));
+  return;
+}
 
   if (isSendingMessage) return;
   isSendingMessage = true;
@@ -1118,7 +1199,7 @@ async function sendMessage(){
     const d = await r.json().catch(() => null);
 
     if (d && d.success === false) {
-      alert(d.message || "Ошибка");
+      alert((d && d.message) || tr("page.errors.sendFailed"));
       return;
     }
 
@@ -1148,7 +1229,7 @@ async function assignTicket(){
   const d = await r.json().catch(() => null);
 
   if(!d || !d.success){
-    alert((d && d.message) || "Не удалось взять тикет");
+    alert((d && d.message) || tr("page.errors.assignFailed"));
     return;
   }
 
@@ -1156,7 +1237,7 @@ async function assignTicket(){
 }
 
 async function closeTicket(){
-  if(!confirm("Закрыть обращение?")) return;
+  if(!confirm(tr("page.confirm.close"))) return;
 
   const r = await fetch("/api/support/tickets/" + ticketId + "/close",{
     method:"POST",
@@ -1172,7 +1253,7 @@ async function closeTicket(){
   const data = await r.json().catch(() => null);
 
   if(!data || !data.success){
-    alert((data && data.message) || "Ошибка закрытия");
+    alert((data && data.message) || tr("page.errors.closeFailed"));
     return;
   }
 
@@ -1180,7 +1261,7 @@ async function closeTicket(){
 }
 
 async function reopenTicket(){
-  if(!confirm("Переоткрыть обращение?")) return;
+if(!confirm(tr("page.confirm.reopen"))) return;
 
   const r = await fetch("/api/support/tickets/" + ticketId + "/reopen",{
     method:"POST",
@@ -1196,7 +1277,7 @@ async function reopenTicket(){
   const d = await r.json().catch(() => null);
 
   if(!d || !d.success){
-    alert((d && d.message) || "Ошибка переоткрытия");
+    alert((d && d.message) || tr("page.errors.reopenFailed"));
     return;
   }
 
@@ -1212,9 +1293,24 @@ chatText.addEventListener("keydown", e=>{
   }
 });
 
-loadMe().then((ok) => {
+(async () => {
+  if (window.tpI18nReady) {
+    try {
+      await window.tpI18nReady;
+    } catch (e) {}
+  }
+
+  applyStaticTexts();
+
+  const ok = await loadMe();
   if (!ok) return;
-  loadTicket();
+
+  await loadTicket();
+})();
+
+window.addEventListener("tp:lang-change", async () => {
+  applyStaticTexts();
+  await loadTicket();
 });
 
 socket.on("new-support-message", (data) => {
@@ -1228,6 +1324,7 @@ socket.on("support-ticket-updated", (data) => {
     loadTicket();
   }
 });
+
 const imageModal = document.getElementById("imageModal");
 const imageModalImg = document.getElementById("imageModalImg");
 const imageModalClose = document.getElementById("imageModalClose");

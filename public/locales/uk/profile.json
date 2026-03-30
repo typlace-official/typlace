@@ -5,6 +5,10 @@
   "docTitleMy": "Мій профіль — TyPlace",
   "docTitleExternal": "Профіль користувача — TyPlace",
 
+  "common": {
+    "close": "Закрити"
+  },
+
   "nav": {
     "myOffers": "Мої оголошення",
     "purchases": "Покупки",
@@ -31,7 +35,7 @@
     "nickname": "Нікнейм",
     "changeNick": "Змінити нік",
     "nickHint": "Нік можна змінювати раз на 30 днів",
-    "nickHintNext": "Наступна зміна ніку буде доступна {{date}}",
+    "nickHintNext": "Наступна зміна ніка доступна {{date}}",
     "site": "На сайті",
     "email": "Email",
     "telegram": "Telegram",
@@ -43,19 +47,28 @@
     "save": "Зберегти"
   },
 
+  "avatar": {
+    "cropTitle": "Редагування аватарки",
+    "tip": "Перетягніть фото та виберіть масштаб",
+    "zoom": "Масштаб",
+    "cancel": "Скасувати",
+    "save": "Зберегти"
+  },
+
   "alerts": {
     "userNotFound": "Користувача не знайдено",
     "enterNickname": "Введіть нік",
-    "nickTooShort": "Нік має містити щонайменше 3 символи",
-    "nickTooLong": "Нік має містити не більше 20 символів",
-    "nickWaitUntil": "Нік можна буде змінити знову {{date}}",
+    "nickTooShort": "Нік має бути щонайменше 3 символи",
+    "nickTooLong": "Нік має бути не більше 20 символів",
+    "nickWaitUntil": "Нік можна змінити знову {{date}}",
     "nickSaveError": "Не вдалося зберегти нік",
     "avatarSaveError": "Не вдалося оновити фото",
-    "onlyImages": "Можна завантажувати лише зображення",
+    "onlyImages": "Можна завантажити лише зображення",
     "notifySaveError": "Не вдалося зберегти сповіщення",
-    "telegramLinkStartError": "Не вдалося розпочати підключення Telegram",
+    "telegramLinkStartError": "Не вдалося почати підключення Telegram",
     "telegramUnlinkError": "Не вдалося відключити Telegram",
     "telegramLinkedSuccess": "Telegram успішно підключено",
-    "telegramLinkInstructions": "Відкрийте Telegram, запустіть бота та підтвердьте прив’язку"
+    "telegramLinkInstructions": "Відкрийте Telegram, запустіть бота та підтвердьте прив’язку",
+    "copyIdError": "Не вдалося скопіювати ID"
   }
 }

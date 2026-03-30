@@ -1,0 +1,86 @@
+{
+  "title": "Предложение — TyPlace",
+  "loading": "Загрузка…",
+  "copyOfferId": "Нажмите, чтобы скопировать ID",
+  "common": {
+    "back": "Назад"
+  },
+  "buttons": {
+    "buy": "Купить",
+    "writeSeller": "Написать продавцу",
+    "edit": "Редактировать",
+    "creatingOrder": "Создание заказа..."
+  },
+  "tools": {
+    "share": "Поделиться",
+    "shareDone": "Ссылка скопирована",
+    "shareFail": "Не удалось поделиться",
+    "report": "Пожаловаться",
+    "reportLogin": "Сначала войдите в аккаунт"
+  },
+  "sections": {
+    "description": "Описание"
+  },
+  "expand": {
+    "showFull": "Показать полностью"
+  },
+  "alerts": {
+    "offerNotFound": "Предложение не найдено",
+    "orderCreateError": "Ошибка создания заказа",
+    "chatOpenError": "Не удалось открыть чат"
+  },
+  "status": {
+    "deleted": "Предложение удалено",
+    "sold": "Товар продан",
+    "unavailable": "Временно недоступно"
+  },
+  "reviews": {
+    "one": "отзыв",
+    "few": "отзыва",
+    "many": "отзывов"
+  },
+  "seller": {
+    "noReviews": "Нет отзывов",
+    "onSite": {
+      "lessMinute": "На TyPlace меньше минуты",
+      "minutes": "На TyPlace уже {{count}} {{word}}",
+      "hours": "На TyPlace уже {{count}} {{word}}",
+      "days": "На TyPlace уже {{count}} {{word}}",
+      "weeks": "На TyPlace уже {{count}} {{word}}",
+      "months": "На TyPlace уже {{count}} {{word}}",
+      "years": "На TyPlace уже {{count}} {{word}}"
+    },
+    "words": {
+      "minute": {
+        "one": "минуту",
+        "few": "минуты",
+        "many": "минут"
+      },
+      "hour": {
+        "one": "час",
+        "few": "часа",
+        "many": "часов"
+      },
+      "day": {
+        "one": "день",
+        "few": "дня",
+        "many": "дней"
+      },
+      "week": {
+        "one": "неделю",
+        "few": "недели",
+        "many": "недель"
+      },
+      "month": {
+        "one": "месяц",
+        "few": "месяца",
+        "many": "месяцев"
+      },
+      "year": {
+        "one": "год",
+        "few": "года",
+        "many": "лет"
+      }
+    }
+  }
+}

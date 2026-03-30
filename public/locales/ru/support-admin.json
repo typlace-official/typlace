@@ -1,0 +1,73 @@
+{
+  "page": {
+    "title": "Поддержка — Тикеты — TyPlace",
+    "brand": {
+      "subtitle": "Support Panel"
+    },
+    "nav": {
+      "tickets": "Тикеты",
+      "resolution": "Арбитраж",
+      "official": "Официальные сообщения"
+    },
+    "sidebar": {
+      "adminBack": "В админку",
+      "logout": "Выйти"
+    },
+    "heading": "Тикеты поддержки",
+    "subheading": "Очередь обращений пользователей и модераторов.",
+    "rolePrefix": "Роль",
+    "stats": {
+      "waiting": "Ожидают",
+      "in_progress": "В процессе",
+      "resolved": "Решены",
+      "total": "Всего"
+    },
+    "filters": {
+      "allStatuses": "Все статусы",
+      "waiting": "Ожидают ответа",
+      "in_progress": "В процессе",
+      "resolved": "Решены",
+      "allTickets": "Все тикеты",
+      "onlyMine": "Только мои"
+    },
+    "status": {
+      "waiting": "Ожидает ответа",
+      "in_progress": "В процессе",
+      "resolved": "Решено"
+    },
+    "wait": {
+      "label": "Ждёт",
+      "minutes": "{{count}} мин.",
+      "hoursMinutes": "{{hours}} ч. {{minutes}} мин."
+    },
+    "priority": {
+      "highLabel": "Высокий приоритет"
+    },
+    "meta": {
+      "order": "Заказ",
+      "userId": "ID пользователя",
+      "offerId": "ID объявления",
+      "newCount": "Новых: {{count}}",
+      "createdBy": "Создал",
+      "createdByFallback": "Пользователь",
+      "lastReplyUser": "Последний ответ: пользователь",
+      "lastReplySupport": "Последний ответ: поддержка",
+      "noMessages": "Сообщений пока нет",
+      "assignedTo": "Ответственный",
+      "unassigned": "не назначен",
+      "userIdShort": "ID {{id}}"
+    },
+    "actions": {
+      "assign": "Взять",
+      "open": "Открыть"
+    },
+    "empty": {
+      "loading": "Загрузка...",
+      "loadFailed": "Ошибка загрузки тикетов",
+      "noTickets": "Тикетов нет"
+    },
+    "errors": {
+      "assignFailed": "Не удалось взять тикет"
+    }
+  }
+}

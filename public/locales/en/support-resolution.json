@@ -1,0 +1,86 @@
+{
+  "page": {
+    "title": "Support — Resolution — TyPlace",
+    "brand": {
+      "subtitle": "Support Panel"
+    },
+    "nav": {
+      "tickets": "Tickets",
+      "resolution": "Resolution",
+      "official": "Official messages"
+    },
+    "sidebar": {
+      "adminBack": "To admin panel",
+      "logout": "Log out"
+    },
+    "heading": "Resolution",
+    "subheading": "Queue of order disputes and assignment of resolution staff.",
+    "rolePrefix": "Role",
+    "stats": {
+      "total": "Total disputes",
+      "waiting": "Waiting",
+      "in_progress": "In progress",
+      "resolved": "Resolved"
+    },
+    "filters": {
+      "allStatuses": "All statuses",
+      "waiting": "Waiting for reply",
+      "in_progress": "In progress",
+      "resolved": "Resolved",
+      "allDisputes": "All disputes",
+      "onlyMine": "Only mine"
+    },
+    "status": {
+      "waiting": "Waiting for reply",
+      "in_progress": "In progress",
+      "resolved": "Resolved"
+    },
+    "wait": {
+      "label": "Waiting",
+      "minutes": "{{count}} min.",
+      "hoursMinutes": "{{hours}} h. {{minutes}} min."
+    },
+    "assign": {
+      "title": "Resolution assignment",
+      "titleWithId": "Resolution assignment — {{id}}",
+      "subtitle": "Choose a resolution staff member",
+      "orderSubtitle": "Order: {{orderId}}",
+      "searchPlaceholder": "Email, username or ID of resolution staff",
+      "searchBtn": "Search",
+      "closeBtn": "Close",
+      "enterQuery": "Enter email, username or ID of resolution staff",
+      "searching": "Searching...",
+      "notFound": "Resolution staff not found",
+      "assignBtn": "Assign",
+      "success": "Resolution assigned",
+      "staffFallback": "Staff member",
+      "disputeFallback": "dispute"
+    },
+    "meta": {
+      "dispute": "Dispute",
+      "disputeFallback": "Order dispute",
+      "order": "Order",
+      "userId": "User ID",
+      "role": "Role",
+      "newCount": "New: {{count}}",
+      "createdBy": "Created by",
+      "createdByFallback": "User",
+      "userIdShort": "ID {{id}}",
+      "resolutionUnassigned": "Resolution: unassigned",
+      "resolutionAssigned": "Resolution: {{value}}"
+    },
+    "actions": {
+      "assignResolution": "Assign resolution staff",
+      "openTicket": "Open ticket"
+    },
+    "empty": {
+      "loading": "Loading...",
+      "loadFailed": "Failed to load disputes",
+      "noDisputes": "No disputes"
+    },
+    "errors": {
+      "searchFailed": "Failed to search staff",
+      "assignFailed": "Failed to assign resolution"
+    }
+  }
+}

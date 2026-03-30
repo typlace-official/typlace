@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Заказ — TyPlace</title>
+<script>
+  document.titleKey = "page.title";
+</script>
+<title data-i18n="page.title"></title>
 <link rel="stylesheet" href="/header.css">
 <link rel="stylesheet" href="/gallery.css">
 <link rel="stylesheet" href="/footer.css">
@@ -1158,8 +1161,8 @@ body{
 
     <div class="order-info">
 
-      <div class="order-title" id="title">Загрузка…</div>
-      <button id="expandTitleBtn" class="expand-btn">Показать полностью</button>
+      <div class="order-title" id="title" data-i18n="page.loading"></div>
+      <button id="expandTitleBtn" class="expand-btn" data-i18n="page.showFull"></button>
 
 <div class="order-price" id="price">—</div>
 
@@ -1174,31 +1177,30 @@ body{
   id="resolutionDecisionBox"
   style="display:none;"
 >
-  <div class="resolution-decision-title">Решение арбитража</div>
+<div class="resolution-decision-title" data-i18n="page.resolution.title"></div>
 
-  <textarea
-    id="resolutionDecisionText"
-    class="resolution-decision-text"
-    placeholder="Напишите итоговое решение по спору"
-  ></textarea>
+<textarea
+  id="resolutionDecisionText"
+  class="resolution-decision-text"
+  data-i18n-placeholder="page.resolution.placeholder"
+></textarea>
 
-  <div class="resolution-decision-actions">
-    <button
-      type="button"
-      id="resolutionConfirmBtn"
-      class="btn btnResolutionConfirm"
-    >
-      Подтвердить заказ
-    </button>
+<div class="resolution-decision-actions">
+  <button
+    type="button"
+    id="resolutionConfirmBtn"
+    class="btn btnResolutionConfirm"
+    data-i18n="page.resolution.confirmBtn"
+  ></button>
 
-    <button
-      type="button"
-      id="resolutionRefundBtn"
-      class="btn btnResolutionRefund"
-    >
-      Сделать возврат
-    </button>
-  </div>
+  <button
+    type="button"
+    id="resolutionRefundBtn"
+    class="btn btnResolutionRefund"
+    data-i18n="page.resolution.refundBtn"
+  ></button>
+</div>
+
 </div>
     </div>
   </div>
@@ -1208,9 +1210,9 @@ body{
 
   <!-- DESCRIPTION -->
   <div class="order-desc-section" id="descSection">
-    <div class="section-title">ОПИСАНИЕ</div>
+    <div class="section-title" data-i18n="page.descriptionTitle"></div>
     <div class="order-desc" id="desc"></div>
-    <button id="expandDescBtn" class="expand-btn">Показать полностью</button>
+    <button id="expandDescBtn" class="expand-btn" data-i18n="page.showFull"></button>
   </div>
 
 </div>
@@ -1259,13 +1261,23 @@ body{
 
 <div class="composer" id="composer">
   <input type="file" id="filePicker" accept="image/*" style="display:none;" />
-  <button class="mini-btn" id="attachBtn" title="Прикрепить">＋</button>
+  <button
+  class="mini-btn"
+  id="attachBtn"
+  data-i18n-title="page.chat.attach"
+  data-i18n-aria-label="page.chat.attach"
+>＋</button>
   <input
   type="text"
   id="msgInput"
   data-i18n-placeholder="page.chat.writeMessage"
 />
-  <button class="send-btn" id="sendBtn">
+  <button
+  class="send-btn"
+  id="sendBtn"
+  data-i18n-title="page.chat.send"
+  data-i18n-aria-label="page.chat.send"
+>
 <svg width="20" height="20" viewBox="0 0 24 24">
 <path fill="white"
 d="M2 21L23 12L2 3L2 10L17 12L2 14Z"/>
@@ -1276,9 +1288,7 @@ d="M2 21L23 12L2 3L2 10L17 12L2 14Z"/>
 </div> <!-- закрываем order-chat-card -->
 
 <div class="card" id="reviewBlock" style="display:none;">
-<div class="review-title">
-  ОСТАВИТЬ ОТЗЫВ
-</div>
+<div class="review-title" data-i18n="page.review.title"></div>
 
 
 <div id="reviewStars" class="review-stars-input"></div>
@@ -1286,11 +1296,12 @@ d="M2 21L23 12L2 3L2 10L17 12L2 14Z"/>
 <div id="reviewError" class="review-error"></div>
 
 <div class="review-textarea-wrap">
-  <textarea
-    id="reviewText"
-    class="review-textarea"
-    maxlength="100"
-  ></textarea>
+<textarea
+  id="reviewText"
+  class="review-textarea"
+  maxlength="100"
+  data-i18n-placeholder="page.review.placeholder"
+></textarea>
 
   <div class="review-counter">
     <span id="reviewCount">0</span> / 100
@@ -1301,9 +1312,9 @@ d="M2 21L23 12L2 3L2 10L17 12L2 14Z"/>
 <button
   id="sendReviewBtn"
   class="btn btnBlue"
-  style="margin-top:12px;">
-  Опубликовать
-</button>
+  style="margin-top:12px;"
+  data-i18n="page.review.submit"
+></button>
 
 </div>
 </div>
@@ -1324,10 +1335,6 @@ d="M2 21L23 12L2 3L2 10L17 12L2 14Z"/>
 
 <script>
 const orderId = new URLSearchParams(location.search).get("id");
-if(!orderId){
-  alert("Не указан заказ");
-  location.href = "/";
-}
 
 const token = localStorage.getItem("tp_token");
 let myEmail = localStorage.getItem("tp_user_email") || "";
@@ -1456,10 +1463,30 @@ const i18nReady = window.tpI18n?.load
   ? window.tpI18n.load(window.tpI18n.currentLang)
   : Promise.resolve();
 
+function getCurrentLang(){
+  return window.tpI18n?.currentLang || localStorage.getItem("tp_lang") || "ru";
+}
+
+function getLocaleByLang(lang){
+  if(lang === "uk") return "uk-UA";
+  if(lang === "en") return "en-US";
+  return "ru-RU";
+}
+
+function getCurrentLocale(){
+  return getLocaleByLang(getCurrentLang());
+}
+
 function pageT(key, params = {}){
-  return window.tpI18n?.t
-    ? window.tpI18n.t(`page.${key}`, params)
-    : key;
+  const fullKey = `page.${key}`;
+  const tr = window.tpI18n?.t ? window.tpI18n.t(fullKey, params) : "";
+  return tr && tr !== fullKey ? tr : key;
+}
+
+function commonT(key, params = {}){
+  const fullKey = `common.${key}`;
+  const tr = window.tpI18n?.t ? window.tpI18n.t(fullKey, params) : "";
+  return tr && tr !== fullKey ? tr : key;
 }
 
 i18nReady.then(() => {
@@ -1560,17 +1587,27 @@ function updateChatActionLabels(){
 }
 
 function statusText(s){
-  if(s==="pending") return "В процессе";
-  if(s==="completed") return "Завершено";
-  if(s==="refunded") return "Возврат";
+  if(s === "pending") return pageT("order.status.pending");
+  if(s === "completed") return pageT("order.status.completed");
+  if(s === "refunded") return pageT("order.status.refunded");
   return s;
 }
-function formatMode(mode){
+
+function formatMode(gameId, mode){
   if(!mode) return "";
 
+  const modeCfg = window.GAMES?.[gameId]?.modes?.[mode];
+
+  if (modeCfg?.labelKey && window.tpI18n?.t) {
+    const tr = window.tpI18n.t(modeCfg.labelKey);
+    if (tr && tr !== modeCfg.labelKey) {
+      return tr;
+    }
+  }
+
   return mode
-    .replace(/_/g," ")
-    .replace(/\b\w/g,l=>l.toUpperCase());
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, l => l.toUpperCase());
 }
 
 async function loadOrder(){
@@ -1586,10 +1623,10 @@ await ensureUserEmail(true);
     headers:{ Authorization:"Bearer "+token }
   });
   const data = await res.json();
-  if(!data.success){
-    alert(data.message || "Заказ не найден");
-    return;
-  }
+if(!data.success){
+  alert(data.message || pageT("alerts.orderNotFound"));
+  return;
+}
 
 const o = data.order;
 currentOrder = o;
@@ -1615,7 +1652,7 @@ if (attachBtnEl) {
 
 if (msgInputEl) {
   msgInputEl.placeholder = isResolutionWriter()
-    ? "Напишите сообщение от лица арбитража"
+    ? pageT("chat.resolutionWriteMessage")
     : pageT("chat.writeMessage");
 }
 
@@ -1653,19 +1690,20 @@ const gameTitle = gameObj ? gameObj.name : offer.game;
 
 const gameLine = [
   gameTitle,
-  formatMode(offer.mode)
+  formatMode(offer.game, offer.mode)
 ].filter(Boolean).join(", ");
 
 orderGameLineEl.textContent = gameLine || "";
 
 orderNumberEl.textContent =
-  "Заказ " + (o.orderNumber || "#" + o.id.slice(0,8));
+  `${pageT("order.numberLabel")} ${o.orderNumber || "#" + o.id.slice(0,8)}`;
 
 const created = new Date(o.createdAt || Date.now());
+const locale = getCurrentLocale();
 
 let dateText =
-  "Создан: " +
-  created.toLocaleDateString("ru-RU", {
+  `${pageT("order.createdLabel")}: ` +
+  created.toLocaleDateString(locale, {
     day:"numeric",
     month:"short",
     year:"numeric"
@@ -1675,8 +1713,8 @@ if(o.status === "completed" && o.completedAt){
   const completed = new Date(o.completedAt);
 
   dateText +=
-    "\nЗавершён: " +
-    completed.toLocaleDateString("ru-RU", {
+    `\n${pageT("order.completedLabel")}: ` +
+    completed.toLocaleDateString(locale, {
       day:"numeric",
       month:"short",
       year:"numeric"
@@ -1687,8 +1725,8 @@ if(o.status === "refunded" && o.refundedAt){
   const refunded = new Date(o.refundedAt);
 
   dateText +=
-    "\nВозврат: " +
-    refunded.toLocaleDateString("ru-RU", {
+    `\n${pageT("order.refundedLabel")}: ` +
+    refunded.toLocaleDateString(locale, {
       day:"numeric",
       month:"short",
       year:"numeric"
@@ -1697,13 +1735,15 @@ if(o.status === "refunded" && o.refundedAt){
 
 orderDateEl.textContent = dateText;
 
-  const lang = localStorage.getItem("tp_lang") || "ru";
+const lang = getCurrentLang();
 const description =
   offer.description?.[lang] ||
   offer.description?.ru ||
+  offer.description?.uk ||
+  offer.description?.en ||
   "";
 
-descEl.textContent = description || "Описание не указано.";
+descEl.textContent = description || pageT("order.descriptionEmpty");
 statusBadgeEl.textContent = statusText(o.status);
 statusBadgeEl.className = "order-badge " + o.status;
 
@@ -1712,34 +1752,34 @@ actions.innerHTML = "";
 
 // buyer
 if(role === "buyer" && o.status === "pending"){
-  actions.innerHTML += `
-    <button class="btn btnBlue" onclick="confirmOrder()">
-      Подтвердить получение
-    </button>
-  `;
+actions.innerHTML += `
+  <button class="btn btnBlue" onclick="confirmOrder()">
+    ${pageT("order.confirmReceiptBtn")}
+  </button>
+`;
 }
 
 // buyer appeal after completed
 if (canBuyerAppealCompletedOrder(o)) {
   const timeLeft = getAppealTimeLeftText(o);
 
-  actions.innerHTML += `
-    <button class="btn btnGray" onclick="openCompletedOrderAppeal()">
-      Подать апелляцию
-    </button>
-    <div style="width:100%;font-size:12px;color:#6b7280;margin-top:2px;">
-      Апелляция доступна ещё ${timeLeft}
-    </div>
-  `;
+actions.innerHTML += `
+  <button class="btn btnGray" onclick="openCompletedOrderAppeal()">
+    ${pageT("order.appealBtn")}
+  </button>
+  <div style="width:100%;font-size:12px;color:#6b7280;margin-top:2px;">
+    ${pageT("order.appealAvailable", { time: timeLeft })}
+  </div>
+`;
 }
 
 // seller
 if(role === "seller" && o.status === "pending"){
-  actions.innerHTML += `
-    <button class="btn btnGray" onclick="refundOrder()">
-      Вернуть деньги
-    </button>
-  `;
+actions.innerHTML += `
+  <button class="btn btnGray" onclick="refundOrder()">
+    ${pageT("order.refundBtn")}
+  </button>
+`;
 }
 
 // resolution / super_admin
@@ -1846,7 +1886,7 @@ function getLastSeenText(lastSeen){
 }
 
 function formatMessageTime(createdAt){
-  return new Date(createdAt).toLocaleTimeString("ru-RU", {
+  return new Date(createdAt).toLocaleTimeString(getCurrentLocale(), {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false
@@ -1898,7 +1938,7 @@ function isResolutionMessage(m){
 function getResolutionLabel(){
   return window.tpBadges?.getTranslatedLabel
     ? window.tpBadges.getTranslatedLabel("resolution")
-    : "Арбитраж";
+    : commonT("badges.resolution");
 }
 
 function renderResolutionMessageItem(m){
@@ -1990,10 +2030,10 @@ async function loadChatHeader(){
     document.getElementById("chatAva").innerHTML =
       `<img src="${DEFAULT_AVATAR}" alt="">`;
 
-    document.getElementById("chatName").textContent = "Чат заказа";
-    document.getElementById("chatSub").textContent = isResolutionWriter()
-      ? "Арбитражный чат"
-      : "Просмотр сообщений";
+document.getElementById("chatName").textContent = pageT("chat.orderChatTitle");
+document.getElementById("chatSub").textContent = isResolutionWriter()
+  ? pageT("chat.resolutionChatSub")
+  : pageT("chat.readOnlyChatSub");
 
     updateOrderChatProfileLink(null);
 
@@ -2023,11 +2063,11 @@ async function loadChatHeader(){
 
   document.getElementById("chatAva").innerHTML = `<img src="${avatar}" alt="">`;
 
-  window.tpBadges.applyNameWithBadge(
-    document.getElementById("chatName"),
-    user.username || "Пользователь",
-    user.role || "user"
-  );
+window.tpBadges.applyNameWithBadge(
+  document.getElementById("chatName"),
+  user.username || commonT("userDefaultName"),
+  user.role || "user"
+);
 
   document.getElementById("chatSub").textContent =
     user.online ? pageT("chat.online") : getLastSeenText(user.lastSeen);
@@ -2049,16 +2089,16 @@ function formatDateDivider(date){
 
   const isYesterday = d.toDateString() === yesterday.toDateString();
 
-  if(isToday) return "Сегодня";
-  if(isYesterday) return "Вчера";
+if(isToday) return pageT("chat.today");
+if(isYesterday) return pageT("chat.yesterday");
 
-  const options = { day:'numeric', month:'long' };
+  const options = { day:"numeric", month:"long" };
 
   if(d.getFullYear() !== today.getFullYear()){
-    options.year = 'numeric';
+    options.year = "numeric";
   }
 
-  return d.toLocaleDateString("ru-RU", options);
+  return d.toLocaleDateString(getCurrentLocale(), options);
 }
 
 async function loadMessages(){
@@ -2130,10 +2170,10 @@ async function sendMsg(){
 
     const data = await res.json();
 
-    if(!data.success){
-      alert(data.message || "Ошибка отправки сообщения");
-      return;
-    }
+if(!data.success){
+  alert(data.message || pageT("alerts.sendMessageError"));
+  return;
+}
 
     if(data.message){
       appendMessageToOrderChat(data.message);
@@ -2160,26 +2200,26 @@ async function sendMsg(){
 }
 
 async function confirmOrder(){
-if(!confirm("Подтвердить получение? Деньги будут переведены продавцу.")) return;
+if(!confirm(pageT("order.confirmReceiptConfirm"))) return;
 
-  const r = await fetch(`/api/orders/${orderId}/confirm`,{
-    method:"POST",
-    headers:{ Authorization:"Bearer "+token }
-  });
-  const d = await r.json();
-  if(!d.success) alert(d.message || "Ошибка");
+const r = await fetch(`/api/orders/${orderId}/confirm`,{
+  method:"POST",
+  headers:{ Authorization:"Bearer "+token }
+});
+const d = await r.json();
+if(!d.success) alert(d.message || pageT("alerts.confirmOrderError"));
   loadOrder();
 }
 
 async function refundOrder(){
-if(!confirm("Вернуть деньги покупателю?")) return;
+if(!confirm(pageT("order.refundConfirm"))) return;
 
-  const r = await fetch(`/api/orders/${orderId}/refund`,{
-    method:"POST",
-    headers:{ Authorization:"Bearer "+token }
-  });
-  const d = await r.json();
-  if(!d.success) alert(d.message || "Ошибка");
+const r = await fetch(`/api/orders/${orderId}/refund`,{
+  method:"POST",
+  headers:{ Authorization:"Bearer "+token }
+});
+const d = await r.json();
+if(!d.success) alert(d.message || pageT("alerts.refundOrderError"));
   loadOrder();
 }
 
@@ -2189,19 +2229,19 @@ async function sendResolutionDecision(decision){
 
   const text = String(resolutionDecisionTextEl?.value || "").trim();
 
-  if(!text){
-    alert("Напишите текст решения");
-    resolutionDecisionTextEl?.focus();
-    return;
-  }
+if(!text){
+  alert(pageT("resolution.decisionTextRequired"));
+  resolutionDecisionTextEl?.focus();
+  return;
+}
 
   const isConfirm = decision === "confirm";
 
-  const ok = confirm(
-    isConfirm
-      ? "Подтвердить заказ решением арбитража?"
-      : "Сделать возврат решением арбитража?"
-  );
+const ok = confirm(
+  isConfirm
+    ? pageT("resolution.confirmDecisionConfirm")
+    : pageT("resolution.refundDecisionConfirm")
+);
 
   if(!ok) return;
 
@@ -2223,10 +2263,10 @@ async function sendResolutionDecision(decision){
 
     const data = await res.json();
 
-    if(!data.success){
-      alert(data.message || "Ошибка решения по спору");
-      return;
-    }
+if(!data.success){
+  alert(data.message || pageT("alerts.resolutionDecisionError"));
+  return;
+}
 
     if(resolutionDecisionTextEl){
       resolutionDecisionTextEl.value = "";
@@ -2268,11 +2308,11 @@ filePickerEl.addEventListener("change", async (e) => {
 
   const data = await res.json();
 
-  if (!data.success) {
-    alert(data.message || "Ошибка отправки файла");
-    filePickerEl.value = "";
-    return;
-  }
+if (!data.success) {
+  alert(data.message || pageT("alerts.fileSendError"));
+  filePickerEl.value = "";
+  return;
+}
 
   if (data.message) {
     appendMessageToOrderChat(data.message);
@@ -2306,10 +2346,10 @@ if (reviewBtn) {
     const rating = Number(document.getElementById("reviewRating").value);
     const errorEl = document.getElementById("reviewError");
 
-    if (rating === 0) {
-      errorEl.textContent = "Поставьте оценку";
-      return;
-    }
+if (rating === 0) {
+  errorEl.textContent = pageT("review.ratingRequired");
+  return;
+}
 
     errorEl.textContent = "";
     reviewBtn.disabled = true;
@@ -2331,11 +2371,11 @@ if (reviewBtn) {
 
     const data = await res.json();
 
-    if (!data.success) {
-      alert(data.message || "Ошибка при отправке отзыва");
-      reviewBtn.disabled = false;
-      return;
-    }
+if (!data.success) {
+  alert(data.message || pageT("alerts.reviewSendError"));
+  reviewBtn.disabled = false;
+  return;
+}
 
     document.getElementById("reviewText").value = "";
     loadOrder();
@@ -2471,7 +2511,32 @@ if(reviewText){
 
   });
 }
-loadOrder();
+
+window.addEventListener("tp:lang-change", async () => {
+  if (window.tpI18n?.apply) {
+    window.tpI18n.apply(document.body);
+  }
+
+  if (orderId) {
+    await loadOrder();
+  }
+
+  updateChatActionLabels();
+});
+
+i18nReady.then(async () => {
+  if (window.tpI18n?.apply) {
+    window.tpI18n.apply(document.body);
+  }
+
+  if (!orderId) {
+    alert(pageT("alerts.orderIdMissing"));
+    location.href = "/";
+    return;
+  }
+
+  await loadOrder();
+});
 </script>
 </body>
 </html>

@@ -1,0 +1,54 @@
+{
+  "title": "Create listing — TyPlace",
+  "back": "Back",
+"fieldLabels": {
+  "ru": {
+    "title": "Название",
+    "description": "Описание"
+  },
+  "uk": {
+    "title": "Назва",
+    "description": "Опис"
+  },
+  "en": {
+    "title": "Title",
+    "description": "Description"
+  }
+},
+  "languageTargets": {
+    "ru": "in Russian",
+    "uk": "in Ukrainian",
+    "en": "in English"
+  },
+  "langRules": {
+    "ru": "Fill in the listing in <strong>Russian</strong> and <strong>Ukrainian</strong>. <strong>English</strong> can be added optionally.",
+    "uk": "Fill in the listing in <strong>Ukrainian</strong> and <strong>Russian</strong>. <strong>English</strong> can be added optionally.",
+    "en": "Fill in the listing in <strong>English</strong>. <strong>Russian</strong> and <strong>Ukrainian</strong> can be added optionally."
+  },
+  "errors": {
+    "gameNotFound": "Game not found",
+    "fillField": "Fill in the field",
+    "chooseCategory": "Choose a category",
+    "enterPrice": "Enter a price",
+    "minPrice": "Minimum price is {{price}} {{currency}}",
+    "maxPrice": "Maximum price is {{price}} {{currency}}",
+    "fillTitleForLanguage": "Fill in the title {{language}}",
+    "fillDescriptionForLanguage": "Fill in the description {{language}}",
+    "generic": "Error"
+  },
+  "toasts": {
+    "saved": "Changes saved",
+    "created": "Listing created"
+  },
+  "deleteConfirm": {
+    "title": "Confirmation",
+    "text": "Are you sure you want to delete this listing?",
+    "confirm": "Delete",
+    "cancel": "Cancel"
+  },
+  "alerts": {
+    "successTitle": "Success",
+    "errorTitle": "Error",
+    "deleteError": "Failed to delete the listing"
+  }
+}

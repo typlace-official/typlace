@@ -1,0 +1,44 @@
+{
+  "page": {
+    "title": "Поддержка — Официальные сообщения — TyPlace",
+    "brand": {
+      "subtitle": "Support Panel"
+    },
+    "nav": {
+      "tickets": "Тикеты",
+      "resolution": "Арбитраж",
+      "official": "Официальные сообщения"
+    },
+    "sidebar": {
+      "adminBack": "В админку",
+      "logout": "Выйти"
+    },
+    "heading": "Официальные сообщения",
+    "subheading": "Поиск пользователя и переход в официальный чат от имени TyPlace.",
+    "rolePrefix": "Роль",
+    "search": {
+      "title": "Поиск пользователя",
+      "subtitle": "Введите email, ник или userId, чтобы открыть официальный чат.",
+      "placeholder": "Email, ник или ID пользователя",
+      "button": "Найти"
+    },
+    "meta": {
+      "userFallback": "Пользователь",
+      "userId": "ID",
+      "role": "Роль",
+      "banned": "Заблокирован"
+    },
+    "actions": {
+      "openChat": "Открыть чат"
+    },
+    "empty": {
+      "enterQuery": "Введите email, ник или ID пользователя",
+      "searching": "Поиск...",
+      "notFound": "Пользователи не найдены"
+    },
+    "errors": {
+      "searchFailed": "Ошибка поиска пользователей",
+      "openChatFailed": "Не удалось открыть официальный чат"
+    }
+  }
+}

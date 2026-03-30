@@ -1,0 +1,20 @@
+{
+  "title": "Support History — TyPlace",
+  "nav": {
+    "home": "Home",
+    "current": "Support History"
+  },
+  "heading": "Support History",
+  "filters": {
+    "all": "Status",
+    "waiting": "Waiting for reply",
+    "in_progress": "In progress",
+    "resolved": "Resolved"
+  },
+  "ticketLabel": "Ticket",
+  "orderLabel": "Order",
+  "empty": "No tickets yet",
+  "errors": {
+    "loadFailed": "Error"
+  }
+}

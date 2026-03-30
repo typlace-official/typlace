@@ -434,6 +434,20 @@ h1{
 
 <script>
 const token = localStorage.getItem("tp_token");
+
+function tr(key, fallback = ""){
+  const value = String(key || "").trim();
+  if(!value) return fallback;
+
+  const translated = window.tpI18n?.t ? window.tpI18n.t(value) : value;
+
+  if (translated && translated !== value) {
+    return translated;
+  }
+
+  return fallback || value;
+}
+
 if(!token){
   location.href = "/auth.html?mode=login";
 }
@@ -521,7 +535,7 @@ Object.entries(SUPPORT_CONFIG).forEach(([key, value]) => {
 
   const option = document.createElement("option");
   option.value = key;
-  option.textContent = tpI18n.t(value.labelKey);
+  option.textContent = tr(value.labelKey, value.labelKey);
 
   categorySelect.appendChild(option);
 
@@ -635,33 +649,49 @@ if(userError) userError.textContent = "";
 if(offerError) offerError.textContent = "";
 
 if(!d.success){
+  const msg = String(d.message || "").trim();
 
-  if(d.message === "Заказ не найден"){
-    if(orderError) orderError.textContent = tpI18n.t("page.errors.orderNotFound");
+  if(
+    msg === tr("responses.orders.orderNotFound") ||
+    msg === tr("page.errors.orderNotFound")
+  ){
+    if(orderError) orderError.textContent = tr("page.errors.orderNotFound");
     return;
   }
 
-  if(d.message === "Введите ID пользователя"){
-    if(userError) userError.textContent = tpI18n.t("page.errors.enterUserId");
+  if(
+    msg === tr("responses.support.enterUserId") ||
+    msg === tr("page.errors.enterUserId")
+  ){
+    if(userError) userError.textContent = tr("page.errors.enterUserId");
     return;
   }
 
-  if(d.message === "Пользователь не найден"){
-    if(userError) userError.textContent = tpI18n.t("page.errors.userNotFound");
+  if(
+    msg === tr("responses.common.userNotFound") ||
+    msg === tr("page.errors.userNotFound")
+  ){
+    if(userError) userError.textContent = tr("page.errors.userNotFound");
     return;
   }
 
-  if(d.message === "Введите ID объявления"){
-    if(offerError) offerError.textContent = tpI18n.t("page.errors.enterOfferId");
+  if(
+    msg === tr("responses.support.enterOfferId") ||
+    msg === tr("page.errors.enterOfferId")
+  ){
+    if(offerError) offerError.textContent = tr("page.errors.enterOfferId");
     return;
   }
 
-  if(d.message === "Объявление не найдено"){
-    if(offerError) offerError.textContent = tpI18n.t("page.errors.offerNotFound");
+  if(
+    msg === tr("responses.support.offerNotFound") ||
+    msg === tr("page.errors.offerNotFound")
+  ){
+    if(offerError) offerError.textContent = tr("page.errors.offerNotFound");
     return;
   }
 
-  alert(d.message || tpI18n.t("common.error"));
+  alert(msg || tr("responses.common.internalError", "Ошибка"));
   return;
 }
 
@@ -741,7 +771,7 @@ subjectSelect.appendChild(defaultOption);
 SUPPORT_CONFIG[categorySelect.value].topics.forEach(topic=>{
   const option = document.createElement("option");
   option.value = topic;
-  option.textContent = tpI18n.t(topic);
+    option.textContent = tr(topic, topic);
   subjectSelect.appendChild(option);
 });
 
@@ -784,7 +814,7 @@ if(!topics) return;
 topics.forEach(topic=>{
   const option = document.createElement("option");
   option.value = topic;
-  option.textContent = tpI18n.t(topic);
+    option.textContent = tr(topic, topic);
   subjectSelect.appendChild(option);
 });
 

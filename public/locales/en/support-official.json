@@ -1,0 +1,44 @@
+{
+  "page": {
+    "title": "Support — Official Messages — TyPlace",
+    "brand": {
+      "subtitle": "Support Panel"
+    },
+    "nav": {
+      "tickets": "Tickets",
+      "resolution": "Resolution",
+      "official": "Official messages"
+    },
+    "sidebar": {
+      "adminBack": "To admin panel",
+      "logout": "Log out"
+    },
+    "heading": "Official messages",
+    "subheading": "Find a user and open an official chat as TyPlace.",
+    "rolePrefix": "Role",
+    "search": {
+      "title": "User search",
+      "subtitle": "Enter email, username or userId to open the official chat.",
+      "placeholder": "Email, username or user ID",
+      "button": "Search"
+    },
+    "meta": {
+      "userFallback": "User",
+      "userId": "ID",
+      "role": "Role",
+      "banned": "Banned"
+    },
+    "actions": {
+      "openChat": "Open chat"
+    },
+    "empty": {
+      "enterQuery": "Enter email, username or user ID",
+      "searching": "Searching...",
+      "notFound": "No users found"
+    },
+    "errors": {
+      "searchFailed": "Failed to search users",
+      "openChatFailed": "Failed to open official chat"
+    }
+  }
+}

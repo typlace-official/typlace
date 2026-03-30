@@ -234,8 +234,16 @@ input {
 .terms-text a:hover{
   text-decoration:underline;
 }
+html:not(.i18n-ready) body{
+  visibility:hidden;
+}
   </style>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <script>
+  function markPageReady() {
+    document.documentElement.classList.add("i18n-ready");
+  }
+</script>
 </head>
 
 <body>
@@ -260,10 +268,7 @@ input {
 <input id="loginEmail" type="email" data-i18n-placeholder="page.enter_email" autocomplete="email"/>
 
 <div class="captcha-wrap">
-<div class="cf-turnstile"
-     id="captchaLogin"
-     data-sitekey="0x4AAAAAAClwUY3L9pkup7mR">
-</div>
+<div class="cf-turnstile" id="captchaLogin"></div>
 </div>
 
 <button class="btn" type="button" id="loginSendBtn" data-i18n="page.get_code"></button>
@@ -305,10 +310,7 @@ input {
   </label>
 </div>
 <div class="captcha-wrap">
-<div class="cf-turnstile"
-     id="captchaRegister"
-     data-sitekey="0x4AAAAAAClwUY3L9pkup7mR">
-</div>
+<div class="cf-turnstile" id="captchaRegister"></div>
 </div>
 <button class="btn" type="button" id="regSendBtn" data-i18n="page.get_code"></button>
 
@@ -371,12 +373,23 @@ input {
 
   <script>
   const t = (key, params = {}) => window.tpI18n.t(key, params);  
+  function getCurrentLang() {
+  return window.tpI18n?.currentLang || localStorage.getItem("tp_lang") || "ru";
+}
     // ====== state ======
-    let mode = "login"; // login | register
-    let currentEmail = "";
-    let currentNick = "";
-    let resendTimer = null;
-    let resendLeft = 0;
+let mode = "login"; // login | register
+let currentEmail = "";
+let currentNick = "";
+let resendTimer = null;
+let resendLeft = 0;
+
+let appConfig = {
+  turnstileEnabled: false,
+  turnstileSiteKey: ""
+};
+
+let loginTurnstileWidgetId = null;
+let registerTurnstileWidgetId = null;
 
     // ====== elements ======
     const tabLogin = document.getElementById("tabLogin");
@@ -524,37 +537,46 @@ regNick.addEventListener("input", () => {
 
     // ====== API ======
 async function requestCode(email, mode, username) {
+  const body = {
+    email,
+    mode,
+    lang: getCurrentLang()
+  };
 
-  const body = { email, mode };
-
-let tsToken = null;
-
-try {
+  let captchaWidgetId = null;
+  let tsToken = null;
 
   if (mode === "login") {
-    tsToken = window.turnstile?.getResponse(
-      document.getElementById("captchaLogin")
-    );
+    captchaWidgetId = loginTurnstileWidgetId;
   } else {
-    tsToken = window.turnstile?.getResponse(
-      document.getElementById("captchaRegister")
-    );
+    captchaWidgetId = registerTurnstileWidgetId;
+    body.username = username;
   }
 
-} catch(e) {
-  tsToken = null;
-}
+  try {
+    if (appConfig.turnstileEnabled && window.turnstile && captchaWidgetId !== null) {
+      tsToken = window.turnstile.getResponse(captchaWidgetId);
+    }
+  } catch (e) {
+    tsToken = null;
+  }
 
-// если капча не работает (локально) — просто пропускаем
-if (!tsToken) {
-  tsToken = "dev";
-}
+  const isLocalDev =
+    location.hostname === "localhost" ||
+    location.hostname === "127.0.0.1";
 
-body["cf-turnstile-response"] = tsToken;
+  if (!tsToken && isLocalDev) {
+    tsToken = "dev";
+  }
 
-if (mode === "register") {
-  body.username = username;
-}
+  if (appConfig.turnstileEnabled && !tsToken) {
+    return {
+      success: false,
+      message: t("page.errors.complete_captcha")
+    };
+  }
+
+  body["cf-turnstile-response"] = tsToken || "";
 
   const r = await fetch("/auth/request-code", {
     method: "POST",
@@ -564,20 +586,11 @@ if (mode === "register") {
 
   const data = await r.json();
 
-  // если ошибка — сбросить капчу
-if (!data.success) {
-
-  if (mode === "login") {
-    window.turnstile.reset(
-      document.getElementById("captchaLogin")
-    );
-  } else {
-    window.turnstile.reset(
-      document.getElementById("captchaRegister")
-    );
+  if (!data.success && window.turnstile && captchaWidgetId !== null) {
+    try {
+      window.turnstile.reset(captchaWidgetId);
+    } catch (e) {}
   }
-
-}
 
   return data;
 }
@@ -599,6 +612,75 @@ if (!data.success) {
       return left + "@" + b;
     }
 
+    async function loadAppConfig() {
+  try {
+    const res = await fetch("/api/public/app-config", { cache: "no-cache" });
+    const data = await res.json();
+
+    if (!data?.success) {
+      return {
+        turnstileEnabled: false,
+        turnstileSiteKey: ""
+      };
+    }
+
+    return data.config || {
+      turnstileEnabled: false,
+      turnstileSiteKey: ""
+    };
+  } catch (e) {
+    return {
+      turnstileEnabled: false,
+      turnstileSiteKey: ""
+    };
+  }
+}
+
+function waitForTurnstile(timeoutMs = 7000) {
+  return new Promise((resolve, reject) => {
+    const startedAt = Date.now();
+
+    function check() {
+      if (window.turnstile) {
+        resolve(window.turnstile);
+        return;
+      }
+
+      if (Date.now() - startedAt >= timeoutMs) {
+        reject(new Error("Turnstile not loaded"));
+        return;
+      }
+
+      setTimeout(check, 50);
+    }
+
+    check();
+  });
+}
+
+async function initTurnstileWidgets() {
+  if (!appConfig.turnstileEnabled || !appConfig.turnstileSiteKey) {
+    return;
+  }
+
+  const turnstile = await waitForTurnstile();
+
+  const loginEl = document.getElementById("captchaLogin");
+  const registerEl = document.getElementById("captchaRegister");
+
+  if (loginEl && loginTurnstileWidgetId === null) {
+    loginTurnstileWidgetId = turnstile.render(loginEl, {
+      sitekey: appConfig.turnstileSiteKey
+    });
+  }
+
+  if (registerEl && registerTurnstileWidgetId === null) {
+    registerTurnstileWidgetId = turnstile.render(registerEl, {
+      sitekey: appConfig.turnstileSiteKey
+    });
+  }
+}
+
     // ====== actions ======
 loginSendBtn.addEventListener("click", async () => {
   const email = String(loginEmail.value || "").trim().toLowerCase();
@@ -606,7 +688,7 @@ loginSendBtn.addEventListener("click", async () => {
   if (!email) {
     await tpAlert(t("page.errors.enter_email"), {
       type: "error",
-      title: "Ошибка"
+      title: t("page.errors.title")
     });
     return;
   }
@@ -619,19 +701,18 @@ loginSendBtn.addEventListener("click", async () => {
     if (!d.success) {
       await tpAlert(d.message || t("page.errors.generic"), {
         type: "error",
-        title: "Ошибка"
+        title: t("page.errors.title")
       });
       return;
     }
 
     currentEmail = email;
     currentNick = "";
-    modalHint.textContent = "Мы отправили письмо на " + maskEmail(email);
     openModal(maskEmail(email));
   } catch {
-    await tpAlert("Ошибка. Попробуйте снова.", {
+    await tpAlert(t("page.errors.try_again"), {
       type: "error",
-      title: "Ошибка"
+      title: t("page.errors.title")
     });
   } finally {
     loginSendBtn.disabled = false;
@@ -644,7 +725,7 @@ regSendBtn.addEventListener("click", async () => {
   if (!acceptTerms.checked) {
     await tpAlert(t("page.errors.accept_terms"), {
       type: "error",
-      title: "Ошибка"
+      title: t("page.errors.title")
     });
     return;
   }
@@ -655,7 +736,7 @@ regSendBtn.addEventListener("click", async () => {
   if (!nick) {
     await tpAlert(t("page.errors.enter_nickname"), {
       type: "error",
-      title: "Ошибка"
+      title: t("page.errors.title")
     });
     return;
   }
@@ -663,7 +744,7 @@ regSendBtn.addEventListener("click", async () => {
   if (!email) {
     await tpAlert(t("page.errors.enter_email"), {
       type: "error",
-      title: "Ошибка"
+      title: t("page.errors.title")
     });
     return;
   }
@@ -671,7 +752,7 @@ regSendBtn.addEventListener("click", async () => {
   if (!/^[A-Za-z0-9_.]{1,20}$/.test(nick)) {
     await tpAlert(t("page.errors.nickname_invalid"), {
       type: "error",
-      title: "Ошибка"
+      title: t("page.errors.title")
     });
     return;
   }
@@ -679,7 +760,7 @@ regSendBtn.addEventListener("click", async () => {
   if (/^[_.]+$/.test(nick)) {
     await tpAlert(t("page.errors.nickname_letters_or_digits"), {
       type: "error",
-      title: "Ошибка"
+      title: t("page.errors.title")
     });
     return;
   }
@@ -695,7 +776,7 @@ regSendBtn.addEventListener("click", async () => {
   if (reserved.includes(nick.toLowerCase())) {
     await tpAlert(t("page.errors.nickname_reserved"), {
       type: "error",
-      title: "Ошибка"
+      title: t("page.errors.title")
     });
     return;
   }
@@ -708,7 +789,7 @@ regSendBtn.addEventListener("click", async () => {
     if (!d.success) {
       await tpAlert(d.message || t("page.errors.generic"), {
         type: "error",
-        title: "Ошибка"
+        title: t("page.errors.title")
       });
       return;
     }
@@ -719,7 +800,7 @@ regSendBtn.addEventListener("click", async () => {
   } catch {
     await tpAlert(t("page.errors.try_again"), {
       type: "error",
-      title: "Ошибка"
+      title: t("page.errors.title")
     });
   } finally {
     regSendBtn.disabled = false;
@@ -743,8 +824,9 @@ regSendBtn.addEventListener("click", async () => {
       }
     });
 
-    verifyBtn.addEventListener("click", async () => {
+verifyBtn.addEventListener("click", async () => {
   const code = getCodeValue();
+
   if (!/^\d{6}$/.test(code)) {
     showModalError(t("page.errors.enter_code_6"));
     return;
@@ -759,7 +841,8 @@ regSendBtn.addEventListener("click", async () => {
       body: JSON.stringify({
         email: currentEmail,
         mode,
-        code
+        code,
+        lang: getCurrentLang()
       })
     });
 
@@ -770,27 +853,33 @@ regSendBtn.addEventListener("click", async () => {
       return;
     }
 
-    // 🔥 ВАЖНО: сохраняем ВСЁ ЯВНО
     localStorage.setItem("tp_token", d.token);
-    localStorage.setItem("userName", d.user.username);
-    localStorage.setItem("userEmail", d.user.email);
+    localStorage.setItem("tp_user_email", d.user.email || "");
 
-    if (d.user.avatarUrl) {
-      localStorage.setItem("avatarUrl", d.user.avatarUrl);
-      localStorage.removeItem("avatarDataUrl");
+    const avatar =
+      d.user.avatarUrl ||
+      d.user.avatarDataUrl ||
+      "";
+
+    if (avatar) {
+      localStorage.setItem("tp_avatar", avatar);
+    } else {
+      localStorage.removeItem("tp_avatar");
     }
 
-    if (d.user.avatarDataUrl) {
-      localStorage.setItem("avatarDataUrl", d.user.avatarDataUrl);
-      localStorage.removeItem("avatarUrl");
-    }
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("avatarUrl");
+    localStorage.removeItem("avatarDataUrl");
 
-    // 🔥 ДЛЯ ОТЛАДКИ (временно)
-    console.log("TOKEN SAVED:", d.token);
+    window.dispatchEvent(
+      new CustomEvent("tp:profile-updated", {
+        detail: { user: d.user }
+      })
+    );
 
     closeModal();
-location.replace("/");
-
+    location.replace("/");
   } catch (err) {
     console.error(err);
     showModalError(t("page.errors.connection"));
@@ -805,6 +894,15 @@ location.replace("/");
         verifyBtn.click();
       }
     });
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    await window.tpI18n.load(getCurrentLang());
+    appConfig = await loadAppConfig();
+    await initTurnstileWidgets();
+  } finally {
+    markPageReady();
+  }
+});
   </script>
 </body>
 </html>

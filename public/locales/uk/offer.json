@@ -1,0 +1,86 @@
+{
+  "title": "Пропозиція — TyPlace",
+  "loading": "Завантаження…",
+  "copyOfferId": "Натисніть, щоб скопіювати ID",
+  "common": {
+    "back": "Назад"
+  },
+  "buttons": {
+    "buy": "Купити",
+    "writeSeller": "Написати продавцю",
+    "edit": "Редагувати",
+    "creatingOrder": "Створення замовлення..."
+  },
+  "tools": {
+    "share": "Поділитися",
+    "shareDone": "Посилання скопійовано",
+    "shareFail": "Не вдалося поділитися",
+    "report": "Поскаржитися",
+    "reportLogin": "Спочатку увійдіть в акаунт"
+  },
+  "sections": {
+    "description": "Опис"
+  },
+  "expand": {
+    "showFull": "Показати повністю"
+  },
+  "alerts": {
+    "offerNotFound": "Пропозицію не знайдено",
+    "orderCreateError": "Помилка створення замовлення",
+    "chatOpenError": "Не вдалося відкрити чат"
+  },
+  "status": {
+    "deleted": "Пропозицію видалено",
+    "sold": "Товар продано",
+    "unavailable": "Тимчасово недоступно"
+  },
+  "reviews": {
+    "one": "відгук",
+    "few": "відгуки",
+    "many": "відгуків"
+  },
+  "seller": {
+    "noReviews": "Немає відгуків",
+    "onSite": {
+      "lessMinute": "На TyPlace менше хвилини",
+      "minutes": "На TyPlace вже {{count}} {{word}}",
+      "hours": "На TyPlace вже {{count}} {{word}}",
+      "days": "На TyPlace вже {{count}} {{word}}",
+      "weeks": "На TyPlace вже {{count}} {{word}}",
+      "months": "На TyPlace вже {{count}} {{word}}",
+      "years": "На TyPlace вже {{count}} {{word}}"
+    },
+    "words": {
+      "minute": {
+        "one": "хвилину",
+        "few": "хвилини",
+        "many": "хвилин"
+      },
+      "hour": {
+        "one": "годину",
+        "few": "години",
+        "many": "годин"
+      },
+      "day": {
+        "one": "день",
+        "few": "дні",
+        "many": "днів"
+      },
+      "week": {
+        "one": "тиждень",
+        "few": "тижні",
+        "many": "тижнів"
+      },
+      "month": {
+        "one": "місяць",
+        "few": "місяці",
+        "many": "місяців"
+      },
+      "year": {
+        "one": "рік",
+        "few": "роки",
+        "many": "років"
+      }
+    }
+  }
+}

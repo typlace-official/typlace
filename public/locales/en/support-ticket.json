@@ -1,0 +1,51 @@
+{
+  "title": "Ticket — TyPlace",
+  "nav": {
+    "adminBack": "Support panel",
+    "historyBack": "Ticket history"
+  },
+  "messagePlaceholder": "Message",
+  "supportName": "TyPlace Support",
+  "ticketLabel": "Ticket",
+  "fileName": "photo.{{ext}}",
+  "status": {
+    "waiting": "Waiting for reply",
+    "in_progress": "In progress",
+    "resolved": "Resolved"
+  },
+  "sidebar": {
+    "status": "Status",
+    "created": "Created",
+    "details": "Ticket details",
+    "category": "Category",
+    "subject": "Subject",
+    "orderId": "Order number",
+    "userId": "User ID",
+    "offerId": "Offer ID",
+    "priority": "Priority",
+    "assigned": "Assigned to"
+  },
+  "priority": {
+    "high": "High"
+  },
+  "actions": {
+    "assign": "Take ticket",
+    "resolve": "Mark as resolved",
+    "close": "Close ticket",
+    "reopen": "Reopen ticket",
+    "backToList": "Back to ticket list"
+  },
+  "confirm": {
+    "close": "Close this ticket?",
+    "reopen": "Reopen this ticket?"
+  },
+  "errors": {
+    "loadFailed": "Loading error",
+    "messageTooLong": "Message is too long",
+    "sendFailed": "Error",
+    "assignFailed": "Failed to take the ticket",
+    "closeFailed": "Failed to close the ticket",
+    "reopenFailed": "Failed to reopen the ticket",
+    "fileTooLarge": "Maximum file size is 5MB"
+  }
+}

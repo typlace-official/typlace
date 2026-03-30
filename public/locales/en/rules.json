@@ -1,112 +1,91 @@
 {
   "title": "Platform Rules",
-
-  "intro": "These Rules supplement the TyPlace Terms of Use and establish the main requirements for user conduct, listing placement, transactions, and the use of platform features. The list of violations and possible measures is not exhaustive.",
-
+  "intro": "These Rules supplement the TyPlace User Agreement and establish the main requirements for user conduct, listing placement, transactions, and the use of platform functions. Under the platform’s launch model, the buyer pays only for a specific order, the amount related to the transaction is held within that transaction until completion, refund, or dispute resolution, and after the transaction is completed the seller becomes eligible for payout. The list of violations and possible measures is not exhaustive.",
   "labels": {
     "violation": "Violation",
     "measure": "Possible measures"
   },
-
   "section1": {
     "title": "1. General Rules of Conduct",
-
     "rule1": {
-      "title": "1.1. Circumventing the platform and moving transactions outside TyPlace",
-      "violation": "It is prohibited to exchange contact details, encourage moving to third-party messengers, move payment, order fulfillment, dispute discussion, or other essential transaction terms outside TyPlace where this is used to bypass the internal balance, safe transaction mechanism, fees, support, or the recording of agreements on the platform.",
-      "measure": "The platform may remove messages, restrict account features, cancel the transaction, restrict withdrawals, temporarily suspend the account, or apply a permanent ban in case of repeated, serious, or intentional violations."
+      "title": "1.1. Circumventing the platform and moving a transaction outside TyPlace",
+      "violation": "It is prohibited to exchange contact details, encourage moving to third-party messengers, transfer payment, perform an order, discuss a dispute, or agree on material transaction terms outside TyPlace if this is used to bypass the payment procedure for a specific transaction, the safe transaction mechanism, the platform fee, support, or the recording of agreements on the platform.",
+      "measure": "The platform may delete messages, restrict account functions, cancel an order, limit seller payout availability, temporarily block an account, or impose a permanent block in the event of repeated, serious, or intentional violations."
     },
-
     "rule2": {
-      "title": "1.2. Abuse of reviews, disputes, and support requests",
-      "violation": "It is prohibited to manipulate reviews, pressure the other party, blackmail with a review, create fake transactions for reputation purposes, submit false complaints, or abuse the dispute, appeal, or support request systems.",
-      "measure": "The platform may remove a review, close a request without satisfaction, restrict access to review and support features, and apply a warning, temporary suspension, or permanent ban."
+      "title": "1.2. Abuse of reviews, disputes, and requests",
+      "violation": "It is prohibited to manipulate reviews, pressure the other party, blackmail with a review, create fake transactions for reputation purposes, submit false complaints, or abuse the system of disputes, appeals, and support requests.",
+      "measure": "The platform may delete a review, close a request without satisfaction, restrict access to review and request functions, and also issue a warning, a temporary block, or a permanent block."
     },
-
     "rule3": {
       "title": "1.3. Toxic behavior, spam, and abuse of chats",
-      "violation": "Spam, flooding, threats, insults, harassment, hate speech, intrusive advertising, fraudulent messages, manipulation, and any other conduct that disrupts normal communication on the platform are prohibited.",
-      "measure": "The platform may remove content, restrict messaging, limit certain features, issue a warning, or apply a temporary or permanent account ban."
+      "violation": "Spam, flooding, threats, insults, harassment, hate speech, intrusive advertising, fraudulent messages, manipulation, and any other behavior that disrupts normal communication on the platform are prohibited.",
+      "measure": "The platform may remove content, restrict message sending, restrict certain functions, issue a warning, or impose a temporary or permanent account block."
     },
-
     "rule4": {
-      "title": "1.4. Disclosure of other people's information and abuse of access",
-      "violation": "It is prohibited to publish, transfer, or use personal, payment, confidential, or other sensitive information about users or third parties without sufficient grounds, and to use such information to harm others.",
-      "measure": "The platform may remove content, restrict features, block the account, limit operations, and apply other protective measures depending on the severity of the violation."
+      "title": "1.4. Disclosure of others’ information and abuse of access",
+      "violation": "It is prohibited to publish, transfer, or use personal, payment-related, confidential, or other sensitive information about users and third parties without sufficient grounds, or to use such information to the detriment of others.",
+      "measure": "The platform may remove content, restrict functions, block an account, restrict transaction-related actions, and apply other protective measures depending on the seriousness of the violation."
     }
   },
-
   "section2": {
     "title": "2. Accounts, Listings, and Seller Conduct",
-
     "rule1": {
       "title": "2.1. Sale, transfer, and use of TyPlace accounts",
-      "violation": "It is prohibited to buy, sell, transfer, rent out, share TyPlace accounts, or create multiple accounts to circumvent bans, limits, restrictions, or platform rules.",
-      "measure": "The platform may restrict related accounts, block one or more accounts, limit operations, and apply other security measures."
+      "violation": "The purchase, sale, transfer, rental, or shared use of TyPlace accounts is prohibited, as is creating multiple accounts to bypass blocks, limits, restrictions, or platform rules.",
+      "measure": "The platform may restrict related accounts, block one or more accounts, restrict operations, and apply other security measures."
     },
-
     "rule2": {
-      "title": "2.2. False and misleading listings",
-      "violation": "It is prohibited to post listings with false descriptions, hidden conditions, inaccurate prices, false availability of goods or services, or other information capable of misleading a buyer.",
-      "measure": "The platform may hide, deactivate, or remove the listing, restrict the posting of new listings, cancel the related transaction, and apply a warning, temporary suspension, or permanent ban."
+      "title": "2.2. Inaccurate and misleading listings",
+      "violation": "It is prohibited to post listings with false descriptions, hidden conditions, inaccurate pricing, false availability of goods or services, or other information capable of misleading a buyer.",
+      "measure": "The platform may hide, deactivate, or remove a listing, restrict the posting of new listings, cancel the related transaction, issue a warning, or impose a temporary or permanent block."
     },
-
     "rule3": {
-      "title": "2.3. Mass duplication and catalog spam",
-      "violation": "Meaningless duplication of listings, spam listings, artificial catalog cluttering, and abuse of identical or almost identical offers without a reasonable need are prohibited.",
-      "measure": "The platform may remove or deactivate listings, restrict the publication of new listings, limit seller functions, and apply other measures depending on the scale of the violation."
+      "title": "2.3. Mass duplication and catalog cluttering",
+      "violation": "Meaningless duplication of listings, spam listings, artificial catalog cluttering, and abuse of identical or nearly identical offers without reasonable necessity are prohibited.",
+      "measure": "The platform may remove or deactivate listings, restrict the publication of new listings, restrict seller functions, and apply other measures depending on the scale of the violation."
     },
-
     "rule4": {
-      "title": "2.4. Refusal to participate in good faith in a transaction or dispute",
-      "violation": "A seller must not, without sufficient grounds, avoid fulfilling a paid order, ignore important messages related to an active transaction, refuse to participate in a dispute in good faith, or provide knowingly false information when an order is being reviewed.",
-      "measure": "The platform may issue a refund for the order, restrict the seller's features, restrict withdrawals, hide listings, and temporarily or permanently limit the account."
+      "title": "2.4. Refusal to participate in good faith in a transaction and dispute",
+      "violation": "A seller may not, without sufficient grounds, evade fulfilling a paid order, ignore significant messages regarding an active transaction, refuse to participate in a dispute in good faith, or provide knowingly false information during the review of an order.",
+      "measure": "The platform may issue a refund for the order, restrict the use of seller functions, limit seller payout availability, hide listings, and temporarily or permanently restrict the account."
     }
   },
-
   "section3": {
     "title": "3. Prohibited Goods, Services, and Categories",
-
     "rule1": {
       "title": "3.1. Illegal, stolen, and fraudulent digital items",
-      "violation": "It is prohibited to sell, buy, post, or transfer digital goods, accounts, access credentials, currency, items, services, or other objects obtained unlawfully or connected to hacking, deception, theft, fraud, or unauthorized access.",
-      "measure": "The platform may remove content, cancel or restrict related operations, restrict withdrawals, block the account, and apply other security measures."
+      "violation": "The sale, purchase, posting, or transfer of digital goods, accounts, access credentials, currency, items, services, and other objects obtained unlawfully or connected with hacking, deception, theft, fraud, or unauthorized access is prohibited.",
+      "measure": "The platform may remove content, cancel or restrict related operations, limit seller payout availability, block an account, and apply other security measures."
     },
-
     "rule2": {
       "title": "3.2. Hacking, phishing, carding, malware, and similar practices",
-      "violation": "Offers related to hacking, phishing, carding, malware, security bypass, exploit services, unauthorized access, or facilitation of such activities are prohibited.",
-      "measure": "The platform may immediately remove the relevant content, restrict the account, limit operations, and apply a permanent ban without prior warning."
+      "violation": "Offers related to hacking, phishing, carding, malicious software, bypassing protection, exploit services, obtaining unauthorized access, or facilitating such actions are prohibited.",
+      "measure": "The platform may immediately remove the relevant content, restrict the account, restrict operations, and impose a permanent block without prior warning."
     },
-
     "rule3": {
       "title": "3.3. Personal data, documents, and confidential information",
-      "violation": "It is prohibited to sell, distribute, exchange, or publish personal data, documents, payment information, databases, banking details, or other confidential information where this violates third-party rights, platform rules, or security requirements.",
-      "measure": "The platform may remove content, restrict functions, block the account, and take other measures necessary to protect users and the platform."
+      "violation": "The sale, distribution, exchange, or publication of personal data, documents, payment information, databases, details, and other confidential information is prohibited if it violates third-party rights, platform rules, or security requirements.",
+      "measure": "The platform may remove content, restrict functions, block an account, and apply other measures necessary to protect users and the platform."
     },
-
     "rule4": {
       "title": "3.4. Other unacceptable content and offers",
-      "violation": "Erotic or pornographic offers, dangerous or unacceptable digital services, and any other goods, services, or materials that the platform considers incompatible with the safe and lawful operation of the service are prohibited.",
-      "measure": "The platform may remove content, deactivate listings, restrict account features, and apply temporary or permanent bans."
+      "violation": "Erotic or pornographic offers, dangerous or unacceptable digital services, and other goods, services, and materials that the platform considers incompatible with the safe and lawful operation of the service are prohibited.",
+      "measure": "The platform may remove content, deactivate listings, restrict account functions, and impose a temporary or permanent block."
     }
   },
-
   "section4": {
     "title": "4. Consequences of Violations and Special Cases",
-
     "rule1": {
       "title": "4.1. Seller actions causing harm to the buyer",
-      "violation": "If, due to the seller's actions or inaction, the buyer receives a block, restriction, loss of a digital item, loss of access, or another significant negative outcome within the subject matter of the transaction, the platform may take this into account when reviewing a dispute or request.",
-      "measure": "Depending on the circumstances, the platform may issue a full refund or another refund permitted by the platform's internal logic, restrict the seller's functions, hide the seller's listings, restrict withdrawals, and apply other measures."
+      "violation": "If, due to the seller’s actions or inaction, the buyer receives a block, restriction, loss of a digital object, loss of access, or another significant negative result within the subject of the transaction, the platform may take this into account when reviewing a dispute or request.",
+      "measure": "Depending on the circumstances, the platform may issue a full or partial refund under the platform rules, restrict seller functions, hide the seller’s listings, limit seller payout availability, and apply other measures."
     },
-
     "rule2": {
-      "title": "4.2. Individual assessment of the severity of a violation",
-      "violation": "The assessment of a violation depends on the nature of the user's actions, the user's behavior history, the level of risk to the platform, the amount of possible harm, and whether the violation is repeated or intentional.",
-      "measure": "The platform may apply measures individually, including a warning, content removal, feature restrictions, transaction cancellation, balance and withdrawal restrictions, temporary suspension, or permanent account ban."
+      "title": "4.2. Individual assessment of the seriousness of a violation",
+      "violation": "The assessment of a violation depends on the nature of the user’s actions, the user’s behavior history, the degree of risk to the platform, the amount of possible damage, and the existence of repeated or intentional violations.",
+      "measure": "The platform may apply measures individually, including a warning, content removal, function restrictions, transaction cancellation, temporary restriction of payout availability, temporary blocking, or permanent blocking of an account."
     }
   },
-
-"footerNote": "Each dispute and each violation is reviewed by the platform individually, taking into account the circumstances of the specific situation."
+  "footerNote": "Each dispute and each violation is reviewed by the platform individually, taking into account the circumstances of the specific situation."
 }

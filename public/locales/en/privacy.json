@@ -1,101 +1,87 @@
 {
   "title": "Privacy Policy",
-
   "meta": {
-    "line1": "Document describing how user data may be processed on the TyPlace platform.",
+    "line1": "Document describing the processing of TyPlace platform user data.",
     "line2": "The current version is published on this page.",
-    "line3": "Data-related contacts:"
+    "line3": "Data-related contact:"
   },
-
-  "intro": "This Privacy Policy describes what data the TyPlace platform may process, for what purposes such processing is carried out, how the data is used, and what rights the user may have.",
-
+  "intro": "This Privacy Policy describes what data the TyPlace platform may process, for what purposes this is done, how the data is used, and what rights the user has.",
   "section1": {
     "title": "1. Who processes the data",
-    "p1": "The data operator within the operation of the TyPlace platform is the person managing the platform. Current contact methods are available on the",
+    "p1": "The data controller for the operation of the TyPlace platform is the person operating the platform. Current contact methods are published on the",
     "link1": "Contacts"
   },
-
   "section2": {
     "title": "2. What data may be processed",
     "l1": "email address;",
-    "l2": "username, user ID, avatar, and other profile data that the user provides or uploads to the platform;",
-    "l3": "technical data, including IP address, device data, browser data, and the date and time of actions performed on the platform;",
+    "l2": "username, user ID, avatar, and other profile data that the user specifies or uploads on the platform;",
+    "l3": "technical data, including IP address, device data, browser data, and the date and time of actions on the platform;",
     "l4": "data related to listings, orders, reviews, support requests, disputes, and actions within the platform;",
-    "l5": "the content of platform chat messages and attachments sent through chat or support;",
-    "l6": "data related to internal balance, operation history, withdrawal requests, top-ups, and other financial actions within the platform;",
-    "l7": "notification-related data, including email notifications and, where connected, Telegram notifications;",
-    "l8": "other data voluntarily provided by the user or generated through the use of the service."
+    "l5": "the content of messages in platform chats and attachments sent through chat or support;",
+    "l6": "data related to payment for a specific transaction, payment status, refund, order cancellation, dispute, and seller payout availability;",
+    "l7": "data related to notifications, including email notifications and, if connected, Telegram notifications;",
+    "l8": "other data that the user voluntarily provides to the platform or that is generated through the use of the service."
   },
-
   "section3": {
-    "title": "3. Purposes of data processing",
-    "l1": "registration, login, and account maintenance;",
-    "l2": "operation of listings, orders, safe transactions, internal balance, and other platform functions;",
-    "l3": "processing of top-ups, deductions, refunds, and withdrawal requests;",
-    "l4": "handling support requests, disputes, and appeals;",
+    "title": "3. For what purposes the data is used",
+    "l1": "registration, login, and maintenance of the user account;",
+    "l2": "operation of listings, orders, the safe transaction mechanism, and other platform functions;",
+    "l3": "confirmation of payment for a specific transaction, handling refunds, cancellations, disputes, and seller payout availability;",
+    "l4": "processing support requests and reviewing disputes and appeals;",
     "l5": "communication with the user regarding the account, orders, security, and platform operation;",
-    "l6": "detection of fraud, abuse, suspicious activity, and other risks;",
-    "l7": "security, logging of activity, and technical diagnostics;",
-    "l8": "improving the stability, functionality, and quality of the platform."
+    "l6": "detection of fraud, abuse, suspicious actions, and other risks;",
+    "l7": "security, logging of actions, and technical diagnostics;",
+    "l8": "improvement of the stability, functionality, and quality of the platform."
   },
-
   "section4": {
-    "title": "4. Legal grounds for processing",
+    "title": "4. Legal grounds for data processing",
     "p1": "The platform may process user data on the following grounds:",
-    "l1": "the necessity to perform the Terms of Use and provide platform functionality;",
-    "l2": "the legitimate interest of the platform in ensuring security, stability, and protection of the service against abuse;",
-    "l3": "the user's consent, where such consent is required under applicable rules or the logic of the service;",
-    "l4": "the necessity to comply with mandatory requirements of applicable law."
+    "l1": "the need to perform the User Agreement and provide platform functions;",
+    "l2": "the legitimate interest of the platform in ensuring security, stability, and protection of the service from abuse;",
+    "l3": "the user’s consent, where required under applicable rules or the logic of the service;",
+    "l4": "the need to comply with mandatory requirements of applicable law."
   },
-
   "section5": {
     "title": "5. Transfer of data to third parties",
-    "p1": "The platform may transfer data to third parties only to the extent necessary for the operation of the service and the relevant purposes.",
-    "l1": "payment, infrastructure, and technical providers;",
-    "l2": "hosting providers, email services, security tools, analytics tools, and other technical services;",
+    "p1": "The platform may transfer data to third parties only to the extent necessary for the operation of the service and the achievement of the relevant purposes.",
+    "l1": "payment, infrastructure, and technical providers, including services involved in confirming payment for a specific transaction, refund processing, and payout availability processing;",
+    "l2": "hosting providers and providers of mail, security, analytics, and other technical services;",
     "l3": "services related to security, anti-fraud, logging, and abuse prevention;",
-    "l4": "public authorities, rights holders, or other persons where such transfer is required on mandatory legal grounds."
+    "l4": "government authorities, rights holders, or other persons, if such transfer is required on mandatory legal grounds."
   },
-
   "section6": {
     "title": "6. International nature of processing",
-    "p1": "The platform and the technical services it uses may involve data processing in different countries. The user understands that some of the technical infrastructure, providers, and communication channels may be located outside the user's country."
+    "p1": "The platform and the technical services it uses may involve data processing in different countries. The user understands that part of the technical infrastructure, providers, and communication channels may be located outside the user’s country."
   },
-
   "section7": {
     "title": "7. Data retention period",
-    "p1": "Data may be retained for the duration of the user's account, for the period necessary for the operation of platform functions, dispute handling, support processing, abuse prevention, and for any other period reasonably necessary to perform the platform's obligations and protect its legitimate interests."
+    "p1": "Data may be retained for the duration of the user account, for the period necessary for the operation of platform functions, dispute review, request handling, abuse prevention, and for any other period reasonably necessary to fulfill the platform’s obligations and protect its legitimate interests."
   },
-
   "section8": {
     "title": "8. Security and anti-fraud",
-    "p1": "The platform applies technical and organizational measures to protect data and may also use internal checks, restrictions, activity logs, and automated and manual risk analysis mechanisms aimed at ensuring the security of the service, users, and operations."
+    "p1": "The platform applies technical and organizational measures to protect data and may also use internal checks, restrictions, action logs, and automated and manual risk analysis mechanisms aimed at ensuring the security of the service, its users, and transactions."
   },
-
   "section9": {
     "title": "9. User rights",
     "p1": "Depending on applicable law, the user may have the right to:",
     "l1": "receive information about the processing of their data;",
     "l2": "request correction of inaccurate or outdated data;",
-    "l3": "request deletion of data where such deletion is permitted and does not conflict with mandatory requirements or the platform's legitimate interests;",
-    "l4": "restrict certain processing methods in the cases provided for by applicable law;",
-    "l5": "submit a request regarding data processing through the platform's available communication channels;",
-    "p2": "For data-related questions, requests may be sent to:"
+    "l3": "request deletion of data, where such deletion is allowed and does not conflict with mandatory requirements or the legitimate interests of the platform;",
+    "l4": "restrict certain methods of processing in the cases provided for;",
+    "l5": "send a request regarding data processing through the available communication channels of the platform;",
+    "p2": "For issues related to data, you may contact:"
   },
-
   "section10": {
     "title": "10. Cookies and similar technologies",
-    "p1": "The platform may use cookies and similar technologies. This is described in more detail in the",
+    "p1": "The platform may use cookies and similar technologies. More details are described in the",
     "link": "Cookie Policy"
   },
-
   "section11": {
-    "title": "11. Changes to this policy",
+    "title": "11. Changes to the policy",
     "p1": "The platform may update this Privacy Policy. The current version is published on this page, and continued use of the platform after an update means acceptance of the new version to the extent applicable."
   },
-
   "footer": {
-    "text1": "If you have any questions about this Policy, please use the",
+    "text1": "If you have questions about this Policy, please use the",
     "link1": "Contacts",
     "or": "or",
     "link2": "Help Center"
