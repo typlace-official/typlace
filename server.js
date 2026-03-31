@@ -1,5 +1,5 @@
 // server.js
-require("dotenv").config();
+require("dotenv").config({ path: __dirname + "/.env" });
 
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
