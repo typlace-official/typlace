@@ -221,49 +221,441 @@ const crypto = require("crypto");
 const prisma = require("./lib/prisma");
 
 const app = express();
+
+app.set("trust proxy", 1);
+app.use(express.json({ limit: "5mb" }));
+app.use(express.urlencoded({ extended: true, limit: "5mb" }));
+
 const SITE_LOCK_ENABLED = String(process.env.SITE_LOCK_ENABLED || "").trim() === "true";
 const SITE_LOCK_USER = String(process.env.SITE_LOCK_USER || "").trim();
 const SITE_LOCK_PASS = String(process.env.SITE_LOCK_PASS || "").trim();
 
+const SITE_LOCK_COOKIE_NAME = "tp_preview";
+const SITE_LOCK_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
+
+if (SITE_LOCK_ENABLED && (!SITE_LOCK_USER || !SITE_LOCK_PASS)) {
+  throw new Error("SITE_LOCK_ENABLED=true requires SITE_LOCK_USER and SITE_LOCK_PASS");
+}
+
+function safeEqualStrings(a, b) {
+  const left = Buffer.from(String(a || ""), "utf8");
+  const right = Buffer.from(String(b || ""), "utf8");
+
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(left, right);
+}
+
+function parseCookies(cookieHeader = "") {
+  const result = Object.create(null);
+
+  String(cookieHeader)
+    .split(";")
+    .forEach(part => {
+      const trimmed = part.trim();
+      if (!trimmed) return;
+
+      const eqIndex = trimmed.indexOf("=");
+      const key = eqIndex >= 0 ? trimmed.slice(0, eqIndex).trim() : trimmed;
+      const value = eqIndex >= 0 ? trimmed.slice(eqIndex + 1).trim() : "";
+
+      if (!key) return;
+
+      try {
+        result[key] = decodeURIComponent(value);
+      } catch {
+        result[key] = value;
+      }
+    });
+
+  return result;
+}
+
+function isSecureRequest(req) {
+  if (req.secure) return true;
+
+  const forwardedProto = String(req.headers["x-forwarded-proto"] || "")
+    .split(",")[0]
+    .trim()
+    .toLowerCase();
+
+  return forwardedProto === "https";
+}
+
+function normalizeSiteLockNextPath(value) {
+  const raw = String(value || "").trim();
+
+  if (!raw) return "/";
+
+  if (!raw.startsWith("/")) return "/";
+  if (raw.startsWith("//")) return "/";
+  if (raw.startsWith("/site-lock")) return "/";
+
+  return raw;
+}
+
+function signSiteLockPayload(payload) {
+  return crypto
+    .createHmac("sha256", SITE_LOCK_PASS)
+    .update(payload)
+    .digest("hex");
+}
+
+function createSiteLockCookieValue() {
+  const expiresAt = Date.now() + SITE_LOCK_SESSION_TTL_MS;
+  const payload = `${SITE_LOCK_USER}\t${expiresAt}`;
+  const signature = signSiteLockPayload(payload);
+
+  return Buffer.from(`${payload}\t${signature}`, "utf8").toString("base64url");
+}
+
+function getSiteLockSession(req) {
+  const cookies = parseCookies(req.headers.cookie || "");
+  const rawValue = cookies[SITE_LOCK_COOKIE_NAME];
+
+  if (!rawValue) {
+    return null;
+  }
+
+  let decoded = "";
+  try {
+    decoded = Buffer.from(rawValue, "base64url").toString("utf8");
+  } catch {
+    return null;
+  }
+
+  const parts = decoded.split("\t");
+  if (parts.length !== 3) {
+    return null;
+  }
+
+  const [username, expiresAtRaw, signature] = parts;
+  const expiresAt = Number(expiresAtRaw);
+
+  if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+    return null;
+  }
+
+  const payload = `${username}\t${expiresAt}`;
+  const expectedSignature = signSiteLockPayload(payload);
+
+  if (!safeEqualStrings(signature, expectedSignature)) {
+    return null;
+  }
+
+  if (!safeEqualStrings(username, SITE_LOCK_USER)) {
+    return null;
+  }
+
+  return {
+    username,
+    expiresAt
+  };
+}
+
+function setSiteLockCookie(req, res) {
+  res.cookie(SITE_LOCK_COOKIE_NAME, createSiteLockCookieValue(), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: isSecureRequest(req),
+    maxAge: SITE_LOCK_SESSION_TTL_MS,
+    path: "/"
+  });
+}
+
+function clearSiteLockCookie(req, res) {
+  res.clearCookie(SITE_LOCK_COOKIE_NAME, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: isSecureRequest(req),
+    path: "/"
+  });
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function renderSiteLockPage({ nextPath = "/", errorMessage = "", username = "" } = {}) {
+  const safeNextPath = escapeHtml(normalizeSiteLockNextPath(nextPath));
+  const safeErrorMessage = escapeHtml(errorMessage);
+  const safeUsername = escapeHtml(username);
+
+  return `<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TyPlace Preview</title>
+  <style>
+    :root{
+      --bg:#f6f7f9;
+      --card:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --primary:#1e63d5;
+      --primary-hover:#174eb0;
+      --danger-bg:#fef2f2;
+      --danger-border:#fecaca;
+      --danger-text:#b91c1c;
+    }
+
+    *{box-sizing:border-box}
+
+    html,body{
+      margin:0;
+      min-height:100%;
+      font-family:Inter,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    body{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+
+    .card{
+      width:100%;
+      max-width:420px;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:20px;
+      padding:24px;
+      box-shadow:0 20px 60px rgba(0,0,0,.08);
+    }
+
+    .brand{
+      font-size:34px;
+      font-weight:800;
+      color:var(--primary);
+      margin:0 0 18px;
+    }
+
+    h1{
+      font-size:22px;
+      margin:0 0 8px;
+    }
+
+    .text{
+      color:var(--muted);
+      line-height:1.5;
+      margin:0 0 18px;
+    }
+
+    .error{
+      margin:0 0 16px;
+      padding:12px 14px;
+      border-radius:12px;
+      background:var(--danger-bg);
+      border:1px solid var(--danger-border);
+      color:var(--danger-text);
+      font-size:14px;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-bottom:14px;
+    }
+
+    .label{
+      font-size:14px;
+      font-weight:600;
+    }
+
+    .input{
+      width:100%;
+      padding:12px 14px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      font:inherit;
+      outline:none;
+      background:#fff;
+    }
+
+    .input:focus{
+      border-color:var(--primary);
+      box-shadow:0 0 0 3px rgba(30,99,213,.12);
+    }
+
+    .button{
+      width:100%;
+      border:none;
+      border-radius:12px;
+      padding:13px 16px;
+      font:inherit;
+      font-weight:700;
+      cursor:pointer;
+      background:var(--primary);
+      color:#fff;
+      transition:.15s ease;
+    }
+
+    .button:hover{
+      background:var(--primary-hover);
+    }
+
+    .hint{
+      margin-top:14px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="brand">TyPlace</div>
+    <h1>Доступ к preview</h1>
+    <p class="text">Сайт сейчас закрыт для общего доступа. Введите логин и пароль, чтобы продолжить.</p>
+    ${safeErrorMessage ? `<div class="error">${safeErrorMessage}</div>` : ""}
+    <form method="POST" action="/site-lock/login">
+      <input type="hidden" name="next" value="${safeNextPath}" />
+
+      <div class="field">
+        <label class="label" for="siteLockUsername">Логин</label>
+        <input
+          class="input"
+          id="siteLockUsername"
+          name="username"
+          type="text"
+          value="${safeUsername}"
+          autocomplete="username"
+          autocapitalize="off"
+          autocorrect="off"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label class="label" for="siteLockPassword">Пароль</label>
+        <input
+          class="input"
+          id="siteLockPassword"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          required
+        />
+      </div>
+
+      <button class="button" type="submit">Войти</button>
+    </form>
+
+    <div class="hint">
+      После успешного входа доступ сохранится в cookie и сайт не будет заново показывать системные окна браузера.
+    </div>
+  </main>
+</body>
+</html>`;
+}
+
+function sendSiteLockPage(res, options = {}) {
+  res.setHeader("Cache-Control", "no-store");
+  return res.status(200).send(renderSiteLockPage(options));
+}
+
+function requestWantsHtml(req) {
+  const accept = String(req.headers.accept || "").toLowerCase();
+  const secFetchDest = String(req.headers["sec-fetch-dest"] || "").toLowerCase();
+
+  if (secFetchDest === "document") {
+    return true;
+  }
+
+  if (accept.includes("text/html")) {
+    return true;
+  }
+
+  if (req.path === "/" || /\.html?$/i.test(req.path)) {
+    return true;
+  }
+
+  return false;
+}
+
+app.get("/site-lock", (req, res) => {
+  if (!SITE_LOCK_ENABLED) {
+    return res.redirect(normalizeSiteLockNextPath(req.query.next));
+  }
+
+  if (getSiteLockSession(req)) {
+    return res.redirect(normalizeSiteLockNextPath(req.query.next));
+  }
+
+  return sendSiteLockPage(res, {
+    nextPath: normalizeSiteLockNextPath(req.query.next)
+  });
+});
+
+app.post("/site-lock/login", (req, res) => {
+  if (!SITE_LOCK_ENABLED) {
+    return res.redirect(normalizeSiteLockNextPath(req.body.next));
+  }
+
+  const nextPath = normalizeSiteLockNextPath(req.body.next);
+  const username = String(req.body.username || "").trim();
+  const password = String(req.body.password || "");
+
+  const isValid =
+    safeEqualStrings(username, SITE_LOCK_USER) &&
+    safeEqualStrings(password, SITE_LOCK_PASS);
+
+  if (!isValid) {
+    clearSiteLockCookie(req, res);
+
+    return sendSiteLockPage(res, {
+      nextPath,
+      username,
+      errorMessage: "Неверный логин или пароль."
+    });
+  }
+
+  setSiteLockCookie(req, res);
+  return res.redirect(nextPath);
+});
+
+app.post("/site-lock/logout", (req, res) => {
+  clearSiteLockCookie(req, res);
+  return res.redirect("/site-lock");
+});
+
 if (SITE_LOCK_ENABLED) {
   app.use((req, res, next) => {
-    const publicPaths = [
-      "/favicon.ico"
-    ];
-
-    if (publicPaths.includes(req.path)) {
+    if (req.path === "/favicon.ico" || req.path.startsWith("/site-lock")) {
       return next();
     }
 
-    const auth = String(req.headers.authorization || "");
-
-    if (!auth.startsWith("Basic ")) {
-      res.setHeader("WWW-Authenticate", 'Basic realm="TyPlace Preview"');
-      return res.status(401).send("Authentication required");
+    if (getSiteLockSession(req)) {
+      return next();
     }
 
-    const encoded = auth.slice(6).trim();
+    const nextPath = normalizeSiteLockNextPath(req.originalUrl || req.url || "/");
 
-    let decoded = "";
-    try {
-      decoded = Buffer.from(encoded, "base64").toString("utf8");
-    } catch (e) {
-      res.setHeader("WWW-Authenticate", 'Basic realm="TyPlace Preview"');
-      return res.status(401).send("Invalid authentication");
+    if (requestWantsHtml(req)) {
+      return sendSiteLockPage(res, { nextPath });
     }
 
-    const separatorIndex = decoded.indexOf(":");
-    const username = separatorIndex >= 0 ? decoded.slice(0, separatorIndex) : "";
-    const password = separatorIndex >= 0 ? decoded.slice(separatorIndex + 1) : "";
-
-    if (username !== SITE_LOCK_USER || password !== SITE_LOCK_PASS) {
-      res.setHeader("WWW-Authenticate", 'Basic realm="TyPlace Preview"');
-      return res.status(401).send("Access denied");
-    }
-
-    next();
+    return res.status(401).json({
+      success: false,
+      message: "responses.auth.previewAccessRequired"
+    });
   });
 }
+
 app.use("/uploads", express.static(UPLOADS_DIR));
 const http = require("http");
 const { Server } = require("socket.io");
