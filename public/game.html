@@ -8,901 +8,1139 @@
   <link rel="stylesheet" href="/header.css">
   <link rel="stylesheet" href="/game.css">
   <link rel="stylesheet" href="/footer.css">
-
 </head>
 
 <body>
   <div id="header-container"></div>
 
   <main class="page-content">
-  <div class="page">
+    <div class="page">
+      <div class="container">
 
-    <div class="container">
+        <div class="breadcrumb" id="breadcrumb">
+          <img id="crumbIcon" src="" alt="" class="crumb-icon">
+          <span class="crumb-game" id="crumbGame"></span>
+          <span class="crumb-mode" id="crumbMode"></span>
+        </div>
 
-      <div class="breadcrumb" id="breadcrumb">
-        <img id="crumbIcon" src="" alt="" class="crumb-icon">
-        <span class="crumb-game" id="crumbGame"></span>
-        <span class="crumb-mode" id="crumbMode"></span>
+        <div class="modes-wrap">
+          <div class="modes" id="modes"></div>
+        </div>
+
+        <div class="topbar">
+          <div class="mobile-controls">
+            <button class="sort-chip" id="filterToggle" type="button">
+              <svg class="filter-icon" viewBox="0 0 24 24">
+                <line x1="4" y1="6" x2="20" y2="6"/>
+                <circle cx="9" cy="6" r="2"/>
+                <line x1="4" y1="12" x2="20" y2="12"/>
+                <circle cx="15" cy="12" r="2"/>
+                <line x1="4" y1="18" x2="20" y2="18"/>
+                <circle cx="11" cy="18" r="2"/>
+              </svg>
+              <span data-i18n="common.filters"></span>
+            </button>
+
+            <div class="sort-chip" id="priceSort" role="button" tabindex="0">
+              <span data-i18n="common.price"></span>
+              <span class="state" id="priceState">↕</span>
+            </div>
+
+            <div class="sort-chip" id="stockSort" style="display:none;" role="button" tabindex="0">
+              <span data-i18n="common.amount"></span>
+              <span class="state" id="stockState">↕</span>
+            </div>
+          </div>
+
+          <div class="filters-panel" id="filtersPanel">
+            <div id="extraFilters"></div>
+            <select class="select" id="subcatSelect"></select>
+            <select class="select" id="methodSelect" style="display:none;"></select>
+          </div>
+
+          <div class="mobile-search-row">
+            <div class="search">
+              <input
+                id="searchInput"
+                type="text"
+                data-i18n-placeholder="common.search_by_name">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="7"></circle>
+                  <path d="M20 20l-3.5-3.5"></path>
+                </svg>
+              </span>
+            </div>
+
+            <button
+              class="sell-btn"
+              id="sellBtn"
+              type="button"
+              data-i18n="common.sell">
+            </button>
+          </div>
+
+          <div class="offers-count" id="offersCount"></div>
+        </div>
+
+        <div id="emptyState" class="empty-state">
+          <div class="empty-state-inner">
+            <div class="empty-state-illustration" id="emptyStateIllustration" aria-hidden="true"></div>
+            <h2 id="emptyStateTitle" class="empty-state-title"></h2>
+            <p id="emptyStateText" class="empty-state-text"></p>
+          </div>
+        </div>
+
+        <div id="offersList" class="offers-list"></div>
+
       </div>
-
-<div class="modes-wrap">
-  <div class="modes" id="modes"></div>
-</div>
-
-<div class="topbar">
-
-  <!-- 🔹 1. Кнопка фильтров + сортировка -->
-  <div class="mobile-controls">
-
-<button class="sort-chip" id="filterToggle">
-  <svg class="filter-icon" viewBox="0 0 24 24">
-    <line x1="4" y1="6" x2="20" y2="6"/>
-    <circle cx="9" cy="6" r="2"/>
-    <line x1="4" y1="12" x2="20" y2="12"/>
-    <circle cx="15" cy="12" r="2"/>
-    <line x1="4" y1="18" x2="20" y2="18"/>
-    <circle cx="11" cy="18" r="2"/>
-  </svg>
-  <span data-i18n="common.filters"></span>
-</button>
-
-    <div class="sort-chip" id="priceSort">
-      <span data-i18n="common.price"></span>
-      <span class="state" id="priceState">—</span>
     </div>
+  </main>
 
-    <div class="sort-chip" id="stockSort" style="display:none;">
-      <span data-i18n="common.amount"></span>
-      <span class="state" id="stockState">—</span>
-    </div>
+  <div id="footer-container"></div>
 
-  </div>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/games.list.js"></script>
+  <script src="/header.js"></script>
+  <script src="/i18n.js"></script>
+  <script type="module" src="/games/index.js"></script>
+  <script src="/tp-money.js"></script>
+  <script src="/offer-title.js"></script>
+  <script src="/offer-card.js"></script>
+  <script src="/footer.js"></script>
 
-  <!-- 🔹 2. Скрытая панель фильтров -->
-  <div class="filters-panel" id="filtersPanel">
+  <script>
+  (async () => {
+    const urlParams = new URLSearchParams(location.search);
+    const RESERVED_QUERY_KEYS = new Set([
+      "game",
+      "mode",
+      "lang",
+      "category",
+      "search",
+      "sort"
+    ]);
 
-    <div id="extraFilters"></div>
-    <select class="select" id="subcatSelect"></select>
-<select class="select" id="methodSelect" style="display:none;"></select>
-  </div>
+    const extraFilterValues = {};
 
-  <!-- 🔹 3. Поиск + Продать -->
-  <div class="mobile-search-row">
-
-    <div class="search">
-      <input
-        id="searchInput"
-        type="text"
-        data-i18n-placeholder="common.search_by_name">
-      <span class="icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24">
-          <circle cx="11" cy="11" r="7"></circle>
-          <path d="M20 20l-3.5-3.5"></path>
-        </svg>
-      </span>
-    </div>
-
-    <button
-      class="sell-btn"
-      id="sellBtn"
-      data-i18n="common.sell">
-    </button>
-
-  </div>
-
-  <!-- 🔹 4. Количество объявлений -->
-  <div class="offers-count" id="offersCount"></div>
-
-</div>
-
-      <div id="offersList" class="offers-list"></div>
-
-    </div>
-  </div>
-</main>
-
-<div id="footer-container"></div>
-
-<script src="/socket.io/socket.io.js"></script>
-<script src="/games.list.js"></script>
-<script src="/header.js"></script>
-<script src="/i18n.js"></script>
-<script type="module" src="/games/index.js"></script>
-<script src="/tp-money.js"></script>
-<script src="/offer-title.js"></script>
-<script src="/offer-card.js"></script>
-<script src="/footer.js"></script>
-
-<script>
-(async () => {
-
-const urlParams = new URLSearchParams(location.search);
-const extraFilterValues = {};
-
-function getCurrentLang() {
-  const lang = localStorage.getItem("tp_lang") || "ru";
-  return ["ru", "uk", "en"].includes(lang) ? lang : "ru";
-}
-
-function pageT(key, params = {}) {
-  if (!window.tpI18n?.t) {
-    return key;
-  }
-
-  const candidates = [key, `page.${key}`];
-
-  for (const candidate of candidates) {
-    const value = window.tpI18n.t(candidate, params);
-
-    if (value != null && value !== candidate) {
-      return value;
+    function getCurrentLang() {
+      const lang = localStorage.getItem("tp_lang") || "ru";
+      return ["ru", "uk", "en"].includes(lang) ? lang : "ru";
     }
-  }
 
-  return key;
-}
-
-  urlParams.forEach((value, key) => {
-    if (["game", "mode"].includes(key)) return;
-    extraFilterValues[key] = value;
-  });
-
-  const GAME_ID = urlParams.get("game");
-  const MODE_FROM_URL = urlParams.get("mode");
-
-  async function waitForGameConfig(gameId, requestedMode, timeoutMs = 7000){
-    const startedAt = Date.now();
-
-    while (true) {
-      const game = window.GAMES?.[gameId];
-      const resolvedMode = requestedMode || game?.defaultMode;
-
-      const isReady = !!(
-        game &&
-        game.title &&
-        game.icon &&
-        game.modes &&
-        typeof game.modes === "object" &&
-        Object.keys(game.modes).length > 0 &&
-        resolvedMode &&
-        game.modes[resolvedMode]
-      );
-
-      if (isReady) {
-        return game;
+    function pageT(key, params = {}) {
+      if (!window.tpI18n?.t) {
+        return key;
       }
 
-      if (Date.now() - startedAt >= timeoutMs) {
-        throw new Error(`Game config not ready: ${gameId}/${requestedMode || ""}`);
+      const candidates = [key, `page.${key}`];
+
+      for (const candidate of candidates) {
+        const value = window.tpI18n.t(candidate, params);
+        if (value != null && value !== candidate) {
+          return value;
+        }
       }
 
-      await new Promise(resolve => setTimeout(resolve, 25));
+      return key;
     }
-  }
 
-  if (window.tpI18n?.load) {
-    await window.tpI18n.load(getCurrentLang());
-  }
+    const GAME_ID = urlParams.get("game");
+    const MODE_FROM_URL = urlParams.get("mode");
 
-  if (!GAME_ID) {
-    document.body.innerHTML = `<h2 style="padding:24px">${pageT("errors.gameNotFound")}</h2>`;
-    throw new Error("Game id not found");
-  }
+    urlParams.forEach((value, key) => {
+      if (RESERVED_QUERY_KEYS.has(key)) return;
+      extraFilterValues[key] = value;
+    });
 
-  let GAME;
+    async function waitForGameConfig(gameId, requestedMode, timeoutMs = 7000) {
+      const startedAt = Date.now();
 
-  try {
-    GAME = await waitForGameConfig(GAME_ID, MODE_FROM_URL);
-  } catch (err) {
-    console.error("game page init error:", err);
-    document.body.innerHTML = `<h2 style="padding:24px">${pageT("errors.gameNotFound")}</h2>`;
-    throw err;
-  }
+      while (true) {
+        const game = window.GAMES?.[gameId];
+        const resolvedMode = requestedMode || game?.defaultMode;
 
-    // ===== set breadcrumb game =====
+        const isReady = !!(
+          game &&
+          game.title &&
+          game.icon &&
+          game.modes &&
+          typeof game.modes === "object" &&
+          Object.keys(game.modes).length > 0 &&
+          resolvedMode &&
+          game.modes[resolvedMode]
+        );
+
+        if (isReady) {
+          return game;
+        }
+
+        if (Date.now() - startedAt >= timeoutMs) {
+          throw new Error(`Game config not ready: ${gameId}/${requestedMode || ""}`);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 25));
+      }
+    }
+
+    if (window.tpI18n?.load) {
+      await window.tpI18n.load(getCurrentLang());
+    }
+
+    if (!GAME_ID) {
+      document.body.innerHTML = `<h2 style="padding:24px">${pageT("errors.gameNotFound")}</h2>`;
+      throw new Error("Game id not found");
+    }
+
+    let GAME;
+
+    try {
+      GAME = await waitForGameConfig(GAME_ID, MODE_FROM_URL);
+    } catch (err) {
+      console.error("game page init error:", err);
+      document.body.innerHTML = `<h2 style="padding:24px">${pageT("errors.gameNotFound")}</h2>`;
+      throw err;
+    }
+
     const crumbIcon = document.getElementById("crumbIcon");
     const crumbGame = document.getElementById("crumbGame");
     const crumbMode = document.getElementById("crumbMode");
 
-    crumbIcon.src = GAME.icon || "/img/game-default.png";
-crumbIcon.alt = GAME.title || "";
-crumbGame.textContent = GAME.title || "";
+    const modesEl = document.getElementById("modes");
+    const methodSelect = document.getElementById("methodSelect");
+    const subcatSelect = document.getElementById("subcatSelect");
+    const extraFiltersWrap = document.getElementById("extraFilters");
 
-    // ===== Roblox-only defaults (пока) =====
-    // позже мы вынесем FILTERS в config для каждой игры
-const MODES = Object.entries(GAME.modes || {});
+    const searchInput = document.getElementById("searchInput");
+    const filterToggle = document.getElementById("filterToggle");
+    const filtersPanel = document.getElementById("filtersPanel");
+
+    const priceSort = document.getElementById("priceSort");
+    const priceState = document.getElementById("priceState");
+    const stockSort = document.getElementById("stockSort");
+    const stockState = document.getElementById("stockState");
+
+    let savedMobileScrollY = 0;
+
+function saveMobileScrollPosition() {
+  savedMobileScrollY = window.scrollY || window.pageYOffset || 0;
+}
+
+function restoreMobileScrollPosition() {
+  const y = savedMobileScrollY;
+
+  setTimeout(() => {
+    window.scrollTo(0, y);
+  }, 0);
+
+  requestAnimationFrame(() => {
+    window.scrollTo(0, y);
+  });
+
+  setTimeout(() => {
+    window.scrollTo(0, y);
+  }, 120);
+}
+
+function bindMobileSelectFix(select) {
+  if (!select || select.dataset.mobileScrollFixBound === "1") return;
+  select.dataset.mobileScrollFixBound = "1";
+
+  select.addEventListener("touchstart", saveMobileScrollPosition, { passive: true });
+  select.addEventListener("mousedown", saveMobileScrollPosition);
+  select.addEventListener("focus", saveMobileScrollPosition);
+
+  select.addEventListener("change", () => {
+    if (typeof select.blur === "function") {
+      select.blur();
+    }
+    restoreMobileScrollPosition();
+  });
+
+  select.addEventListener("blur", () => {
+    restoreMobileScrollPosition();
+  });
+}
+
+    const offersCountEl = document.getElementById("offersCount");
+    const offersListEl = document.getElementById("offersList");
+
+    const sellBtn = document.getElementById("sellBtn");
+    const emptyState = document.getElementById("emptyState");
+    const emptyStateIllustration = document.getElementById("emptyStateIllustration");
+    const emptyStateTitle = document.getElementById("emptyStateTitle");
+    const emptyStateText = document.getElementById("emptyStateText");
+    bindMobileSelectFix(subcatSelect);
+bindMobileSelectFix(methodSelect);
+
+    crumbIcon.src = GAME.icon || "/img/game-default.png";
+    crumbIcon.alt = GAME.title || "";
+    crumbGame.textContent = GAME.title || "";
+
+    const MODES = Object.entries(GAME.modes || {});
 
 let currentMode =
-  MODE_FROM_URL ||
-  localStorage.getItem("tp_last_mode_" + GAME_ID) ||
   GAME.defaultMode ||
   (MODES[0] ? MODES[0][0] : null);
-// если mode не был в URL — добавляем его
-if (!MODE_FROM_URL && currentMode) {
+
+if (currentMode) {
+  const url = new URL(window.location);
+  url.searchParams.set("mode", currentMode);
+  url.searchParams.delete("category");
+  url.searchParams.delete("search");
+  url.searchParams.delete("sort");
+  history.replaceState({}, "", url);
+}
+
+    let selectedCategory = urlParams.get("category") || null;
+    let selectedSearch = urlParams.get("search") || "";
+
+    searchInput.value = selectedSearch;
+
+    const sortFromUrl = urlParams.get("sort") || "";
+
+    let sortPrice =
+      sortFromUrl === "price_asc" ? "asc" :
+      sortFromUrl === "price_desc" ? "desc" :
+      null;
+
+    let sortAmount =
+      sortFromUrl === "amount_asc" ? "asc" :
+      sortFromUrl === "amount_desc" ? "desc" :
+      null;
+
+    function updateSortUI() {
+      priceState.textContent =
+        sortPrice === "asc" ? "↑" :
+        sortPrice === "desc" ? "↓" :
+        "↕";
+
+      stockState.textContent =
+        sortAmount === "asc" ? "↑" :
+        sortAmount === "desc" ? "↓" :
+        "↕";
+
+      priceSort.classList.toggle("active", !!sortPrice);
+      stockSort.classList.toggle("active", !!sortAmount);
+    }
+
+    function updateBreadcrumb() {
+      const modeData = GAME.modes?.[currentMode];
+
+      crumbMode.textContent =
+        modeData?.labelKey && window.tpI18n?.t
+          ? window.tpI18n.t(modeData.labelKey)
+          : currentMode;
+
+      document.title = pageT("dynamicTitle", {
+        game: GAME.title || ""
+      });
+    }
+
+    function updateCategoryFilter() {
+      subcatSelect.style.display = "none";
+      subcatSelect.innerHTML = "";
+
+      const modeConfig = GAME.modes?.[currentMode];
+      const categories = modeConfig?.categories;
+
+      if (Array.isArray(categories) && categories.length) {
+        subcatSelect.style.display = "";
+        subcatSelect.innerHTML = `
+          <option value="">
+            ${window.tpI18n?.t("common.category_placeholder")}
+          </option>
+        `;
+
+        categories.forEach(cat => {
+          const key = `${GAME_ID}.categories.${cat}`;
+          const translated = window.tpI18n?.t ? window.tpI18n.t(key) : key;
+          const label = translated === key ? cat : translated;
+
+          subcatSelect.innerHTML += `<option value="${cat}">${label}</option>`;
+        });
+
+        if (selectedCategory) {
+          const hasOption = Array.from(subcatSelect.options).some(option => option.value === selectedCategory);
+          subcatSelect.value = hasOption ? selectedCategory : "";
+          if (!hasOption) {
+            selectedCategory = null;
+          }
+        }
+      } else {
+        selectedCategory = null;
+      }
+    }
+
+    function renderModes() {
+      modesEl.innerHTML = "";
+
+      MODES.forEach(([modeId, modeData]) => {
+        const label =
+          modeData.labelKey && window.tpI18n?.t
+            ? window.tpI18n.t(modeData.labelKey)
+            : modeId;
+
+        const pill = document.createElement("button");
+        pill.type = "button";
+        pill.className = "mode-pill" + (modeId === currentMode ? " active" : "");
+        pill.textContent = label;
+
+pill.onclick = () => {
+  for (const k in extraFilterValues) delete extraFilterValues[k];
+
+  selectedCategory = null;
+  selectedSearch = "";
+  searchInput.value = "";
+
+  sortPrice = null;
+  sortAmount = null;
+  updateSortUI();
+
+  currentMode = modeId;
 
   const url = new URL(window.location);
-
-  url.searchParams.set("mode", currentMode);
-
+  url.searchParams.set("mode", modeId);
+  url.searchParams.delete("category");
+  url.searchParams.delete("search");
+  url.searchParams.delete("sort");
   history.replaceState({}, "", url);
 
+  renderModes();
+  updateBreadcrumb();
+  updateCategoryFilter();
+  renderExtraFilters();
+  loadOffers();
+};
+
+        modesEl.appendChild(pill);
+      });
+    }
+
+    function hasFieldDependency(field) {
+      return Boolean(field?.showIf) || Boolean(field?.showIfValue);
+    }
+
+    function matchesFieldCondition(actualValue, expectedValue) {
+      if (Array.isArray(expectedValue)) {
+        return expectedValue.includes(actualValue);
+      }
+
+      return String(actualValue || "") === String(expectedValue || "");
+    }
+
+    function getCurrentFilterValues() {
+      const modeConfig = GAME.modes?.[currentMode];
+      const values = {};
+
+      if (!modeConfig?.filters) {
+        return values;
+      }
+
+      Object.keys(modeConfig.filters).forEach((key) => {
+        const wrap = extraFiltersWrap.querySelector(`[data-key="${key}"]`);
+        if (!wrap) return;
+
+        const select = wrap.querySelector("select");
+        if (select) {
+          values[key] = select.value || "";
+          return;
+        }
+
+        const singleInput = wrap.querySelector('input:not([data-role="from"]):not([data-role="to"])');
+        if (singleInput) {
+          values[key] = singleInput.value || "";
+          return;
+        }
+
+        const fromInput = wrap.querySelector('[data-role="from"]');
+        const toInput = wrap.querySelector('[data-role="to"]');
+
+        if (fromInput || toInput) {
+          values[key] = {
+            from: fromInput?.value || "",
+            to: toInput?.value || ""
+          };
+        }
+      });
+
+      return values;
+    }
+
+    function syncDependentFilterVisibility() {
+      const modeConfig = GAME.modes?.[currentMode];
+      if (!modeConfig?.filters) return;
+
+      const currentValues = getCurrentFilterValues();
+
+      Object.entries(modeConfig.filters).forEach(([key, field]) => {
+        const wrap = extraFiltersWrap.querySelector(`[data-key="${key}"]`);
+        if (!wrap) return;
+
+        if (!hasFieldDependency(field)) {
+          wrap.style.display = "";
+          return;
+        }
+
+        let visible = false;
+
+        if (field.showIf) {
+          visible = Object.entries(field.showIf).some(([depKey, expectedValue]) => {
+            return matchesFieldCondition(currentValues[depKey], expectedValue);
+          });
+        }
+
+        if (!visible && field.showIfValue) {
+          visible = Object.entries(field.showIfValue).some(([depKey, expectedValue]) => {
+            return matchesFieldCondition(currentValues[depKey], expectedValue);
+          });
+        }
+
+        wrap.style.display = visible ? "" : "none";
+
+        if (!visible) {
+          const select = wrap.querySelector("select");
+          const singleInput = wrap.querySelector('input:not([data-role="from"]):not([data-role="to"])');
+          const fromInput = wrap.querySelector('[data-role="from"]');
+          const toInput = wrap.querySelector('[data-role="to"]');
+
+          if (select) {
+            select.value = "";
+            delete extraFilterValues[key];
+          }
+
+          if (singleInput) {
+            singleInput.value = "";
+            delete extraFilterValues[key];
+          }
+
+          if (fromInput) {
+            fromInput.value = "";
+            delete extraFilterValues[key + "_from"];
+          }
+
+          if (toInput) {
+            toInput.value = "";
+            delete extraFilterValues[key + "_to"];
+          }
+        }
+      });
+    }
+
+    function renderExtraFilters() {
+      const t = (key, fallback = "") =>
+        window.tpI18n?.t ? window.tpI18n.t(key) : (fallback || key || "");
+
+      extraFiltersWrap.innerHTML = "";
+
+      const modeConfig = GAME.modes?.[currentMode];
+      if (!modeConfig?.filters) return;
+
+      Object.entries(modeConfig.filters).forEach(([key, field]) => {
+        const wrap = document.createElement("div");
+        wrap.dataset.key = key;
+
+        const defaultDisplay = hasFieldDependency(field) ? "none" : "";
+
+        if (field.type === "range") {
+          wrap.className = "filter-range";
+          wrap.style.display = defaultDisplay;
+
+          const label = document.createElement("div");
+          label.className = "range-label";
+          label.textContent =
+            field.labelKey ? t(field.labelKey, field.label) : (field.label || "");
+
+          const row = document.createElement("div");
+          row.className = "filter-range-row";
+
+          const from = document.createElement("input");
+          from.type = "number";
+          from.placeholder = window.tpI18n?.t("common.from") || "From";
+          from.className = "select range-input";
+          from.dataset.role = "from";
+          from.value = extraFilterValues[key + "_from"] || "";
+
+          const to = document.createElement("input");
+          to.type = "number";
+          to.placeholder = window.tpI18n?.t("common.to") || "To";
+          to.className = "select range-input";
+          to.dataset.role = "to";
+          to.value = extraFilterValues[key + "_to"] || "";
+
+          from.addEventListener("input", () => {
+            extraFilterValues[key + "_from"] = from.value || null;
+            loadOffers();
+          });
+
+          to.addEventListener("input", () => {
+            extraFilterValues[key + "_to"] = to.value || null;
+            loadOffers();
+          });
+
+          row.appendChild(from);
+          row.appendChild(to);
+
+          wrap.appendChild(label);
+          wrap.appendChild(row);
+          extraFiltersWrap.appendChild(wrap);
+          return;
+        }
+
+        if (field.type === "number") {
+          wrap.style.display = defaultDisplay;
+
+          const input = document.createElement("input");
+          input.type = "number";
+          input.className = "select";
+          input.placeholder =
+            field.labelKey ? t(field.labelKey, field.label) : (field.label || "");
+          input.value = extraFilterValues[key] || "";
+
+          input.addEventListener("input", () => {
+            extraFilterValues[key] = input.value || null;
+            syncDependentFilterVisibility();
+            loadOffers();
+          });
+
+          wrap.appendChild(input);
+          extraFiltersWrap.appendChild(wrap);
+          return;
+        }
+
+        if (field.type === "select") {
+          wrap.style.display = defaultDisplay;
+
+          const select = document.createElement("select");
+          select.className = "select";
+
+          const firstOptionText =
+            field.labelKey ? t(field.labelKey, field.label) : (field.label || "");
+
+          select.innerHTML = `<option value="">${firstOptionText}</option>`;
+
+          field.options.forEach((opt) => {
+            const option = document.createElement("option");
+
+            if (typeof opt === "object") {
+              option.value = opt.value;
+              option.textContent = opt.labelKey
+                ? t(opt.labelKey, opt.label)
+                : (opt.label ?? opt.value);
+            } else {
+              option.value = opt;
+              option.textContent = opt;
+            }
+
+            select.appendChild(option);
+          });
+
+          select.value = extraFilterValues[key] || "";
+          bindMobileSelectFix(select);
+
+          select.addEventListener("change", () => {
+            extraFilterValues[key] = select.value || null;
+            syncDependentFilterVisibility();
+            loadOffers();
+          });
+
+          wrap.appendChild(select);
+          extraFiltersWrap.appendChild(wrap);
+          return;
+        }
+      });
+
+      syncDependentFilterVisibility();
+    }
+
+    async function loadOffers() {
+      const params = new URLSearchParams();
+
+      params.set("game", GAME_ID);
+      params.set("mode", currentMode);
+
+      const currentLang = getCurrentLang();
+      params.set("lang", currentLang);
+
+      Object.entries(extraFilterValues).forEach(([key, value]) => {
+        if (value !== null && value !== "") {
+          params.set(key, value);
+        }
+      });
+
+      if (selectedSearch) {
+        params.set("search", selectedSearch);
+      }
+
+      if (selectedCategory) {
+        params.set("category", selectedCategory);
+      }
+
+      if (sortPrice) {
+        params.set("sort", sortPrice === "asc" ? "price_asc" : "price_desc");
+      }
+
+      if (sortAmount) {
+        params.set("sort", sortAmount === "asc" ? "amount_asc" : "amount_desc");
+      }
+
+      const newUrl = new URL(window.location);
+      newUrl.search = params.toString();
+      history.replaceState({}, "", newUrl);
+
+      const res = await fetch("/api/offers?" + params.toString());
+      const data = await res.json();
+
+      if (!data.success) return;
+
+      renderOffers(data.offers || []);
+      if (window.tpOfferCard?.updatePrices) {
+        window.tpOfferCard.updatePrices();
+      }
+    }
+
+    function normalizeFavoriteId(entry) {
+      if (typeof entry === "string") {
+        const id = entry.trim();
+        return id || null;
+      }
+
+      if (entry && typeof entry === "object") {
+        const id = String(entry.id || "").trim();
+        return id || null;
+      }
+
+      return null;
+    }
+
+    function readFavorites() {
+      try {
+        const raw = JSON.parse(localStorage.getItem("tp_favorites") || "[]");
+        return Array.isArray(raw) ? raw : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function dedupeFavorites(items) {
+      const result = [];
+      const seen = new Set();
+
+      for (const rawItem of items) {
+        const id = normalizeFavoriteId(rawItem);
+        if (!id || seen.has(id)) continue;
+
+        seen.add(id);
+        result.push(id);
+      }
+
+      return result;
+    }
+
+    function getFavorites() {
+      return dedupeFavorites(readFavorites());
+    }
+
+    function saveFavorites(items) {
+      const normalized = dedupeFavorites(items);
+      localStorage.setItem("tp_favorites", JSON.stringify(normalized));
+      return normalized;
+    }
+
+    function isFavorite(id) {
+      const safeId = String(id || "").trim();
+      if (!safeId) return false;
+      return getFavorites().includes(safeId);
+    }
+
+    function toggleFavorite(id) {
+      const safeId = String(id || "").trim();
+      if (!safeId) return false;
+
+      const favs = getFavorites();
+      const exists = favs.includes(safeId);
+
+      const nextFavs = exists
+        ? favs.filter(favId => favId !== safeId)
+        : [...favs, safeId];
+
+      saveFavorites(nextFavs);
+      return !exists;
+    }
+
+    function getPluralForm(n, one, few, many) {
+      const abs = Math.abs(Number(n) || 0);
+      const lastTwo = abs % 100;
+      const last = abs % 10;
+
+      if (lastTwo >= 11 && lastTwo <= 14) return many;
+      if (last === 1) return one;
+      if (last >= 2 && last <= 4) return few;
+      return many;
+    }
+
+    function hasActiveOffersFilters() {
+      const hasSearch = Boolean(String(selectedSearch || "").trim());
+      const hasCategory = Boolean(String(selectedCategory || "").trim());
+
+      const hasExtraFilters = Object.entries(extraFilterValues).some(([key, value]) => {
+        if (RESERVED_QUERY_KEYS.has(key)) return false;
+        return value !== null && value !== undefined && String(value).trim() !== "";
+      });
+
+      return hasSearch || hasCategory || hasExtraFilters;
+    }
+
+    function getOffersWord(count) {
+      const safeCount = Math.max(0, Number(count) || 0);
+      const lang = getCurrentLang();
+
+      if (lang === "en") {
+        return safeCount === 1
+          ? pageT("offersWords.one")
+          : pageT("offersWords.many");
+      }
+
+      return getPluralForm(
+        safeCount,
+        pageT("offersWords.one"),
+        pageT("offersWords.few"),
+        pageT("offersWords.many")
+      );
+    }
+
+    function buildOffersCountText(count) {
+      const safeCount = Math.max(0, Number(count) || 0);
+      const word = getOffersWord(safeCount);
+
+      return hasActiveOffersFilters()
+        ? pageT("offersCount.found", { count: safeCount, word })
+        : pageT("offersCount.total", { count: safeCount, word });
+    }
+
+    function getCatalogEmptySvg() {
+      return `
+        <svg viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg" fill="none">
+          <defs>
+            <linearGradient id="catalogBubbleFill" x1="48" y1="44" x2="208" y2="184" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#ffffff" stop-opacity=".92"/>
+              <stop offset=".48" stop-color="#eef3ff" stop-opacity=".82"/>
+              <stop offset="1" stop-color="#dce8ff" stop-opacity=".68"/>
+            </linearGradient>
+
+            <linearGradient id="catalogBubbleStroke" x1="56" y1="50" x2="204" y2="182" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#5f89f8" stop-opacity=".62"/>
+              <stop offset="1" stop-color="#7ea2ff" stop-opacity=".24"/>
+            </linearGradient>
+
+            <radialGradient id="catalogGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
+              gradientTransform="translate(130 110) rotate(90) scale(84 98)">
+              <stop offset="0" stop-color="#7ea2ff" stop-opacity=".28"/>
+              <stop offset=".62" stop-color="#7ea2ff" stop-opacity=".08"/>
+              <stop offset="1" stop-color="#7ea2ff" stop-opacity="0"/>
+            </radialGradient>
+
+            <filter id="catalogBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="16"/>
+            </filter>
+
+            <filter id="catalogShadow" x="-30%" y="-30%" width="160%" height="180%">
+              <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#6f95ff" flood-opacity=".14"/>
+            </filter>
+          </defs>
+
+          <ellipse cx="130" cy="186" rx="62" ry="14" fill="#dfe7fb" opacity=".72"/>
+          <circle cx="130" cy="112" r="72" fill="url(#catalogGlow)" filter="url(#catalogBlur)"/>
+
+          <g filter="url(#catalogShadow)">
+            <rect x="73" y="44" width="114" height="122" rx="26"
+              fill="url(#catalogBubbleFill)"
+              stroke="url(#catalogBubbleStroke)"
+              stroke-width="3"/>
+            <path d="M102 83h56" stroke="#4f7df3" stroke-width="6" stroke-linecap="round"/>
+            <path d="M102 106h42" stroke="#7d97de" stroke-width="6" stroke-linecap="round" opacity=".9"/>
+            <path d="M102 129h50" stroke="#b6c6f4" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="172" cy="127" r="16" fill="#f7faff" stroke="#dbe7ff" stroke-width="2"/>
+            <path d="M165 127l4.5 4.5 9-10" stroke="#4f7df3" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </g>
+
+          <g opacity=".86">
+            <path d="M199 60v8" stroke="#6f95ff" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M195 64h8" stroke="#6f95ff" stroke-width="3.5" stroke-linecap="round"/>
+          </g>
+
+          <g opacity=".7">
+            <path d="M58 146v6" stroke="#7f9fff" stroke-width="3" stroke-linecap="round"/>
+            <path d="M55 149h6" stroke="#7f9fff" stroke-width="3" stroke-linecap="round"/>
+          </g>
+        </svg>
+      `;
+    }
+
+    function getSearchEmptySvg() {
+      return `
+        <svg viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg" fill="none">
+          <defs>
+            <linearGradient id="searchGlassFill" x1="76" y1="56" x2="176" y2="156" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#ffffff" stop-opacity=".92"/>
+              <stop offset=".5" stop-color="#eef3ff" stop-opacity=".82"/>
+              <stop offset="1" stop-color="#dce8ff" stop-opacity=".68"/>
+            </linearGradient>
+
+            <linearGradient id="searchGlassStroke" x1="84" y1="62" x2="174" y2="152" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#5f89f8" stop-opacity=".62"/>
+              <stop offset="1" stop-color="#7ea2ff" stop-opacity=".24"/>
+            </linearGradient>
+
+            <radialGradient id="searchGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
+              gradientTransform="translate(128 108) rotate(90) scale(84 98)">
+              <stop offset="0" stop-color="#7ea2ff" stop-opacity=".28"/>
+              <stop offset=".62" stop-color="#7ea2ff" stop-opacity=".08"/>
+              <stop offset="1" stop-color="#7ea2ff" stop-opacity="0"/>
+            </radialGradient>
+
+            <filter id="searchBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="16"/>
+            </filter>
+
+            <filter id="searchShadow" x="-30%" y="-30%" width="160%" height="180%">
+              <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#6f95ff" flood-opacity=".14"/>
+            </filter>
+          </defs>
+
+          <ellipse cx="130" cy="186" rx="62" ry="14" fill="#dfe7fb" opacity=".72"/>
+          <circle cx="130" cy="112" r="72" fill="url(#searchGlow)" filter="url(#searchBlur)"/>
+
+          <g filter="url(#searchShadow)">
+            <circle cx="118" cy="102" r="42"
+              fill="url(#searchGlassFill)"
+              stroke="url(#searchGlassStroke)"
+              stroke-width="3"/>
+            <path d="M147 131l26 26"
+              stroke="#6f95ff"
+              stroke-width="8"
+              stroke-linecap="round"/>
+            <path d="M102 102h24" stroke="#4f7df3" stroke-width="6" stroke-linecap="round"/>
+            <path d="M118 86v32" stroke="#b6c6f4" stroke-width="6" stroke-linecap="round" opacity=".75"/>
+          </g>
+
+          <g opacity=".86">
+            <path d="M196 58v8" stroke="#6f95ff" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M192 62h8" stroke="#6f95ff" stroke-width="3.5" stroke-linecap="round"/>
+          </g>
+
+          <g opacity=".7">
+            <path d="M58 146v6" stroke="#7f9fff" stroke-width="3" stroke-linecap="round"/>
+            <path d="M55 149h6" stroke="#7f9fff" stroke-width="3" stroke-linecap="round"/>
+          </g>
+        </svg>
+      `;
+    }
+
+    function updateEmptyState(visible) {
+      if (emptyState) {
+        emptyState.classList.toggle("show", visible);
+      }
+
+      if (offersListEl) {
+        offersListEl.style.display = visible ? "none" : "grid";
+      }
+
+      if (!visible) return;
+
+      const filtered = hasActiveOffersFilters();
+
+      if (emptyStateIllustration) {
+        emptyStateIllustration.innerHTML = filtered
+          ? getSearchEmptySvg()
+          : getCatalogEmptySvg();
+      }
+
+      if (emptyStateTitle) {
+        emptyStateTitle.textContent = filtered
+          ? pageT("emptyFilteredTitle")
+          : pageT("emptyTitle");
+      }
+
+      if (emptyStateText) {
+        emptyStateText.textContent = filtered
+          ? pageT("emptyFilteredText")
+          : pageT("emptyText");
+      }
+    }
+
+    function renderOffers(offers) {
+      const lang = getCurrentLang();
+
+      const visibleOffers = offers.filter(o => {
+        const modeConfig = window.GAMES?.[o.game]?.modes?.[o.mode];
+
+        if (modeConfig?.description === false) {
+          return true;
+        }
+
+        const titleValue = o.title?.[lang];
+        return typeof titleValue === "string" && titleValue.trim();
+      });
+
+      if (offersCountEl) {
+        offersCountEl.textContent = buildOffersCountText(visibleOffers.length);
+      }
+
+      offersListEl.innerHTML = "";
+
+      if (!visibleOffers.length) {
+        updateEmptyState(true);
+        return;
+      }
+
+      updateEmptyState(false);
+
+      visibleOffers.forEach(o => {
+        const card = window.tpOfferCard.createOfferCard(o, {
+          showHeart: true,
+          heartActive: isFavorite(o.id),
+
+          onHeartClick: (offer, cardEl, heartEl) => {
+            const isNowFavorite = toggleFavorite(offer.id);
+            heartEl.classList.toggle("active", isNowFavorite);
+          },
+
+          onClick: (offer) => {
+            location.href = "/offer.html?id=" + encodeURIComponent(offer.id);
+          }
+        });
+
+        offersListEl.appendChild(card);
+      });
+
+      if (window.tpOfferCard?.updatePrices) {
+        window.tpOfferCard.updatePrices(offersListEl);
+      }
+
+      if (window.tpI18n?.apply) {
+        window.tpI18n.apply();
+      }
+    }
+
+function syncFiltersOpenClass(){
+  const isOpen = filtersPanel && filtersPanel.classList.contains("show");
+  document.body.classList.toggle("game-filters-open", isOpen);
 }
-  const currentModeData = GAME.modes?.[currentMode];
-crumbMode.textContent =
-  currentModeData?.labelKey && window.tpI18n?.t
-    ? window.tpI18n.t(currentModeData.labelKey)
-    : currentMode;
-
-    // ===== Elements =====
-    const modesEl = document.getElementById("modes");
-    // ===== FILTERS =====
-const methodSelect = document.getElementById("methodSelect");
-const subcatSelect = document.getElementById("subcatSelect");
-let selectedCategory = urlParams.get("category") || null;
-// ===== EXTRA FILTERS (YouTube, TikTok и т.д.) =====
-
-let selectedSearch = "";
-const searchInput = document.getElementById("searchInput");
-
-// 🔥 ВСТАВЛЯЕШЬ ВОТ СЮДА
-const filterToggle = document.getElementById("filterToggle");
-const filtersPanel = document.getElementById("filtersPanel");
 
 if (filterToggle && filtersPanel) {
   filterToggle.addEventListener("click", () => {
     filtersPanel.classList.toggle("show");
-filterToggle.classList.toggle("active");
-  });
-}
-searchInput.addEventListener("input", () => {
-  selectedSearch = searchInput.value.trim();
-  loadOffers();
-});
-
-subcatSelect.addEventListener("change", () => {
-  selectedCategory = subcatSelect.value || null;
-  loadOffers();
-});
-
-const priceSort = document.getElementById("priceSort");
-const priceState = document.getElementById("priceState");
-const stockSort = document.getElementById("stockSort");
-const stockState = document.getElementById("stockState");
-
-let sortPrice = null; // asc | desc
-let sortAmount = null; // asc | desc
-
-// ===== SORT PRICE =====
-priceSort.addEventListener("click", ()=>{
-  // ❌ сбрасываем сортировку количества
-  sortAmount = null;
-  stockState.textContent = "—";
-
-  // ✅ включаем цену
-  sortPrice = sortPrice === "asc" ? "desc" : "asc";
-  priceState.textContent = sortPrice === "asc" ? "↑" : "↓";
-
-  loadOffers();
-});
-
-// ===== SORT AMOUNT =====
-stockSort.addEventListener("click", ()=>{
-  // ❌ сбрасываем сортировку цены
-  sortPrice = null;
-  priceState.textContent = "—";
-
-  // ✅ включаем количество
-  sortAmount = sortAmount === "asc" ? "desc" : "asc";
-  stockState.textContent = sortAmount === "asc" ? "↑" : "↓";
-
-  loadOffers();
-});
-
-function updateBreadcrumb(){
-  const modeData = GAME.modes?.[currentMode];
-
-  crumbMode.textContent =
-    modeData?.labelKey && window.tpI18n?.t
-      ? window.tpI18n.t(modeData.labelKey)
-      : currentMode;
-
-  document.title = pageT("dynamicTitle", {
-    game: GAME.title || ""
+    filterToggle.classList.toggle("active");
+    syncFiltersOpenClass();
   });
 }
 
-function updateCategoryFilter() {
-  subcatSelect.style.display = "none";
-  subcatSelect.innerHTML = "";
+    searchInput.addEventListener("input", () => {
+      selectedSearch = searchInput.value.trim();
+      loadOffers();
+    });
 
-  const modeConfig = GAME.modes?.[currentMode];
-  const categories = modeConfig?.categories;
+    subcatSelect.addEventListener("change", () => {
+      selectedCategory = subcatSelect.value || null;
+      loadOffers();
+    });
 
-  if (Array.isArray(categories) && categories.length) {
-    subcatSelect.style.display = "";
-    subcatSelect.innerHTML = `
-  <option value="">
-    ${window.tpI18n?.t("common.category_placeholder")}
-  </option>
-`;
-
-categories.forEach(cat => {
-  const key = `${GAME_ID}.categories.${cat}`;
-  const tr = window.tpI18n?.t ? window.tpI18n.t(key) : key;
-
-  const label = (tr === key) ? cat : tr;
-
-  subcatSelect.innerHTML += `
-    <option value="${cat}">${label}</option>
-  `;
-});
-  }
-}
-
-function renderModes(){
-  modesEl.innerHTML = "";
-
-  MODES.forEach(([modeId, modeData]) => {
-    const label =
-      modeData.labelKey && window.tpI18n?.t
-        ? window.tpI18n.t(modeData.labelKey)
-        : modeId;
-
-    const pill = document.createElement("button");
-    pill.type = "button";
-    pill.className = "mode-pill" + (modeId === currentMode ? " active" : "");
-    pill.textContent = label;
-
-    pill.onclick = () => {
-      for (const k in extraFilterValues) delete extraFilterValues[k];
-
-      selectedCategory = null;
-      subcatSelect.value = "";
-
-      localStorage.setItem("tp_last_mode_" + GAME_ID, modeId);
-      currentMode = modeId;
-
-      const url = new URL(window.location);
-      url.searchParams.set("mode", modeId);
-      url.searchParams.delete("category");
-      history.replaceState({}, "", url);
-
-      selectedSearch = "";
-      searchInput.value = "";
-
-      sortPrice = null;
+    priceSort.addEventListener("click", () => {
       sortAmount = null;
-      priceState.textContent = "—";
-      stockState.textContent = "—";
+      sortPrice = sortPrice === "asc" ? "desc" : "asc";
+      updateSortUI();
+      loadOffers();
+    });
+
+    stockSort.addEventListener("click", () => {
+      sortPrice = null;
+      sortAmount = sortAmount === "asc" ? "desc" : "asc";
+      updateSortUI();
+      loadOffers();
+    });
+
+    sellBtn.addEventListener("click", () => {
+      if (!currentMode) return;
+
+      const url = new URL("/offer-create.html", location.origin);
+      url.searchParams.set("game", GAME_ID);
+      url.searchParams.set("mode", currentMode);
+
+      location.href = url.toString();
+    });
+
+    if (selectedCategory) {
+      subcatSelect.value = selectedCategory;
+    }
+
+    window.addEventListener("tp:currency-change", () => {
+      if (window.tpOfferCard?.updatePrices) {
+        window.tpOfferCard.updatePrices(offersListEl);
+      }
+    });
+
+    window.addEventListener("tp:lang-change", async (e) => {
+      const lang = e.detail?.lang || (localStorage.getItem("tp_lang") || "ru");
+
+      if (window.tpI18n?.load) {
+        await window.tpI18n.load(lang);
+      }
 
       renderModes();
       updateBreadcrumb();
       updateCategoryFilter();
       renderExtraFilters();
       loadOffers();
-    };
-
-    modesEl.appendChild(pill);
-  });
-}
-
-const extraFiltersWrap = document.getElementById("extraFilters");
-
-function hasFieldDependency(field) {
-  return Boolean(field?.showIf) || Boolean(field?.showIfValue);
-}
-
-function matchesFieldCondition(actualValue, expectedValue) {
-  if (Array.isArray(expectedValue)) {
-    return expectedValue.includes(actualValue);
-  }
-
-  return String(actualValue || "") === String(expectedValue || "");
-}
-
-function getCurrentFilterValues() {
-  const modeConfig = GAME.modes?.[currentMode];
-  const values = {};
-
-  if (!modeConfig?.filters) {
-    return values;
-  }
-
-  Object.keys(modeConfig.filters).forEach((key) => {
-    const wrap = extraFiltersWrap.querySelector(`[data-key="${key}"]`);
-    if (!wrap) return;
-
-    const select = wrap.querySelector("select");
-    if (select) {
-      values[key] = select.value || "";
-      return;
-    }
-
-    const singleInput = wrap.querySelector('input:not([data-role="from"]):not([data-role="to"])');
-    if (singleInput) {
-      values[key] = singleInput.value || "";
-      return;
-    }
-
-    const fromInput = wrap.querySelector('[data-role="from"]');
-    const toInput = wrap.querySelector('[data-role="to"]');
-
-    if (fromInput || toInput) {
-      values[key] = {
-        from: fromInput?.value || "",
-        to: toInput?.value || ""
-      };
-    }
-  });
-
-  return values;
-}
-
-function syncDependentFilterVisibility() {
-  const modeConfig = GAME.modes?.[currentMode];
-  if (!modeConfig?.filters) return;
-
-  const currentValues = getCurrentFilterValues();
-
-  Object.entries(modeConfig.filters).forEach(([key, field]) => {
-    const wrap = extraFiltersWrap.querySelector(`[data-key="${key}"]`);
-    if (!wrap) return;
-
-    if (!hasFieldDependency(field)) {
-      wrap.style.display = "";
-      return;
-    }
-
-    let visible = false;
-
-    if (field.showIf) {
-      visible = Object.entries(field.showIf).some(([depKey, expectedValue]) => {
-        return matchesFieldCondition(currentValues[depKey], expectedValue);
-      });
-    }
-
-    if (!visible && field.showIfValue) {
-      visible = Object.entries(field.showIfValue).some(([depKey, expectedValue]) => {
-        return matchesFieldCondition(currentValues[depKey], expectedValue);
-      });
-    }
-
-    wrap.style.display = visible ? "" : "none";
-
-    if (!visible) {
-      const select = wrap.querySelector("select");
-      const singleInput = wrap.querySelector('input:not([data-role="from"]):not([data-role="to"])');
-      const fromInput = wrap.querySelector('[data-role="from"]');
-      const toInput = wrap.querySelector('[data-role="to"]');
-
-      if (select) {
-        select.value = "";
-        delete extraFilterValues[key];
-      }
-
-      if (singleInput) {
-        singleInput.value = "";
-        delete extraFilterValues[key];
-      }
-
-      if (fromInput) {
-        fromInput.value = "";
-        delete extraFilterValues[key + "_from"];
-      }
-
-      if (toInput) {
-        toInput.value = "";
-        delete extraFilterValues[key + "_to"];
-      }
-    }
-  });
-}
-
-function renderExtraFilters() {
-  const t = (key, fallback = "") =>
-    window.tpI18n?.t ? window.tpI18n.t(key) : (fallback || key || "");
-
-  extraFiltersWrap.innerHTML = "";
-
-  const modeConfig = GAME.modes?.[currentMode];
-  if (!modeConfig?.filters) return;
-
-  Object.entries(modeConfig.filters).forEach(([key, field]) => {
-    const wrap = document.createElement("div");
-    wrap.dataset.key = key;
-
-    const defaultDisplay = hasFieldDependency(field) ? "none" : "";
-
-    if (field.type === "range") {
-      wrap.className = "filter-range";
-      wrap.style.display = defaultDisplay;
-
-      const label = document.createElement("div");
-      label.className = "range-label";
-      label.textContent =
-        field.labelKey ? t(field.labelKey, field.label) : (field.label || "");
-
-      const row = document.createElement("div");
-      row.className = "filter-range-row";
-
-      const from = document.createElement("input");
-      from.type = "number";
-      from.placeholder = window.tpI18n?.t("common.from") || "From";
-      from.className = "select range-input";
-      from.dataset.role = "from";
-      from.value = extraFilterValues[key + "_from"] || "";
-
-      const to = document.createElement("input");
-      to.type = "number";
-      to.placeholder = window.tpI18n?.t("common.to") || "To";
-      to.className = "select range-input";
-      to.dataset.role = "to";
-      to.value = extraFilterValues[key + "_to"] || "";
-
-      from.addEventListener("input", () => {
-        extraFilterValues[key + "_from"] = from.value || null;
-        loadOffers();
-      });
-
-      to.addEventListener("input", () => {
-        extraFilterValues[key + "_to"] = to.value || null;
-        loadOffers();
-      });
-
-      row.appendChild(from);
-      row.appendChild(to);
-
-      wrap.appendChild(label);
-      wrap.appendChild(row);
-      extraFiltersWrap.appendChild(wrap);
-      return;
-    }
-
-    if (field.type === "number") {
-      wrap.style.display = defaultDisplay;
-
-      const input = document.createElement("input");
-      input.type = "number";
-      input.className = "select";
-      input.placeholder =
-        field.labelKey ? t(field.labelKey, field.label) : (field.label || "");
-      input.value = extraFilterValues[key] || "";
-
-      input.addEventListener("input", () => {
-        extraFilterValues[key] = input.value || null;
-        syncDependentFilterVisibility();
-        loadOffers();
-      });
-
-      wrap.appendChild(input);
-      extraFiltersWrap.appendChild(wrap);
-      return;
-    }
-
-    if (field.type === "select") {
-      wrap.style.display = defaultDisplay;
-
-      const select = document.createElement("select");
-      select.className = "select";
-
-      const firstOptionText =
-        field.labelKey ? t(field.labelKey, field.label) : (field.label || "");
-
-      select.innerHTML = `<option value="">${firstOptionText}</option>`;
-
-      field.options.forEach((opt) => {
-        const option = document.createElement("option");
-
-        if (typeof opt === "object") {
-          option.value = opt.value;
-          option.textContent = opt.labelKey
-            ? t(opt.labelKey, opt.label)
-            : (opt.label ?? opt.value);
-        } else {
-          option.value = opt;
-          option.textContent = opt;
-        }
-
-        select.appendChild(option);
-      });
-
-      select.value = extraFilterValues[key] || "";
-
-      select.addEventListener("change", () => {
-        extraFilterValues[key] = select.value || null;
-        syncDependentFilterVisibility();
-        loadOffers();
-      });
-
-      wrap.appendChild(select);
-      extraFiltersWrap.appendChild(wrap);
-      return;
-    }
-  });
-
-  syncDependentFilterVisibility();
-}
-
-async function loadOffers() {
-  const params = new URLSearchParams();
-
-params.set("game", GAME_ID);
-params.set("mode", currentMode);
-
-const currentLang = getCurrentLang();
-params.set("lang", currentLang);
-
-  // 🔹 extra filters
-  Object.entries(extraFilterValues).forEach(([key, value]) => {
-    if (value !== null && value !== "") {
-      params.set(key, value);
-    }
-  });
-
-  if (selectedSearch) {
-    params.set("search", selectedSearch);
-  }
-
-  if (selectedCategory) {
-    params.set("category", selectedCategory);
-  }
-
-  if (sortPrice) {
-    params.set(
-      "sort",
-      sortPrice === "asc" ? "price_asc" : "price_desc"
-    );
-  }
-
-  if (sortAmount) {
-    params.set(
-      "sort",
-      sortAmount === "asc" ? "amount_asc" : "amount_desc"
-    );
-  }
-
-  // 🔥 ОБНОВЛЯЕМ URL ПОСЛЕ ДОБАВЛЕНИЯ ВСЕГО
-  const newUrl = new URL(window.location);
-  newUrl.search = params.toString();
-  history.replaceState({}, "", newUrl);
-
-  const res = await fetch("/api/offers?" + params.toString());
-  const data = await res.json();
-
-  if (!data.success) return;
-
-  renderOffers(data.offers || []);
-  window.tpOfferCard.updatePrices();
-}
-
-    // ===== Favorites =====
-function getFavorites(){
-  try{ return JSON.parse(localStorage.getItem("tp_favorites") || "[]"); }
-  catch{ return []; }
-}
-
-function isFavorite(id){
-  const lang = getCurrentLang();
-
-  return getFavorites().some(f => {
-    if (typeof f === "string") return f === id;
-    return f.id === id && f.lang === lang;
-  });
-}
-
-function toggleFavorite(id){
-
-const lang = getCurrentLang();
-
-  let favs = getFavorites();
-
-const index = favs.findIndex(f => typeof f === "object" && f.id === id && f.lang === lang);
-  if(index >= 0){
-    favs.splice(index,1);
-  }else{
-    favs.push({ id, lang });
-  }
-
-  localStorage.setItem("tp_favorites", JSON.stringify(favs));
-
-}
-
-function getPluralForm(n, one, few, many) {
-  const abs = Math.abs(Number(n) || 0);
-  const lastTwo = abs % 100;
-  const last = abs % 10;
-
-  if (lastTwo >= 11 && lastTwo <= 14) return many;
-  if (last === 1) return one;
-  if (last >= 2 && last <= 4) return few;
-  return many;
-}
-
-function hasActiveOffersFilters() {
-  const hasSearch = Boolean(String(selectedSearch || "").trim());
-  const hasCategory = Boolean(String(selectedCategory || "").trim());
-
-  const hasExtraFilters = Object.values(extraFilterValues).some(value => {
-    return value !== null && value !== undefined && String(value).trim() !== "";
-  });
-
-  return hasSearch || hasCategory || hasExtraFilters;
-}
-
-function getOffersWord(count) {
-  const safeCount = Math.max(0, Number(count) || 0);
-  const lang = getCurrentLang();
-
-  if (lang === "en") {
-    return safeCount === 1
-      ? pageT("offersWords.one")
-      : pageT("offersWords.many");
-  }
-
-  return getPluralForm(
-    safeCount,
-    pageT("offersWords.one"),
-    pageT("offersWords.few"),
-    pageT("offersWords.many")
-  );
-}
-
-function buildOffersCountText(count) {
-  const safeCount = Math.max(0, Number(count) || 0);
-  const word = getOffersWord(safeCount);
-
-  return hasActiveOffersFilters()
-    ? pageT("offersCount.found", { count: safeCount, word })
-    : pageT("offersCount.total", { count: safeCount, word });
-}
-
-function renderOffers(offers){
-
-  const lang = getCurrentLang();
-
-  const visibleOffers = offers.filter(o => {
-    const modeConfig = window.GAMES?.[o.game]?.modes?.[o.mode];
-
-    // если у режима описание/ручной title не нужен — оффер показываем
-    if (modeConfig?.description === false) {
-      return true;
-    }
-
-    const titleValue = o.title?.[lang];
-    return typeof titleValue === "string" && titleValue.trim();
-  });
-
-const countEl = document.getElementById("offersCount");
-
-if (countEl) {
-  countEl.textContent = buildOffersCountText(visibleOffers.length);
-}
-
-  const list = document.getElementById("offersList");
-  list.innerHTML = "";
-
-  if(!visibleOffers.length){
-    return;
-  }
-
-  visibleOffers.forEach(o => {
-
-    const card = window.tpOfferCard.createOfferCard(o, {
-      showHeart: true,
-      heartActive: isFavorite(o.id),
-
-      onHeartClick: (offer, cardEl, heartEl) => {
-        toggleFavorite(offer.id);
-        heartEl.classList.toggle("active");
-      },
-
-      onClick: (offer) => {
-        location.href = "/offer.html?id=" + encodeURIComponent(offer.id);
-      },
-
     });
 
-    list.appendChild(card);
-  });
-
-  window.tpOfferCard.updatePrices(list);
-
-  if (window.tpI18n?.apply) {
-    window.tpI18n.apply();
-  }
-}
-
-// INIT
-(async () => {
-
-  const lang = localStorage.getItem("tp_lang") || "ru";
-
-  if (window.tpI18n?.load) {
-    await window.tpI18n.load(lang);
-  }
-
-  renderModes();
-  updateBreadcrumb();
-  updateCategoryFilter();
-  renderExtraFilters();
-  loadOffers();
-
-})();
-
-if (selectedCategory) {
-  subcatSelect.value = selectedCategory;
-}
-
-window.addEventListener("tp:currency-change", () => {
-  const list = document.getElementById("offersList");
-  window.tpOfferCard.updatePrices(list);
-});
-// ===== SELL BUTTON =====
-const sellBtn = document.getElementById("sellBtn");
-
-sellBtn.addEventListener("click", () => {
-  // если не выбран режим — не пускаем
-  if (!currentMode) return;
-
-  const url = new URL("/offer-create.html", location.origin);
-  url.searchParams.set("game", GAME_ID);
-  url.searchParams.set("mode", currentMode);
-
-  location.href = url.toString();
-});
-window.addEventListener("tp:lang-change", async (e) => {
-  const lang = e.detail?.lang || (localStorage.getItem("tp_lang") || "ru");
-
-  if (window.tpI18n?.load) {
-    await window.tpI18n.load(lang);
-  }
-
-  // 🔥 ПЕРЕРИСОВЫВАЕМ ВСЁ
-  renderModes();
-  updateBreadcrumb();
-  updateCategoryFilter();
-  renderExtraFilters();
-
-  loadOffers();
-});
-})();
+    saveFavorites(getFavorites());
+    updateSortUI();
+    renderModes();
+    updateBreadcrumb();
+    updateCategoryFilter();
+    renderExtraFilters();
+    await loadOffers();
+  })();
   </script>
+
   <div id="tpToast" class="tp-toast"></div>
+
   <script>
-(function(){
-  const tpToast = document.getElementById("tpToast");
-  let tpToastTimer = null;
+  (function(){
+    const tpToast = document.getElementById("tpToast");
+    let tpToastTimer = null;
 
-  function showToast(message, type = "success", duration = 1800){
-    if (!tpToast) return;
+    function showToast(message, type = "success", duration = 1800){
+      if (!tpToast) return;
 
-    tpToast.textContent = message;
-    tpToast.className = `tp-toast ${type}`;
+      tpToast.textContent = message;
+      tpToast.className = `tp-toast ${type}`;
 
-    requestAnimationFrame(() => {
-      tpToast.classList.add("show");
-    });
+      requestAnimationFrame(() => {
+        tpToast.classList.add("show");
+      });
 
-    clearTimeout(tpToastTimer);
-    tpToastTimer = setTimeout(() => {
-      tpToast.classList.remove("show");
-    }, duration);
-  }
+      clearTimeout(tpToastTimer);
+      tpToastTimer = setTimeout(() => {
+        tpToast.classList.remove("show");
+      }, duration);
+    }
 
-  try {
-    const raw = sessionStorage.getItem("tp_toast");
-    if (!raw) return;
+    try {
+      const raw = sessionStorage.getItem("tp_toast");
+      if (!raw) return;
 
-    sessionStorage.removeItem("tp_toast");
+      sessionStorage.removeItem("tp_toast");
 
-    const toast = JSON.parse(raw);
-    if (!toast?.text) return;
+      const toast = JSON.parse(raw);
+      if (!toast?.text) return;
 
-    showToast(toast.text, toast.type || "success", 1800);
-  } catch (e) {
-    sessionStorage.removeItem("tp_toast");
-  }
-})();
-</script>
+      showToast(toast.text, toast.type || "success", 1800);
+    } catch (e) {
+      sessionStorage.removeItem("tp_toast");
+    }
+  })();
+  </script>
 </body>
 </html>

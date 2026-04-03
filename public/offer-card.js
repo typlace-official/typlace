@@ -27,12 +27,9 @@
     return `на сайте ${days} дн`;
   }
 
-  function formatReviewsCount(n){
-    if (window.tpI18n?.pluralKey) {
-      return window.tpI18n.pluralKey("common.reviews_count", n);
-    }
-    return n + " reviews";
-  }
+function formatReviewsCount(n){
+  return String(Number(n) || 0);
+}
 
   function getCurrentLang() {
     const lang = (localStorage.getItem("tp_lang") || "ru").trim().toLowerCase();
@@ -77,66 +74,62 @@
           "Предложение"
         );
 
-    card.innerHTML = `
-      ${showHeart ? `
-        <div class="offer-heart ${heartActive ? "active" : ""}">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 21s-7-4.35-10-8.5C-1.5 7.5 3 3 7.5 6.5
-                     9.5 8 12 10.5 12 10.5S14.5 8 16.5 6.5
-                     C21 3 25.5 7.5 22 12.5
-                     19 16.65 12 21 12 21z"/>
-          </svg>
-        </div>
-      ` : ""}
+card.innerHTML = `
+  <div class="offer-image">
+    <img src="${offerImage}" onerror="this.src='/img/offer-default.png'">
+  </div>
 
-      <div class="offer-image">
-        <img src="${offerImage}" onerror="this.src='/img/offer-default.png'">
+  <div class="offer-body">
+    ${showHeart ? `
+      <div class="offer-heart ${heartActive ? "active" : ""}">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 21s-7-4.35-10-8.5C-1.5 7.5 3 3 7.5 6.5
+                   9.5 8 12 10.5 12 10.5S14.5 8 16.5 6.5
+                   C21 3 25.5 7.5 22 12.5
+                   19 16.65 12 21 12 21z"/>
+        </svg>
+      </div>
+    ` : ""}
+
+    <div class="offer-title">${title}</div>
+    <div class="offer-price" data-price="${o.price}">—</div>
+
+    <div class="offer-seller">
+      <div class="seller-avatar">
+        <img src="${avatar}" onerror="this.src='/img/avatar-default.svg'">
+        <span class="seller-status" style="background:${online ? "#22c55e" : "#9ca3af"}"></span>
       </div>
 
-      <div class="offer-body">
-        <div class="offer-title">${title}</div>
-        <div class="offer-price" data-price="${o.price}">—</div>
-
-        <div class="offer-seller">
-          <div class="seller-avatar">
-            <img src="${avatar}" onerror="this.src='/img/avatar-default.svg'">
-            <span class="seller-status" style="background:${online ? "#22c55e" : "#9ca3af"}"></span>
-          </div>
-
-          <div>
-            <div class="seller-name seller-profile-link"
-                 data-user-id="${seller.userId || seller.id || seller._id || ""}">
-              ${o.sellerName || seller.username || "Продавец"}
-            </div>
-
-            <div class="seller-rating"
-                 data-user-id="${seller.userId || seller.id || seller._id || ""}">
-
-              ${
-                reviews === 0
-                  ? `<span class="no-reviews">${window.tpI18n?.t("common.no_reviews") || "No reviews"}</span>`
-                  : reviews < 10
-                    ? `<span style="color:#6b7280;font-weight:600;">
-                         ${formatReviewsCount(reviews)}
-                       </span>`
-                    : `${renderStars(rating)}
-                       <span style="color:#6b7280;font-weight:600;">
-                         ${formatReviewsCount(reviews)}
-                       </span>`
-              }
-            </div>
-
-            ${seller.createdAt ? `
-              <div class="seller-profile-link seller-since"
-                   data-user-id="${seller.userId || seller.id || seller._id || ""}"
-                   style="font-size:12px;color:#6b7280;margin-top:2px;cursor:pointer;">
-                ${onSiteText}
-              </div>
-            ` : ``}
-          </div>
+      <div>
+        <div class="seller-name seller-profile-link"
+             data-user-id="${seller.userId || seller.id || seller._id || ""}">
+          ${o.sellerName || seller.username || "Продавец"}
         </div>
+
+        <div class="seller-rating"
+             data-user-id="${seller.userId || seller.id || seller._id || ""}">
+
+          ${
+            reviews === 0
+              ? `<span class="no-reviews">${window.tpI18n?.t("common.no_reviews") || "No reviews"}</span>`
+              : `${renderStars(rating)}
+<span class="reviews-count">
+  ${formatReviewsCount(reviews)}
+</span>`
+          }
+        </div>
+
+        ${seller.createdAt ? `
+          <div class="seller-profile-link seller-since"
+               data-user-id="${seller.userId || seller.id || seller._id || ""}"
+               style="font-size:12px;color:#6b7280;margin-top:2px;cursor:pointer;">
+            ${onSiteText}
+          </div>
+        ` : ``}
       </div>
-    `;
+    </div>
+  </div>
+`;
 
     const avatarBlock = card.querySelector(".seller-avatar");
 

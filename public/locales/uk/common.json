@@ -2,9 +2,9 @@
   "sale": "Продаж",
   "rent": "Оренда",
 
-"vc_yes": "Є VC",
-"vc_no": "Немає VC",
-"offer_fallback": "Оголошення",
+  "vc_yes": "Є VC",
+  "vc_no": "Немає VC",
+  "offer_fallback": "Оголошення",
 
   "other_amount": "Інша кількість",
 
@@ -44,6 +44,19 @@
   "offers_found_few": "Знайдено {{count}} оголошення",
   "offers_found_many": "Знайдено {{count}} оголошень",
 
+  "offersWords": {
+    "one": "оголошення",
+    "few": "оголошення",
+    "many": "оголошень"
+  },
+
+  "offersCount": {
+    "found": "Знайдено {{count}} {{word}}",
+    "total": "Усього {{count}} {{word}}"
+  },
+
+  "dynamicTitle": "{{game}} — TyPlace",
+
   "no_reviews": "Немає відгуків",
 
   "reviews_count_one": "{{count}} відгук",
@@ -58,9 +71,13 @@
   "to": "До",
 
   "category_placeholder": "Категорія",
-  "choose_category": "Оберіть категорію",
+  "choose_category": "Виберіть категорію",
 
   "empty": "Поки немає оголошень",
+  "emptyTitle": "Поки тут порожньо",
+  "emptyText": "Для цього режиму оголошень поки немає.",
+  "emptyFilteredTitle": "Нічого не знайдено",
+  "emptyFilteredText": "Спробуйте змінити фільтри або пошуковий запит.",
 
   "back": "Назад",
   "photo_product": "Фото товару",
@@ -164,7 +181,7 @@
   },
 
   "footer": {
-    "copyLine1": "© 2026 TyPlace — маркетплейс цифрових товарів та послуг.",
+    "copyLine1": "© 2026 TyPlace — маркетплейс цифрових товарів і послуг.",
     "copyLine2": "Усі права захищені.",
     "links": {
       "rules": "Правила платформи",
@@ -175,5 +192,9 @@
       "help": "Центр допомоги",
       "contacts": "Контакти"
     }
+  },
+
+  "errors": {
+    "gameNotFound": "Гру не знайдено"
   }
 }

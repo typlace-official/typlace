@@ -2,13 +2,148 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Избранные — TyPlace</title>
+  <title data-i18n="page.title"></title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="/header.css">
   <link rel="stylesheet" href="/game.css">
   <link rel="stylesheet" href="/footer.css">
 
+<style>
+  :root{
+    --tp-header-space: 110px;
+    --tp-page-bg: #f6f7f9;
+    --tp-empty-text: #6b7280;
+    --tp-heart-blue: #4f7df3;
+    --tp-heart-blue-soft: #dfe9ff;
+    --tp-heart-stroke: rgba(79,125,243,.38);
+    --tp-heart-shadow: rgba(79,125,243,.16);
+    --tp-bottom-space: calc(28px + env(safe-area-inset-bottom, 0px));
+  }
+
+  html,
+  body{
+    margin:0;
+    padding:0;
+    min-height:100%;
+    overflow-x:hidden;
+    background:var(--tp-page-bg);
+  }
+
+  body{
+    min-height:100svh;
+    display:flex;
+    flex-direction:column;
+    font-family:Inter, Arial, sans-serif;
+    background:var(--tp-page-bg);
+  }
+
+  .page-content{
+    flex:1 0 auto;
+    width:100%;
+    padding-top:var(--tp-header-space);
+    box-sizing:border-box;
+  }
+
+  .page{
+    width:100%;
+    min-height:calc(100svh - var(--tp-header-space));
+    padding:0 14px var(--tp-bottom-space);
+    box-sizing:border-box;
+  }
+
+  .container{
+    width:100%;
+    max-width:1200px;
+    margin:0 auto;
+    min-height:calc(100svh - var(--tp-header-space) - var(--tp-bottom-space));
+    display:flex;
+    flex-direction:column;
+    box-sizing:border-box;
+  }
+
+  .page-title{
+    margin:10px 0 24px;
+    font-size:32px;
+    line-height:1.12;
+    font-weight:800;
+    color:#111827;
+  }
+
+  #offersList{
+    width:100%;
+  }
+
+  .empty-state{
+    display:none;
+    flex:1 1 auto;
+    width:min(100%, 420px);
+    margin:0 auto;
+    padding:12px 18px 0;
+    box-sizing:border-box;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+
+  .empty-state.show{
+    display:flex;
+  }
+
+  .empty-illustration{
+    width:min(260px, 72vw);
+    margin:0 auto 22px;
+    filter:drop-shadow(0 20px 40px var(--tp-heart-shadow));
+  }
+
+  .empty-illustration svg{
+    display:block;
+    width:100%;
+    height:auto;
+  }
+
+  .empty-text{
+    color:#9ca3af;
+    font-size:16px;
+    line-height:1.45;
+    font-weight:300;
+    max-width:320px;
+    margin:0 auto;
+  }
+
+  @media (max-width: 768px){
+    :root{
+      --tp-header-space: 100px;
+      --tp-bottom-space: calc(22px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .page{
+      padding:0 12px var(--tp-bottom-space);
+    }
+
+    .container{
+      min-height:calc(100svh - var(--tp-header-space) - var(--tp-bottom-space));
+    }
+
+    .page-title{
+      margin:8px 0 18px;
+      font-size:24px;
+    }
+
+    .empty-state{
+      padding:8px 10px 0;
+    }
+
+    .empty-illustration{
+      width:min(230px, 74vw);
+      margin:0 auto 18px;
+    }
+
+    .empty-text{
+      font-size:15px;
+    }
+  }
+</style>
 </head>
 
 <body>
@@ -17,16 +152,101 @@
 
 <main class="page-content">
   <div class="page">
+    <div class="container">
 
-  <div class="container">
+      <h1 class="page-title" data-i18n="common.favorites"></h1>
 
-<h2 style="margin:10px 0 20px;" data-i18n="common.favorites"></h2>
+      <div id="offersList" class="offers-list"></div>
 
-    <div id="offersList" class="offers-list"></div>
+      <div id="empty" class="empty-state">
+        <div class="empty-illustration" aria-hidden="true">
+          <svg viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg" fill="none">
+            <defs>
+              <linearGradient id="heartFill" x1="45" y1="34" x2="205" y2="196" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#ffffff" stop-opacity=".82"/>
+                <stop offset=".45" stop-color="#eaf0ff" stop-opacity=".72"/>
+                <stop offset="1" stop-color="#d8e5ff" stop-opacity=".54"/>
+              </linearGradient>
 
-<div id="empty" class="empty" style="display:none;"></div>
+              <linearGradient id="heartStroke" x1="56" y1="42" x2="203" y2="191" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#5e88f7" stop-opacity=".65"/>
+                <stop offset="1" stop-color="#7aa0ff" stop-opacity=".22"/>
+              </linearGradient>
+
+              <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
+                gradientTransform="translate(130 118) rotate(90) scale(92 106)">
+                <stop offset="0" stop-color="#7ea2ff" stop-opacity=".34"/>
+                <stop offset=".65" stop-color="#7ea2ff" stop-opacity=".1"/>
+                <stop offset="1" stop-color="#7ea2ff" stop-opacity="0"/>
+              </radialGradient>
+
+              <radialGradient id="shine" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
+                gradientTransform="translate(104 82) rotate(122) scale(68 76)">
+                <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/>
+                <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+              </radialGradient>
+
+              <filter id="blurGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="16"/>
+              </filter>
+
+              <filter id="glassShadow" x="-30%" y="-30%" width="160%" height="180%">
+                <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#6f95ff" flood-opacity=".14"/>
+              </filter>
+            </defs>
+
+            <ellipse cx="130" cy="184" rx="64" ry="15" fill="#dfe7fb" opacity=".72"/>
+
+            <circle cx="132" cy="110" r="74" fill="url(#glow)" filter="url(#blurGlow)"/>
+
+            <g transform="rotate(-8 130 108)" filter="url(#glassShadow)">
+              <path
+                d="M130 189.2c-7.3-5.4-18.2-13.8-30.5-24.4C75.7 144.3 53 120.8 53 92.2 53 68.7 71.5 50 94.5 50c14.4 0 27.2 7.5 35.5 19.4C138.3 57.5 151.1 50 165.5 50 188.5 50 207 68.7 207 92.2c0 28.6-22.7 52.1-46.5 72.6-12.3 10.6-23.2 19-30.5 24.4Z"
+                fill="url(#heartFill)"
+                stroke="url(#heartStroke)"
+                stroke-width="3"
+              />
+
+              <path
+                d="M129.8 178c-6.6-4.9-16.4-12.5-27.4-22-21.3-18.4-41.4-39.3-41.4-64.7 0-18.9 14.7-33.8 33.4-33.8 13 0 24.3 7.3 30.4 18.4 1.2 2.2 4.4 2.2 5.6 0 6.1-11.1 17.4-18.4 30.4-18.4 18.7 0 33.4 14.9 33.4 33.8 0 25.4-20.1 46.3-41.4 64.7-11 9.5-20.8 17.1-27.4 22Z"
+                fill="url(#shine)"
+                opacity=".78"
+              />
+
+              <path
+                d="M91 78.5c4.9-7.7 12.8-12.4 22.5-12.4"
+                stroke="#ffffff"
+                stroke-opacity=".72"
+                stroke-width="6"
+                stroke-linecap="round"
+              />
+
+              <path
+                d="M82.5 91.5c.5-2 1.2-4 2.2-5.9"
+                stroke="#ffffff"
+                stroke-opacity=".6"
+                stroke-width="5"
+                stroke-linecap="round"
+              />
+            </g>
+
+            <g opacity=".9">
+              <path d="M196 56v8" stroke="#6f95ff" stroke-width="3.5" stroke-linecap="round"/>
+              <path d="M192 60h8" stroke="#6f95ff" stroke-width="3.5" stroke-linecap="round"/>
+            </g>
+
+            <g opacity=".72">
+              <path d="M56 148v6" stroke="#7f9fff" stroke-width="3" stroke-linecap="round"/>
+              <path d="M53 151h6" stroke="#7f9fff" stroke-width="3" stroke-linecap="round"/>
+            </g>
+          </svg>
+        </div>
+
+        <div id="emptyText" class="empty-text"></div>
+      </div>
+
+    </div>
   </div>
-</div>
 </main>
 
 <div id="footer-container"></div>
@@ -34,6 +254,7 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
 <script src="/i18n.js"></script>
+<script type="module" src="/games/index.js"></script>
 <script src="/header.js"></script>
 <script src="/tp-money.js"></script>
 <script src="/offer-title.js"></script>
@@ -42,24 +263,63 @@
 
 <script>
 /* ================= FAVORITES STORAGE ================= */
-function getFavs(){
-  try{ return JSON.parse(localStorage.getItem("tp_favorites") || "[]"); }
-  catch{ return []; }
+function getCurrentLang() {
+  const lang = String(localStorage.getItem("tp_lang") || "ru").trim().toLowerCase();
+  return ["ru", "uk", "en"].includes(lang) ? lang : "ru";
 }
 
-function toggleFavorite(id){
-
-  const lang = localStorage.getItem("tp_lang") || "ru";
-
-  let favs = getFavs();
-
-const index = favs.findIndex(f => typeof f === "object" && f.id === id && f.lang === lang);
-
-  if(index >= 0){
-    favs.splice(index,1);
+function normalizeFavoriteId(entry) {
+  if (typeof entry === "string") {
+    const id = entry.trim();
+    return id || null;
   }
 
-  localStorage.setItem("tp_favorites", JSON.stringify(favs));
+  if (entry && typeof entry === "object") {
+    const id = String(entry.id || "").trim();
+    return id || null;
+  }
+
+  return null;
+}
+
+function dedupeFavorites(items) {
+  const seen = new Set();
+  const result = [];
+
+  for (const rawItem of Array.isArray(items) ? items : []) {
+    const id = normalizeFavoriteId(rawItem);
+    if (!id || seen.has(id)) continue;
+
+    seen.add(id);
+    result.push(id);
+  }
+
+  return result;
+}
+
+function getFavs() {
+  try {
+    const raw = JSON.parse(localStorage.getItem("tp_favorites") || "[]");
+    return dedupeFavorites(raw);
+  } catch {
+    return [];
+  }
+}
+
+function saveFavs(favs) {
+  const normalized = dedupeFavorites(favs);
+  localStorage.setItem("tp_favorites", JSON.stringify(normalized));
+  return normalized;
+}
+
+function toggleFavorite(id) {
+  const safeId = String(id || "").trim();
+  if (!safeId) return;
+
+  const favs = getFavs();
+  const nextFavs = favs.filter(favId => favId !== safeId);
+
+  saveFavs(nextFavs);
 }
 
 /* ================= LOAD OFFER ================= */
@@ -69,137 +329,148 @@ async function loadOffer(id){
   return data.success ? data.offer : null;
 }
 
-/* ================= STARS + TIME (как в game.html) ================= */
-function renderStars(avg){
-  const rounded = Math.round(avg || 0);
-  let cls = "r1";
-  if(avg >= 4.5) cls="r5";
-  else if(avg >= 3.5) cls="r4";
-  else if(avg >= 2.5) cls="r3";
-  else if(avg >= 1.5) cls="r2";
-
-  let html = `<span class="stars ${cls}">`;
-  for(let i=1;i<=5;i++){
-    html += `<span class="star ${i<=rounded?"filled":""}">★</span>`;
-  }
-  html += `</span>`;
-  return html;
-}
-
-function timeOnSite(createdAt){
-  if (!createdAt) return "на сайте недавно";
-  const diff = Date.now() - new Date(createdAt).getTime();
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-  if (minutes < 60) return `на сайте ${minutes} мин`;
-  if (hours < 24) return `на сайте ${hours} ч`;
-  return `на сайте ${days} дн`;
-}
-
 /* ================= RENDER ================= */
 const list = document.getElementById("offersList");
 const empty = document.getElementById("empty");
-function renderEmptyText(){
-  empty.textContent = window.tpI18n?.t("common.no_favorites") || "";
-}
-function renderOffer(o){
+const emptyText = document.getElementById("emptyText");
 
-  const card = window.tpOfferCard.createOfferCard(o,{
+function showEmpty(){
+  emptyText.textContent = window.tpI18n?.t("common.no_favorites") || "";
+  empty.classList.add("show");
+}
+
+function hideEmpty(){
+  empty.classList.remove("show");
+  emptyText.textContent = "";
+}
+
+function renderOffer(o){
+  const card = window.tpOfferCard.createOfferCard(o, {
     showHeart: true,
     heartActive: true,
 
     onHeartClick: (offer, cardEl) => {
-
       toggleFavorite(offer.id);
       cardEl.remove();
 
-if(!list.children.length){
-  renderEmptyText();
-  empty.style.display = "block";
-}
-
+      if (!list.querySelector(".offer-card")) {
+        showEmpty();
+      }
     },
 
-    onClick: (offer)=>{
+    onClick: (offer) => {
       location.href = "/offer.html?id=" + encodeURIComponent(offer.id);
     }
-
   });
 
   list.appendChild(card);
-
 }
 
 /* ================= CURRENCY ================= */
 async function updatePrices(){
   window.tpOfferCard.updatePrices(document);
 }
+
 window.addEventListener("tp:currency-change", updatePrices);
+
+let favoritesRenderVersion = 0;
 
 /* ================= INIT ================= */
 async function init(){
+  const renderVersion = ++favoritesRenderVersion;
 
-list.innerHTML = "";
-empty.style.display = "none";
+  list.innerHTML = "";
+  hideEmpty();
 
-const lang = localStorage.getItem("tp_lang") || "ru";
+  const lang = getCurrentLang();
+  const favs = getFavs();
 
-const favs = getFavs()
-  .filter(f => typeof f === "object" && f.lang === lang)
-  .map(f => f.id);
+  if (!favs.length) {
+    if (renderVersion !== favoritesRenderVersion) return;
+    showEmpty();
+    return;
+  }
 
-if(!favs.length){
-  renderEmptyText();
-  empty.style.display = "block";
-  return;
-}
+  const loadedOffers = await Promise.all(favs.map(loadOffer));
 
-const loadedOffers = await Promise.all(favs.map(loadOffer));
+  if (renderVersion !== favoritesRenderVersion) return;
 
-const validOffers = loadedOffers.filter(o => o && !o.deleted);
+  const validOffers = loadedOffers.filter(o => {
+    if (!o || o.deleted) return false;
 
-if (!validOffers.length) {
-  renderEmptyText();
-  empty.style.display = "block";
-  return;
-}
+    const modeConfig = window.GAMES?.[o.game]?.modes?.[o.mode];
 
-validOffers.forEach(o => {
-  renderOffer(o);
-});
+    if (modeConfig?.description === false) {
+      return true;
+    }
 
-await updatePrices();
+    const titleValue = o.title?.[lang];
+    return typeof titleValue === "string" && titleValue.trim();
+  });
 
-if (window.tpI18n?.apply) {
-  window.tpI18n.apply(document);
-}
+  if (!validOffers.length) {
+    if (renderVersion !== favoritesRenderVersion) return;
+    showEmpty();
+    return;
+  }
+
+  list.innerHTML = "";
+
+  validOffers.forEach(o => {
+    renderOffer(o);
+  });
+
+  await updatePrices();
+
+  if (renderVersion !== favoritesRenderVersion) return;
+
+  if (window.tpI18n?.apply) {
+    window.tpI18n.apply(document);
+  }
 }
 
 async function start(){
-  if(window.tpI18n?.load){
-    const lang = localStorage.getItem("tp_lang") || "ru";
+  if (window.tpI18n?.load) {
+    const lang = getCurrentLang();
     await window.tpI18n.load(lang);
   }
 
-  init();
+  try {
+    await waitForGamesConfig();
+  } catch (e) {
+    console.warn("Games config not loaded on favorites page:", e);
+  }
+
+  await init();
+}
+
+async function waitForGamesConfig(timeoutMs = 7000){
+  const startedAt = Date.now();
+
+  while (true) {
+    const isReady = Boolean(
+      window.GAMES &&
+      typeof window.GAMES === "object" &&
+      Object.keys(window.GAMES).length > 0
+    );
+
+    if (isReady) {
+      return;
+    }
+
+    if (Date.now() - startedAt >= timeoutMs) {
+      throw new Error("Games config not ready");
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 25));
+  }
 }
 
 start();
 
 window.addEventListener("tp:lang-change", async () => {
-  list.innerHTML = "";
-  empty.style.display = "none";
-
-  requestAnimationFrame(async () => {
-    await init();
-
-    if (window.tpI18n?.apply) {
-      window.tpI18n.apply(document);
-    }
-  });
+  await init();
 });
-
 </script>
 
 </body>

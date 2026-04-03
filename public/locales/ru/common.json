@@ -2,11 +2,11 @@
   "sale": "Продажа",
   "rent": "Аренда",
 
-"vc_yes": "Есть VC",
-"vc_no": "Нет VC",
-"offer_fallback": "Предложение",
+  "vc_yes": "Есть VC",
+  "vc_no": "Нет VC",
+  "offer_fallback": "Предложение",
 
-"other_amount": "Другое количество",
+  "other_amount": "Другое количество",
 
   "country": {
     "eu": "Европа",
@@ -44,6 +44,19 @@
   "offers_found_few": "Найдено {{count}} объявления",
   "offers_found_many": "Найдено {{count}} объявлений",
 
+  "offersWords": {
+    "one": "объявление",
+    "few": "объявления",
+    "many": "объявлений"
+  },
+
+  "offersCount": {
+    "found": "Найдено {{count}} {{word}}",
+    "total": "Всего {{count}} {{word}}"
+  },
+
+  "dynamicTitle": "{{game}} — TyPlace",
+
   "no_reviews": "Нет отзывов",
 
   "reviews_count_one": "{{count}} отзыв",
@@ -61,6 +74,10 @@
   "choose_category": "Выберите категорию",
 
   "empty": "Пока нет объявлений",
+  "emptyTitle": "Пока здесь пусто",
+  "emptyText": "Для этого режима объявлений пока нет.",
+  "emptyFilteredTitle": "Ничего не найдено",
+  "emptyFilteredText": "Попробуйте изменить фильтры или поисковый запрос.",
 
   "back": "Назад",
   "photo_product": "Фото товара",
@@ -175,5 +192,9 @@
       "help": "Центр помощи",
       "contacts": "Контакты"
     }
+  },
+
+  "errors": {
+    "gameNotFound": "Игра не найдена"
   }
 }

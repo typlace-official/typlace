@@ -2,189 +2,345 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Мои предложения — TyPlace</title>
+<title data-i18n="page.title"></title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="stylesheet" href="/header.css">
-<link rel="stylesheet" href="/game.css">
+<link rel="stylesheet" href="/card.css">
 <link rel="stylesheet" href="/footer.css">
 
 <style>
-body{
-  margin:0;
-  font-family:Inter,Arial,sans-serif;
-  background:#f6f7f9;
-}
+  :root{
+    --tp-header-space:110px;
+    --tp-page-bg:#f6f7f9;
+    --tp-text:#111827;
+    --tp-muted:#8b95a7;
+    --tp-border:#e5e7eb;
+    --tp-empty-shadow:rgba(79,125,243,.14);
+    --tp-bottom-space:calc(40px + env(safe-area-inset-bottom, 0px));
+  }
 
-.wrap{
-  max-width:1200px;
-  margin:24px auto;
-  padding:0 14px;
-}
+  html,
+  body{
+    margin:0;
+    padding:0;
+    min-height:100%;
+    overflow-x:hidden;
+    background:var(--tp-page-bg);
+  }
 
-.head{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:10px;
-  margin-bottom:16px;
-}
+  body{
+    min-height:100svh;
+    display:flex;
+    flex-direction:column;
+    font-family:Inter, Arial, sans-serif;
+    color:var(--tp-text);
+    background:var(--tp-page-bg);
+  }
 
-.title{
-  font-size:22px;
-  font-weight:900;
-}
+  .page-content{
+    flex:1 0 auto;
+    width:100%;
+    padding-top:var(--tp-header-space);
+    box-sizing:border-box;
+  }
 
-.tabs{
-  display:flex;
-  gap:6px;
-}
+  .page{
+    width:100%;
+    min-height:calc(100svh - var(--tp-header-space));
+    box-sizing:border-box;
+  }
 
-.tab{
-  padding:8px 14px;
-  border-radius:999px;
-  border:1px solid #e5e7eb;
-  background:#fff;
-  cursor:pointer;
-  font-weight:800;
-  font-size:13px;
-}
+  .container{
+    width:100%;
+    max-width:1200px;
+    margin:0 auto;
+    padding:8px 16px var(--tp-bottom-space);
+    box-sizing:border-box;
+    min-height:calc(100svh - var(--tp-header-space));
+    display:flex;
+    flex-direction:column;
+  }
 
-.tab.active{
-  background:#111;
-  color:#fff;
-  border-color:#111;
-}
+  .topbar{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin:8px 0 16px;
+    flex-wrap:wrap;
+  }
 
-.offer-meta{
-  font-size:12px;
-  color:#6b7280;
-  margin-top:4px;
-  font-weight:500;
+  .title{
+    margin:0;
+    font-size:22px;
+    line-height:1.1;
+    font-weight:900;
+    color:var(--tp-text);
+  }
 
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  .filters{
+    margin-left:auto;
+    max-width:220px;
+    width:100%;
+  }
 
-  max-width:100%;
-}
+  .select{
+    width:100%;
+    height:40px;
+    border-radius:12px;
+    border:1px solid var(--tp-border);
+    background:#fff;
+    padding:0 12px;
+    font-size:14px;
+    outline:none;
+    box-sizing:border-box;
+  }
 
-.offer-actions{
-  margin-top:10px;
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-}
+  .select:focus{
+    border-color:#cbd5e1;
+  }
 
-.offer-actions button{
-  padding:8px 12px;
-  border-radius:10px;
-  border:none;
-  cursor:pointer;
-  font-weight:800;
-  font-size:13px;
-  white-space:nowrap;
-}
-.btn-danger{
-  background:#fee2e2;
-  color:#b91c1c;
-}
+  .offers-list{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:16px;
+    align-content:start;
+    flex:1 0 auto;
+  }
 
-.btn-primary{
-  background:#1E50D4;
-  color:#fff;
-}
+  .offer-card{
+    width:100%;
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:16px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
 
-.btn-secondary{
-  background:#e5e7eb;
-  color:#111;
-}
+  .offer-image{
+    position:relative;
+    width:100%;
+    aspect-ratio:4 / 3;
+    background:#f3f4f6;
+    overflow:hidden;
+  }
 
-.empty{
-  text-align:center;
-  color:#9ca3af;
-  font-size:14px;
-  margin-top:40px;
-}
-.offer-body{
-  position:relative;
-}
+  .offer-image img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
 
-.offer-menu{
-  position:absolute;
-  top:8px;
-  right:8px;
+  .offer-body{
+    position:relative;
+    padding:10px;
+    display:flex;
+    flex-direction:column;
+    flex:1;
+    gap:4px;
+  }
 
-  width:28px;
-  height:28px;
+  .offer-title{
+    font-size:14px;
+    font-weight:700;
+    line-height:1.35;
+    display:-webkit-box;
+    -webkit-line-clamp:3;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+    word-break:break-word;
+    overflow-wrap:anywhere;
+  }
 
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  .offer-price{
+    font-size:18px;
+    font-weight:900;
+    margin:6px 0 8px;
+    letter-spacing:.2px;
+  }
 
-  font-size:18px;
-  font-weight:700;
+  .offer-meta{
+    font-size:12px;
+    color:#6b7280;
+    margin-top:4px;
+    font-weight:500;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width:100%;
+  }
 
-  border-radius:8px;
-  cursor:pointer;
+  .offer-menu{
+    position:absolute;
+    top:8px;
+    right:8px;
+    width:28px;
+    height:28px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:18px;
+    font-weight:700;
+    border-radius:8px;
+    cursor:pointer;
+    background:rgba(255,255,255,0.92);
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+    color:#111;
+    z-index:6;
+    border:1px solid rgba(255,255,255,.7);
+    box-shadow:0 4px 12px rgba(0,0,0,.06);
+  }
 
-  background:rgba(255,255,255,0.9);
-  backdrop-filter:blur(4px);
+  .offer-menu:hover{
+    background:#fff;
+  }
 
-  color:#111;
-}
+  .offer-dropdown{
+    position:absolute;
+    top:40px;
+    right:8px;
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:10px;
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
+    display:none;
+    flex-direction:column;
+    min-width:170px;
+    overflow:hidden;
+    z-index:20;
+  }
 
-.offer-menu:hover{
-  background:#fff;
-}
+  .offer-dropdown button{
+    padding:10px 14px;
+    border:none;
+    background:#fff;
+    text-align:left;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    color:#111827;
+  }
 
-.offers-list:has(.empty){
-  display:block;
-}
-.offer-dropdown{
-  position:absolute;
-  top:40px;
-  right:8px;
+  .offer-dropdown button:hover{
+    background:#f3f4f6;
+  }
 
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:10px;
+  .offer-dropdown.show{
+    display:flex;
+  }
 
-  box-shadow:0 10px 25px rgba(0,0,0,0.08);
+  .empty-state{
+    grid-column:1/-1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:calc(100svh - var(--tp-header-space) - 180px);
+    padding:24px 0 8px;
+    box-sizing:border-box;
+  }
 
-  display:none;
-  flex-direction:column;
+  .empty-state-inner{
+    width:min(100%, 420px);
+    text-align:center;
+    padding:0 18px;
+    box-sizing:border-box;
+  }
 
-  min-width:160px;
-  overflow:hidden;
-  z-index:20;
-}
+  .empty-illustration{
+    width:min(180px, 48vw);
+    margin:0 auto 20px;
+    filter:drop-shadow(0 16px 32px var(--tp-empty-shadow));
+  }
 
-.offer-dropdown button{
-  padding:10px 14px;
-  border:none;
-  background:#fff;
-  text-align:left;
-  font-size:13px;
-  cursor:pointer;
-}
+  .empty-illustration svg{
+    display:block;
+    width:100%;
+    height:auto;
+  }
 
-.offer-dropdown button:hover{
-  background:#f3f4f6;
-}
+  .empty-text{
+    color:#9ca3af;
+    font-size:16px;
+    line-height:1.45;
+    font-weight:400;
+    margin:0;
+  }
 
-.offer-dropdown.show{
-  display:flex;
-}
-.offer-body{
-  padding:10px;
-  display:flex;
-  flex-direction:column;
-  flex:1;
+  .empty-error{
+    grid-column:1/-1;
+    padding:24px;
+    color:#777;
+  }
 
-  gap:4px;
-}
+  @media (max-width:768px){
+    :root{
+      --tp-header-space:100px;
+      --tp-bottom-space:calc(32px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .container{
+      padding:0 12px var(--tp-bottom-space);
+    }
+  }
+
+  @media (max-width:640px){
+    :root{
+      --tp-bottom-space:calc(28px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .container{
+      padding:0 12px var(--tp-bottom-space);
+    }
+
+    .topbar{
+      flex-direction:column;
+      align-items:flex-start;
+      gap:12px;
+      margin:0 0 14px;
+    }
+
+    .filters{
+      margin-left:0;
+      width:220px;
+      max-width:100%;
+    }
+
+    .offers-list{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:12px;
+    }
+
+    .offer-title{
+      font-size:13px;
+      -webkit-line-clamp:3;
+      min-height:auto;
+    }
+
+    .offer-price{
+      font-size:15px;
+    }
+
+    .offer-meta{
+      font-size:11px;
+    }
+
+    .empty-state{
+      min-height:calc(100svh - var(--tp-header-space) - 170px);
+      padding:18px 0 0;
+    }
+
+    .empty-illustration{
+      width:min(160px, 46vw);
+    }
+
+    .empty-text{
+      font-size:15px;
+    }
+  }
 </style>
 </head>
 
@@ -192,21 +348,25 @@ body{
 <div id="header-container"></div>
 
 <main class="page-content">
+  <div class="page">
+    <div class="container">
 
-<div class="wrap">
+      <div class="topbar">
+        <h1 class="title" data-i18n="page.title"></h1>
 
-  <div class="head">
-    <div class="title">Мои предложения</div>
+        <div class="filters">
+<select class="select" id="statusFilter">
+  <option value="active" data-i18n="page.filters.active"></option>
+  <option value="inactive" data-i18n="page.filters.inactive"></option>
+  <option value="closed" data-i18n="page.filters.closed"></option>
+</select>
+        </div>
+      </div>
 
-<div class="tabs">
-  <button class="tab" id="tab-active" onclick="setTab('active')">Активные</button>
-  <button class="tab" id="tab-inactive" onclick="setTab('inactive')">Неактивные</button>
-  <button class="tab" id="tab-closed" onclick="setTab('closed')">Проданные</button>
-</div>
+      <div id="list" class="offers-list"></div>
+
+    </div>
   </div>
-
-  <div id="list" class="offers-list"></div>
-</div>
 </main>
 
 <div id="footer-container"></div>
@@ -214,6 +374,7 @@ body{
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
 <script src="/i18n.js"></script>
+<script type="module" src="/games/index.js"></script>
 <script src="/header.js"></script>
 <script src="/tp-money.js"></script>
 <script src="/offer-title.js"></script>
@@ -221,181 +382,322 @@ body{
 
 <script>
 const token = localStorage.getItem("tp_token");
+if(!token){
+  location.href = "/auth.html?mode=login";
+}
+
 const list = document.getElementById("list");
+const statusFilter = document.getElementById("statusFilter");
 
 let allOffers = [];
-let currentTab = "active";
+let currentStatus = "active";
+
+function pageT(key, params = {}){
+  return window.tpI18n?.t(`page.${key}`, params) || key;
+}
+
+function commonT(key, params = {}){
+  return window.tpI18n?.t(`common.${key}`, params) || key;
+}
+
+function getCurrentLang(){
+  const lang =
+    window.tpI18n?.currentLang ||
+    localStorage.getItem("tp_lang") ||
+    "ru";
+
+  const safeLang = String(lang).trim().toLowerCase();
+  return ["ru", "uk", "en"].includes(safeLang) ? safeLang : "ru";
+}
+
+function getCurrentLocale(){
+  const lang = getCurrentLang();
+  if(lang === "uk") return "uk-UA";
+  if(lang === "en") return "en-US";
+  return "ru-RU";
+}
+
+function escapeHtml(value){
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function formatDate(ts){
   if(!ts) return "";
   const d = new Date(ts);
-  return d.toLocaleDateString("ru-RU", {
+
+  if (Number.isNaN(d.getTime())) return "";
+
+  return d.toLocaleDateString(getCurrentLocale(), {
     day:"numeric",
     month:"long"
   });
 }
+
 function formatMode(mode){
   if(!mode) return "";
 
-  return mode
-    .replace(/_/g," ")
-    .replace(/\b\w/g,l=>l.toUpperCase());
-}
-function setTab(tab){
-  currentTab = tab;
-
-  document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
-  document.getElementById("tab-" + tab).classList.add("active");
-
-  render();
+  return String(mode)
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, l => l.toUpperCase());
 }
 
-fetch("/api/my-offers", {
-  headers:{ Authorization:"Bearer " + token }
-})
-.then(r=>r.json())
-.then(d=>{
-  if(!d.success){
-    list.innerHTML = `<div class="empty">Ошибка загрузки</div>`;
-    return;
+function getOfferTitle(o){
+  if(typeof window.buildOfferTitle === "function"){
+    return window.buildOfferTitle(o);
   }
-  allOffers = d.offers || [];
-  setTab("active");
-});
+
+  const lang = getCurrentLang();
+
+  return (
+    o.title?.[lang] ||
+    o.title?.ru ||
+    o.title?.uk ||
+    o.title?.en ||
+    o.mode ||
+    commonT("offer_fallback")
+  );
+}
+
+function hasOfferForCurrentLang(o){
+  const lang = getCurrentLang();
+  const modeConfig = window.GAMES?.[o.game]?.modes?.[o.mode];
+
+  if (modeConfig?.description === false) {
+    return true;
+  }
+
+  const titleValue = o.title?.[lang];
+  return typeof titleValue === "string" && titleValue.trim();
+}
+
+function getFilteredOffers(){
+  const now = Date.now();
+
+  return allOffers.filter(o => {
+    if (!hasOfferForCurrentLang(o)) {
+      return false;
+    }
+
+    if(currentStatus === "active"){
+      return o.status === "active" && (!o.activeUntil || o.activeUntil > now);
+    }
+
+    if(currentStatus === "inactive"){
+      return o.status === "inactive" || (o.status === "active" && o.activeUntil && o.activeUntil <= now);
+    }
+
+    if(currentStatus === "closed"){
+      return o.status === "closed";
+    }
+
+    return false;
+  });
+}
+
+function renderEmptyState(){
+  list.innerHTML = `
+    <div class="empty-state">
+      <div class="empty-state-inner">
+        <div class="empty-illustration" aria-hidden="true">
+          <svg viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg" fill="none">
+            <defs>
+              <linearGradient id="cardFill" x1="44" y1="32" x2="132" y2="136" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#ffffff" stop-opacity=".96"/>
+                <stop offset="1" stop-color="#eaf0ff" stop-opacity=".82"/>
+              </linearGradient>
+
+              <linearGradient id="cardStroke" x1="48" y1="36" x2="130" y2="132" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#7ea2ff" stop-opacity=".72"/>
+                <stop offset="1" stop-color="#7ea2ff" stop-opacity=".26"/>
+              </linearGradient>
+
+              <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
+                gradientTransform="translate(90 94) rotate(90) scale(72 78)">
+                <stop offset="0" stop-color="#7ea2ff" stop-opacity=".24"/>
+                <stop offset=".65" stop-color="#7ea2ff" stop-opacity=".08"/>
+                <stop offset="1" stop-color="#7ea2ff" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+
+            <ellipse cx="90" cy="145" rx="42" ry="10" fill="#dfe7fb" opacity=".66"/>
+            <circle cx="90" cy="88" r="62" fill="url(#glow)"/>
+
+            <rect x="48" y="34" width="84" height="104" rx="18"
+                  fill="url(#cardFill)"
+                  stroke="url(#cardStroke)"
+                  stroke-width="3"/>
+
+            <rect x="64" y="56" width="38" height="8" rx="4" fill="#cfdcff"/>
+            <rect x="64" y="74" width="52" height="7" rx="3.5" fill="#dbe5ff"/>
+            <rect x="64" y="88" width="44" height="7" rx="3.5" fill="#dbe5ff"/>
+
+            <circle cx="118" cy="112" r="16" fill="#f4f7ff" stroke="#9ab6ff" stroke-width="3"/>
+            <path d="M118 103v18" stroke="#7ea2ff" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M109 112h18" stroke="#7ea2ff" stroke-width="3.5" stroke-linecap="round"/>
+
+            <path d="M42 110v6" stroke="#8aa9ff" stroke-width="3" stroke-linecap="round"/>
+            <path d="M39 113h6" stroke="#8aa9ff" stroke-width="3" stroke-linecap="round"/>
+
+            <path d="M140 50v8" stroke="#8aa9ff" stroke-width="3" stroke-linecap="round"/>
+            <path d="M136 54h8" stroke="#8aa9ff" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <p class="empty-text">${escapeHtml(pageT(`empty.${currentStatus}`))}</p>
+      </div>
+    </div>
+  `;
+}
 
 function render(){
   list.innerHTML = "";
 
-  const now = Date.now();
+  const filtered = getFilteredOffers();
 
-const filtered = allOffers.filter(o=>{
-
-  if(currentTab === "active"){
-    return o.status === "active" && o.activeUntil > now;
+  if(!filtered.length){
+    renderEmptyState();
+    return;
   }
-
-  if(currentTab === "inactive"){
-    return o.status === "inactive";
-  }
-
-  if(currentTab === "closed"){
-    return o.status === "closed";
-  }
-
-});
-
-if(!filtered.length){
-  list.innerHTML = `
-    <div class="empty">Нет предложений</div>
-  `;
-  return;
-}
 
   filtered.forEach(renderCard);
   updatePrices();
 }
 
 function renderCard(o){
-
   const card = document.createElement("div");
   card.className = "offer-card";
   card.style.cursor = "pointer";
 
-  card.addEventListener("click",()=>{
-    location.href = "/offer.html?id=" + o.id;
+  card.addEventListener("click", () => {
+    location.href = "/offer.html?id=" + encodeURIComponent(o.id);
   });
 
-  const image = o.imageUrl || "/img/offer-default.png";
-  const title = buildOfferTitle(o);
-  const gameObj = (window.GAMES_LIST || []).find(g => g.id === o.game);
-const gameTitle = gameObj ? gameObj.name : o.game;
+  const image = o.imageUrl || o.imageDataUrl || "/img/offer-default.png";
+  const title = escapeHtml(getOfferTitle(o));
 
-const gameLine = [
-  gameTitle,
-  formatMode(o.mode)
-]
-  .filter(Boolean)
-  .join(", ");
+  const gameObj = (window.GAMES_LIST || []).find(g => g.id === o.game);
+  const gameTitle = gameObj ? gameObj.name : o.game;
+
+  const gameLine = [
+    gameTitle,
+    formatMode(o.mode)
+  ].filter(Boolean).join(", ");
 
   let meta = "";
 
   if(o.status === "active" && o.activeUntil){
-    meta = `<div class="offer-meta">
-      Активно до ${formatDate(o.activeUntil)}
-    </div>`;
+    meta = `<div class="offer-meta">${escapeHtml(pageT("meta.activeUntil", { date: formatDate(o.activeUntil) }))}</div>`;
   }
 
+  if(currentStatus === "inactive"){
+    meta = `<div class="offer-meta">${escapeHtml(pageT("meta.inactiveStatus"))}</div>`;
+  }
 
+  if(currentStatus === "closed"){
+    meta = `<div class="offer-meta">${escapeHtml(pageT("meta.closedStatus"))}</div>`;
+  }
 
-card.innerHTML = `
-<div class="offer-image">
+  card.innerHTML = `
+    <div class="offer-image">
+      <img src="${escapeHtml(image)}" onerror="this.src='/img/offer-default.png'">
 
-  <img src="${image}" onerror="this.src='/img/offer-default.png'">
-
-  <div class="offer-menu" onclick="toggleMenu('${o.id}', event)">⋯</div>
-
-  <div class="offer-dropdown" id="menu-${o.id}"></div>
-
-</div>
-  <div class="offer-body">
-    <div class="offer-title">${title}</div>
-
-    <div class="offer-price" data-price="${o.price}">—</div>
-
-    <div class="offer-meta">
-      ${gameLine}
+      <div class="offer-menu" onclick="toggleMenu('${escapeHtml(o.id)}', event)">⋯</div>
+      <div class="offer-dropdown" id="menu-${escapeHtml(o.id)}"></div>
     </div>
 
-    ${meta}
-
-
-  </div>
-`;
+    <div class="offer-body">
+      <div class="offer-title">${title}</div>
+      <div class="offer-price" data-price="${o.price}">—</div>
+      <div class="offer-meta">${escapeHtml(gameLine)}</div>
+      ${meta}
+    </div>
+  `;
 
   list.appendChild(card);
 }
 
-function activate(id,e){
-  e.stopPropagation();
-
-  fetch("/api/offers/" + id + "/activate",{
-    method:"POST",
+async function loadOffers(){
+  const res = await fetch("/api/my-offers", {
     headers:{ Authorization:"Bearer " + token }
-  })
-  .then(r=>r.json())
-  .then(d=>{
-    if(d.success) location.reload();
-    else alert("Ошибка");
   });
-}
-function deactivate(id, e){
-  e.stopPropagation();
 
-  if(!confirm("Деактивировать объявление?")){
+  const data = await res.json().catch(() => ({}));
+
+  if(!data.success){
+    list.innerHTML = `
+      <div class="empty-error">
+        ${escapeHtml(pageT("alerts.loadError"))}
+      </div>
+    `;
     return;
   }
 
-  fetch("/api/offers/" + id + "/deactivate", {
-    method: "POST",
-    headers: {
-      Authorization: "Bearer " + token
-    }
-  })
-  .then(r => r.json())
-  .then(d => {
-    if(d.success){
-      location.reload();
-    } else {
-      alert(d.message || "Ошибка");
-    }
+  allOffers = Array.isArray(data.offers) ? data.offers : [];
+  render();
+}
+
+function closeAllMenus(){
+  document.querySelectorAll(".offer-dropdown").forEach(m => {
+    m.classList.remove("show");
   });
 }
-function edit(id, e){
+
+function buildMenuHtml(id){
+  const editText = escapeHtml(pageT("actions.edit"));
+  const deactivateText = escapeHtml(pageT("actions.deactivate"));
+  const activateText = escapeHtml(pageT("actions.activate"));
+  const cloneText = escapeHtml(pageT("actions.clone"));
+
+  if(currentStatus === "active"){
+    return `
+      <button onclick="editOffer('${id}', event)">${editText}</button>
+      <button onclick="deactivateOffer('${id}', event)">${deactivateText}</button>
+    `;
+  }
+
+  if(currentStatus === "inactive"){
+    return `
+      <button onclick="activateOffer('${id}', event)">${activateText}</button>
+      <button onclick="editOffer('${id}', event)">${editText}</button>
+    `;
+  }
+
+  if(currentStatus === "closed"){
+    return `
+      <button onclick="cloneOffer('${id}', event)">${cloneText}</button>
+    `;
+  }
+
+  return "";
+}
+
+function toggleMenu(id, e){
+  e.stopPropagation();
+
+  const menu = document.getElementById("menu-" + id);
+  if(!menu) return;
+
+  const isOpen = menu.classList.contains("show");
+
+  closeAllMenus();
+
+  if(!isOpen){
+    menu.innerHTML = buildMenuHtml(id);
+    menu.classList.add("show");
+  }
+}
+
+function editOffer(id, e){
   e.stopPropagation();
 
   const offer = allOffers.find(o => o.id === id);
-  if (!offer) {
-    alert("Оффер не найден");
+  if(!offer){
+    alert(pageT("alerts.offerNotFound"));
     return;
   }
 
@@ -408,82 +710,135 @@ function edit(id, e){
   location.href = "/offer-create.html?" + params.toString();
 }
 
+async function activateOffer(id, e){
+  e.stopPropagation();
+
+  const res = await fetch("/api/offers/" + id + "/activate", {
+    method:"POST",
+    headers:{ Authorization:"Bearer " + token }
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if(data.success){
+    closeAllMenus();
+    await loadOffers();
+  }else{
+    alert(data.message || pageT("alerts.error"));
+  }
+}
+
+async function deactivateOffer(id, e){
+  e.stopPropagation();
+
+  if(!confirm(pageT("confirm.deactivate"))){
+    return;
+  }
+
+  const res = await fetch("/api/offers/" + id + "/deactivate", {
+    method:"POST",
+    headers:{ Authorization:"Bearer " + token }
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if(data.success){
+    closeAllMenus();
+    await loadOffers();
+  }else{
+    alert(data.message || pageT("alerts.error"));
+  }
+}
+
+async function cloneOffer(id, e){
+  e.stopPropagation();
+
+  const res = await fetch("/api/offers/" + id + "/clone", {
+    method:"POST",
+    headers:{ Authorization:"Bearer " + token }
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if(data.success){
+    closeAllMenus();
+    await loadOffers();
+  }else{
+    alert(data.message || pageT("alerts.error"));
+  }
+}
+
 async function updatePrices(){
   const els = document.querySelectorAll(".offer-price");
+
   for(const el of els){
     const eur = Number(el.dataset.price);
-    if(!eur) continue;
+    if(!Number.isFinite(eur)) continue;
     el.textContent = await tpMoney.formatPrice(eur);
   }
 }
 
+statusFilter.addEventListener("change", () => {
+  currentStatus = statusFilter.value;
+  render();
+});
+
 window.addEventListener("tp:currency-change", updatePrices);
-function cloneOffer(id, e){
-  e.stopPropagation();
 
-  fetch("/api/offers/" + id + "/clone", {
-    method: "POST",
-    headers: {
-      Authorization: "Bearer " + token
-    }
-  })
-  .then(r => r.json())
-  .then(d => {
-    if(d.success){
-      location.reload();
-    } else {
-      alert(d.message || "Ошибка");
-    }
-  });
-}
-function toggleMenu(id,e){
-  e.stopPropagation();
+window.addEventListener("tp:lang-change", async () => {
+  if(window.tpI18n?.load){
+    await window.tpI18n.load(getCurrentLang());
+  }
 
-  const menu = document.getElementById("menu-"+id);
-  if(!menu) return;
+  if(window.tpI18n?.apply){
+    window.tpI18n.apply(document);
+  }
 
-  const isOpen = menu.classList.contains("show");
+  render();
+});
 
-  // закрываем все меню
-  document.querySelectorAll(".offer-dropdown").forEach(m=>{
-    m.classList.remove("show");
-  });
+document.addEventListener("click", closeAllMenus);
 
-  // если было закрыто — открываем
-  if(!isOpen){
+async function waitForGamesConfig(timeoutMs = 7000){
+  const startedAt = Date.now();
 
-    const offer = allOffers.find(o=>o.id===id);
-    if(!offer) return;
+  while (true) {
+    const isReady = Boolean(
+      window.GAMES &&
+      typeof window.GAMES === "object" &&
+      Object.keys(window.GAMES).length > 0
+    );
 
-    menu.innerHTML="";
-
-    if(currentTab==="active"){
-      menu.innerHTML=`
-        <button onclick="edit('${id}',event)">Редактировать</button>
-        <button onclick="deactivate('${id}',event)">Снять с продажи</button>
-      `;
+    if (isReady) {
+      return;
     }
 
-    if(currentTab==="inactive"){
-      menu.innerHTML=`
-        <button onclick="activate('${id}',event)">Активировать</button>
-        <button onclick="edit('${id}',event)">Редактировать</button>
-      `;
+    if (Date.now() - startedAt >= timeoutMs) {
+      throw new Error("Games config not ready");
     }
 
-    if(currentTab==="closed"){
-      menu.innerHTML=`
-        <button onclick="cloneOffer('${id}',event)">Продать снова</button>
-      `;
-    }
-
-    menu.classList.add("show");
+    await new Promise(resolve => setTimeout(resolve, 25));
   }
 }
-document.addEventListener("click",()=>{
-  document.querySelectorAll(".offer-dropdown").forEach(m=>{
-    m.classList.remove("show");
-  });
+
+document.addEventListener("DOMContentLoaded", async () => {
+  if(window.tpI18n?.load){
+    await window.tpI18n.load(getCurrentLang());
+  }
+
+  try {
+    await waitForGamesConfig();
+  } catch (e) {
+    console.warn("Games config not loaded on my-offers page:", e);
+  }
+
+  if(window.tpI18n?.apply){
+    window.tpI18n.apply(document);
+  }
+
+statusFilter.value = "active";
+currentStatus = "active";
+await loadOffers();
 });
 </script>
 </body>

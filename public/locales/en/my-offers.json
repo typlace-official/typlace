@@ -1,0 +1,34 @@
+{
+  "title": "My listings",
+  "filters": {
+    "all": "All",
+    "active": "Active",
+    "inactive": "Inactive",
+    "closed": "Sold"
+  },
+  "empty": {
+    "all": "No listings yet",
+    "active": "No active listings yet",
+    "inactive": "No inactive listings yet",
+    "closed": "No sold listings yet"
+  },
+  "meta": {
+    "activeUntil": "Active until {{date}}",
+    "inactiveStatus": "Listing is inactive",
+    "closedStatus": "Listing has been sold"
+  },
+  "actions": {
+    "edit": "Edit",
+    "deactivate": "Deactivate",
+    "activate": "Activate",
+    "clone": "Sell again"
+  },
+  "alerts": {
+    "loadError": "Loading error",
+    "offerNotFound": "Listing not found",
+    "error": "Error"
+  },
+  "confirm": {
+    "deactivate": "Deactivate this listing?"
+  }
+}

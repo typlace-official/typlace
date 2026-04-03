@@ -1,0 +1,19 @@
+{
+  "title": "Продажі",
+  "empty": "Продажів поки немає",
+  "orderNumber": "Замовлення {{number}}",
+  "filters": {
+    "all": "Статус",
+    "pending": "У процесі",
+    "completed": "Завершено",
+    "refunded": "Повернення"
+  },
+  "statuses": {
+    "pending": "У процесі",
+    "completed": "Завершено",
+    "refunded": "Повернення"
+  },
+  "alerts": {
+    "loadError": "Помилка завантаження"
+  }
+}

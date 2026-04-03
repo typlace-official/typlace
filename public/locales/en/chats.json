@@ -1,11 +1,56 @@
 {
   "title": "Chats",
-  "chatsEmpty": "Chat list is empty",
-  "pickChat": "Select a chat",
-  "writeMessage": "Write a message...",
-  "send": "Send",
-  "noMessages": "No messages",
+  "officialTitle": "Official chats",
+  "scopeExit": "Regular chats",
+  "back": "Back",
   "report": "Report",
   "block": "Block",
-  "deleteChat": "Delete chat"
+  "unblock": "Unblock",
+  "deleteChat": "Delete chat",
+  "pickChat": "Choose a chat",
+  "writeMessage": "Write a message",
+  "chatsEmpty": "You have no chats yet",
+  "noMessages": "No messages yet",
+  "blockedNotice": "This user is blocked — sending messages is disabled.",
+  "chat": {
+    "actions": "Chat actions",
+    "attach": "Attach",
+    "send": "Send",
+    "mute": "Turn off notifications",
+    "unmute": "Turn on notifications",
+    "officialAccount": "Official account",
+    "officialWritePlaceholder": "Write an official message",
+    "officialReadOnlyPlaceholder": "Official chat is read-only",
+    "online": "Online",
+    "offline": "Offline",
+    "justNow": "Just now",
+    "minutesAgo": "{{count}} min ago",
+    "hoursAgo": "{{count}} h ago",
+    "daysAgo": "{{count}} d ago",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "photo": "📷 Photo",
+    "userFallback": "User",
+    "noMessagesPreview": "No messages"
+  },
+  "alerts": {
+    "errorTitle": "Error",
+    "confirmTitle": "Confirmation",
+    "chatNotFound": "Chat not found or access denied",
+    "fileSendError": "Failed to send file",
+    "sendMessageError": "Failed to send message",
+    "orderCreateError": "Failed to create order",
+    "deleteChatError": "Failed to delete chat"
+  },
+  "deleteConfirm": {
+    "text": "Delete chat?",
+    "confirm": "Delete",
+    "cancel": "Cancel"
+  },
+  "toasts": {
+    "notificationsOff": "Notifications turned off",
+    "notificationsOn": "Notifications turned on",
+    "userBlocked": "User blocked",
+    "userUnblocked": "User unblocked"
+  }
 }

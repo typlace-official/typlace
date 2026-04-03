@@ -2,8 +2,10 @@
   "title": "Профиль",
   "myTitle": "Мой профиль",
   "externalTitle": "Профиль пользователя",
+  "externalTitleNamed": "Профиль {{username}}",
   "docTitleMy": "Мой профиль — TyPlace",
   "docTitleExternal": "Профиль пользователя — TyPlace",
+  "docTitleExternalNamed": "Профиль {{username}} — TyPlace",
 
   "nav": {
     "myOffers": "Мои объявления",
@@ -16,11 +18,24 @@
   "since": "На TyPlace с",
   "noReviews": "Нет отзывов",
   "copyId": "Нажмите, чтобы скопировать ID",
+  "userIdPrefix": "UID: {{id}}",
 
   "reviews": {
     "one": "отзыв",
     "few": "отзыва",
     "many": "отзывов"
+  },
+
+  "common": {
+    "close": "Закрыть"
+  },
+
+  "avatar": {
+    "cropTitle": "Обрезать фото",
+    "tip": "Перетащите изображение и выберите масштаб",
+    "zoom": "Масштаб",
+    "cancel": "Отмена",
+    "save": "Сохранить"
   },
 
   "menu": {
@@ -56,6 +71,7 @@
     "telegramLinkStartError": "Не удалось начать подключение Telegram",
     "telegramUnlinkError": "Не удалось отключить Telegram",
     "telegramLinkedSuccess": "Telegram успешно подключён",
-    "telegramLinkInstructions": "Откройте Telegram, запустите бота и подтвердите привязку"
+    "telegramLinkInstructions": "Откройте Telegram, запустите бота и подтвердите привязку",
+    "copyIdError": "Не удалось скопировать ID"
   }
 }

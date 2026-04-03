@@ -663,12 +663,168 @@ const { Server } = require("socket.io");
 const server = http.createServer(app);
 const io = new Server(server);
 
-const onlineSockets = new Map(); // email -> socket.id
-supportService.setSocket(io, onlineSockets);
+const onlineSockets = new Map(); // email -> last socket.id
+const socketIdsByEmail = new Map(); // email -> Set<socket.id>
+const socketIdsByToken = new Map(); // token -> Set<socket.id>
+
+supportService.setSocket(io, emitToUserSockets);
+
+function emitToUserSockets(email, event, payload) {
+  const safeEmail = String(email || "").trim().toLowerCase();
+  if (!safeEmail) return;
+
+  const set = socketIdsByEmail.get(safeEmail);
+  if (!set || set.size === 0) return;
+
+  for (const socketId of set) {
+    io.to(socketId).emit(event, payload);
+  }
+}
+
+function addSocketToToken(token, socketId) {
+  const safeToken = String(token || "").trim();
+  const safeSocketId = String(socketId || "").trim();
+
+  if (!safeToken || !safeSocketId) return;
+
+  let set = socketIdsByToken.get(safeToken);
+
+  if (!set) {
+    set = new Set();
+    socketIdsByToken.set(safeToken, set);
+  }
+
+  set.add(safeSocketId);
+}
+
+function removeSocketFromToken(token, socketId) {
+  const safeToken = String(token || "").trim();
+  const safeSocketId = String(socketId || "").trim();
+
+  if (!safeToken || !safeSocketId) return;
+
+  const set = socketIdsByToken.get(safeToken);
+  if (!set) return;
+
+  set.delete(safeSocketId);
+
+  if (set.size === 0) {
+    socketIdsByToken.delete(safeToken);
+  }
+}
+
+function disconnectSocketsForToken(token) {
+  const safeToken = String(token || "").trim();
+  if (!safeToken) return;
+
+  const set = socketIdsByToken.get(safeToken);
+  if (!set || set.size === 0) {
+    socketIdsByToken.delete(safeToken);
+    return;
+  }
+
+  for (const socketId of Array.from(set)) {
+    const socket = io.sockets.sockets.get(socketId);
+    if (socket) {
+      socket.disconnect(true);
+    }
+  }
+
+  socketIdsByToken.delete(safeToken);
+}
+
+function setUserOnlineState(email, isOnline) {
+  const safeEmail = String(email || "").trim().toLowerCase();
+  if (!safeEmail) return;
+
+  const user = users.get(safeEmail);
+  const lastSeen = Date.now();
+
+  if (user) {
+    user.online = Boolean(isOnline);
+
+    if (!isOnline) {
+      user.lastSeen = lastSeen;
+    }
+  }
+
+  prisma.user.update({
+    where: { email: safeEmail },
+    data: {
+      online: Boolean(isOnline),
+      ...(isOnline ? {} : { lastSeenAt: new Date(lastSeen) })
+    }
+  }).catch(err => {
+    console.error("setUserOnlineState prisma error:", err.message);
+  });
+}
+
+function addOnlineSocket(email, socketId) {
+  const safeEmail = String(email || "").trim().toLowerCase();
+  const safeSocketId = String(socketId || "").trim();
+
+  if (!safeEmail || !safeSocketId) return;
+
+  let set = socketIdsByEmail.get(safeEmail);
+
+  if (!set) {
+    set = new Set();
+    socketIdsByEmail.set(safeEmail, set);
+  }
+
+  set.add(safeSocketId);
+  onlineSockets.set(safeEmail, safeSocketId);
+  setUserOnlineState(safeEmail, true);
+}
+
+function removeOnlineSocket(email, socketId) {
+  const safeEmail = String(email || "").trim().toLowerCase();
+  const safeSocketId = String(socketId || "").trim();
+
+  if (!safeEmail || !safeSocketId) return;
+
+  const set = socketIdsByEmail.get(safeEmail);
+  if (!set) return;
+
+  set.delete(safeSocketId);
+
+  if (set.size === 0) {
+    socketIdsByEmail.delete(safeEmail);
+    onlineSockets.delete(safeEmail);
+    setUserOnlineState(safeEmail, false);
+    return;
+  }
+
+  const nextSocketId = set.values().next().value;
+  if (nextSocketId) {
+    onlineSockets.set(safeEmail, nextSocketId);
+  }
+}
+
+function cleanupUploadedFile(file) {
+  const filePath = String(file?.path || "").trim();
+  if (!filePath) return;
+
+  try {
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  } catch (err) {
+    console.error("cleanupUploadedFile error:", err.message);
+  }
+}
+
+function cleanupUploadedFiles(files) {
+  if (!files) return;
+
+  const list = Array.isArray(files) ? files : [files];
+
+  for (const file of list) {
+    cleanupUploadedFile(file);
+  }
+}
 
 const PORT = process.env.PORT || 3000;
-
-app.set("trust proxy", 1);
 
 const authRequestCodeLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
@@ -720,8 +876,6 @@ const supportMessageLimiter = rateLimit({
   }
 });
 
-app.use(express.json({ limit: "5mb" }));
-app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 app.use((req, res, next) => {
   const originalJson = res.json.bind(res);
@@ -1221,10 +1375,7 @@ function emitChatMessageToParticipants(chatId, message) {
   const participants = getRealtimeEmailsForChat(chat);
 
   participants.forEach(email => {
-    const socketId = onlineSockets.get(email);
-    if (socketId) {
-      io.to(socketId).emit("new-message", message);
-    }
+    emitToUserSockets(email, "new-message", message);
   });
 }
 
@@ -1489,11 +1640,12 @@ async function cleanupExpiredAuthData() {
     })
   ]);
 
-  for (const [token, session] of sessions.entries()) {
-    if (!session?.expiresAt || session.expiresAt <= nowMs) {
-      sessions.delete(token);
-    }
+for (const [token, session] of sessions.entries()) {
+  if (!session?.expiresAt || session.expiresAt <= nowMs) {
+    disconnectSocketsForToken(token);
+    sessions.delete(token);
   }
+}
 
   for (const [email, code] of pendingCodes.entries()) {
     if (!code?.expiresAt || code.expiresAt <= nowMs) {
@@ -1693,9 +1845,11 @@ async function recalcSellerRating(sellerEmail) {
   const reviewsCount = sellerReviews.length;
 
   let rating = 0;
-  if (reviewsCount >= 10) {
+
+  if (reviewsCount > 0) {
     const avg =
       sellerReviews.reduce((sum, r) => sum + Number(r.rating || 0), 0) / reviewsCount;
+
     rating = Math.round(avg * 10) / 10;
   }
 
@@ -2166,15 +2320,13 @@ async function applyOrderConfirm({ order, actor, systemType }) {
     throw new Error("responses.orders.confirmImpossible");
   }
 
-  order.status = "completed";
-  order.completedAt = Date.now();
-  order.disputeStatus = "closed";
-
-  await updateDbOrderRecord(order.id, {
-    status: order.status,
-    completedAt: order.completedAt,
-    disputeStatus: order.disputeStatus
+  const updatedOrder = await updateDbOrderRecord(order.id, {
+    status: "completed",
+    completedAt: Date.now(),
+    disputeStatus: "closed"
   });
+
+  Object.assign(order, updatedOrder);
 
   const chat = chats.find(c => c.id === order.chatId);
 
@@ -2196,15 +2348,13 @@ async function applyOrderRefund({ order, actor, systemType }) {
     throw new Error("responses.orders.refundImpossible");
   }
 
-  order.status = "refunded";
-  order.refundedAt = Date.now();
-  order.disputeStatus = "closed";
-
-  await updateDbOrderRecord(order.id, {
-    status: order.status,
-    refundedAt: order.refundedAt,
-    disputeStatus: order.disputeStatus
+  const updatedOrder = await updateDbOrderRecord(order.id, {
+    status: "refunded",
+    refundedAt: Date.now(),
+    disputeStatus: "closed"
   });
+
+  Object.assign(order, updatedOrder);
 
   const chat = chats.find(c => c.id === order.chatId);
 
@@ -2629,8 +2779,10 @@ function generateOrderCode(){
   return code;
 }
 
-function buildOfferSnapshot(offer) {
+function buildOfferSnapshot(offer, orderLang = DEFAULT_LANG) {
   if (!offer) return null;
+
+  const safeOrderLang = normalizeLang(orderLang);
 
   return {
     id: offer.id,
@@ -2638,6 +2790,7 @@ function buildOfferSnapshot(offer) {
     game: offer.game || "",
     mode: offer.mode || "",
     category: offer.category || null,
+    orderLang: safeOrderLang,
     title: offer.title || { ru: "", uk: "", en: "" },
     description: offer.description || { ru: "", uk: "", en: "" },
     images: Array.isArray(offer.images) ? offer.images : [],
@@ -3116,15 +3269,16 @@ async function authRequired(req, res, next) {
       }
     }
 
-    if (now() > s.expiresAt) {
-      sessions.delete(token);
+if (now() > s.expiresAt) {
+  disconnectSocketsForToken(token);
+  sessions.delete(token);
 
-      await prisma.session.deleteMany({
-        where: { token }
-      });
+  await prisma.session.deleteMany({
+    where: { token }
+  });
 
-      return res.status(401).json({ success: false, message: "responses.auth.sessionExpired" });
-    }
+  return res.status(401).json({ success: false, message: "responses.auth.sessionExpired" });
+}
 
     let u = users.get(s.email);
 
@@ -3143,31 +3297,35 @@ async function authRequired(req, res, next) {
       u = syncUserToMap(dbUser);
     }
 
-    if (u.banned) {
-      sessions.delete(token);
+if (u.banned) {
+  disconnectSocketsForToken(token);
+  sessions.delete(token);
 
-      await prisma.session.deleteMany({
-        where: { token }
-      });
+  await prisma.session.deleteMany({
+    where: { token }
+  });
 
-      return res.status(403).json({
-        success: false,
-        message: "responses.auth.accountBanned"
-      });
-    }
+  return res.status(403).json({
+    success: false,
+    message: "responses.auth.accountBanned"
+  });
+}
 
-    u.online = true;
-    u.lastSeen = Date.now();
+u.lastSeen = Date.now();
 
-    prisma.user.update({
-      where: { email: u.email },
-      data: {
-        online: true,
-        lastSeenAt: new Date(u.lastSeen)
-      }
-    }).catch(err => {
-      console.error("authRequired user.update error:", err.message);
-    });
+const isActuallyOnline = socketIdsByEmail.has(u.email);
+
+u.online = isActuallyOnline;
+
+prisma.user.update({
+  where: { email: u.email },
+  data: {
+    online: isActuallyOnline,
+    lastSeenAt: new Date(u.lastSeen)
+  }
+}).catch(err => {
+  console.error("authRequired user.update error:", err.message);
+});
 
     req.userEmail = s.email;
     req.user = u;
@@ -3689,6 +3847,8 @@ app.post("/auth/logout", authRequired, async (req, res) => {
         token: req.token
       }
     });
+
+    disconnectSocketsForToken(req.token);
 
     return res.json({ success: true });
   } catch (e) {
@@ -4358,29 +4518,85 @@ app.post("/api/offers/:id/clone", authRequired, async (req, res) => {
   const oldOffer = offers.find(o => o.id === req.params.id);
 
   if (!oldOffer) {
-    return res.json({ success:false, message:"responses.offers.offerNotFound" });
+    return res.json({
+      success: false,
+      message: "responses.offers.offerNotFound"
+    });
   }
 
   if (oldOffer.sellerEmail !== req.user.email) {
-    return res.json({ success:false, message:"responses.common.noAccess" });
+    return res.json({
+      success: false,
+      message: "responses.common.noAccess"
+    });
   }
 
   if (oldOffer.status !== "closed") {
     return res.json({
-  success:false,
-  message:"responses.offers.onlyClosedOfferCanBeCloned"
-});
+      success: false,
+      message: "responses.offers.onlyClosedOfferCanBeCloned"
+    });
   }
 
-  const newOffer = await createDbOfferRecord({
-    ...oldOffer,
-    offerId: await generateOfferId(),
-    status: "active",
-    createdAt: Date.now(),
-    activeUntil: Date.now() + 7 * 24 * 60 * 60 * 1000
-  });
+  try {
+    // Сразу убираем старый оффер из "Проданных",
+    // чтобы его нельзя было клонировать повторно
+    await updateDbOfferRecord(oldOffer.id, {
+      status: "relisted",
+      activeUntil: null
+    });
 
-  res.json({ success:true, offer: newOffer });
+    const newOffer = await createDbOfferRecord({
+      offerId: await generateOfferId(),
+      game: oldOffer.game,
+      mode: oldOffer.mode,
+      category: oldOffer.category || null,
+      title: oldOffer.title || { ru: "", uk: "", en: "" },
+      description: oldOffer.description || { ru: "", uk: "", en: "" },
+      extra: oldOffer.extra || {},
+      priceNet: Number(oldOffer.priceNet || 0),
+      price: Number(oldOffer.price || 0),
+      amount: oldOffer.amount == null ? null : Number(oldOffer.amount),
+      method: oldOffer.method || null,
+      country: oldOffer.country || null,
+      accountType: oldOffer.accountType || null,
+      accountRegion: oldOffer.accountRegion || null,
+      voiceChat:
+        oldOffer.voiceChat == null
+          ? null
+          : Boolean(oldOffer.voiceChat),
+      images: Array.isArray(oldOffer.images) ? [...oldOffer.images] : [],
+      imageUrl: oldOffer.imageUrl || null,
+      sellerEmail: oldOffer.sellerEmail,
+      sellerName: oldOffer.sellerName,
+      status: "active",
+      createdAt: Date.now(),
+      activeUntil: Date.now() + 7 * 24 * 60 * 60 * 1000
+    });
+
+    return res.json({
+      success: true,
+      offer: newOffer
+    });
+  } catch (e) {
+    console.error("clone offer error:", e);
+
+    // если создание нового оффера не удалось —
+    // возвращаем старый обратно в closed
+    try {
+      await updateDbOfferRecord(oldOffer.id, {
+        status: "closed",
+        activeUntil: null
+      });
+    } catch (restoreErr) {
+      console.error("restore old offer after clone error:", restoreErr.message);
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "responses.common.internalError"
+    });
+  }
 });
 
 /* ================== CHATS ================== */
@@ -4980,53 +5196,69 @@ seller: seller ? {
 app.get("/api/offers/:id", authRequiredOptional, (req, res) => {
   const { id } = req.params;
 
-const offer = offers.find(o => o.id === id);
+  const offer = offers.find(o => o.id === id);
 
-if (!offer) {
-  return res.json({
-    success: true,
-    deleted: true
-  });
-}
+  if (!offer) {
+    return res.json({
+      success: true,
+      deleted: true
+    });
+  }
 
-if (offer.status === "deleted") {
-  return res.json({
-    success: true,
-    deleted: true
-  });
-}
+  if (offer.status === "deleted") {
+    return res.json({
+      success: true,
+      deleted: true
+    });
+  }
+
+  const isOwner = req.user?.email === offer.sellerEmail;
+  const canModerate =
+    req.user &&
+    (
+      isOfferModerationRole(req.user) ||
+      isAdminPanelRole(req.user)
+    );
+
+  if (offer.status !== "active" && !isOwner && !canModerate) {
+    return res.json({
+      success: true,
+      unavailable: true
+    });
+  }
 
   const seller = users.get(offer.sellerEmail);
-let blockedBySeller = false;
+  let blockedBySeller = false;
 
-if (req.user && seller?.blockedUsers?.includes(req.user.email)) {
-  blockedBySeller = true;
-}
+  if (req.user && seller?.blockedUsers?.includes(req.user.email)) {
+    blockedBySeller = true;
+  }
 
   return res.json({
     success: true,
     blockedBySeller,
     offer: {
       ...offer,
-seller: seller ? {
-  username: seller.username || "Продавец",
-  userId: seller.userId || null,
-  avatarUrl: seller.avatarUrl || null,
-  avatarDataUrl: seller.avatarDataUrl || null,
-  online: Boolean(seller.online),
-  rating: seller.rating || 0,
-  reviewsCount: seller.reviewsCount || 0,
-  createdAt: seller.createdAt
-} : {
-  username: tReq(req, "common.sellerFallback"),
-  userId: null,
-  avatarUrl: null,
-  avatarDataUrl: null,
-  online: false,
-  rating: 0,
-  reviewsCount: 0,
-  createdAt: null
-}
+      canClone: Boolean(isOwner && offer.status === "closed"),
+      seller: seller ? {
+        username: seller.username || tReq(req, "common.sellerFallback"),
+        userId: seller.userId || null,
+        avatarUrl: seller.avatarUrl || null,
+        avatarDataUrl: seller.avatarDataUrl || null,
+        online: Boolean(seller.online),
+        rating: seller.rating || 0,
+        reviewsCount: seller.reviewsCount || 0,
+        createdAt: seller.createdAt
+      } : {
+        username: tReq(req, "common.sellerFallback"),
+        userId: null,
+        avatarUrl: null,
+        avatarDataUrl: null,
+        online: false,
+        rating: 0,
+        reviewsCount: 0,
+        createdAt: null
+      }
     }
   });
 });
@@ -5037,8 +5269,11 @@ app.post("/api/chats/start", authRequired, async (req, res) => {
 
   const offer = offers.find(o => o.id === offerId);
 
-  if (!offer) {
-    return res.json({ success:false, message:"responses.offers.offerNotFound" });
+  if (!offer || offer.status !== "active") {
+    return res.json({
+      success: false,
+      message: "responses.chats.itemUnavailable"
+    });
   }
 
   if (offer.sellerEmail === req.user.email) {
@@ -5083,11 +5318,27 @@ app.post("/api/chats/start", authRequired, async (req, res) => {
       official: false,
       deletedBy: []
     });
-  } else if (chat.offerId !== offer.id) {
-    chat = await updateDbChatRecord(chat.id, {
-      offerId: offer.id
-    });
+} else {
+  const currentDeletedBy = Array.isArray(chat.deletedBy) ? chat.deletedBy : [];
+  const nextDeletedBy = currentDeletedBy.filter(email =>
+    email !== req.user.email &&
+    email !== offer.sellerEmail
+  );
+
+  const chatPatch = {};
+
+  if (chat.offerId !== offer.id) {
+    chatPatch.offerId = offer.id;
   }
+
+  if (nextDeletedBy.length !== currentDeletedBy.length) {
+    chatPatch.deletedBy = nextDeletedBy;
+  }
+
+  if (Object.keys(chatPatch).length) {
+    chat = await updateDbChatRecord(chat.id, chatPatch);
+  }
+}
 
   res.json({ success:true, chat });
 });
@@ -5319,23 +5570,26 @@ const message = await createDbChatMessageRecord({
 // ===== SEND FILE TO CHAT =====
 app.post("/api/chats/:id/files", authRequired, uploadChatFiles.single("file"), async (req, res) => {
   let chat = chats.find(c => c.id === req.params.id);
-  if (!chat) {
-    return res.json({ success:false, message:"responses.chats.chatNotFound" });
-  }
+if (!chat) {
+  cleanupUploadedFile(req.file);
+  return res.json({ success:false, message:"responses.chats.chatNotFound" });
+}
 
-  if (isOfficialChat(chat)) {
-    return res.json({
-      success: false,
-      message: "responses.chats.officialFilesNotAllowed"
-    });
-  }
+if (isOfficialChat(chat)) {
+  cleanupUploadedFile(req.file);
+  return res.json({
+    success: false,
+    message: "responses.chats.officialFilesNotAllowed"
+  });
+}
 
-  if (
-    chat.buyerEmail !== req.user.email &&
-    chat.sellerEmail !== req.user.email
-  ) {
-    return res.json({ success:false, message:"responses.common.noAccess" });
-  }
+if (
+  chat.buyerEmail !== req.user.email &&
+  chat.sellerEmail !== req.user.email
+) {
+  cleanupUploadedFile(req.file);
+  return res.json({ success:false, message:"responses.common.noAccess" });
+}
 
   if (!req.file) {
     return res.json({ success:false, message: "responses.upload.fileNotFound" });
@@ -5349,12 +5603,13 @@ app.post("/api/chats/:id/files", authRequired, uploadChatFiles.single("file"), a
 
   const otherUser = getUserByEmailSafe(otherEmail);
 
-  if (otherUser?.blockedUsers?.includes(myEmail)) {
-    return res.json({
-      success: false,
-      message: "responses.chats.blockedByUser"
-    });
-  }
+if (otherUser?.blockedUsers?.includes(myEmail)) {
+  cleanupUploadedFile(req.file);
+  return res.json({
+    success: false,
+    message: "responses.chats.blockedByUser"
+  });
+}
 
   if (chat.deletedBy?.includes(otherEmail)) {
     if (!otherUser?.blockedUsers?.includes(myEmail)) {
@@ -5366,9 +5621,7 @@ app.post("/api/chats/:id/files", authRequired, uploadChatFiles.single("file"), a
   }
 
 if (req.user.blockedUsers?.includes(otherEmail)) {
-  if (req.file?.path && fs.existsSync(req.file.path)) {
-    fs.unlinkSync(req.file.path);
-  }
+  cleanupUploadedFile(req.file);
 
   return res.json({
     success:false,
@@ -5379,9 +5632,7 @@ if (req.user.blockedUsers?.includes(otherEmail)) {
 const cooldownSeconds = getChatActionCooldownSeconds(chat.id, req.user.email);
 
 if (cooldownSeconds > 0) {
-  if (req.file?.path && fs.existsSync(req.file.path)) {
-    fs.unlinkSync(req.file.path);
-  }
+  cleanupUploadedFile(req.file);
 
   return res.status(429).json({
     success: false,
@@ -5619,6 +5870,14 @@ app.post("/api/orders/create", authRequired, async (req, res) => {
       });
     }
 
+    const orderLang = normalizeLang(
+  req.body.lang ||
+  req.query.lang ||
+  req.headers["x-tp-lang"] ||
+  req.user?.lang ||
+  DEFAULT_LANG
+);
+
     if (seller.blockedUsers?.includes(req.user.email)) {
       return res.json({
         success: false,
@@ -5644,43 +5903,113 @@ app.post("/api/orders/create", authRequired, async (req, res) => {
       });
     }
 
-    const chat = await createDbChatRecord({
-      buyerEmail: req.user.email,
-      sellerEmail: offer.sellerEmail,
-      offerId: offer.id,
-      blocked: false,
-      official: false,
-      deletedBy: []
-    });
+let chat = chats.find(c =>
+  !c.official &&
+  (
+    (c.buyerEmail === req.user.email && c.sellerEmail === offer.sellerEmail) ||
+    (c.sellerEmail === req.user.email && c.buyerEmail === offer.sellerEmail)
+  )
+);
 
-    const order = await createDbOrderRecord({
-      orderNumber: generateOrderCode(),
-      offerId: offer.id,
-      buyerEmail: req.user.email,
-      sellerEmail: offer.sellerEmail,
-      chatId: chat.id,
-      price: Number(offer.price || 0),
-      commission: calcFee(Number(offer.price || 0), Number(offer.priceNet || 0)),
-      status: "pending",
-      disputeStatus: "none",
-      offerSnapshot: buildOfferSnapshot(offer)
-    });
+if (!chat) {
+  chat = await createDbChatRecord({
+    buyerEmail: req.user.email,
+    sellerEmail: offer.sellerEmail,
+    offerId: offer.id,
+    blocked: false,
+    official: false,
+    deletedBy: []
+  });
+} else {
+  const currentDeletedBy = Array.isArray(chat.deletedBy) ? chat.deletedBy : [];
+  const nextDeletedBy = currentDeletedBy.filter(email =>
+    email !== req.user.email &&
+    email !== offer.sellerEmail
+  );
 
-    await pushSystemMessage({
-      chatId: chat.id,
-      systemType: "order_created",
-      actorEmail: req.user.email,
-      actorUserId: req.user.userId || "",
-      actorUsername: req.user.username || "",
-      actorRole: req.user.role || ROLE.USER,
-      orderId: order.id,
-      orderNumber: order.orderNumber
-    });
+  const chatPatch = {};
+
+  if (chat.offerId !== offer.id) {
+    chatPatch.offerId = offer.id;
+  }
+
+  if (nextDeletedBy.length !== currentDeletedBy.length) {
+    chatPatch.deletedBy = nextDeletedBy;
+  }
+
+  if (Object.keys(chatPatch).length) {
+    chat = await updateDbChatRecord(chat.id, chatPatch);
+  }
+}
+
+    let closedOffer;
+
+    try {
+      closedOffer = await updateDbOfferRecord(offer.id, {
+        status: "closed",
+        activeUntil: null
+      });
+    } catch (e) {
+      console.error("close offer before order create error:", e);
+      return res.status(500).json({
+        success: false,
+        message: "responses.common.internalError"
+      });
+    }
+
+    let order;
+
+    try {
+order = await createDbOrderRecord({
+  orderNumber: generateOrderCode(),
+  offerId: offer.id,
+  buyerEmail: req.user.email,
+  sellerEmail: offer.sellerEmail,
+  chatId: chat.id,
+  price: Number(offer.price || 0),
+  commission: calcFee(Number(offer.price || 0), Number(offer.priceNet || 0)),
+  status: "pending",
+  disputeStatus: "none",
+  offerSnapshot: buildOfferSnapshot(offer, orderLang)
+});
+    } catch (e) {
+      console.error("create order after closing offer error:", e);
+
+      try {
+        await updateDbOfferRecord(offer.id, {
+          status: "active",
+          activeUntil: offer.activeUntil || Date.now() + 7 * 24 * 60 * 60 * 1000
+        });
+      } catch (restoreErr) {
+        console.error("restore offer after failed order create error:", restoreErr.message);
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: "responses.common.internalError"
+      });
+    }
+
+    try {
+      await pushSystemMessage({
+        chatId: chat.id,
+        systemType: "order_created",
+        actorEmail: req.user.email,
+        actorUserId: req.user.userId || "",
+        actorUsername: req.user.username || "",
+        actorRole: req.user.role || ROLE.USER,
+        orderId: order.id,
+        orderNumber: order.orderNumber
+      });
+    } catch (e) {
+      console.error("order_created system message error:", e.message);
+    }
 
     return res.json({
       success: true,
       order,
       chat,
+      offer: closedOffer,
       checkoutMode: CHECKOUT_MODE
     });
   } catch (e) {
@@ -6019,22 +6348,34 @@ app.get("/api/my-sales", authRequired, (req, res) => {
   const mySales = orders
     .filter(o => o.sellerEmail === req.user.email)
     .map(o => {
-      const offer = offers.find(of => of.id === o.offerId);
-      return { ...o, offer };
+      const liveOffer = offers.find(of => of.id === o.offerId) || null;
+
+      return {
+        ...o,
+        offer: o.offerSnapshot || liveOffer || null,
+        liveOffer
+      };
     });
 
   res.json({ success: true, sales: mySales });
 });
+
 app.get("/api/my-purchases", authRequired, (req, res) => {
   const myPurchases = orders
     .filter(o => o.buyerEmail === req.user.email)
     .map(o => {
-      const offer = offers.find(of => of.id === o.offerId);
-      return { ...o, offer };
+      const liveOffer = offers.find(of => of.id === o.offerId) || null;
+
+      return {
+        ...o,
+        offer: o.offerSnapshot || liveOffer || null,
+        liveOffer
+      };
     });
 
   res.json({ success: true, purchases: myPurchases });
 });
+
 // получить отзывы продавца
 app.get("/api/users/:email/reviews", (req, res) => {
   const sellerEmail = req.params.email;
@@ -6076,7 +6417,8 @@ app.get("/api/users/:email/reviews", (req, res) => {
 }
       };
     })
-    .filter(Boolean);
+    .filter(Boolean)
+    .sort((a, b) => b.createdAt - a.createdAt);
 
   res.json({ success: true, reviews: result });
 });
@@ -6123,7 +6465,8 @@ offer: {
   price: snapshot?.price || order?.price || 0
 }
       };
-    });
+    })
+    .sort((a, b) => b.createdAt - a.createdAt);
 
   res.json({ success: true, reviews: result });
 });
@@ -6204,7 +6547,9 @@ app.post("/api/chats/:id/read", authRequired, async (req, res) => {
       return res.json({ success: true, skipped: true });
     }
 
-    return res.json({ success: true, skipped: true });
+    await markDbChatMessagesRead(chatId, OFFICIAL_ACCOUNT.email);
+
+    return res.json({ success: true });
   }
 
   if (!canViewChat(req.user, chat)) {
@@ -6318,87 +6663,100 @@ app.delete("/api/chats/:id", authRequired, async (req, res) => {
 io.on("connection", (socket) => {
   console.log("🔌 Socket connected:", socket.id);
 
-socket.on("auth", ({ token }) => {
-  try {
-    const s = sessions.get(String(token || ""));
-    if (!s) return;
+  socket.on("auth", ({ token }) => {
+    try {
+      const safeToken = String(token || "").trim();
+      const s = sessions.get(safeToken);
+      if (!s) return;
 
-    if (Date.now() > s.expiresAt) {
-      sessions.delete(token);
-      return;
-    }
+      if (Date.now() > s.expiresAt) {
+        disconnectSocketsForToken(safeToken);
+        sessions.delete(safeToken);
+        return;
+      }
 
-    onlineSockets.set(s.email, socket.id);
-    socket.data.email = s.email;
+      const prevEmail = String(socket.data.email || "").trim().toLowerCase();
+      const prevToken = String(socket.data.token || "").trim();
 
-    // 🔥 ВОТ ЭТО ДОБАВЛЕНО
-    const myChats = chats.filter(c =>
-      c.buyerEmail === s.email || c.sellerEmail === s.email
-    );
+      if (prevEmail && prevEmail !== s.email) {
+        removeOnlineSocket(prevEmail, socket.id);
+      }
 
-    myChats.forEach(c => {
-      socket.join("chat:" + c.id);
-    });
+      if (prevToken && prevToken !== safeToken) {
+        removeSocketFromToken(prevToken, socket.id);
+      }
 
-  } catch(e) {}
-});
+      addOnlineSocket(s.email, socket.id);
+      addSocketToToken(safeToken, socket.id);
 
-socket.on("disconnect", () => {
-  const email = socket.data.email;
-  if (email && onlineSockets.get(email) === socket.id) {
-    onlineSockets.delete(email);
-    return;
-  }
+      socket.data.email = s.email;
+      socket.data.token = safeToken;
 
-  // fallback если email не сохранился
-  for (const [e, id] of onlineSockets.entries()) {
-    if (id === socket.id) {
-      onlineSockets.delete(e);
-      break;
-    }
-  }
-});
-});
-function emitTicketUpdate(ticket, event){
-  // всем support/admin онлайн
-  users.forEach(u => {
-    if (
-  (u.role === ROLE.SUPPORT || u.role === ROLE.ADMIN || u.role === ROLE.SUPER_ADMIN) &&
-  onlineSockets.has(u.email)
-) {
-      io.to(onlineSockets.get(u.email)).emit("support-ticket-updated", {
-        event,
-        ticketId: ticket.id,
-        status: ticket.status,
-        assignedTo: ticket.assignedTo || null,
-        priority: ticket.priority || "normal",
-        updatedAt: ticket.updatedAt
+      const myChats = chats.filter(c =>
+        c.buyerEmail === s.email || c.sellerEmail === s.email
+      );
+
+      myChats.forEach(c => {
+        socket.join("chat:" + c.id);
       });
+    } catch (e) {
+      console.error("socket auth error:", e.message);
     }
   });
 
-  // владельцу тикета
-  if (onlineSockets.has(ticket.userEmail)) {
-    io.to(onlineSockets.get(ticket.userEmail)).emit("support-ticket-updated", {
-      event,
-      ticketId: ticket.id,
-      status: ticket.status,
-      assignedTo: ticket.assignedTo || null,
-      priority: ticket.priority || "normal",
-      updatedAt: ticket.updatedAt
-    });
-  }
+  socket.on("disconnect", () => {
+    const email = String(socket.data.email || "").trim().toLowerCase();
+    const token = String(socket.data.token || "").trim();
 
-  // назначенному
-  if (ticket.assignedTo && onlineSockets.has(ticket.assignedTo)) {
-    io.to(onlineSockets.get(ticket.assignedTo)).emit("support-ticket-updated", {
-      event,
-      ticketId: ticket.id,
-      status: ticket.status,
-      assignedTo: ticket.assignedTo || null,
-      priority: ticket.priority || "normal",
-      updatedAt: ticket.updatedAt
-    });
+    if (token) {
+      removeSocketFromToken(token, socket.id);
+    }
+
+    if (email) {
+      removeOnlineSocket(email, socket.id);
+      return;
+    }
+
+    for (const [e, set] of socketIdsByEmail.entries()) {
+      if (set.has(socket.id)) {
+        removeOnlineSocket(e, socket.id);
+        break;
+      }
+    }
+
+    for (const [t, set] of socketIdsByToken.entries()) {
+      if (set.has(socket.id)) {
+        removeSocketFromToken(t, socket.id);
+        break;
+      }
+    }
+  });
+});
+
+function emitTicketUpdate(ticket, event){
+  const payload = {
+    event,
+    ticketId: ticket.id,
+    status: ticket.status,
+    assignedTo: ticket.assignedTo || null,
+    priority: ticket.priority || "normal",
+    updatedAt: ticket.updatedAt
+  };
+
+  users.forEach(u => {
+    if (
+      u.role === ROLE.SUPPORT ||
+      u.role === ROLE.ADMIN ||
+      u.role === ROLE.SUPER_ADMIN
+    ) {
+      emitToUserSockets(u.email, "support-ticket-updated", payload);
+    }
+  });
+
+  emitToUserSockets(ticket.userEmail, "support-ticket-updated", payload);
+
+  if (ticket.assignedTo) {
+    emitToUserSockets(ticket.assignedTo, "support-ticket-updated", payload);
   }
 }
 
@@ -6453,6 +6811,14 @@ app.post(
       console.log("user:", req.user?.email);
       console.log("body:", req.body);
       console.log("files:", req.files?.length || 0);
+      const failTicketCreate = (message, extra = {}) => {
+  cleanupUploadedFiles(req.files);
+  return res.json({
+    success: false,
+    message,
+    ...extra
+  });
+};
 
       const subject = String(req.body.subject || "").trim().slice(0, 80);
       const category = String(req.body.category || "other").trim().slice(0, 30);
@@ -6469,29 +6835,20 @@ app.post(
       const offerId = formatPrefixedId(rawOfferId, "OID");
 
       if (category === "report" && !userIdDigits) {
-        return res.json({
-          success: false,
-          message: "responses.support.enterUserId"
-        });
+return failTicketCreate("responses.support.enterUserId");
       }
 
-      if (category === "report_offer" && !offerIdDigits) {
-        return res.json({
-          success: false,
-          message: "responses.support.enterOfferId"
-        });
-      }
+if (category === "report_offer" && !offerIdDigits) {
+  return failTicketCreate("responses.support.enterOfferId");
+}
 
       if (userIdDigits) {
         const targetUser = Array.from(users.values())
           .find(u => String(u.userId || "") === userIdDigits);
 
-        if (!targetUser) {
-          return res.json({
-            success: false,
-            message: "responses.common.userNotFound"
-          });
-        }
+if (!targetUser) {
+  return failTicketCreate("responses.common.userNotFound");
+}
       }
 
       if (offerIdDigits) {
@@ -6500,12 +6857,9 @@ app.post(
           o.status !== "deleted"
         );
 
-        if (!targetOffer) {
-          return res.json({
-            success: false,
-            message: "responses.support.offerNotFound"
-          });
-        }
+if (!targetOffer) {
+  return failTicketCreate("responses.support.offerNotFound");
+}
       }
 
       const message = String(req.body.message || "").trim().slice(0, 2000);
@@ -6523,19 +6877,13 @@ app.post(
         attachments = req.files.map(file => "/uploads/" + file.filename);
       }
 
-      if (!subject) {
-        return res.json({
-          success: false,
-          message: "responses.support.enterSubject"
-        });
-      }
+if (!subject) {
+  return failTicketCreate("responses.support.enterSubject");
+}
 
-      if (!message) {
-        return res.json({
-          success: false,
-          message: "responses.support.enterDescription"
-        });
-      }
+if (!message) {
+  return failTicketCreate("responses.support.enterDescription");
+}
 
       let finalOrderId = normalizedOrderId || rawOrderId;
 
@@ -6546,48 +6894,33 @@ app.post(
           o.orderNumber === normalizedOrderId
         );
 
-        if (!order) {
-          return res.json({
-            success: false,
-            message: "responses.orders.orderNotFound"
-          });
-        }
+if (!order) {
+  return failTicketCreate("responses.orders.orderNotFound");
+}
 
-        if (
-          order.buyerEmail !== req.user.email &&
-          order.sellerEmail !== req.user.email
-        ) {
-          return res.json({
-            success: false,
-            message: "responses.support.notOrderParticipant"
-          });
-        }
+if (
+  order.buyerEmail !== req.user.email &&
+  order.sellerEmail !== req.user.email
+) {
+  return failTicketCreate("responses.support.notOrderParticipant");
+}
 
         if (category === "order") {
           if (
             order.disputeStatus === "requested" ||
             order.disputeStatus === "in_review"
           ) {
-            return res.json({
-              success: false,
-              message: "responses.support.disputeAlreadyOpen"
-            });
+return failTicketCreate("responses.support.disputeAlreadyOpen");
           }
 
           if (order.status === "pending") {
             shouldOpenLiveDispute = true;
           } else if (order.status === "completed") {
             if (!canBuyerOpenCompletedOrderAppeal(order, req.user)) {
-              return res.json({
-                success: false,
-                message: "responses.support.completedOrderAppealOnlyBuyerWithin72h"
-              });
+return failTicketCreate("responses.support.completedOrderAppealOnlyBuyerWithin72h");
             }
           } else {
-            return res.json({
-              success: false,
-              message: "responses.support.cannotOpenTicketForThisOrderCategory"
-            });
+return failTicketCreate("responses.support.cannotOpenTicketForThisOrderCategory");
           }
         }
 
@@ -6599,12 +6932,9 @@ app.post(
         t => t.userEmail === req.user.email && t.status !== "resolved"
       );
 
-      if (activeTickets.length >= 3) {
-        return res.json({
-          success: false,
-          message: "responses.support.tooManyActiveTickets"
-        });
-      }
+if (activeTickets.length >= 3) {
+  return failTicketCreate("responses.support.tooManyActiveTickets");
+}
 
       console.log("before supportService.createTicket", {
         subject,
@@ -6617,92 +6947,112 @@ app.post(
         shouldOpenLiveDispute
       });
 
-      let ticket = await supportService.createTicket({
-        user: req.user,
-        subject,
-        category,
-        orderId: finalOrderId,
-        userId,
-        offerId,
-        message,
-        attachments,
-        priority
+let ticket;
+
+try {
+  ticket = await supportService.createTicket({
+    user: req.user,
+    subject,
+    category,
+    orderId: finalOrderId,
+    userId,
+    offerId,
+    message,
+    attachments,
+    priority
+  });
+} catch (e) {
+  cleanupUploadedFiles(req.files);
+
+  return res.status(500).json({
+    success: false,
+    message:
+      typeof e?.message === "string" && e.message.startsWith("responses.")
+        ? e.message
+        : "responses.common.internalError"
+  });
+}
+
+try {
+  if (category === "order" && linkedOrder && shouldOpenLiveDispute) {
+    ticket = await supportService.updateTicket(ticket.id, {
+      kind: "order_dispute",
+      chatId: linkedOrder.chatId,
+      orderInternalId: linkedOrder.id,
+      updatedAt: Date.now()
+    });
+
+    linkedOrder.disputeStatus = "requested";
+    linkedOrder.disputeTicketId = ticket.id;
+
+    if (!linkedOrder.resolutionRequestedAt) {
+      linkedOrder.resolutionRequestedAt = Date.now();
+    }
+
+    await updateDbOrderRecord(linkedOrder.id, {
+      disputeStatus: linkedOrder.disputeStatus,
+      disputeTicketId: linkedOrder.disputeTicketId,
+      resolutionRequestedAt: linkedOrder.resolutionRequestedAt
+    });
+
+    await pushSystemMessage({
+      chatId: linkedOrder.chatId,
+      systemType: "resolution_requested",
+      actorEmail: req.user.email,
+      actorUserId: req.user.userId || "",
+      actorUsername: req.user.username || "",
+      actorRole: req.user.role || "user",
+      orderId: linkedOrder.id,
+      orderNumber: linkedOrder.orderNumber
+    });
+  } else if (category === "order" && linkedOrder && linkedOrder.status === "completed") {
+    ticket = await supportService.updateTicket(ticket.id, {
+      kind: "completed_order_appeal",
+      chatId: linkedOrder.chatId,
+      orderInternalId: linkedOrder.id,
+      updatedAt: Date.now()
+    });
+  }
+
+  users.forEach(u => {
+    if (
+      u.role === ROLE.SUPPORT ||
+      u.role === ROLE.ADMIN ||
+      u.role === ROLE.SUPER_ADMIN
+    ) {
+      emitToUserSockets(u.email, "new-support-ticket", {
+        id: ticket.id,
+        shortId: ticket.shortId,
+        subject: ticket.subject,
+        priority: ticket.priority
       });
+    }
+  });
 
-      if (category === "order" && linkedOrder && shouldOpenLiveDispute) {
-        ticket = await supportService.updateTicket(ticket.id, {
-          kind: "order_dispute",
-          chatId: linkedOrder.chatId,
-          orderInternalId: linkedOrder.id,
-          updatedAt: Date.now()
-        });
+  notifyUser(req.user, "support_ticket_created", {
+    ticketShortId: ticket.shortId,
+    subject: ticket.subject
+  });
+} catch (e) {
+  console.error("support ticket post-save side effect error:", e.message);
+}
 
-        linkedOrder.disputeStatus = "requested";
-        linkedOrder.disputeTicketId = ticket.id;
-
-        if (!linkedOrder.resolutionRequestedAt) {
-          linkedOrder.resolutionRequestedAt = Date.now();
-        }
-
-        await updateDbOrderRecord(linkedOrder.id, {
-          disputeStatus: linkedOrder.disputeStatus,
-          disputeTicketId: linkedOrder.disputeTicketId,
-          resolutionRequestedAt: linkedOrder.resolutionRequestedAt
-        });
-
-        await pushSystemMessage({
-          chatId: linkedOrder.chatId,
-          systemType: "resolution_requested",
-          actorEmail: req.user.email,
-          actorUserId: req.user.userId || "",
-          actorUsername: req.user.username || "",
-          actorRole: req.user.role || "user",
-          orderId: linkedOrder.id,
-          orderNumber: linkedOrder.orderNumber
-        });
-      } else if (category === "order" && linkedOrder && linkedOrder.status === "completed") {
-        ticket = await supportService.updateTicket(ticket.id, {
-          kind: "completed_order_appeal",
-          chatId: linkedOrder.chatId,
-          orderInternalId: linkedOrder.id,
-          updatedAt: Date.now()
-        });
-      }
-
-      users.forEach(u => {
-        if (
-          (u.role === ROLE.SUPPORT || u.role === ROLE.ADMIN || u.role === ROLE.SUPER_ADMIN) &&
-          onlineSockets.has(u.email)
-        ) {
-          const socketId = onlineSockets.get(u.email);
-          io.to(socketId).emit("new-support-ticket", {
-            id: ticket.id,
-            shortId: ticket.shortId,
-            subject: ticket.subject,
-            priority: ticket.priority
-          });
-        }
-      });
-
-      notifyUser(req.user, "support_ticket_created", {
-        ticketShortId: ticket.shortId,
-        subject: ticket.subject
-      });
-
-      return res.json({
-        success: true,
-        ticket
-      });
+return res.json({
+  success: true,
+  ticket
+});
     } catch (e) {
       console.error("POST /api/support/tickets error:", e);
 
-      return res.status(500).json({
-        success: false,
-        message:
-          typeof e?.message === "string" && e.message.startsWith("responses.")
-            ? e.message
-            : "responses.common.internalError"
-      });
+cleanupUploadedFiles(req.files);
+
+return res.status(500).json({
+  success: false,
+  message:
+    typeof e?.message === "string" && e.message.startsWith("responses.")
+      ? e.message
+      : "responses.common.internalError"
+});
     }
   }
 );
@@ -6839,7 +7189,10 @@ app.post(
     const ticket = await supportService.getTicketById(req.params.id);
 
 if (!ticket) {
-  return res.json({ success:false, message:"responses.support.ticketNotFound" });
+  return res.json({
+    success: false,
+    message: "responses.support.ticketNotFound"
+  });
 }
 
 if (ticket.status === "resolved") {
@@ -7056,7 +7409,10 @@ app.get("/api/support/tickets/:id", authRequired, async (req, res) => {
   }
 
 if (!canAccessSupportTicket(req.user, ticket)) {
-  return res.json({ success:false, message:"responses.common.noAccess" });
+  return res.json({
+    success: false,
+    message: "responses.common.noAccess"
+  });
 }
 
 let assignedUser = null;
@@ -7099,12 +7455,21 @@ app.post(
   async (req, res) => {
     const ticket = await supportService.getTicketById(req.params.id);
 
+    const failTicketMessage = (message, extra = {}) => {
+      cleanupUploadedFiles(req.files);
+      return res.json({
+        success: false,
+        message,
+        ...extra
+      });
+    };
+
     if (!ticket) {
-      return res.json({ success: false, message: "responses.support.ticketNotFound" });
+      return failTicketMessage("responses.support.ticketNotFound");
     }
 
     if (!canAccessSupportTicket(req.user, ticket)) {
-      return res.json({ success:false, message:"responses.common.noAccess" });
+      return failTicketMessage("responses.common.noAccess");
     }
 
     const text = String(req.body.text || "").trim().slice(0, 2000);
@@ -7115,7 +7480,7 @@ app.post(
     }
 
     if (!text && attachments.length === 0) {
-      return res.json({ success: false, message: "responses.common.emptyMessage" });
+      return failTicketMessage("responses.common.emptyMessage");
     }
 
     const isStaffReply =
@@ -7126,14 +7491,25 @@ app.post(
 
     const wasUnassigned = !ticket.assignedTo;
 
+    let updatedTicket;
+
     try {
-      const updatedTicket = await supportService.addMessage({
+      updatedTicket = await supportService.addMessage({
         ticket,
         user: req.user,
         text,
         attachments
       });
+    } catch (e) {
+      cleanupUploadedFiles(req.files);
 
+      return res.json({
+        success: false,
+        message: e.message
+      });
+    }
+
+    try {
       if (isStaffReply && wasUnassigned && updatedTicket.assignedTo === req.user.email) {
         await supportService.addLog(ticket.id, "assigned", req.user);
       }
@@ -7160,11 +7536,11 @@ app.post(
           preview: text || getAttachmentFallback(assignedUser?.lang)
         });
       }
-
-      return res.json({ success: true, ticket: updatedTicket });
     } catch (e) {
-      return res.json({ success: false, message: e.message });
+      console.error("support post-save side effect error:", e.message);
     }
+
+    return res.json({ success: true, ticket: updatedTicket });
   }
 );
 
@@ -7816,7 +8192,7 @@ app.post("/api/admin/ban", authRequired, async (req, res) => {
   }
 
   const email = String(req.body.email || "").trim().toLowerCase();
-  const banned = Boolean(req.body.banned);
+  const banned = parseBoolean(req.body.banned);
 
   const target = users.get(email);
   if (!target) {

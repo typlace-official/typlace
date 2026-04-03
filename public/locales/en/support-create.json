@@ -15,22 +15,22 @@
   },
 
   "topics": {
-    "seller_not_complete": "Seller is not completing the order",
+    "seller_not_complete": "The seller is not completing the order",
     "wrong_item": "I received the wrong item",
-    "seller_took_back_item_or_access": "Seller took back the item or access",
+    "seller_took_back_item_or_access": "The seller took the item or access back",
     "cancel_order": "I want to cancel the order",
 
-    "buyer_not_confirm": "Buyer is not confirming the order",
-    "delivery_problem": "Problem with item delivery or service fulfillment",
-    "buyer_abuse_or_false_claim": "Buyer is abusing the system or filed a false claim",
+    "buyer_not_confirm": "The buyer is not confirming the order",
+    "delivery_problem": "Problem with delivery or service completion",
+    "buyer_abuse_or_false_claim": "The buyer is abusing the system or filed a false complaint",
 
-    "deposit_problem": "Deposit problem",
-    "withdraw_problem": "Withdrawal problem",
+    "deposit_problem": "Deposit issue",
+    "withdraw_problem": "Withdrawal issue",
     "payment_failed": "Payment failed",
 
     "account_hacked": "My account was hacked",
-    "restore_access": "Restore account access",
-    "appeal_ban": "Appeal account ban",
+    "restore_access": "Restore access to my account",
+    "appeal_ban": "Appeal an account ban",
 
     "rule_violation": "Rule violation",
     "scam": "Scam",
@@ -47,8 +47,8 @@
     "filters_bug": "Filters bug",
 
     "general_question": "General question",
-    "site_suggestion": "Website suggestion",
-    "not_in_list": "Issue is not in the list",
+    "site_suggestion": "Site suggestion",
+    "not_in_list": "My issue is not listed",
 
     "other": "Other"
   },
@@ -56,20 +56,20 @@
   "role": "Who are you?",
   "choose": "Choose",
 
-  "roleBuyer": "I am a buyer",
-  "roleSeller": "I am a seller",
+  "roleBuyer": "I am the buyer",
+  "roleSeller": "I am the seller",
 
   "subject": "Ticket subject",
   "chooseSubject": "Choose a subject",
-  "selectRoleFirst": "Choose a role first",
+  "selectRoleFirst": "Choose your role first",
 
   "orderId": "Order number",
 
   "userId": "User ID",
-  "enterUserId": "Enter user ID",
+  "enterUserId": "Enter the user ID",
 
   "offerId": "Listing ID",
-  "enterOfferId": "Enter listing ID",
+  "enterOfferId": "Enter the listing ID",
 
   "description": "Ticket description",
 
@@ -80,13 +80,16 @@
 
   "counter": "{{current}} / {{max}}",
 
+  "emptyTitle": "What brought you here?",
+  "emptyText": "Choose a ticket category, and the form below will adapt to your situation.",
+
   "errors": {
     "orderNotFound": "Order not found",
-    "enterUserId": "Enter user ID",
+    "enterUserId": "Enter the user ID",
     "userNotFound": "User not found",
-    "enterOfferId": "Enter listing ID",
+    "enterOfferId": "Enter the listing ID",
     "offerNotFound": "Listing not found",
-    "configLoad": "Failed to load configuration",
+    "configLoad": "Failed to load the configuration",
     "maxFiles": "Maximum 10 files",
     "maxLength": "Maximum {{count}} characters"
   }

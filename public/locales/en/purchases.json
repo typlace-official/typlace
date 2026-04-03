@@ -1,0 +1,19 @@
+{
+  "title": "Purchases",
+  "empty": "No purchases yet",
+  "orderNumber": "Order {{number}}",
+  "filters": {
+    "all": "Status",
+    "pending": "In progress",
+    "completed": "Completed",
+    "refunded": "Refunded"
+  },
+  "statuses": {
+    "pending": "In progress",
+    "completed": "Completed",
+    "refunded": "Refunded"
+  },
+  "alerts": {
+    "loadError": "Failed to load"
+  }
+}

@@ -1,12 +1,13 @@
 {
-  "title": "User reviews",
-  "all": "All reviews",
-  "empty": "No reviews yet",
-  "show_more": "Show full",
-  "user": "User reviews",
+  "title": "Reviews",
   "my": "My reviews",
-  "no_user": "User not specified",
-
+  "user": "User reviews",
+  "empty": "No reviews yet",
+  "no_user": "User not found",
+  "all": "All ratings",
+  "show_more": "Show more",
+  "buyer_fallback": "Buyer",
+  "modal_image_alt": "Review image",
   "count_one": "{{count}} review",
   "count_few": "{{count}} reviews",
   "count_many": "{{count}} reviews"

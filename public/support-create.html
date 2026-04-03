@@ -2,297 +2,416 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-<title data-i18n="page.title"></title>
+  <title data-i18n="page.title"></title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="/header.css">
   <link rel="stylesheet" href="/footer.css">
 
   <style>
-    body{
-      margin:0;
-      font-family:Inter, Arial, sans-serif;
-      background:#f6f7f9;
-      color:#111827;
+    :root{
+      --tp-header-space: 110px;
+      --tp-page-bg: #f6f7f9;
+      --tp-card-bg: #ffffff;
+      --tp-text: #111827;
+      --tp-muted: #6b7280;
+      --tp-muted-soft: #9ca3af;
+      --tp-border: #e5e7eb;
+      --tp-primary: #1E50D4;
+      --tp-primary-hover: #1846be;
+      --tp-danger: #ef4444;
     }
 
-.page{
-  max-width:1100px;
-  margin:40px auto;
-  padding:0 16px;
+    html,
+    body{
+      margin:0;
+      padding:0;
+      min-height:100%;
+      background:var(--tp-page-bg);
+    }
+
+    body{
+      font-family:Inter, Arial, sans-serif;
+      color:var(--tp-text);
+    }
+
+.page-content{
+  padding-top:var(--tp-header-space);
+  box-sizing:border-box;
 }
 
-.form{
-  max-width:720px;
+.page-content.is-empty-mode{
+  min-height:100svh;
+}
+
+.page-content.is-form-mode{
+  min-height:auto;
+}
+
+.page{
+  width:100%;
+}
+
+.container{
+  width:100%;
+  max-width:1100px;
   margin:0 auto;
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:16px;
-  padding:24px;
+  padding:10px 16px 40px;
+  box-sizing:border-box;
+}
+
+.container.is-empty-mode{
+  min-height:calc(100svh - var(--tp-header-space));
   display:flex;
   flex-direction:column;
-  gap:18px;
 }
 
-#formFields{
-  display:none;
-  flex-direction:column;
-  gap:18px;
+.container.is-form-mode{
+  min-height:auto;
+  display:block;
+  padding-bottom:40px;
 }
 
-h1{
-  font-size:24px;
-  margin:20px 0 24px 0;
-}
+    .support-nav{
+      display:flex;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:6px;
+      margin:0 0 10px;
+      font-size:13px;
+      font-weight:600;
+      color:var(--tp-muted);
+    }
+
+    .support-nav a,
+    .support-nav .current{
+      text-decoration:none;
+      color:var(--tp-muted);
+    }
+
+    .support-nav a:hover{
+      color:var(--tp-text);
+    }
+
+    .support-nav .current{
+      color:var(--tp-text);
+    }
+
+    .page-title{
+      font-size:24px;
+      line-height:1.2;
+      margin:0 0 24px;
+    }
+
+    .form{
+      width:min(100%, 720px);
+      margin:0 auto 20px;
+      background:var(--tp-card-bg);
+      border:1px solid var(--tp-border);
+      border-radius:20px;
+      padding:24px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      box-sizing:border-box;
+    }
+
+    #formFields{
+      display:none;
+      flex-direction:column;
+      gap:18px;
+    }
 
     .field{
       display:flex;
       flex-direction:column;
       gap:6px;
     }
-.field-row{
-  display:flex;
-  gap:12px;
-}
 
-.field-row .field{
-  flex:1;
-  min-width:0;
-}
+    .field-row{
+      display:flex;
+      gap:12px;
+    }
+
+    .field-row .field{
+      flex:1;
+      min-width:0;
+    }
+
     .label{
       font-size:13px;
       font-weight:800;
-      color:#6b7280;
+      color:var(--tp-muted);
     }
 
-    .input, .select, .textarea{
-      border:1px solid #e5e7eb;
-      border-radius:5px;
-      padding:12px;
+    .input,
+    .select,
+    .textarea{
+      width:100%;
+      border:1px solid var(--tp-border);
+      border-radius:12px;
+      padding:12px 14px;
+      font:inherit;
       font-size:16px;
       font-weight:500;
       outline:none;
       background:#fff;
+      box-sizing:border-box;
+      transition:border-color .15s ease, box-shadow .15s ease, background .15s ease;
     }
 
     .textarea{
       min-height:120px;
-      resize:vertical;
+      resize:none;
+      font-weight:400;
+      line-height:1.6;
+      font-family:Inter, Arial, sans-serif;
     }
 
-    .input:focus, .select:focus, .textarea:focus{
+    .input:focus,
+    .select:focus,
+    .textarea:focus{
       border-color:#cbd5e1;
+      box-shadow:0 0 0 3px rgba(30,80,212,.08);
     }
 
     .btn{
-      margin-top:10px;
+      margin-top:18px;
       border:none;
-      border-radius:5px;
-      padding:14px;
+      border-radius:12px;
+      padding:14px 18px;
       font-size:15px;
       font-weight:900;
       cursor:pointer;
-      background:#1E50D4;
+      background:var(--tp-primary);
       color:#fff;
+      transition:background .15s ease, opacity .15s ease;
     }
 
     .btn:hover{
-      opacity:.9;
+      background:var(--tp-primary-hover);
     }
-.support-nav{
-  max-width:1100px;
-  margin:20px auto 0 auto;
-  padding:0 16px;
 
-  display:flex;
-  align-items:center;
-  gap:6px;              /* вместо margin */
-  
-  font-size:13px;
-  font-weight:600;
-  color:#6b7280;
-}
+    .attach-btn{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      width:auto;
+      align-self:flex-start;
+      background:#f3f4f6;
+      border:1px solid var(--tp-border);
+      border-radius:12px;
+      padding:10px 16px;
+      font-size:16px;
+      cursor:pointer;
+      transition:background .15s ease, border-color .15s ease, color .15s ease;
+    }
 
-.support-nav a,
-.support-nav .current{
-  text-decoration:none;
-  color:#6b7280;
-}
+    .attach-btn:hover{
+      background:#e5e7eb;
+    }
 
-.support-nav a:hover{
-  color:#111827;
-}
+    .attach-icon{
+      width:20px;
+      height:20px;
+    }
 
-.support-nav .current{
-  color:#111827;
-}
-.attach-btn{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
+    .attachments-preview{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+    }
 
-  width:auto;
-  align-self:flex-start;
+    .file-link{
+      display:inline-flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      background:#f9fafb;
+      border:1px solid var(--tp-border);
+      border-radius:12px;
+      padding:10px 14px;
+      font-size:15px;
+      font-weight:600;
+      cursor:pointer;
+      transition:background .15s ease, border-color .15s ease, color .15s ease;
+      max-width:100%;
+    }
 
-  background:#f3f4f6;
-  border:1px solid #e5e7eb;
-  border-radius:5px;
+    .file-link:hover{
+      background:#eef2ff;
+      border-color:#c7d2fe;
+      color:#2563eb;
+    }
 
-  padding:10px 16px;
-  font-size:16px;
+    .file-left{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      overflow:hidden;
+      min-width:0;
+    }
 
-  cursor:pointer;
-  transition:0.2s;
-}
+    .file-link-name{
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
 
-.attach-btn:hover{
-  background:#e5e7eb;
-}
+    .file-icon{
+      width:18px;
+      height:18px;
+      color:#6b7280;
+      flex:0 0 auto;
+    }
 
-.attach-icon{
-  width:20px;
-  height:20px;
-}
+    .file-remove{
+      font-size:20px;
+      font-weight:900;
+      color:#6b7280;
+      cursor:pointer;
+      margin-left:12px;
+      flex:0 0 auto;
+    }
 
-.attachments-preview{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin-top:10px;
-}
+    .file-remove:hover{
+      color:var(--tp-danger);
+    }
 
-.file-chip{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
+    .textarea-footer{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      font-size:12px;
+      margin-top:4px;
+      color:var(--tp-muted-soft);
+    }
 
-  background:#f9fafb;
-  border:1px solid #e5e7eb;
-  border-radius:5px;
+    .textarea-error{
+      color:var(--tp-danger);
+    }
 
-  padding:8px 12px;
-  min-width:240px;
-  max-width:100%;
+    .textarea.invalid{
+      border-color:var(--tp-danger);
+    }
 
-  font-size:14px;
-}
+    .support-empty{
+      display:none;
+      flex:1;
+      width:min(100%, 520px);
+      margin:0 auto;
+      padding:20px 12px 0;
+      box-sizing:border-box;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+    }
 
-.file-left{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  overflow:hidden;
-}
+    .support-empty.show{
+      display:flex;
+    }
 
-.file-name{
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  max-width:180px;
-}
+    .support-empty-inner{
+      width:100%;
+      max-width:360px;
+    }
 
-.file-icon{
-  width:18px;
-  height:18px;
-  color:#6b7280;
-}
+    .support-empty-illustration{
+      width:min(230px, 68vw);
+      margin:0 auto 20px;
+      filter:drop-shadow(0 20px 40px rgba(79,125,243,.16));
+    }
 
-.file-remove{
-  cursor:pointer;
-  font-size:16px;
-  font-weight:600;
-  color:#6b7280;
-}
+    .support-empty-illustration svg{
+      display:block;
+      width:100%;
+      height:auto;
+    }
 
-.file-remove:hover{
-  color:#ef4444;
-}
-.textarea{
-  min-height:120px;
-  resize:none;
+    .support-empty-title{
+      margin:0 0 10px;
+      font-size:28px;
+      line-height:1.15;
+      font-weight:800;
+      color:#111827;
+    }
 
-  font-family: Inter, Arial, sans-serif; /* чтобы точно такой же */
-  font-size:16px;
-  font-weight:400;   /* 👈 обычный текст */
-  line-height:1.6;
-}
+    .support-empty-text{
+      margin:0;
+      color:#8b95a7;
+      font-size:16px;
+      line-height:1.5;
+      font-weight:400;
+    }
 
-.textarea-footer{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  font-size:12px;
-  margin-top:4px;
-  color:#9ca3af;
-}
-
-.textarea-error{
-  color:#ef4444;
-}
-
-.textarea.invalid{
-  border-color:#ef4444;
-}
-.file-link{
-  display:inline-flex;
-  align-items:center;
-  justify-content:space-between;
-
-  background:#f9fafb;
-  border:1px solid #e5e7eb;
-  border-radius:5px;
-
-  padding:10px 14px;
-
-  font-size:15px;
-  font-weight:600;
-
-  cursor:pointer;
-  transition:0.2s;
-}
-
-.file-link:hover{
-  background:#eef2ff;
-  border-color:#c7d2fe;
-  color:#2563eb;
-}
-
-.file-link-name{
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-
-.file-remove{
-  font-size:20px;
-  font-weight:900;
-  color:#6b7280;
-  cursor:pointer;
-  margin-left:12px;
-}
-
-.file-remove:hover{
-  color:#ef4444;
-}
 @media (max-width:640px){
+  :root{
+    --tp-header-space: 126px;
+  }
 
-.form{
-  background:transparent;
-  border:none;
-  border-radius:0;
-  padding:0;
+  .container{
+    padding:8px 14px calc(120px + env(safe-area-inset-bottom, 0px));
+  }
+
+.container.is-form-mode{
+  padding-bottom:calc(150px + env(safe-area-inset-bottom, 0px));
 }
 
-.page{
-  margin:16px auto;
-}
+  .page-title{
+    font-size:22px;
+    margin:0 0 18px;
+  }
 
-.field-row{
-  flex-direction:column;
-}
+  .form{
+    width:100%;
+    margin:0 auto 20px;
+    background:transparent;
+    border:none;
+    border-radius:0;
+    padding:0;
+  }
 
-}
+  .field-row{
+    flex-direction:column;
+  }
 
+  .attach-btn{
+    width:auto;
+    justify-content:flex-start;
+    align-self:flex-start;
+  }
+
+  .attachments-preview{
+    width:100%;
+  }
+
+  .file-link{
+    max-width:100%;
+  }
+
+  .btn{
+    margin-top:18px;
+  }
+
+  .textarea-footer{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .support-empty{
+    padding:8px 0 0;
+  }
+
+  .support-empty-title{
+    font-size:24px;
+  }
+
+  .support-empty-text{
+    font-size:15px;
+  }
+}
   </style>
 </head>
 
@@ -301,101 +420,175 @@ h1{
 <div id="header-container"></div>
 
 <main class="page-content">
+  <div class="page">
+    <div class="container">
 
-<div class="support-nav">
-<a href="/help.html" data-i18n="common.home"></a>
-  <span>/</span>
-<span class="current" data-i18n="page.title"></span>
-</div>
+      <div class="support-nav">
+        <a href="/help.html" data-i18n="common.home"></a>
+        <span>/</span>
+        <span class="current" data-i18n="page.title"></span>
+      </div>
 
-<div class="page">
-<h1 data-i18n="page.title"></h1>
+      <h1 class="page-title" data-i18n="page.title"></h1>
 
-<form class="form" id="supportForm">
-<div class="field">
-<div class="label" data-i18n="page.category"></div>
-<select class="select" name="category" required></select>
-</div>
-<div id="formFields">
-<div class="field-row">
-<div class="field" id="roleField" style="display:none;">
-<div class="label" data-i18n="page.role"></div>
-  <select class="select" id="roleSelect">
-<option value="" data-i18n="page.choose"></option>
-<option value="buyer" data-i18n="page.roleBuyer"></option>
-<option value="seller" data-i18n="page.roleSeller"></option>
-  </select>
-</div>
-<div class="field" id="subjectField" style="display:none;">
-<div class="label" data-i18n="page.subject"></div>
-  <select class="select" name="subject" id="subjectSelect"></select>
-</div>
+      <form class="form" id="supportForm">
+        <div class="field">
+          <div class="label" data-i18n="page.category"></div>
+          <select class="select" name="category" required></select>
+        </div>
 
-<div class="field" id="orderField" style="display:none;">
-<div class="label" data-i18n="page.orderId"></div>
-  <input class="input" name="orderId"/>
-  <div id="orderError" class="textarea-error"></div>
-</div>
-<div class="field" id="reportUserField" style="display:none;">
-<div class="label" data-i18n="page.userId"></div>
-<input class="input" name="userId" data-i18n-placeholder="page.enterUserId"/>
-  <div id="userError" class="textarea-error"></div>
-</div>
-<div class="field" id="reportOfferField" style="display:none;">
-  <div class="label" data-i18n="page.offerId"></div>
-  <input class="input" name="offerId" data-i18n-placeholder="page.enterOfferId"/>
-  <div id="offerError" class="textarea-error"></div>
-</div>
-</div>
+        <div id="formFields">
+          <div class="field-row">
+            <div class="field" id="roleField" style="display:none;">
+              <div class="label" data-i18n="page.role"></div>
+              <select class="select" id="roleSelect">
+                <option value="" data-i18n="page.choose"></option>
+                <option value="buyer" data-i18n="page.roleBuyer"></option>
+                <option value="seller" data-i18n="page.roleSeller"></option>
+              </select>
+            </div>
 
-<div class="field">
-<div class="label" data-i18n="page.description"></div>
+            <div class="field" id="subjectField" style="display:none;">
+              <div class="label" data-i18n="page.subject"></div>
+              <select class="select" name="subject" id="subjectSelect"></select>
+            </div>
 
-<textarea 
-  class="textarea" 
-  name="message" 
-  id="messageInput"
-  maxlength="10000"
-  required
-></textarea>
+            <div class="field" id="orderField" style="display:none;">
+              <div class="label" data-i18n="page.orderId"></div>
+              <input class="input" name="orderId"/>
+              <div id="orderError" class="textarea-error"></div>
+            </div>
 
-  <div class="textarea-footer">
-    <span id="messageError" class="textarea-error"></span>
-    <span id="messageCounter">0 / 10000</span>
+            <div class="field" id="reportUserField" style="display:none;">
+              <div class="label" data-i18n="page.userId"></div>
+              <input class="input" name="userId" data-i18n-placeholder="page.enterUserId"/>
+              <div id="userError" class="textarea-error"></div>
+            </div>
+
+            <div class="field" id="reportOfferField" style="display:none;">
+              <div class="label" data-i18n="page.offerId"></div>
+              <input class="input" name="offerId" data-i18n-placeholder="page.enterOfferId"/>
+              <div id="offerError" class="textarea-error"></div>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="label" data-i18n="page.description"></div>
+
+            <textarea
+              class="textarea"
+              name="message"
+              id="messageInput"
+              maxlength="10000"
+              required
+            ></textarea>
+
+            <div class="textarea-footer">
+              <span id="messageError" class="textarea-error"></span>
+              <span id="messageCounter">0 / 10000</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <input
+              type="file"
+              id="attachmentsInput"
+              name="attachments"
+              multiple
+              accept="image/*"
+              hidden
+            >
+
+            <button type="button" class="attach-btn" id="attachBtn">
+              <svg class="attach-icon" viewBox="0 0 24 24">
+                <path d="M21.44 11.05l-8.49 8.49a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 114.95 4.95l-9.19 9.19a2 2 0 11-2.83-2.83l8.49-8.49"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"/>
+              </svg>
+              <span data-i18n="page.addFiles"></span>
+            </button>
+
+            <div id="attachmentsPreview" class="attachments-preview"></div>
+          </div>
+
+          <button type="submit" class="btn" data-i18n="page.send"></button>
+        </div>
+      </form>
+
+      <div id="supportEmpty" class="support-empty">
+        <div class="support-empty-inner">
+          <div class="support-empty-illustration" aria-hidden="true">
+            <svg viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg" fill="none">
+              <defs>
+                <linearGradient id="supportBubbleFill" x1="48" y1="44" x2="208" y2="184" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stop-color="#ffffff" stop-opacity=".92"/>
+                  <stop offset=".48" stop-color="#eef3ff" stop-opacity=".82"/>
+                  <stop offset="1" stop-color="#dce8ff" stop-opacity=".68"/>
+                </linearGradient>
+
+                <linearGradient id="supportBubbleStroke" x1="56" y1="50" x2="204" y2="182" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stop-color="#5f89f8" stop-opacity=".62"/>
+                  <stop offset="1" stop-color="#7ea2ff" stop-opacity=".24"/>
+                </linearGradient>
+
+                <radialGradient id="supportGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
+                  gradientTransform="translate(130 110) rotate(90) scale(84 98)">
+                  <stop offset="0" stop-color="#7ea2ff" stop-opacity=".28"/>
+                  <stop offset=".62" stop-color="#7ea2ff" stop-opacity=".08"/>
+                  <stop offset="1" stop-color="#7ea2ff" stop-opacity="0"/>
+                </radialGradient>
+
+                <filter id="supportBlur" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="16"/>
+                </filter>
+
+                <filter id="supportShadow" x="-30%" y="-30%" width="160%" height="180%">
+                  <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#6f95ff" flood-opacity=".14"/>
+                </filter>
+              </defs>
+
+              <ellipse cx="130" cy="186" rx="62" ry="14" fill="#dfe7fb" opacity=".72"/>
+              <circle cx="130" cy="112" r="72" fill="url(#supportGlow)" filter="url(#supportBlur)"/>
+
+              <g filter="url(#supportShadow)">
+                <path
+                  d="M67 70c0-18.2 14.8-33 33-33h60c18.2 0 33 14.8 33 33v42c0 18.2-14.8 33-33 33h-35.2l-25.5 21.8c-4.6 3.9-11.7.7-11.7-5.4v-16.4C75.9 140.8 67 127.4 67 112V70Z"
+                  fill="url(#supportBubbleFill)"
+                  stroke="url(#supportBubbleStroke)"
+                  stroke-width="3"
+                />
+                <circle cx="130" cy="89" r="24" fill="#f7faff" stroke="#dbe7ff" stroke-width="2"/>
+                <path d="M130 78c-6.4 0-11 3.8-11 9.3" stroke="#4f7df3" stroke-width="5" stroke-linecap="round"/>
+                <path d="M130 111v.4" stroke="#4f7df3" stroke-width="6" stroke-linecap="round"/>
+                <path d="M141 86.5c0 5.5-5.5 7.8-8.4 10.6-1.7 1.6-2.6 3-2.6 5.1" stroke="#4f7df3" stroke-width="5" stroke-linecap="round"/>
+              </g>
+
+              <g opacity=".86">
+                <path d="M199 60v8" stroke="#6f95ff" stroke-width="3.5" stroke-linecap="round"/>
+                <path d="M195 64h8" stroke="#6f95ff" stroke-width="3.5" stroke-linecap="round"/>
+              </g>
+
+              <g opacity=".7">
+                <path d="M58 146v6" stroke="#7f9fff" stroke-width="3" stroke-linecap="round"/>
+                <path d="M55 149h6" stroke="#7f9fff" stroke-width="3" stroke-linecap="round"/>
+              </g>
+            </svg>
+          </div>
+
+          <h2 id="supportEmptyTitle" class="support-empty-title"></h2>
+          <p id="supportEmptyText" class="support-empty-text"></p>
+        </div>
+      </div>
+
+    </div>
   </div>
-</div>
+</main>
 
-<div class="field">
+<div id="footer-container"></div>
 
-  <input 
-    type="file" 
-    id="attachmentsInput"
-    name="attachments"
-    multiple
-    accept="image/*"
-    hidden
-  >
-
-<button type="button" class="attach-btn" id="attachBtn">
-  <svg class="attach-icon" viewBox="0 0 24 24">
-    <path d="M21.44 11.05l-8.49 8.49a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 114.95 4.95l-9.19 9.19a2 2 0 11-2.83-2.83l8.49-8.49"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"/>
-  </svg>
-<span data-i18n="page.addFiles"></span>
-</button>
-
-  <div id="attachmentsPreview" class="attachments-preview"></div>
-
-</div>
-
-<button type="submit" class="btn" data-i18n="page.send"></button>
-</div>
-  </form>
-</div>
 <div id="imageModal" style="
   display:none;
   position:fixed;
@@ -405,7 +598,6 @@ h1{
   justify-content:center;
   z-index:9999;
 ">
-
   <span id="imageModalClose" style="
     position:absolute;
     top:20px;
@@ -423,8 +615,6 @@ h1{
     box-shadow:0 10px 40px rgba(0,0,0,0.5);
   ">
 </div>
-</main>
-<div id="footer-container"></div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/games.list.js"></script>
@@ -462,6 +652,11 @@ const orderField = document.getElementById("orderField");
 const reportUserField = document.getElementById("reportUserField");
 const reportOfferField = document.getElementById("reportOfferField");
 const formFields = document.getElementById("formFields");
+const supportEmpty = document.getElementById("supportEmpty");
+const supportEmptyTitle = document.getElementById("supportEmptyTitle");
+const supportEmptyText = document.getElementById("supportEmptyText");
+const pageContent = document.querySelector(".page-content");
+const container = document.querySelector(".container");
 let SUPPORT_CONFIG = null;
 
 function normalizePrefixedId(value, prefix){
@@ -495,6 +690,38 @@ function normalizePrefixedId(value, prefix){
   return prefix + ":" + digits;
 }
 
+function updateSupportEmptyState(){
+  const shouldShow = !categorySelect.value;
+
+  if (supportEmpty) {
+    supportEmpty.classList.toggle("show", shouldShow);
+  }
+
+  if (supportEmptyTitle) {
+    supportEmptyTitle.textContent =
+      window.tpI18n?.t("page.emptyTitle") || "Что привело вас сюда?";
+  }
+
+  if (supportEmptyText) {
+    supportEmptyText.textContent =
+      window.tpI18n?.t("page.emptyText") || "Выберите категорию обращения, и форма ниже подстроится под вашу ситуацию.";
+  }
+}
+
+function updateSupportPageMode(){
+  const isEmptyMode = !categorySelect.value;
+
+  if (pageContent) {
+    pageContent.classList.toggle("is-empty-mode", isEmptyMode);
+    pageContent.classList.toggle("is-form-mode", !isEmptyMode);
+  }
+
+  if (container) {
+    container.classList.toggle("is-empty-mode", isEmptyMode);
+    container.classList.toggle("is-form-mode", !isEmptyMode);
+  }
+}
+
 const params = new URLSearchParams(window.location.search);
 
 const prefillCategory = String(
@@ -514,33 +741,28 @@ async function loadConfig(){
     headers:{ Authorization:"Bearer " + token }
   });
 
-const d = await r.json();
+  const d = await r.json();
 
-if(!d.success){
-alert(tpI18n.t("page.errors.configLoad"));
-  return;
-}
+  if(!d.success){
+    alert(tpI18n.t("page.errors.configLoad"));
+    return;
+  }
 
-SUPPORT_CONFIG = d.config;
+  SUPPORT_CONFIG = d.config;
 
-  // очищаем категории
-categorySelect.innerHTML = "";
+  categorySelect.innerHTML = "";
 
-const placeholder = document.createElement("option");
-placeholder.value = "";
-placeholder.textContent = tpI18n.t("page.chooseCategory");
-categorySelect.appendChild(placeholder);
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = tpI18n.t("page.chooseCategory");
+  categorySelect.appendChild(placeholder);
 
-Object.entries(SUPPORT_CONFIG).forEach(([key, value]) => {
-
-  const option = document.createElement("option");
-  option.value = key;
-  option.textContent = tr(value.labelKey, value.labelKey);
-
-  categorySelect.appendChild(option);
-
-});
-
+  Object.entries(SUPPORT_CONFIG).forEach(([key, value]) => {
+    const option = document.createElement("option");
+    option.value = key;
+    option.textContent = tr(value.labelKey, value.labelKey);
+    categorySelect.appendChild(option);
+  });
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -548,6 +770,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadConfig();
   await applyPrefillFromUrl();
   tpI18n.apply();
+  updateSupportEmptyState();
+  updateSupportPageMode();
 
   validateMessage();
   autoResize(messageInput);
@@ -613,7 +837,6 @@ async function applyPrefillFromUrl(){
   }
 }
 
-// 2️⃣ Отправка формы
 form.onsubmit = async (e)=>{
   e.preventDefault();
 
@@ -621,8 +844,8 @@ form.onsubmit = async (e)=>{
 
   formData.delete("attachments");
 
-if(selectedFiles.length > 10){
-alert(tpI18n.t("page.errors.maxFiles"));
+  if(selectedFiles.length > 10){
+    alert(tpI18n.t("page.errors.maxFiles"));
     return;
   }
 
@@ -638,116 +861,112 @@ alert(tpI18n.t("page.errors.maxFiles"));
     body: formData
   });
 
-const d = await r.json();
+  const d = await r.json();
 
-const orderError = document.getElementById("orderError");
-const userError = document.getElementById("userError");
-const offerError = document.getElementById("offerError");
+  const orderError = document.getElementById("orderError");
+  const userError = document.getElementById("userError");
+  const offerError = document.getElementById("offerError");
 
-if(orderError) orderError.textContent = "";
-if(userError) userError.textContent = "";
-if(offerError) offerError.textContent = "";
+  if(orderError) orderError.textContent = "";
+  if(userError) userError.textContent = "";
+  if(offerError) offerError.textContent = "";
 
-if(!d.success){
-  const msg = String(d.message || "").trim();
+  if(!d.success){
+    const msg = String(d.message || "").trim();
 
-  if(
-    msg === tr("responses.orders.orderNotFound") ||
-    msg === tr("page.errors.orderNotFound")
-  ){
-    if(orderError) orderError.textContent = tr("page.errors.orderNotFound");
+    if(
+      msg === tr("responses.orders.orderNotFound") ||
+      msg === tr("page.errors.orderNotFound")
+    ){
+      if(orderError) orderError.textContent = tr("page.errors.orderNotFound");
+      return;
+    }
+
+    if(
+      msg === tr("responses.support.enterUserId") ||
+      msg === tr("page.errors.enterUserId")
+    ){
+      if(userError) userError.textContent = tr("page.errors.enterUserId");
+      return;
+    }
+
+    if(
+      msg === tr("responses.common.userNotFound") ||
+      msg === tr("page.errors.userNotFound")
+    ){
+      if(userError) userError.textContent = tr("page.errors.userNotFound");
+      return;
+    }
+
+    if(
+      msg === tr("responses.support.enterOfferId") ||
+      msg === tr("page.errors.enterOfferId")
+    ){
+      if(offerError) offerError.textContent = tr("page.errors.enterOfferId");
+      return;
+    }
+
+    if(
+      msg === tr("responses.support.offerNotFound") ||
+      msg === tr("page.errors.offerNotFound")
+    ){
+      if(offerError) offerError.textContent = tr("page.errors.offerNotFound");
+      return;
+    }
+
+    alert(msg || tr("responses.common.internalError", "Ошибка"));
     return;
   }
 
-  if(
-    msg === tr("responses.support.enterUserId") ||
-    msg === tr("page.errors.enterUserId")
-  ){
-    if(userError) userError.textContent = tr("page.errors.enterUserId");
-    return;
-  }
+  selectedFiles = [];
+  preview.innerHTML = "";
+  document.getElementById("attachmentsInput").value = "";
 
-  if(
-    msg === tr("responses.common.userNotFound") ||
-    msg === tr("page.errors.userNotFound")
-  ){
-    if(userError) userError.textContent = tr("page.errors.userNotFound");
-    return;
-  }
+  const newId = d.ticket.id;
 
-  if(
-    msg === tr("responses.support.enterOfferId") ||
-    msg === tr("page.errors.enterOfferId")
-  ){
-    if(offerError) offerError.textContent = tr("page.errors.enterOfferId");
-    return;
-  }
-
-  if(
-    msg === tr("responses.support.offerNotFound") ||
-    msg === tr("page.errors.offerNotFound")
-  ){
-    if(offerError) offerError.textContent = tr("page.errors.offerNotFound");
-    return;
-  }
-
-  alert(msg || tr("responses.common.internalError", "Ошибка"));
-  return;
-}
-
-selectedFiles = [];
-preview.innerHTML = "";
-document.getElementById("attachmentsInput").value = "";
-
-const newId = d.ticket.id;
-
-sessionStorage.removeItem("tp_support_category");
-location.href = "/support-ticket.html?id=" + newId;
-
+  sessionStorage.removeItem("tp_support_category");
+  location.href = "/support-ticket.html?id=" + newId;
 };
 
 categorySelect.addEventListener("change", ()=>{
 
-roleSelect.value = "";
+  roleSelect.value = "";
+  subjectSelect.value = "";
 
-subjectSelect.value = "";
-if(categorySelect.value){
-  formFields.style.display = "flex";
-}else{
-  formFields.style.display = "none";
-}
+  if(categorySelect.value){
+    formFields.style.display = "flex";
+  }else{
+    formFields.style.display = "none";
+  }
 
-subjectSelect.innerHTML = "";
+  subjectSelect.innerHTML = "";
 
-roleField.style.display = "none";
-subjectField.style.display = "none";
-orderField.style.display = "none";
-reportUserField.style.display = "none";
-reportOfferField.style.display = "none";
-
-/* ===== ПРОБЛЕМА С ЗАКАЗОМ ===== */
+  roleField.style.display = "none";
+  subjectField.style.display = "none";
+  orderField.style.display = "none";
+  reportUserField.style.display = "none";
+  reportOfferField.style.display = "none";
 
 if(categorySelect.value === "order"){
-
   roleField.style.display = "flex";
   orderField.style.display = "none";
 
-subjectSelect.innerHTML =
-  `<option value="">${tpI18n.t("page.selectRoleFirst")}</option>`;
+  subjectSelect.innerHTML =
+    `<option value="">${tpI18n.t("page.selectRoleFirst")}</option>`;
   subjectSelect.required = true;
 
+  updateSupportEmptyState();
+  updateSupportPageMode();
   return;
 }
 
-if(categorySelect.value === "report"){
-  reportUserField.style.display = "flex";
-}
+  if(categorySelect.value === "report"){
+    reportUserField.style.display = "flex";
+  }
 
-if(categorySelect.value === "report_offer"){
-  reportOfferField.style.display = "flex";
-}
-
-/* ===== ДРУГИЕ КАТЕГОРИИ ===== */
+  if(categorySelect.value === "report_offer"){
+    reportOfferField.style.display = "flex";
+  }
 
 if(
   !SUPPORT_CONFIG ||
@@ -757,68 +976,68 @@ if(
 ){
   subjectField.style.display = "none";
   subjectSelect.required = false;
+  updateSupportEmptyState();
+  updateSupportPageMode();
   return;
 }
 
-subjectField.style.display = "flex";
-subjectSelect.required = true;
+  subjectField.style.display = "flex";
+  subjectSelect.required = true;
 
-const defaultOption = document.createElement("option");
-defaultOption.value = "";
-defaultOption.textContent = tpI18n.t("page.chooseSubject");
-subjectSelect.appendChild(defaultOption);
+  const defaultOption = document.createElement("option");
+  defaultOption.value = "";
+  defaultOption.textContent = tpI18n.t("page.chooseSubject");
+  subjectSelect.appendChild(defaultOption);
 
-SUPPORT_CONFIG[categorySelect.value].topics.forEach(topic=>{
-  const option = document.createElement("option");
-  option.value = topic;
+  SUPPORT_CONFIG[categorySelect.value].topics.forEach(topic=>{
+    const option = document.createElement("option");
+    option.value = topic;
     option.textContent = tr(topic, topic);
-  subjectSelect.appendChild(option);
+    subjectSelect.appendChild(option);
+  });
+
+  updateSupportEmptyState();
+updateSupportPageMode();
 });
 
-});
 roleSelect.addEventListener("change", ()=>{
 
-if(!roleSelect.value){
+  if(!roleSelect.value){
+    subjectField.style.display = "none";
+    orderField.style.display = "none";
+    subjectSelect.innerHTML = "";
+    return;
+  }
 
-  subjectField.style.display = "none";
-  orderField.style.display = "none";
+  orderField.style.display = "flex";
   subjectSelect.innerHTML = "";
 
-  return;
-}
+  const defaultOption = document.createElement("option");
+  defaultOption.value = "";
+  defaultOption.textContent = tpI18n.t("page.chooseSubject");
+  subjectSelect.appendChild(defaultOption);
 
-orderField.style.display = "flex";
+  subjectField.style.display = "flex";
+  subjectSelect.required = true;
 
-subjectSelect.innerHTML = "";
+  const category = categorySelect.value;
 
-const defaultOption = document.createElement("option");
-defaultOption.value = "";
-defaultOption.textContent = tpI18n.t("page.chooseSubject");
-subjectSelect.appendChild(defaultOption);
+  if(!SUPPORT_CONFIG || !SUPPORT_CONFIG[category]) return;
 
-subjectField.style.display = "flex";
-subjectSelect.required = true;
+  const roles = SUPPORT_CONFIG[category]?.roles;
+  if(!roles) return;
 
-const category = categorySelect.value;
+  const topics = roles[roleSelect.value];
+  if(!topics) return;
 
-if(!SUPPORT_CONFIG || !SUPPORT_CONFIG[category]) return;
-
-const roles = SUPPORT_CONFIG[category]?.roles;
-
-if(!roles) return;
-
-const topics = roles[roleSelect.value];
-
-if(!topics) return;
-
-topics.forEach(topic=>{
-  const option = document.createElement("option");
-  option.value = topic;
+  topics.forEach(topic=>{
+    const option = document.createElement("option");
+    option.value = topic;
     option.textContent = tr(topic, topic);
-  subjectSelect.appendChild(option);
+    subjectSelect.appendChild(option);
+  });
 });
 
-});
 const input = document.getElementById("attachmentsInput");
 const btn = document.getElementById("attachBtn");
 const preview = document.getElementById("attachmentsPreview");
@@ -830,10 +1049,10 @@ btn.onclick = () => input.click();
 input.onchange = () => {
   const files = Array.from(input.files);
 
-if(selectedFiles.length + files.length > 10){
-  alert(tpI18n.t("page.errors.maxFiles"));
-  return;
-}
+  if(selectedFiles.length + files.length > 10){
+    alert(tpI18n.t("page.errors.maxFiles"));
+    return;
+  }
 
   files.forEach(file => {
     selectedFiles.push(file);
@@ -846,9 +1065,9 @@ function renderFiles(){
   preview.innerHTML = "";
 
   selectedFiles.forEach((file, index) => {
-
     const extension = file.name.split(".").pop();
-const shortName = tpI18n.t("page.file") + "." + extension;
+    const shortName = tpI18n.t("page.file") + "." + extension;
+
     const chip = document.createElement("div");
     chip.className = "file-link";
 
@@ -864,7 +1083,6 @@ const shortName = tpI18n.t("page.file") + "." + extension;
       <div class="file-remove">×</div>
     `;
 
-    // открыть модал
     chip.querySelector(".file-left").onclick = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -873,7 +1091,6 @@ const shortName = tpI18n.t("page.file") + "." + extension;
       reader.readAsDataURL(file);
     };
 
-    // удалить
     chip.querySelector(".file-remove").onclick = (e) => {
       e.stopPropagation();
       selectedFiles.splice(index,1);
@@ -889,7 +1106,6 @@ const messageCounter = document.getElementById("messageCounter");
 const messageError = document.getElementById("messageError");
 const submitBtn = form.querySelector(".btn");
 
-// авто-рост
 function autoResize(el){
   el.style.height = "auto";
   el.style.height = el.scrollHeight + "px";
@@ -899,11 +1115,12 @@ const MAX_LENGTH = 10000;
 
 function validateMessage(){
   const length = messageInput.value.length;
-messageCounter.textContent =
-  tpI18n.t("page.counter", { current:length, max:MAX_LENGTH });
+  messageCounter.textContent =
+    tpI18n.t("page.counter", { current:length, max:MAX_LENGTH });
+
   if(length > MAX_LENGTH){
-messageError.textContent =
-  tpI18n.t("page.errors.maxLength", {count: MAX_LENGTH});
+    messageError.textContent =
+      tpI18n.t("page.errors.maxLength", {count: MAX_LENGTH});
     messageInput.classList.add("invalid");
     submitBtn.disabled = true;
     submitBtn.style.opacity = ".6";
@@ -941,7 +1158,6 @@ imageModal.onclick = (e) => {
     closeImageModal();
   }
 };
-/* ===== ОГРАНИЧЕНИЕ ID ПОЛЬЗОВАТЕЛЯ ===== */
 
 const reportUserInput = form.querySelector("[name='userId']");
 const reportOfferInput = form.querySelector("[name='offerId']");
@@ -966,24 +1182,19 @@ if(reportOfferInput){
   });
 }
 
-
-/* ===== ОГРАНИЧЕНИЕ НОМЕРА ЗАКАЗА ===== */
-
 const orderInput = form.querySelector("[name='orderId']");
 
 if(orderInput){
   orderInput.addEventListener("input", () => {
-
     let value = orderInput.value
       .toUpperCase()
-      .replace(/[^A-Z0-9#]/g,""); // только латиница и цифры
+      .replace(/[^A-Z0-9#]/g,"");
 
     if(value && value[0] !== "#"){
       value = "#" + value.replace("#","");
     }
 
-    orderInput.value = value.slice(0,8); // максимум 8 символов
-
+    orderInput.value = value.slice(0,8);
   });
 }
 
@@ -1033,11 +1244,12 @@ window.addEventListener("tp:lang-change", async () => {
     }
   }
 
-  tpI18n.apply();
-  validateMessage();
-  autoResize(messageInput);
+tpI18n.apply();
+updateSupportEmptyState();
+updateSupportPageMode();
+validateMessage();
+autoResize(messageInput);
 });
-
 </script>
 
 </body>

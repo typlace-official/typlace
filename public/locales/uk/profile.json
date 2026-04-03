@@ -2,12 +2,10 @@
   "title": "Профіль",
   "myTitle": "Мій профіль",
   "externalTitle": "Профіль користувача",
+  "externalTitleNamed": "Профіль {{username}}",
   "docTitleMy": "Мій профіль — TyPlace",
   "docTitleExternal": "Профіль користувача — TyPlace",
-
-  "common": {
-    "close": "Закрити"
-  },
+  "docTitleExternalNamed": "Профіль {{username}} — TyPlace",
 
   "nav": {
     "myOffers": "Мої оголошення",
@@ -20,11 +18,24 @@
   "since": "На TyPlace з",
   "noReviews": "Немає відгуків",
   "copyId": "Натисніть, щоб скопіювати ID",
+  "userIdPrefix": "UID: {{id}}",
 
   "reviews": {
     "one": "відгук",
     "few": "відгуки",
     "many": "відгуків"
+  },
+
+  "common": {
+    "close": "Закрити"
+  },
+
+  "avatar": {
+    "cropTitle": "Обрізати фото",
+    "tip": "Перетягніть зображення та виберіть масштаб",
+    "zoom": "Масштаб",
+    "cancel": "Скасувати",
+    "save": "Зберегти"
   },
 
   "menu": {
@@ -47,19 +58,11 @@
     "save": "Зберегти"
   },
 
-  "avatar": {
-    "cropTitle": "Редагування аватарки",
-    "tip": "Перетягніть фото та виберіть масштаб",
-    "zoom": "Масштаб",
-    "cancel": "Скасувати",
-    "save": "Зберегти"
-  },
-
   "alerts": {
     "userNotFound": "Користувача не знайдено",
     "enterNickname": "Введіть нік",
-    "nickTooShort": "Нік має бути щонайменше 3 символи",
-    "nickTooLong": "Нік має бути не більше 20 символів",
+    "nickTooShort": "Нік має містити щонайменше 3 символи",
+    "nickTooLong": "Нік має містити не більше 20 символів",
     "nickWaitUntil": "Нік можна змінити знову {{date}}",
     "nickSaveError": "Не вдалося зберегти нік",
     "avatarSaveError": "Не вдалося оновити фото",
@@ -68,7 +71,7 @@
     "telegramLinkStartError": "Не вдалося почати підключення Telegram",
     "telegramUnlinkError": "Не вдалося відключити Telegram",
     "telegramLinkedSuccess": "Telegram успішно підключено",
-    "telegramLinkInstructions": "Відкрийте Telegram, запустіть бота та підтвердьте прив’язку",
+    "telegramLinkInstructions": "Відкрийте Telegram, запустіть бота та підтвердіть прив’язку",
     "copyIdError": "Не вдалося скопіювати ID"
   }
 }

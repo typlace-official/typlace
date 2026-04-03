@@ -2,108 +2,187 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>TyPlace</title>
+  <title data-i18n="page.title"></title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="/header.css">
   <link rel="stylesheet" href="/footer.css">
 
   <style>
+    :root{
+      --tp-header-space:110px;
+      --tp-page-bg:#f6f7f9;
+      --tp-text:#111827;
+      --tp-muted:#8b95a7;
+      --tp-border:#e5e7eb;
+      --tp-panel:#ffffff;
+    }
+
+    html,
     body{
       margin:0;
+      padding:0;
+      min-height:100%;
+      background:var(--tp-page-bg);
+      overflow-x:hidden;
+    }
+
+    body{
+      min-height:100svh;
       font-family:Inter, Arial, sans-serif;
-      background:#f6f7f9;
-      color:#111827;
+      color:var(--tp-text);
+    }
+
+    .page-content{
+      min-height:100svh;
+      padding-top:var(--tp-header-space);
+      box-sizing:border-box;
+      display:flex;
     }
 
     .page{
-      max-width:1200px;
-      margin:40px auto;
+      width:100%;
+      max-width:1100px;
+      margin:0 auto;
       padding:0 14px;
+      box-sizing:border-box;
+      display:flex;
     }
 
-    .center{
+    .help-shell{
+      width:100%;
+      min-height:calc(100svh - var(--tp-header-space));
+      box-sizing:border-box;
+      padding:12px 0 24px;
       display:flex;
       flex-direction:column;
       align-items:center;
-      gap:26px;
+    }
+
+    .help-head{
+      width:100%;
+      max-width:640px;
       text-align:center;
+      margin:0 0 28px;
     }
 
     .title{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      font-size:26px;
+      margin:0 0 10px;
+      font-size:32px;
+      line-height:1.05;
       font-weight:900;
-      margin:0;
+      letter-spacing:-0.02em;
     }
 
-    .help-title-svg{
-      width:26px;
-      height:26px;
-      color:#6b7280;
-      flex-shrink:0;
+    .subtitle{
+      margin:0;
+      font-size:15px;
+      line-height:1.55;
+      color:var(--tp-muted);
+      font-weight:500;
     }
 
     .support-menu{
-      display:flex;
-      justify-content:center;
-      gap:18px;
-      flex-wrap:wrap;
       width:100%;
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:16px;
     }
 
     .menu-btn{
-      width:260px;
-      background:#fff;
-      border:1px solid #e5e7eb;
-      border-radius:16px;
+      appearance:none;
+      width:100%;
+      min-height:148px;
+      background:var(--tp-panel);
+      border:1px solid var(--tp-border);
+      border-radius:18px;
       padding:22px 20px;
-      font-size:16px;
-      font-weight:900;
       cursor:pointer;
-      text-align:center;
-      transition:.15s;
-      color:#111827;
+      text-align:left;
+      color:var(--tp-text);
+      transition:none;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-start;
+      gap:10px;
+      box-sizing:border-box;
+      box-shadow:0 4px 14px rgba(17,24,39,.03);
     }
 
     .menu-btn:hover{
-      background:#f3f4f6;
+      background:var(--tp-panel);
+      border-color:var(--tp-border);
+      box-shadow:0 4px 14px rgba(17,24,39,.03);
+      transform:none;
     }
 
-    @media (max-width:640px){
+    .menu-btn-title{
+      display:block;
+      font-size:18px;
+      line-height:1.25;
+      font-weight:900;
+      color:var(--tp-text);
+    }
+
+    .menu-btn-text{
+      display:block;
+      font-size:14px;
+      line-height:1.5;
+      color:var(--tp-muted);
+      font-weight:500;
+    }
+
+    @media (max-width:900px){
+      .support-menu{
+        grid-template-columns:1fr;
+      }
+
+      .menu-btn{
+        min-height:124px;
+      }
+    }
+
+    @media (max-width:768px){
+      :root{
+        --tp-header-space:100px;
+      }
+
       .page{
-        margin:20px auto;
         padding:0 12px;
       }
 
-      .center{
-        gap:20px;
+      .help-shell{
+        padding:0 0 24px;
+      }
+
+      .help-head{
+        margin-bottom:20px;
       }
 
       .title{
-        font-size:22px;
-        gap:8px;
+        font-size:28px;
       }
 
-      .help-title-svg{
-        width:22px;
-        height:22px;
+      .subtitle{
+        font-size:14px;
       }
 
       .support-menu{
-        flex-direction:column;
-        align-items:center;
         gap:12px;
       }
 
       .menu-btn{
-        width:100%;
-        max-width:420px;
-        font-size:15px;
+        min-height:116px;
+        border-radius:16px;
         padding:18px 16px;
+      }
+
+      .menu-btn-title{
+        font-size:16px;
+      }
+
+      .menu-btn-text{
+        font-size:13px;
       }
     }
   </style>
@@ -114,33 +193,27 @@
 
   <main class="page-content">
     <div class="page">
-      <div class="center">
+      <div class="help-shell">
 
-        <h1 class="title">
-          <svg class="help-title-svg" viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
-            <path d="M9.5 9a2.5 2.5 0 114 2c-.8.8-1.5 1.2-1.5 2"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"/>
-            <circle cx="12" cy="17" r="1" fill="currentColor"/>
-          </svg>
-
-          <span data-i18n="page.title">Центр помощи</span>
-        </h1>
+        <div class="help-head">
+          <h1 class="title" data-i18n="page.title"></h1>
+          <p class="subtitle" data-i18n="page.subtitle"></p>
+        </div>
 
         <div class="support-menu">
           <button class="menu-btn" onclick="location.href='/support-create.html'">
-            <span data-i18n="page.create">Создать обращение</span>
+            <span class="menu-btn-title" data-i18n="page.create"></span>
+            <span class="menu-btn-text" data-i18n="page.create_note"></span>
           </button>
 
           <button class="menu-btn" onclick="location.href='/support-history.html'">
-            <span data-i18n="page.history">История обращений</span>
+            <span class="menu-btn-title" data-i18n="page.history"></span>
+            <span class="menu-btn-text" data-i18n="page.history_note"></span>
           </button>
 
           <button class="menu-btn" onclick="location.href='/rules.html'">
-            <span data-i18n="page.rules">Правила платформы</span>
+            <span class="menu-btn-title" data-i18n="page.rules"></span>
+            <span class="menu-btn-text" data-i18n="page.rules_note"></span>
           </button>
         </div>
 
@@ -163,14 +236,14 @@
     }
 
     document.addEventListener("DOMContentLoaded", async () => {
-      if (window.tpI18n) {
+      if (window.tpI18n?.load) {
         await window.tpI18n.load(window.tpI18n.currentLang);
       }
     });
 
-    window.addEventListener("tp:lang-change", async () => {
-      if (window.tpI18n) {
-        await window.tpI18n.load(window.tpI18n.currentLang);
+    window.addEventListener("tp:lang-change", () => {
+      if (window.tpI18n?.apply) {
+        window.tpI18n.apply(document);
       }
     });
   </script>

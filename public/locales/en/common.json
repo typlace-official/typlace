@@ -2,9 +2,9 @@
   "sale": "Sale",
   "rent": "Rent",
 
-"vc_yes": "VC available",
-"vc_no": "No VC",
-"offer_fallback": "Offer",
+  "vc_yes": "VC available",
+  "vc_no": "No VC",
+  "offer_fallback": "Listing",
 
   "other_amount": "Other amount",
 
@@ -19,7 +19,7 @@
 
   "badges": {
     "admin": "Admin",
-    "super_admin": "Super admin",
+    "super_admin": "Super Admin",
     "moderator": "Moderator",
     "support": "Support",
     "resolution": "Resolution",
@@ -31,7 +31,7 @@
   "help": "Help",
   "chats": "Chats",
   "profile": "Profile",
-  "login": "Login",
+  "login": "Log in",
   "signup": "Sign up",
 
   "price": "Price",
@@ -40,9 +40,22 @@
   "search_by_name": "Search by name",
   "sell": "Sell",
 
-  "offers_found_one": "{{count}} offer found",
-  "offers_found_few": "{{count}} offers found",
-  "offers_found_many": "{{count}} offers found",
+  "offers_found_one": "Found {{count}} listing",
+  "offers_found_few": "Found {{count}} listings",
+  "offers_found_many": "Found {{count}} listings",
+
+  "offersWords": {
+    "one": "listing",
+    "few": "listings",
+    "many": "listings"
+  },
+
+  "offersCount": {
+    "found": "Found {{count}} {{word}}",
+    "total": "Total {{count}} {{word}}"
+  },
+
+  "dynamicTitle": "{{game}} — TyPlace",
 
   "no_reviews": "No reviews",
 
@@ -52,7 +65,7 @@
 
   "home": "Home",
   "favorites": "Favorites",
-  "no_favorites": "You do not have any favorite offers yet",
+  "no_favorites": "You don't have any favorite listings yet",
 
   "from": "From",
   "to": "To",
@@ -60,7 +73,11 @@
   "category_placeholder": "Category",
   "choose_category": "Choose a category",
 
-  "empty": "No offers yet",
+  "empty": "No listings yet",
+  "emptyTitle": "Nothing here yet",
+  "emptyText": "There are no listings for this mode yet.",
+  "emptyFilteredTitle": "Nothing found",
+  "emptyFilteredText": "Try changing the filters or search query.",
 
   "back": "Back",
   "photo_product": "Product photo",
@@ -68,22 +85,22 @@
   "availability": "Availability",
 
   "language": "Language",
-  "offer_language": "Offer language",
-  "ad_language": "Offer language",
+  "offer_language": "Listing language",
+  "ad_language": "Listing language",
 
-  "create_offer": "Create offer",
-  "edit_offer": "Edit offer",
+  "create_offer": "Create listing",
+  "edit_offer": "Edit listing",
   "save_changes": "Save changes",
-  "delete_offer": "Delete offer",
+  "delete_offer": "Delete listing",
 
   "invalid_price": "Enter a valid price",
   "enter_title": "Enter the title in the selected language",
   "enter_description": "Enter the description in the selected language",
 
-  "offer_deleted": "Offer deleted",
-  "offer_not_found": "Offer not found",
+  "offer_deleted": "Listing deleted",
+  "offer_not_found": "Listing not found",
 
-  "buyer_pays": "Buyer pays",
+  "buyer_pays": "Buyer will pay",
 
   "title": "Title",
   "description": "Description",
@@ -100,7 +117,7 @@
       "finance": "Payments and withdrawals",
       "account": "Account issue",
       "report": "Report a user",
-      "report_offer": "Report an offer",
+      "report_offer": "Report a listing",
       "bug": "Report a bug",
       "other": "Other"
     },
@@ -112,15 +129,15 @@
 
       "buyer_not_confirm": "Buyer is not confirming the order",
       "delivery_problem": "Problem with item delivery or service completion",
-      "buyer_abuse_or_false_claim": "Buyer is abusing the system or filed a false claim",
+      "buyer_abuse_or_false_claim": "Buyer is abusing the system or filed a false complaint",
 
-      "deposit_problem": "Deposit problem",
-      "withdraw_problem": "Withdrawal problem",
+      "deposit_problem": "Deposit issue",
+      "withdraw_problem": "Withdrawal issue",
       "payment_failed": "Payment failed",
 
       "account_hacked": "My account was hacked",
       "restore_access": "Restore account access",
-      "appeal_ban": "Appeal account ban",
+      "appeal_ban": "Appeal account suspension",
 
       "rule_violation": "Rule violation",
       "scam": "Scam",
@@ -128,17 +145,17 @@
       "spam": "Spam",
 
       "fake_description": "Fake or incorrect description",
-      "wrong_category": "Wrong offer category",
+      "wrong_category": "Wrong listing category",
       "prohibited_item": "Prohibited item",
       "price_manipulation": "Price manipulation",
 
       "page_bug": "Page bug",
       "chat_bug": "Chat bug",
-      "filters_bug": "Filters bug",
+      "filters_bug": "Filter bug",
 
       "general_question": "General question",
       "site_suggestion": "Website suggestion",
-      "not_in_list": "Issue not in the list",
+      "not_in_list": "My issue is not listed",
 
       "other": "Other"
     }
@@ -150,15 +167,15 @@
     "fallback_order": "Order",
     "fallback_text": "System message",
 
-    "order_created": "Buyer {{actor}} created order {{order}}. Funds are frozen.",
+    "order_created": "Buyer {{actor}} created order {{order}}. Funds have been held.",
     "order_confirmed": "Buyer {{actor}} confirmed receipt for order {{order}}. The deal is completed.",
     "order_refunded": "Seller {{actor}} issued a refund for order {{order}}.",
     "order_confirmed_admin": "Administrator confirmed order {{order}}. The deal is completed.",
     "order_refunded_admin": "Administrator issued a refund for order {{order}}.",
     "review_created": "Buyer {{actor}} left a review for order {{order}}.",
 
-    "resolution_requested": "A dispute has been opened for order {{order}}. The case has been sent to Resolution.",
-    "resolution_assigned": "The dispute for order {{order}} has been assigned to Resolution staff member {{actor}}.",
+    "resolution_requested": "A dispute was opened for order {{order}}. The case was forwarded to resolution.",
+    "resolution_assigned": "The dispute for order {{order}} was assigned to resolution staff member {{actor}}.",
     "resolution_confirmed": "Resolution decided in favor of confirmation for order {{order}}. The deal is completed.",
     "resolution_refunded": "Resolution decided to refund the funds for order {{order}}."
   },
@@ -167,13 +184,17 @@
     "copyLine1": "© 2026 TyPlace — marketplace for digital goods and services.",
     "copyLine2": "All rights reserved.",
     "links": {
-      "rules": "Platform rules",
-      "terms": "User agreement",
-      "privacy": "Privacy policy",
-      "cookies": "Cookie policy",
-      "about": "About platform",
-      "help": "Help center",
+      "rules": "Platform Rules",
+      "terms": "User Agreement",
+      "privacy": "Privacy Policy",
+      "cookies": "Cookie Policy",
+      "about": "About the platform",
+      "help": "Help Center",
       "contacts": "Contacts"
     }
+  },
+
+  "errors": {
+    "gameNotFound": "Game not found"
   }
 }

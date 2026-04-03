@@ -3,441 +3,441 @@
 <head>
   <meta charset="UTF-8">
   <script>
-  document.titleKey = "page.title";
-</script>
-<title data-i18n="page.title"></title>
+    document.titleKey = "page.title";
+  </script>
+  <title data-i18n="page.title"></title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="/header.css">
   <link rel="stylesheet" href="/footer.css">
 
   <style>
-    body{
-      margin:0;
-      font-family:Inter, Arial, sans-serif;
-      background:#f6f7f9;
-      color:#111827;
+    :root{
+      --tp-header-space: 110px;
+      --tp-page-bg: #f6f7f9;
+      --tp-card-bg: #ffffff;
+      --tp-text: #111827;
+      --tp-muted: #6b7280;
+      --tp-muted-soft: #9ca3af;
+      --tp-border: #e5e7eb;
+      --tp-primary: #1E50D4;
+      --tp-primary-soft: #eef2ff;
+      --tp-empty-shadow: rgba(79,125,243,.16);
     }
 
-.page{
-  max-width:1000px;
-  margin:24px auto;
-  padding:0 12px;
-}
+    html,
+    body{
+      margin:0;
+      padding:0;
+      min-height:100%;
+      background:var(--tp-page-bg);
+    }
 
+    body{
+      min-height:100svh;
+      font-family:Inter, Arial, sans-serif;
+      color:var(--tp-text);
+    }
 
-h1{
-  font-size:24px;
-  margin:20px 0 24px 0;
-}
-    .layout{
+    .page-content{
+      min-height:100svh;
+      padding-top:var(--tp-header-space);
+      box-sizing:border-box;
+    }
+
+    .page{
+      width:100%;
+    }
+
+    .container{
+      width:100%;
+      max-width:1100px;
+      min-height:calc(100svh - var(--tp-header-space));
+      margin:0 auto;
+      padding:10px 16px 40px;
+      box-sizing:border-box;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .support-nav{
+      display:flex;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:6px;
+      margin:0 0 10px;
+      font-size:13px;
+      font-weight:600;
+      color:var(--tp-muted);
+    }
+
+    .support-nav a,
+    .support-nav .current{
+      text-decoration:none;
+      color:var(--tp-muted);
+    }
+
+    .support-nav a:hover{
+      color:var(--tp-text);
+    }
+
+    .support-nav .current{
+      color:var(--tp-text);
+    }
+
+    .page-title{
+      font-size:24px;
+      line-height:1.2;
+      margin:0 0 20px;
+    }
+
+    .toolbar{
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
+      margin:0 0 20px;
+    }
+
+    .status-select{
+      height:42px;
+      min-width:190px;
+      border-radius:12px;
+      border:1px solid var(--tp-border);
+      background:#fff;
+      padding:0 12px;
+      font-size:14px;
+      font-weight:600;
+      cursor:pointer;
+      outline:none;
+      color:var(--tp-text);
+      box-sizing:border-box;
+    }
+
+    .status-select:focus{
+      border-color:#cbd5e1;
+      box-shadow:0 0 0 3px rgba(30,80,212,.08);
+    }
+
+    .tickets{
       display:grid;
-      grid-template-columns:320px 1fr;
+      grid-template-columns:repeat(3, 1fr);
       gap:16px;
     }
 
-    @media(max-width:900px){
-      .layout{ grid-template-columns:1fr; }
-    }
-
-    .card{
+    .ticket-card{
       background:#fff;
-      border:1px solid #e5e7eb;
+      border:1px solid var(--tp-border);
       border-radius:16px;
-      overflow:hidden;
-    }
-
-    .ticket{
-      padding:14px;
-      border-top:1px solid #f3f4f6;
-      cursor:pointer;
-    }
-
-    .ticket:hover{
-      background:#f9fafb;
-    }
-
-    .ticket.active{
-      background:#eef2ff;
-    }
-
-    .ticket-title{
-      font-weight:800;
-      font-size:14px;
-      margin-bottom:6px;
-    }
-
-    .ticket-meta{
-      font-size:12px;
-      color:#6b7280;
-      font-weight:700;
-    }
-
-    .messages{
       padding:16px;
+      cursor:pointer;
+      transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease, background .15s ease;
       display:flex;
       flex-direction:column;
-      gap:12px;
-      max-height:500px;
-      overflow:auto;
+      justify-content:space-between;
+      gap:14px;
+      min-height:168px;
+      box-sizing:border-box;
     }
 
-    .msg{
-      max-width:70%;
-      padding:10px 14px;
-      border-radius:14px;
-      font-weight:700;
-      font-size:14px;
-      white-space:pre-wrap;
+    .ticket-card:hover{
+      transform:translateY(-1px);
+      box-shadow:0 10px 30px rgba(17,24,39,.06);
+      border-color:#dbe3f3;
+      background:#fcfcfd;
     }
 
-    .me{
-      align-self:flex-end;
-      background:#1E50D4;
-      color:#fff;
-    }
-
-    .support{
-      background:#f3f4f6;
-    }
-
-    .reply{
-      padding:16px;
-      border-top:1px solid #e5e7eb;
+    .ticket-top{
       display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
       gap:10px;
     }
 
-    .textarea{
-      flex:1;
-      border:1px solid #e5e7eb;
-      border-radius:12px;
-      padding:10px;
+    .ticket-id{
+      font-weight:800;
+      font-size:14px;
+      line-height:1.35;
+    }
+
+    .ticket-status{
+      display:inline-flex;
+      align-items:center;
+      padding:8px 12px;
+      border-radius:10px;
+      font-size:12px;
       font-weight:700;
-      resize:vertical;
-    }
-
-    .btn{
-      border:none;
-      border-radius:12px;
-      padding:12px 18px;
-      font-weight:900;
-      cursor:pointer;
-    }
-
-    .btn-primary{
-      background:#1E50D4;
+      letter-spacing:.2px;
       color:#fff;
+      white-space:nowrap;
+      flex:0 0 auto;
     }
 
-    .btn-danger{
-      background:#fee2e2;
-      color:#b91c1c;
+    .ticket-status.waiting{
+      background:#16a34a;
     }
 
-.empty{
-  padding:40px 20px;
-  text-align:center;
-  color:#9ca3af;   /* светло-серый */
-  font-weight:500; /* тоньше */
-  font-size:15px;
-}
+    .ticket-status.in_progress{
+      background:#f59e0b;
+    }
 
-.support-nav{
-  max-width:1100px;
-  margin:20px auto 0 auto;
-  padding:0 16px;
+    .ticket-status.resolved{
+      background:#6b7280;
+    }
 
-  display:flex;
-  align-items:center;
-  gap:6px;              /* вместо margin */
-  
-  font-size:13px;
-  font-weight:600;
-  color:#6b7280;
-}
+    .ticket-category{
+      font-size:12px;
+      color:var(--tp-muted);
+      font-weight:700;
+      line-height:1.4;
+    }
 
-.support-nav a,
-.support-nav .current{
-  text-decoration:none;
-  color:#6b7280;
-}
+    .ticket-subject{
+      font-size:15px;
+      font-weight:800;
+      line-height:1.4;
+      overflow:hidden;
+      display:-webkit-box;
+      -webkit-line-clamp:2;
+      -webkit-box-orient:vertical;
+    }
 
-.support-nav a:hover{
-  color:#111827;
-}
+    .ticket-bottom{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      flex-wrap:wrap;
+      gap:6px 10px;
+      font-size:12px;
+      color:var(--tp-muted);
+      line-height:1.4;
+    }
 
-.support-nav .current{
-  color:#111827;
-}
-.filters{
-  display:flex;
-  gap:8px;
-  margin-bottom:20px;
-  flex-wrap:wrap;
-}
+    .ticket-order{
+      font-weight:700;
+    }
 
-.filter-pill{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
+    .empty-state{
+      display:none;
+      flex:1;
+      width:min(100%, 520px);
+      margin:0 auto;
+      padding:24px 12px 0;
+      box-sizing:border-box;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+    }
 
-  padding:8px 14px;
-  border:1px solid #e5e7eb;
-  border-radius:999px;
+    .empty-state.show{
+      display:flex;
+    }
 
-  background:#fff;
-  font-size:14px;
-  font-weight:600;
-  cursor:pointer;
-  transition:0.15s;
-}
+    .empty-inner{
+      width:100%;
+      max-width:360px;
+    }
 
-.filter-pill:hover{
-  background:#f3f4f6;
-}
+    .empty-illustration{
+      width:min(230px, 68vw);
+      margin:0 auto 20px;
+      filter:drop-shadow(0 20px 40px var(--tp-empty-shadow));
+    }
 
-.filter-pill.active{
-  background:#111827;
-  color:#fff;
-  border-color:#111827;
-}
+    .empty-illustration svg{
+      display:block;
+      width:100%;
+      height:auto;
+    }
 
-.tickets{
-  display:grid;
-  grid-template-columns:repeat(3, 1fr);
-  gap:16px;
-}
+    .empty-title{
+      margin:0 0 10px;
+      font-size:28px;
+      line-height:1.15;
+      font-weight:800;
+      color:var(--tp-text);
+    }
 
-@media(max-width:1100px){
-  .tickets{
-    grid-template-columns:repeat(2, 1fr);
-  }
-}
+    .empty-text{
+      margin:0;
+      color:#8b95a7;
+      font-size:16px;
+      line-height:1.5;
+      font-weight:400;
+    }
 
-@media(max-width:700px){
-  .tickets{
-    grid-template-columns:1fr;
-  }
-}
+    @media (max-width:1100px){
+      .tickets{
+        grid-template-columns:repeat(2, 1fr);
+      }
+    }
 
-.ticket-card{
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:12px;
-  padding:16px;
-  cursor:pointer;
-  transition:all 0.2s ease;
+    @media (max-width:700px){
+      .tickets{
+        grid-template-columns:1fr;
+        gap:12px;
+      }
+    }
 
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
+    @media (max-width:640px){
+      :root{
+        --tp-header-space: 126px;
+      }
 
-  min-height:160px;
-}
+      .container{
+        padding:8px 14px calc(130px + env(safe-area-inset-bottom, 0px));
+      }
 
+      .page-title{
+        font-size:22px;
+        margin:0 0 18px;
+      }
 
-.ticket-id{
-  font-weight:700;
-  font-size:14px;
-}
+      .toolbar{
+        margin:0 0 18px;
+      }
 
-.ticket-category{
-  font-size:12px;
-  color:#6b7280;
-  font-weight:600;
-}
+      .status-select{
+        width:100%;
+        min-width:0;
+      }
 
-.ticket-subject{
-  font-size:15px;
-  font-weight:700;
+      .ticket-card{
+        padding:14px;
+        min-height:auto;
+        gap:12px;
+      }
 
-  overflow:hidden;
-  display:-webkit-box;
-  -webkit-line-clamp:2;
-  -webkit-box-orient:vertical;
-}
+      .ticket-top{
+        gap:8px;
+      }
 
-.ticket-bottom{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:4px;
-  font-size:12px;
-  color:#6b7280;
-}
+      .ticket-id{
+        font-size:13px;
+      }
 
-.ticket-order{
-  font-weight:600;
-}
+      .ticket-status{
+        font-size:11px;
+        padding:6px 9px;
+      }
 
+      .ticket-subject{
+        font-size:14px;
+      }
 
+      .ticket-bottom{
+        font-size:11px;
+      }
 
-.ticket-top{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:8px;
-  margin-bottom:8px;
-}
+      .empty-state{
+        padding:8px 0 0;
+      }
 
-.ticket-title{
-  font-weight:700;
-  font-size:15px;
-}
+      .empty-title{
+        font-size:24px;
+      }
 
-.ticket-date{
-  font-size:12px;
-  color:#6b7280;
-}
-
-.ticket-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:20px;
-}
-
-.ticket-status{
-  display:inline-flex;
-  align-items:center;
-
-  padding:8px 14px;
-  border-radius:8px;     /* не 999px */
-
-  font-size:13px;
-  font-weight:600;
-  letter-spacing:0.2px;
-
-  color:#fff;
-}
-
-.ticket-sidebar{
-  width:340px;
-}
-
-.sidebar-card{
-  background:#fff;
-  border-radius:16px;
-  border:1px solid #e5e7eb;
-  padding:20px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  font-size:14px;
-}
-
-.close-ticket-btn{
-  margin-top:10px;
-  border:none;
-  border-radius:12px;
-  padding:10px;
-  font-weight:700;
-  cursor:pointer;
-  background:#f3f4f6;
-}
-
-.ticket-status.waiting{
-  background:#16a34a; /* зелёный */
-  color:#fff;
-}
-
-.ticket-status.in_progress{
-  background:#f59e0b; /* оранжевый */
-  color:#fff;
-}
-
-.ticket-status.resolved{
-  background:#6b7280; /* серый */
-  color:#fff;
-}
-
-@media (max-width:640px){
-
-h1{
-  font-size:20px;
-  margin:16px 0 20px 0;
-}
-
-.page{
-  margin:16px auto;
-}
-
-.tickets{
-  grid-template-columns:1fr;
-  gap:12px;
-}
-
-.ticket-card{
-  padding:14px;
-  min-height:auto;
-}
-
-.ticket-top{
-  align-items:flex-start;
-  gap:6px;
-}
-
-.ticket-id{
-  font-size:13px;
-}
-
-.ticket-status{
-  font-size:11px;
-  padding:5px 8px;
-}
-
-.ticket-subject{
-  font-size:14px;
-}
-
-.ticket-bottom{
-  font-size:11px;
-}
-
-}
+      .empty-text{
+        font-size:15px;
+      }
+    }
   </style>
 </head>
 
 <body>
 
 <div id="header-container"></div>
+
 <main class="page-content">
+  <div class="page">
+    <div class="container">
 
-<div class="support-nav">
-  <a href="/help.html" data-i18n="page.nav.home"></a>
-  <span>/</span>
-  <span class="current" data-i18n="page.nav.current"></span>
-</div>
+      <div class="support-nav">
+        <a href="/help.html" data-i18n="page.nav.home"></a>
+        <span>/</span>
+        <span class="current" data-i18n="page.nav.current"></span>
+      </div>
 
-<div class="page">
-  <h1 data-i18n="page.heading"></h1>
+      <h1 class="page-title" data-i18n="page.heading"></h1>
 
-<div style="margin-bottom:20px;">
-<select id="statusFilter" style="
-  height:38px;
-  border-radius:10px;
-  border:1px solid #e5e7eb;
-  background:#fff;
-  padding:0 10px;
-  font-size:14px;
-  font-weight:600;
-  cursor:pointer;
-  outline:none;
-  max-width:180px;
-">
-    <option value="all" data-i18n="page.filters.all"></option>
-    <option value="waiting" data-i18n="page.filters.waiting"></option>
-    <option value="in_progress" data-i18n="page.filters.in_progress"></option>
-    <option value="resolved" data-i18n="page.filters.resolved"></option>
-  </select>
-</div>
+      <div class="toolbar">
+        <select id="statusFilter" class="status-select">
+          <option value="all" data-i18n="page.filters.all"></option>
+          <option value="waiting" data-i18n="page.filters.waiting"></option>
+          <option value="in_progress" data-i18n="page.filters.in_progress"></option>
+          <option value="resolved" data-i18n="page.filters.resolved"></option>
+        </select>
+      </div>
 
-<div class="tickets" id="ticketList"></div>
+      <div class="tickets" id="ticketList"></div>
 
-</div>
+      <div id="emptyState" class="empty-state">
+        <div class="empty-inner">
+          <div class="empty-illustration" aria-hidden="true">
+            <svg viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg" fill="none">
+              <defs>
+                <linearGradient id="historyBubbleFill" x1="48" y1="44" x2="208" y2="184" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stop-color="#ffffff" stop-opacity=".92"/>
+                  <stop offset=".48" stop-color="#eef3ff" stop-opacity=".82"/>
+                  <stop offset="1" stop-color="#dce8ff" stop-opacity=".68"/>
+                </linearGradient>
+
+                <linearGradient id="historyBubbleStroke" x1="56" y1="50" x2="204" y2="182" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stop-color="#5f89f8" stop-opacity=".62"/>
+                  <stop offset="1" stop-color="#7ea2ff" stop-opacity=".24"/>
+                </linearGradient>
+
+                <radialGradient id="historyGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
+                  gradientTransform="translate(130 110) rotate(90) scale(84 98)">
+                  <stop offset="0" stop-color="#7ea2ff" stop-opacity=".28"/>
+                  <stop offset=".62" stop-color="#7ea2ff" stop-opacity=".08"/>
+                  <stop offset="1" stop-color="#7ea2ff" stop-opacity="0"/>
+                </radialGradient>
+
+                <filter id="historyBlur" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="16"/>
+                </filter>
+
+                <filter id="historyShadow" x="-30%" y="-30%" width="160%" height="180%">
+                  <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#6f95ff" flood-opacity=".14"/>
+                </filter>
+              </defs>
+
+              <ellipse cx="130" cy="186" rx="62" ry="14" fill="#dfe7fb" opacity=".72"/>
+              <circle cx="130" cy="112" r="72" fill="url(#historyGlow)" filter="url(#historyBlur)"/>
+
+              <g filter="url(#historyShadow)">
+                <rect x="73" y="44" width="114" height="122" rx="26"
+                  fill="url(#historyBubbleFill)"
+                  stroke="url(#historyBubbleStroke)"
+                  stroke-width="3"/>
+                <path d="M102 83h56" stroke="#4f7df3" stroke-width="6" stroke-linecap="round"/>
+                <path d="M102 106h42" stroke="#7d97de" stroke-width="6" stroke-linecap="round" opacity=".9"/>
+                <path d="M102 129h50" stroke="#b6c6f4" stroke-width="6" stroke-linecap="round"/>
+                <circle cx="172" cy="127" r="16" fill="#f7faff" stroke="#dbe7ff" stroke-width="2"/>
+                <path d="M165 127l4.5 4.5 9-10" stroke="#4f7df3" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </g>
+
+              <g opacity=".86">
+                <path d="M199 60v8" stroke="#6f95ff" stroke-width="3.5" stroke-linecap="round"/>
+                <path d="M195 64h8" stroke="#6f95ff" stroke-width="3.5" stroke-linecap="round"/>
+              </g>
+
+              <g opacity=".7">
+                <path d="M58 146v6" stroke="#7f9fff" stroke-width="3" stroke-linecap="round"/>
+                <path d="M55 149h6" stroke="#7f9fff" stroke-width="3" stroke-linecap="round"/>
+              </g>
+            </svg>
+          </div>
+
+          <h2 id="emptyTitle" class="empty-title"></h2>
+          <p id="emptyText" class="empty-text"></p>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </main>
+
 <div id="footer-container"></div>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -454,6 +454,9 @@ if(!token){
 
 const ticketListEl = document.getElementById("ticketList");
 const statusFilter = document.getElementById("statusFilter");
+const emptyStateEl = document.getElementById("emptyState");
+const emptyTitleEl = document.getElementById("emptyTitle");
+const emptyTextEl = document.getElementById("emptyText");
 
 let tickets = [];
 let currentFilter = "all";
@@ -514,6 +517,29 @@ function formatDate(ts){
          d.toLocaleTimeString(locale, { hour:"2-digit", minute:"2-digit" });
 }
 
+function updateEmptyState(visible){
+  if(emptyStateEl){
+    emptyStateEl.classList.toggle("show", visible);
+  }
+
+  if(ticketListEl){
+    ticketListEl.style.display = visible ? "none" : "grid";
+  }
+
+  if(emptyTitleEl){
+    emptyTitleEl.textContent = t("page.emptyTitle", "Пока здесь пусто");
+  }
+
+  if(emptyTextEl){
+    emptyTextEl.textContent = t(
+      "page.emptyText",
+      currentFilter === "all"
+        ? "У вас ещё нет обращений в истории."
+        : "По выбранному статусу обращений пока нет."
+    );
+  }
+}
+
 async function loadTickets(){
   const r = await fetch("/api/support/my", {
     headers:{ Authorization:"Bearer " + token }
@@ -522,7 +548,16 @@ async function loadTickets(){
   const d = await r.json();
 
   if(!d.success){
-    ticketListEl.innerHTML = `<div class="empty">${t("page.errors.loadFailed", "Ошибка")}</div>`;
+    updateEmptyState(true);
+
+    if(emptyTitleEl){
+      emptyTitleEl.textContent = t("page.errors.loadFailedTitle", "Не удалось загрузить историю");
+    }
+
+    if(emptyTextEl){
+      emptyTextEl.textContent = t("page.errors.loadFailed", "Попробуйте обновить страницу позже.");
+    }
+
     return;
   }
 
@@ -544,10 +579,12 @@ function renderTickets(){
   }
 
   if(!filtered.length){
-    ticketListEl.innerHTML = `<div class="empty">${t("page.empty", "Обращений нет")}</div>`;
+    ticketListEl.innerHTML = "";
+    updateEmptyState(true);
     return;
   }
 
+  updateEmptyState(false);
   ticketListEl.innerHTML = "";
 
   filtered.forEach(ticket => {
@@ -588,10 +625,7 @@ function renderTickets(){
       </div>
 
       <div class="ticket-bottom">
-        <div>
-          ${formatDate(ticket.createdAt)}
-        </div>
-
+        <div>${formatDate(ticket.createdAt)}</div>
         ${orderHtml}
       </div>
     `;

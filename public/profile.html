@@ -18,637 +18,944 @@
   <link rel="stylesheet" href="/footer.css">
   <link rel="stylesheet" href="/game.css">
 
-  <style>
-    :root{
-      --bg:#f6f6f6;
-      --card:#fff;
-      --text:#111;
-      --muted:#6b7280;
-      --line:#e5e7eb;
-      --blue:#1E50D4;
-      --radius:12px;
-    }
+<style>
+  :root{
+    --tp-header-space:110px;
+    --tp-bottom-space:calc(28px + env(safe-area-inset-bottom, 0px));
 
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:var(--bg);
-  color:var(--text);
-}
+    --bg:#f6f6f6;
+    --card:#fff;
+    --text:#111;
+    --muted:#6b7280;
+    --line:#e5e7eb;
+    --blue:#1E50D4;
+    --radius:12px;
+  }
 
-html[data-page-ready="0"] body{
-  opacity:0;
-}
-
-html[data-page-ready="1"] body{
-  opacity:1;
-  transition:opacity .12s ease;
-}
-
-    .container{
-      max-width:960px;
-      margin:28px auto;
-      background:var(--card);
-      border:1px solid #ddd;
-      border-radius:var(--radius);
-      padding:20px;
-    }
-
-    h1{
-      margin:0 0 18px;
-      font-size:28px;
-    }
-
-    .profile-header{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:16px;
-      margin-bottom:18px;
-    }
-
-    .profile-top{
-      display:flex;
-      gap:16px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-
-    .avatar{
-      width:96px;
-      height:96px;
-      border-radius:50%;
-      object-fit:cover;
-      background:#ddd;
-      border:1px solid #ccc;
-    }
-
-    .info{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-    }
-
-    .username{
-      font-size:20px;
-      font-weight:900;
-    }
-
-    .user-id{
-      font-size:13px;
-      font-weight:700;
-      color:var(--muted);
-      cursor:pointer;
-      user-select:none;
-      display:inline-block;
-      transition:color .2s ease;
-    }
-
-    .user-id.copied{
-      color:#16a34a;
-    }
-
-    .rating-line{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      font-weight:800;
-      cursor:pointer;
-      user-select:none;
-    }
-
-    .rating-line:hover{
-      text-decoration:underline;
-    }
-
-    .rating-count{
-      font-size:14px;
-      color:var(--muted);
-      font-weight:700;
-    }
-
-    .since{
-      font-size:13px;
-      color:var(--muted);
-    }
-
-    .stars{
-      display:inline-flex;
-      gap:2px;
-      font-size:16px;
-    }
-
-    .star{ color:#9ca3af; }
-    .star.filled{ color:currentColor; }
-    .stars.r5{ color:#facc15; }
-    .stars.r4{ color:#fbbf24; }
-    .stars.r3{ color:#f59e0b; }
-    .stars.r2{ color:#ef4444; }
-    .stars.r1{ color:#991b1b; }
-
-    .nav{
-      margin-top:24px;
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:12px;
-    }
-
-    .nav-item{
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:14px;
-      text-decoration:none;
-      color:var(--text);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      font-weight:900;
-      background:#fff;
-    }
-
-    .nav-item:hover{
-      background:#fafafa;
-    }
-
-    .profile-menu-btn{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      width:36px;
-      height:36px;
-      background:#fff;
-      border:1px solid #e5e7eb;
-      border-radius:10px;
-      cursor:pointer;
-      color:#6b7280;
-      flex-shrink:0;
-    }
-
-    .profile-menu-btn:hover{
-      background:#f3f4f6;
-      color:var(--blue);
-    }
-
-    .profile-menu{
-      position:fixed;
-      inset:0;
-      z-index:5000;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      background:rgba(0,0,0,.45);
-      opacity:0;
-      pointer-events:none;
-      transition:opacity .2s ease;
-    }
-
-    .profile-menu.active{
-      opacity:1;
-      pointer-events:auto;
-    }
-
-    .profile-menu-inner{
-      background:#fff;
-      width:100%;
-      max-width:420px;
-      max-height:90vh;
-      overflow-y:auto;
-      border-radius:18px;
-      box-shadow:0 30px 80px rgba(0,0,0,.25);
-      transform:scale(.95);
-      transition:transform .2s ease;
-    }
-
-    .profile-menu.active .profile-menu-inner{
-      transform:scale(1);
-    }
-
-    .menu-screen-head{
-      position:relative;
-      height:56px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      border-bottom:1px solid #eee;
-    }
-
-    .menu-title{
-      font-size:17px;
-      font-weight:700;
-    }
-
-    .menu-back,
-    .menu-close{
-      position:absolute;
-      top:50%;
-      transform:translateY(-50%);
-      width:40px;
-      height:40px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:22px;
-      color:#6b7280;
-      background:none;
-      border:none;
-      cursor:pointer;
-      border-radius:50%;
-    }
-
-    .menu-back{ left:12px; }
-    .menu-close{ right:12px; }
-
-    .menu-back:hover,
-    .menu-close:hover{
-      background:#f3f4f6;
-    }
-
-    .mobile-avatar-block{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      padding:28px 16px 10px;
-    }
-
-    .menu-avatar-wrap{
-      width:74px;
-      height:74px;
-      border-radius:50%;
-      overflow:hidden;
-      cursor:pointer;
-      background:#e5e7eb;
-      flex-shrink:0;
-    }
-
-    .big-avatar{
-      width:120px;
-      height:120px;
-    }
-
-    .menu-avatar{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-    }
-
-    .menu-change-photo{
-      text-align:center;
-      padding:8px 14px 12px;
-      font-weight:700;
-      color:var(--blue);
-      cursor:pointer;
-    }
-
-    .menu-item{
-      padding:14px 16px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      cursor:pointer;
-      font-weight:700;
-      border-top:1px solid #f1f5f9;
-    }
-
-    .menu-item:hover{
-      background:#f3f4f6;
-    }
-
-    .menu-item.logout-item{
-      color:#d12c2c;
-    }
-
-    .menu-arrow{
-      color:#9ca3af;
-      font-size:18px;
-    }
-
-    .menu-screen-body{
-      padding:14px 16px 16px;
-    }
-
-    .menu-hint{
-      margin-top:10px;
-      font-size:12px;
-      color:var(--muted);
-      font-weight:600;
-    }
-
-    .menu-input{
-      width:100%;
-      margin-top:14px;
-      padding:14px;
-      font-size:16px;
-      border-radius:12px;
-      border:1px solid #e5e7eb;
-      outline:none;
-      box-sizing:border-box;
-    }
-
-    .menu-input:focus{
-      border-color:var(--blue);
-    }
-
-    .menu-btn{
-      margin-top:14px;
-      width:100%;
-      padding:12px 12px;
-      border-radius:12px;
-      border:1px solid var(--line);
-      background:#fff;
-      font-weight:800;
-      cursor:pointer;
-    }
-
-    .menu-btn:hover{
-      background:#f3f4f6;
-    }
-
-    .menu-btn:disabled{
-      opacity:.55;
-      cursor:not-allowed;
-    }
-
-    .menu-subhint{
-  margin-top:10px;
-  font-size:12px;
-  color:var(--muted);
-  font-weight:600;
-  line-height:1.4;
-}
-
-.menu-actions{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  margin-top:12px;
-}
-
-.menu-btn-secondary{
-  color:var(--text);
-  background:#fff;
-}
-
-    .menu-toggle{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:14px 0;
-      border-bottom:1px solid #f1f5f9;
-      font-weight:700;
-    }
-
-    .switch{
-      position:relative;
-      display:inline-block;
-      width:46px;
-      height:26px;
-      flex-shrink:0;
-    }
-
-    .switch.is-disabled{
-  opacity:.5;
-  pointer-events:none;
-}
-
-    .switch input{
-      opacity:0;
-      width:0;
-      height:0;
-    }
-
-    .slider{
-      position:absolute;
-      inset:0;
-      background:#d1d5db;
-      border-radius:999px;
-      transition:.2s ease;
-      cursor:pointer;
-    }
-
-    .slider::before{
-      content:"";
-      position:absolute;
-      width:20px;
-      height:20px;
-      left:3px;
-      top:3px;
-      background:#fff;
-      border-radius:50%;
-      transition:.2s ease;
-      box-shadow:0 1px 3px rgba(0,0,0,.18);
-    }
-
-    .switch input:checked + .slider{
-      background:var(--blue);
-    }
-
-    .switch input:checked + .slider::before{
-      transform:translateX(20px);
-    }
-
-    #externalOffers{
-      max-width:960px;
-      margin:20px auto;
-      display:none;
-    }
-
-    #externalOffersTitle{
-      margin:10px 0 20px;
-    }
-
-    @media(max-width:720px){
-      .nav{
-        grid-template-columns:repeat(2,1fr);
-      }
-    }
-
-@media(max-width:640px){
-  .container{
-    border:none;
-    border-radius:0;
-    background:transparent;
-    padding:16px;
+  html,
+  body{
     margin:0;
+    padding:0;
+    min-height:100%;
+    overflow-x:hidden;
+    background:var(--bg);
   }
 
-  .profile-menu{
-    background:#fff;
-    align-items:stretch;
+  body{
+    min-height:100svh;
+    display:flex;
+    flex-direction:column;
+    font-family:Inter, Arial, sans-serif;
+    background:var(--bg);
+    color:var(--text);
   }
 
-  .profile-menu-inner{
+  html[data-page-ready="0"] body{
+    opacity:0;
+  }
+
+  html[data-page-ready="1"] body{
+    opacity:1;
+    transition:opacity .12s ease;
+  }
+
+  .page-content{
+    flex:1 0 auto;
     width:100%;
-    height:100%;
-    max-width:none;
-    max-height:none;
-    border-radius:0;
-    box-shadow:none;
-    transform:none;
+    min-height:calc(100svh - var(--tp-header-space));
+    padding-top:var(--tp-header-space);
+    padding-bottom:var(--tp-bottom-space);
+    box-sizing:border-box;
   }
 
-  .menu-item{
-    height:56px;
-    padding:0 16px;
+  .container{
+    width:100%;
+    max-width:960px;
+    margin:28px auto 0;
+    background:var(--card);
+    border:1px solid #ddd;
+    border-radius:var(--radius);
+    padding:20px;
+    box-sizing:border-box;
+  }
+
+  h1{
+    margin:0 0 18px;
+    font-size:28px;
+  }
+
+  .profile-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:18px;
+  }
+
+  .profile-top{
+    display:flex;
+    gap:16px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+
+  .avatar{
+    width:96px;
+    height:96px;
+    border-radius:50%;
+    object-fit:cover;
+    background:#ddd;
+    border:1px solid #ccc;
+  }
+
+  .info{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+
+  .username{
+    font-size:20px;
+    font-weight:900;
+  }
+
+  .user-id{
+    font-size:13px;
+    font-weight:700;
+    color:var(--muted);
+    cursor:pointer;
+    user-select:none;
+    display:inline-block;
+    transition:color .2s ease;
+  }
+
+  .user-id.copied{
+    color:#16a34a;
+  }
+
+  .rating-line{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-weight:800;
+    cursor:pointer;
+    user-select:none;
+  }
+
+  .rating-line:hover{
+    text-decoration:underline;
+  }
+
+  .rating-line.is-empty{
+    cursor:default;
+  }
+
+  .rating-line.is-empty:hover{
+    text-decoration:none;
+  }
+
+  .rating-count{
+    font-size:14px;
+    color:var(--muted);
+    font-weight:700;
+  }
+
+  .since{
+    font-size:13px;
+    color:var(--muted);
+  }
+
+  .stars{
+    display:inline-flex;
+    gap:2px;
     font-size:16px;
   }
 
-  .nav-favorites-mobile-hide{
-    display:none;
+  .star{ color:#9ca3af; }
+  .star.filled{ color:currentColor; }
+  .stars.r5{ color:#facc15; }
+  .stars.r4{ color:#fbbf24; }
+  .stars.r3{ color:#f59e0b; }
+  .stars.r2{ color:#ef4444; }
+  .stars.r1{ color:#991b1b; }
+
+  .nav{
+    margin-top:24px;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
   }
-}
 
-    @media(max-width:420px){
-      .nav{
-        grid-template-columns:1fr;
-      }
+  .nav-item{
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px;
+    text-decoration:none;
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    font-weight:900;
+    background:#fff;
+  }
+
+  .nav-item:hover{
+    background:#fafafa;
+  }
+
+  .profile-menu-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:36px;
+    height:36px;
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:10px;
+    cursor:pointer;
+    color:#6b7280;
+    flex-shrink:0;
+  }
+
+  .profile-menu-btn:hover{
+    background:#f3f4f6;
+    color:var(--blue);
+  }
+
+  .profile-menu{
+    position:fixed;
+    inset:0;
+    z-index:5000;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:rgba(0,0,0,.45);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease;
+  }
+
+  .profile-menu.active{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  .profile-menu-inner{
+    background:#fff;
+    width:100%;
+    max-width:420px;
+    max-height:90vh;
+    overflow-y:auto;
+    border-radius:18px;
+    box-shadow:0 30px 80px rgba(0,0,0,.25);
+    transform:scale(.95);
+    transition:transform .2s ease;
+  }
+
+  .profile-menu.active .profile-menu-inner{
+    transform:scale(1);
+  }
+
+  .menu-screen-head{
+    position:relative;
+    height:56px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-bottom:1px solid #eee;
+  }
+
+  .menu-title{
+    font-size:17px;
+    font-weight:700;
+  }
+
+  .menu-back,
+  .menu-close{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    width:40px;
+    height:40px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    color:#6b7280;
+    background:none;
+    border:none;
+    cursor:pointer;
+    border-radius:50%;
+  }
+
+  .menu-back{ left:12px; }
+  .menu-close{ right:12px; }
+
+  .menu-back:hover,
+  .menu-close:hover{
+    background:#f3f4f6;
+  }
+
+  .mobile-avatar-block{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:28px 16px 10px;
+  }
+
+  .menu-avatar-wrap{
+    width:74px;
+    height:74px;
+    border-radius:50%;
+    overflow:hidden;
+    cursor:pointer;
+    background:#e5e7eb;
+    flex-shrink:0;
+  }
+
+  .big-avatar{
+    width:120px;
+    height:120px;
+  }
+
+  .menu-avatar{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+
+  .menu-change-photo{
+    text-align:center;
+    padding:8px 14px 12px;
+    font-weight:700;
+    color:var(--blue);
+    cursor:pointer;
+  }
+
+  .menu-item{
+    padding:14px 16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    cursor:pointer;
+    font-weight:700;
+    border-top:1px solid #f1f5f9;
+  }
+
+  .menu-item:hover{
+    background:#f3f4f6;
+  }
+
+  .menu-item.logout-item{
+    color:#d12c2c;
+  }
+
+  .menu-arrow{
+    color:#9ca3af;
+    font-size:18px;
+  }
+
+  .menu-screen-body{
+    padding:14px 16px 16px;
+  }
+
+  .menu-hint{
+    margin-top:10px;
+    font-size:12px;
+    color:var(--muted);
+    font-weight:600;
+  }
+
+  .menu-input{
+    width:100%;
+    margin-top:14px;
+    padding:14px;
+    font-size:16px;
+    border-radius:12px;
+    border:1px solid #e5e7eb;
+    outline:none;
+    box-sizing:border-box;
+  }
+
+  .menu-input:focus{
+    border-color:var(--blue);
+  }
+
+  .menu-btn{
+    margin-top:14px;
+    width:100%;
+    padding:12px 12px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:#fff;
+    font-weight:800;
+    cursor:pointer;
+  }
+
+  .menu-btn:hover{
+    background:#f3f4f6;
+  }
+
+  .menu-btn:disabled{
+    opacity:.55;
+    cursor:not-allowed;
+  }
+
+  .menu-subhint{
+    margin-top:10px;
+    font-size:12px;
+    color:var(--muted);
+    font-weight:600;
+    line-height:1.4;
+  }
+
+  .menu-actions{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-top:12px;
+  }
+
+  .menu-btn-secondary{
+    color:var(--text);
+    background:#fff;
+  }
+
+  .menu-toggle{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px 0;
+    border-bottom:1px solid #f1f5f9;
+    font-weight:700;
+  }
+
+  .switch{
+    position:relative;
+    display:inline-block;
+    width:46px;
+    height:26px;
+    flex-shrink:0;
+  }
+
+  .switch.is-disabled{
+    opacity:.5;
+    pointer-events:none;
+  }
+
+  .switch input{
+    opacity:0;
+    width:0;
+    height:0;
+  }
+
+  .slider{
+    position:absolute;
+    inset:0;
+    background:#d1d5db;
+    border-radius:999px;
+    transition:.2s ease;
+    cursor:pointer;
+  }
+
+  .slider::before{
+    content:"";
+    position:absolute;
+    width:20px;
+    height:20px;
+    left:3px;
+    top:3px;
+    background:#fff;
+    border-radius:50%;
+    transition:.2s ease;
+    box-shadow:0 1px 3px rgba(0,0,0,.18);
+  }
+
+  .switch input:checked + .slider{
+    background:var(--blue);
+  }
+
+  .switch input:checked + .slider::before{
+    transform:translateX(20px);
+  }
+
+  #externalOffers{
+    width:100%;
+    max-width:960px;
+    margin:20px auto 0;
+    display:none;
+    box-sizing:border-box;
+  }
+
+  #externalOffersTitle{
+    margin:10px 0 20px;
+  }
+
+  @media (max-width:720px){
+    .nav{
+      grid-template-columns:repeat(2,1fr);
     }
+  }
+
+  @media (max-width:640px){
+    :root{
+      --tp-header-space:100px;
+      --tp-bottom-space:calc(22px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .container{
+      width:100%;
+      border:none;
+      border-radius:0;
+      background:transparent;
+      padding:16px 12px 0;
+      margin:0 auto;
+      box-sizing:border-box;
+    }
+
+    #externalOffers{
+      width:100%;
+      padding:0 12px;
+      box-sizing:border-box;
+    }
+
+    .profile-menu{
+      background:#fff;
+      align-items:stretch;
+    }
+
+    .profile-menu-inner{
+      width:100%;
+      height:100%;
+      max-width:none;
+      max-height:none;
+      border-radius:0;
+      box-shadow:none;
+      transform:none;
+    }
+
+    .menu-item{
+      height:56px;
+      padding:0 16px;
+      font-size:16px;
+    }
+
+    .nav-favorites-mobile-hide{
+      display:none;
+    }
+  }
+
+  @media (max-width:420px){
+    .nav{
+      grid-template-columns:1fr;
+    }
+  }
+
+  .avatar-crop-modal{
+    position:fixed;
+    inset:0;
+    z-index:7000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,.55);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease;
+  }
+
+  .avatar-crop-modal.active{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  .avatar-crop-card{
+    width:min(92vw, 460px);
+    background:#fff;
+    border-radius:18px;
+    box-shadow:0 30px 80px rgba(0,0,0,.28);
+    overflow:hidden;
+  }
+
+  .avatar-crop-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px 16px;
+    border-bottom:1px solid #eee;
+  }
+
+  .avatar-crop-title{
+    font-size:17px;
+    font-weight:800;
+  }
+
+  .avatar-crop-close{
+    width:38px;
+    height:38px;
+    border:none;
+    background:#fff;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:18px;
+    color:#6b7280;
+  }
+
+  .avatar-crop-close:hover{
+    background:#f3f4f6;
+  }
+
+  .avatar-crop-body{
+    padding:16px;
+  }
+
+  .avatar-crop-stage{
+    position:relative;
+    width:min(100%, 320px);
+    aspect-ratio:1 / 1;
+    margin:0 auto;
+    overflow:hidden;
+    border-radius:18px;
+    background:#111827;
+    touch-action:none;
+    user-select:none;
+  }
+
+  .avatar-crop-image{
+    position:absolute;
+    left:0;
+    top:0;
+    transform-origin:0 0;
+    will-change:transform, width, height;
+    -webkit-user-drag:none;
+    user-select:none;
+    pointer-events:none;
+  }
+
+  .avatar-crop-circle{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    border:2px solid rgba(255,255,255,.95);
+    box-shadow:0 0 0 9999px rgba(0,0,0,.45);
+    pointer-events:none;
+  }
+
+  .avatar-crop-tip{
+    margin-top:12px;
+    font-size:12px;
+    color:var(--muted);
+    text-align:center;
+    font-weight:600;
+  }
+
+  .avatar-crop-controls{
+    margin-top:16px;
+  }
+
+  .avatar-crop-label{
+    display:block;
+    margin-bottom:8px;
+    font-size:13px;
+    font-weight:700;
+    color:#374151;
+  }
+
+  .avatar-crop-range{
+    width:100%;
+  }
+
+  .avatar-crop-actions{
+    display:flex;
+    gap:10px;
+    margin-top:16px;
+  }
+
+  .avatar-crop-actions .menu-btn{
+    margin-top:0;
+  }
+
+  @media (max-width:640px){
     .avatar-crop-modal{
-      position:fixed;
-      inset:0;
-      z-index:7000;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:rgba(0,0,0,.55);
-      opacity:0;
-      pointer-events:none;
-      transition:opacity .2s ease;
-    }
-
-    .avatar-crop-modal.active{
-      opacity:1;
-      pointer-events:auto;
+      align-items:flex-end;
     }
 
     .avatar-crop-card{
-      width:min(92vw, 460px);
-      background:#fff;
-      border-radius:18px;
-      box-shadow:0 30px 80px rgba(0,0,0,.28);
-      overflow:hidden;
-    }
-
-    .avatar-crop-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:14px 16px;
-      border-bottom:1px solid #eee;
-    }
-
-    .avatar-crop-title{
-      font-size:17px;
-      font-weight:800;
-    }
-
-    .avatar-crop-close{
-      width:38px;
-      height:38px;
-      border:none;
-      background:#fff;
-      border-radius:10px;
-      cursor:pointer;
-      font-size:18px;
-      color:#6b7280;
-    }
-
-    .avatar-crop-close:hover{
-      background:#f3f4f6;
-    }
-
-    .avatar-crop-body{
-      padding:16px;
+      width:100%;
+      max-width:none;
+      border-radius:18px 18px 0 0;
     }
 
     .avatar-crop-stage{
-      position:relative;
-      width:min(100%, 320px);
-      aspect-ratio:1 / 1;
-      margin:0 auto;
-      overflow:hidden;
-      border-radius:18px;
-      background:#111827;
-      touch-action:none;
-      user-select:none;
+      width:min(100%, 300px);
     }
+  }
+  /* ===== PROFILE MOBILE REDESIGN ===== */
 
-    .avatar-crop-image{
-      position:absolute;
-      left:0;
-      top:0;
-      transform-origin:0 0;
-      will-change:transform, width, height;
-      -webkit-user-drag:none;
-      user-select:none;
-      pointer-events:none;
-    }
-
-.avatar-crop-circle{
-  position:absolute;
-  inset:0;
-  border-radius:50%;
-  border:2px solid rgba(255,255,255,.95);
-  box-shadow:0 0 0 9999px rgba(0,0,0,.45);
-  pointer-events:none;
+:root{
+  --bg:#f6f7f9;
+  --card:#ffffff;
+  --line:#e5e7eb;
+  --text:#111827;
+  --muted:#6b7280;
+  --blue:#1E50D4;
 }
 
-    .avatar-crop-tip{
-      margin-top:12px;
-      font-size:12px;
-      color:var(--muted);
-      text-align:center;
-      font-weight:600;
-    }
+.page-content{
+  padding-bottom:24px;
+}
 
-    .avatar-crop-controls{
-      margin-top:16px;
-    }
+.container{
+  width:100%;
+  max-width:960px;
+  margin:0 auto;
+  padding:14px 16px 0;
+  background:transparent;
+  border:none;
+  border-radius:0;
+  box-sizing:border-box;
+}
 
-    .avatar-crop-label{
-      display:block;
-      margin-bottom:8px;
-      font-size:13px;
-      font-weight:700;
-      color:#374151;
-    }
+.profile-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:0 0 12px;
+}
 
-    .avatar-crop-range{
-      width:100%;
-    }
+h1{
+  margin:0;
+  font-size:30px;
+  line-height:1.02;
+  letter-spacing:-0.03em;
+  font-weight:900;
+  color:#111827;
+}
 
-    .avatar-crop-actions{
-      display:flex;
-      gap:10px;
-      margin-top:16px;
-    }
+.profile-menu-btn{
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:#fff;
+  color:#6b7280;
+  box-shadow:none;
+}
 
-    .avatar-crop-actions .menu-btn{
-      margin-top:0;
-    }
+.profile-menu-btn:hover{
+  background:#f8fafc;
+  color:var(--blue);
+}
 
-    @media(max-width:640px){
-      .avatar-crop-modal{
-        align-items:flex-end;
-      }
+.profile-top{
+  display:grid;
+  grid-template-columns:80px minmax(0,1fr);
+  gap:14px;
+  align-items:center;
+  margin:0 0 14px;
+  padding:16px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:20px;
+  box-shadow:none;
+}
 
-      .avatar-crop-card{
-        width:100%;
-        max-width:none;
-        border-radius:18px 18px 0 0;
-      }
+.avatar{
+  width:80px;
+  height:80px;
+  border-radius:50%;
+  object-fit:cover;
+  border:1px solid #e5e7eb;
+  box-shadow:none;
+}
 
-      .avatar-crop-stage{
-        width:min(100%, 300px);
-      }
-    }
-    
-  </style>
+.info{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  gap:4px;
+}
+
+.username{
+  margin:0;
+  font-size:20px;
+  line-height:1.08;
+  font-weight:900;
+  letter-spacing:-0.02em;
+  color:#111827;
+}
+
+.user-id{
+  display:block;
+  padding:0;
+  min-height:0;
+  border:none;
+  background:transparent;
+  border-radius:0;
+  font-size:13px;
+  line-height:1.35;
+  font-weight:700;
+  color:var(--muted);
+}
+
+.rating-line{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:0;
+  min-height:0;
+  border:none;
+  background:transparent;
+  border-radius:0;
+  font-weight:700;
+}
+
+.rating-line:hover{
+  background:transparent;
+  text-decoration:none;
+}
+
+.rating-line.is-empty:hover{
+  background:transparent;
+}
+
+.stars{
+  font-size:14px;
+  gap:1px;
+}
+
+.rating-count{
+  font-size:13px;
+  font-weight:700;
+  color:var(--muted);
+}
+
+.since{
+  font-size:13px;
+  line-height:1.35;
+  color:var(--muted);
+  margin-top:2px;
+}
+
+.nav{
+  margin-top:10px;
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:10px;
+}
+
+.nav-item{
+  min-height:78px;
+  padding:12px;
+  border-radius:18px;
+  border:1px solid var(--line);
+  background:#fff;
+  box-shadow:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  font-size:15px;
+  line-height:1.2;
+  font-weight:800;
+  color:#111827;
+  text-decoration:none;
+  transition:none;
+}
+
+.nav-item:hover{
+  transform:none;
+  background:#fff;
+  box-shadow:none;
+}
+
+.nav-favorites-mobile-hide{
+  display:flex;
+}
+
+#externalOffers{
+  width:100%;
+  max-width:960px;
+  margin:18px auto 0;
+  padding:0 16px;
+  box-sizing:border-box;
+}
+
+#externalOffersTitle{
+  margin:0 0 14px;
+  font-size:22px;
+  line-height:1.1;
+  font-weight:900;
+  letter-spacing:-0.02em;
+  color:#111827;
+}
+
+@media (min-width:641px){
+  .container{
+    padding:20px 16px 0;
+  }
+
+  .profile-top{
+    grid-template-columns:96px minmax(0,1fr);
+    padding:18px;
+    border-radius:22px;
+  }
+
+  .avatar{
+    width:96px;
+    height:96px;
+  }
+
+  .username{
+    font-size:24px;
+  }
+
+  .nav{
+    grid-template-columns:repeat(4, minmax(0,1fr));
+    gap:12px;
+  }
+
+  .nav-item{
+    min-height:84px;
+    font-size:16px;
+  }
+}
+
+@media (max-width:370px){
+  h1{
+    font-size:28px;
+  }
+
+  .profile-top{
+    grid-template-columns:72px minmax(0,1fr);
+    gap:12px;
+    padding:14px;
+  }
+
+  .avatar{
+    width:72px;
+    height:72px;
+  }
+
+  .username{
+    font-size:18px;
+  }
+
+  .nav-item{
+    min-height:72px;
+    font-size:14px;
+  }
+}
+</style>
 </head>
 
 <body>
@@ -752,79 +1059,80 @@ html[data-page-ready="1"] body{
         </div>
       </div>
 
-<div id="menuNotify" style="display:none;">
-  <div class="menu-screen-head">
-    <button class="menu-back" onclick="backToMain()">‹</button>
-    <div class="menu-title" data-i18n="page.menu.notifications"></div>
-    <button class="menu-close" onclick="closeProfileMenu()">✕</button>
+      <div id="menuNotify" style="display:none;">
+        <div class="menu-screen-head">
+          <button class="menu-back" onclick="backToMain()">‹</button>
+          <div class="menu-title" data-i18n="page.menu.notifications"></div>
+          <button class="menu-close" onclick="closeProfileMenu()">✕</button>
+        </div>
+
+        <div class="menu-screen-body">
+          <div class="menu-toggle">
+            <span data-i18n="page.menu.site"></span>
+            <label class="switch">
+              <input type="checkbox" id="notifySite">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="menu-toggle">
+            <span data-i18n="page.menu.email"></span>
+            <label class="switch">
+              <input type="checkbox" id="notifyEmail">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="menu-toggle">
+            <span data-i18n="page.menu.telegram"></span>
+            <label class="switch" id="telegramSwitchWrap">
+              <input type="checkbox" id="notifyTelegram">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div id="telegramStatus" class="menu-subhint"></div>
+
+          <div class="menu-actions">
+            <button
+              id="telegramConnectBtn"
+              class="menu-btn"
+              type="button"
+              data-i18n="page.menu.telegramConnect"
+              hidden
+            ></button>
+
+            <button
+              id="telegramUnlinkBtn"
+              class="menu-btn menu-btn-secondary"
+              type="button"
+              data-i18n="page.menu.telegramUnlink"
+              hidden
+            ></button>
+          </div>
+
+          <button
+            id="saveNotifyBtn"
+            class="menu-btn"
+            type="button"
+            data-i18n="page.menu.save"
+          ></button>
+        </div>
+      </div>
+
+    </div>
   </div>
 
-  <div class="menu-screen-body">
-    <div class="menu-toggle">
-      <span data-i18n="page.menu.site"></span>
-      <label class="switch">
-        <input type="checkbox" id="notifySite">
-        <span class="slider"></span>
-      </label>
-    </div>
-
-    <div class="menu-toggle">
-      <span data-i18n="page.menu.email"></span>
-      <label class="switch">
-        <input type="checkbox" id="notifyEmail">
-        <span class="slider"></span>
-      </label>
-    </div>
-
-    <div class="menu-toggle">
-      <span data-i18n="page.menu.telegram"></span>
-      <label class="switch" id="telegramSwitchWrap">
-        <input type="checkbox" id="notifyTelegram">
-        <span class="slider"></span>
-      </label>
-    </div>
-
-    <div id="telegramStatus" class="menu-subhint"></div>
-
-    <div class="menu-actions">
-      <button
-        id="telegramConnectBtn"
-        class="menu-btn"
-        type="button"
-        data-i18n="page.menu.telegramConnect"
-        hidden
-      ></button>
-
-      <button
-        id="telegramUnlinkBtn"
-        class="menu-btn menu-btn-secondary"
-        type="button"
-        data-i18n="page.menu.telegramUnlink"
-        hidden
-      ></button>
-    </div>
-
-    <button
-      id="saveNotifyBtn"
-      class="menu-btn"
-      type="button"
-      data-i18n="page.menu.save"
-    ></button>
-  </div>
-</div>
-
-    </div>
-  </div>
   <div id="avatarCropModal" class="avatar-crop-modal">
     <div class="avatar-crop-card">
       <div class="avatar-crop-head">
         <div id="avatarCropTitle" class="avatar-crop-title" data-i18n="page.avatar.cropTitle"></div>
-<button
-  type="button"
-  class="avatar-crop-close"
-  onclick="closeAvatarCropModal()"
-  data-i18n-aria-label="page.common.close"
->✕</button>
+        <button
+          type="button"
+          class="avatar-crop-close"
+          onclick="closeAvatarCropModal()"
+          data-i18n-aria-label="page.common.close"
+        >✕</button>
       </div>
 
       <div class="avatar-crop-body">
@@ -833,7 +1141,7 @@ html[data-page-ready="1"] body{
           <div class="avatar-crop-circle"></div>
         </div>
 
-<div id="avatarCropTip" class="avatar-crop-tip" data-i18n="page.avatar.tip"></div>
+        <div id="avatarCropTip" class="avatar-crop-tip" data-i18n="page.avatar.tip"></div>
 
         <div class="avatar-crop-controls">
           <label id="avatarZoomLabel" class="avatar-crop-label" for="avatarZoomRange" data-i18n="page.avatar.zoom"></label>
@@ -849,25 +1157,26 @@ html[data-page-ready="1"] body{
         </div>
 
         <div class="avatar-crop-actions">
-<button
-  type="button"
-  id="avatarCropCancelBtn"
-  class="menu-btn menu-btn-secondary"
-  onclick="closeAvatarCropModal()"
-  data-i18n="page.avatar.cancel"
-></button>
+          <button
+            type="button"
+            id="avatarCropCancelBtn"
+            class="menu-btn menu-btn-secondary"
+            onclick="closeAvatarCropModal()"
+            data-i18n="page.avatar.cancel"
+          ></button>
 
-<button
-  type="button"
-  id="avatarCropSaveBtn"
-  class="menu-btn"
-  onclick="saveAvatarFromCrop()"
-  data-i18n="page.avatar.save"
-></button>
+          <button
+            type="button"
+            id="avatarCropSaveBtn"
+            class="menu-btn"
+            onclick="saveAvatarFromCrop()"
+            data-i18n="page.avatar.save"
+          ></button>
         </div>
       </div>
     </div>
   </div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script src="/games.list.js"></script>
   <script src="/i18n.js"></script>
@@ -877,1214 +1186,673 @@ html[data-page-ready="1"] body{
   <script src="/offer-title.js"></script>
   <script src="/offer-card.js"></script>
 
-  <script>
-    const TOKEN_KEY = "tp_token";
-    const USERNAME_CHANGE_INTERVAL_MS = 30 * 24 * 60 * 60 * 1000;
+<script>
+  const TOKEN_KEY = "tp_token";
+  const USERNAME_CHANGE_INTERVAL_MS = 30 * 24 * 60 * 60 * 1000;
 
-    const DEFAULT_AVATAR =
-      "data:image/svg+xml;utf8," +
-      encodeURIComponent(
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">' +
-          '<rect width="64" height="64" rx="32" fill="#d9d9d9"/>' +
-          '<circle cx="32" cy="26" r="12" fill="#bdbdbd"/>' +
-          '<path d="M12 56c4-12 14-18 20-18s16 6 20 18" fill="#bdbdbd"/>' +
-        '</svg>'
-      );
+  const DEFAULT_AVATAR =
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">' +
+        '<rect width="64" height="64" rx="32" fill="#d9d9d9"/>' +
+        '<circle cx="32" cy="26" r="12" fill="#bdbdbd"/>' +
+        '<path d="M12 56c4-12 14-18 20-18s16 6 20 18" fill="#bdbdbd"/>' +
+      '</svg>'
+    );
 
-const state = {
-  currentUser: null,
-  isExternal: false,
+  const state = {
+    currentUser: null,
+    isExternal: false,
 
-  notify: {
-    site: true,
-    email: true,
-    telegram: false
-  },
+    notify: {
+      site: true,
+      email: true,
+      telegram: false
+    },
 
-  telegramLinked: false,
-  telegramUsername: "",
-  telegramBotUsername: "",
+    telegramLinked: false,
+    telegramUsername: "",
+    telegramBotUsername: "",
 
-  telegramPollTimer: null,
-  telegramPollStartedAt: 0
-};
+    telegramPollTimer: null,
+    telegramPollStartedAt: 0
+  };
 
-const avatarCropState = {
-  objectUrl: "",
-  naturalWidth: 0,
-  naturalHeight: 0,
-  scale: 1,
-  minScale: 1,
-  maxScale: 3,
-  x: 0,
-  y: 0,
-  dragging: false,
-  pointerStartX: 0,
-  pointerStartY: 0,
-  dragStartX: 0,
-  dragStartY: 0,
+  const avatarCropState = {
+    objectUrl: "",
+    naturalWidth: 0,
+    naturalHeight: 0,
+    scale: 1,
+    minScale: 1,
+    maxScale: 3,
+    x: 0,
+    y: 0,
+    dragging: false,
+    pointerStartX: 0,
+    pointerStartY: 0,
+    dragStartX: 0,
+    dragStartY: 0,
 
-  pointers: new Map(),
-  pinchStartDistance: 0,
-  pinchStartScale: 1,
-  pinchAnchorX: 0,
-  pinchAnchorY: 0
-};
+    pointers: new Map(),
+    pinchStartDistance: 0,
+    pinchStartScale: 1,
+    pinchAnchorX: 0,
+    pinchAnchorY: 0
+  };
 
-    function pageT(key, params = {}) {
-      return window.tpI18n.t(`page.${key}`, params);
+  function translateKey(fullKey, params = {}, fallback = "") {
+    const translated = window.tpI18n?.t
+      ? window.tpI18n.t(fullKey, params)
+      : fullKey;
+
+    if (translated && translated !== fullKey) {
+      return translated;
     }
 
-    function getToken() {
-      return localStorage.getItem(TOKEN_KEY) || "";
+    return fallback;
+  }
+
+  function pageT(key, params = {}) {
+    return window.tpI18n.t(`page.${key}`, params);
+  }
+
+  function pageText(key, fallback = "", params = {}) {
+    return translateKey(`page.${key}`, params, fallback);
+  }
+
+  function getToken() {
+    return localStorage.getItem(TOKEN_KEY) || "";
+  }
+
+  function goLogin() {
+    location.href = "/auth.html?mode=login";
+  }
+
+  function getCurrentLang() {
+    return window.tpI18n?.currentLang || "ru";
+  }
+
+  function getLocale() {
+    const lang = getCurrentLang();
+
+    if (lang === "uk") return "uk-UA";
+    if (lang === "en") return "en-US";
+    return "ru-RU";
+  }
+
+  function formatDate(value) {
+    const date = value instanceof Date ? value : new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "";
     }
 
-    function goLogin() {
-      location.href = "/auth.html?mode=login";
+    return date.toLocaleDateString(getLocale(), {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+  }
+
+  function getNextUsernameChangeAt(user) {
+    if (!user) return 0;
+
+    if (user.nextUsernameChangeAt) {
+      return Number(user.nextUsernameChangeAt) || 0;
     }
 
-    function getCurrentLang() {
-      return window.tpI18n?.currentLang || "ru";
+    const changedAt = Number(user.usernameChangedAt || 0);
+    return changedAt ? changedAt + USERNAME_CHANGE_INTERVAL_MS : 0;
+  }
+
+  function getReviewWordKey(count) {
+    const lang = getCurrentLang();
+
+    if (lang === "en") {
+      return count === 1 ? "reviews.one" : "reviews.many";
     }
 
-    function getLocale() {
-      const lang = getCurrentLang();
+    const abs = Math.abs(Number(count) || 0);
+    const lastTwo = abs % 100;
+    const last = abs % 10;
 
-      if (lang === "uk") return "uk-UA";
-      if (lang === "en") return "en-US";
-      return "ru-RU";
+    if (lastTwo >= 11 && lastTwo <= 14) return "reviews.many";
+    if (last === 1) return "reviews.one";
+    if (last >= 2 && last <= 4) return "reviews.few";
+    return "reviews.many";
+  }
+
+  function formatReviewsCount(count) {
+    const safeCount = Math.abs(Number(count) || 0);
+    return `${safeCount} ${pageT(getReviewWordKey(safeCount))}`;
+  }
+
+  function renderStars(avg) {
+    const rounded = Math.round(avg);
+    let cls = "r1";
+
+    if (avg >= 4.5) cls = "r5";
+    else if (avg >= 3.5) cls = "r4";
+    else if (avg >= 2.5) cls = "r3";
+    else if (avg >= 1.5) cls = "r2";
+
+    let html = `<span class="stars ${cls}">`;
+
+    for (let i = 1; i <= 5; i++) {
+      html += `<span class="star ${i <= rounded ? "filled" : ""}">★</span>`;
     }
 
-    function formatDate(value) {
-      const date = value instanceof Date ? value : new Date(value);
+    html += "</span>";
+    return html;
+  }
 
-      if (Number.isNaN(date.getTime())) {
-        return "";
-      }
+  async function api(path, options = {}) {
+    const headers = new Headers(options.headers || {});
+    const token = getToken();
 
-      return date.toLocaleDateString(getLocale(), {
-        day: "numeric",
-        month: "long",
-        year: "numeric"
-      });
+    if (token) {
+      headers.set("Authorization", "Bearer " + token);
     }
 
-    function getNextUsernameChangeAt(user) {
-      if (!user) return 0;
+    const res = await fetch(path, {
+      ...options,
+      headers
+    });
 
-      if (user.nextUsernameChangeAt) {
-        return Number(user.nextUsernameChangeAt) || 0;
-      }
+    return res.json().catch(() => ({}));
+  }
 
-      const changedAt = Number(user.usernameChangedAt || 0);
-      return changedAt ? changedAt + USERNAME_CHANGE_INTERVAL_MS : 0;
-    }
+  async function copyTextSafe(text) {
+    const safeText = String(text || "").trim();
+    if (!safeText) return false;
 
-    function getReviewWordKey(count) {
-      const lang = getCurrentLang();
-
-      if (lang === "en") {
-        return count === 1 ? "reviews.one" : "reviews.many";
-      }
-
-      const abs = Math.abs(Number(count) || 0);
-      const lastTwo = abs % 100;
-      const last = abs % 10;
-
-      if (lastTwo >= 11 && lastTwo <= 14) return "reviews.many";
-      if (last === 1) return "reviews.one";
-      if (last >= 2 && last <= 4) return "reviews.few";
-      return "reviews.many";
-    }
-
-    function formatReviewsCount(count) {
-      const safeCount = Math.abs(Number(count) || 0);
-
-      if (safeCount === 0) {
-        return pageT("noReviews");
-      }
-
-      return `${safeCount} ${pageT(getReviewWordKey(safeCount))}`;
-    }
-
-    function renderStars(avg) {
-      const rounded = Math.round(avg);
-      let cls = "r1";
-
-      if (avg >= 4.5) cls = "r5";
-      else if (avg >= 3.5) cls = "r4";
-      else if (avg >= 2.5) cls = "r3";
-      else if (avg >= 1.5) cls = "r2";
-
-      let html = `<span class="stars ${cls}">`;
-
-      for (let i = 1; i <= 5; i++) {
-        html += `<span class="star ${i <= rounded ? "filled" : ""}">★</span>`;
-      }
-
-      html += "</span>";
-      return html;
-    }
-
-    async function api(path, options = {}) {
-      const headers = new Headers(options.headers || {});
-      const token = getToken();
-
-      if (token) {
-        headers.set("Authorization", "Bearer " + token);
-      }
-
-      const res = await fetch(path, {
-        ...options,
-        headers
-      });
-
-      return res.json().catch(() => ({}));
-    }
-    async function copyTextSafe(text) {
-      const safeText = String(text || "").trim();
-      if (!safeText) return false;
-
-      if (navigator.clipboard && window.isSecureContext) {
-        try {
-          await navigator.clipboard.writeText(safeText);
-          return true;
-        } catch (e) {}
-      }
-
-      const textarea = document.createElement("textarea");
-      textarea.value = safeText;
-      textarea.setAttribute("readonly", "");
-      textarea.style.position = "fixed";
-      textarea.style.top = "0";
-      textarea.style.left = "0";
-      textarea.style.opacity = "0";
-      textarea.style.pointerEvents = "none";
-      textarea.style.fontSize = "16px";
-
-      document.body.appendChild(textarea);
-
-      const selection = document.getSelection();
-      const selectedRange =
-        selection && selection.rangeCount > 0
-          ? selection.getRangeAt(0)
-          : null;
-
-      textarea.focus();
-      textarea.select();
-      textarea.setSelectionRange(0, textarea.value.length);
-
-      let copied = false;
-
+    if (navigator.clipboard && window.isSecureContext) {
       try {
-        copied = document.execCommand("copy");
-      } catch (e) {
-        copied = false;
-      }
-
-      document.body.removeChild(textarea);
-
-      if (selectedRange && selection) {
-        selection.removeAllRanges();
-        selection.addRange(selectedRange);
-      }
-
-      return copied;
+        await navigator.clipboard.writeText(safeText);
+        return true;
+      } catch (e) {}
     }
 
-function setAvatarEditorTexts() {
-  const root = document.getElementById("avatarCropModal");
-  if (!root) return;
+    const textarea = document.createElement("textarea");
+    textarea.value = safeText;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.top = "0";
+    textarea.style.left = "0";
+    textarea.style.opacity = "0";
+    textarea.style.pointerEvents = "none";
+    textarea.style.fontSize = "16px";
 
-  if (window.tpI18n?.apply) {
-    window.tpI18n.apply(root);
-  }
-}
+    document.body.appendChild(textarea);
 
-    function getAvatarCropStageSize() {
-      const stage = document.getElementById("avatarCropStage");
-      return stage ? stage.clientWidth : 320;
+    const selection = document.getSelection();
+    const selectedRange =
+      selection && selection.rangeCount > 0
+        ? selection.getRangeAt(0)
+        : null;
+
+    textarea.focus();
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+
+    let copied = false;
+
+    try {
+      copied = document.execCommand("copy");
+    } catch (e) {
+      copied = false;
     }
 
-    function syncAvatarZoomInput() {
-      const zoom = document.getElementById("avatarZoomRange");
-      if (!zoom) return;
+    document.body.removeChild(textarea);
 
-      zoom.min = String(avatarCropState.minScale);
-      zoom.max = String(avatarCropState.maxScale);
-      zoom.step = String(
-        Math.max((avatarCropState.maxScale - avatarCropState.minScale) / 200, 0.01)
-      );
-      zoom.value = String(avatarCropState.scale);
+    if (selectedRange && selection) {
+      selection.removeAllRanges();
+      selection.addRange(selectedRange);
     }
 
-    function clampAvatarScale(value) {
-  return Math.min(
-    avatarCropState.maxScale,
-    Math.max(avatarCropState.minScale, value)
-  );
-}
-
-function getStagePointerPoint(stage, e) {
-  const rect = stage.getBoundingClientRect();
-
-  return {
-    x: e.clientX - rect.left,
-    y: e.clientY - rect.top
-  };
-}
-
-function getPointerDistance(a, b) {
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
-  return Math.hypot(dx, dy);
-}
-
-function getPointerCenter(a, b) {
-  return {
-    x: (a.x + b.x) / 2,
-    y: (a.y + b.y) / 2
-  };
-}
-
-function startAvatarPinch() {
-  const points = Array.from(avatarCropState.pointers.values());
-  if (points.length < 2) return;
-
-  const [a, b] = points;
-  const center = getPointerCenter(a, b);
-
-  const displayWidth = avatarCropState.naturalWidth * avatarCropState.scale;
-  const displayHeight = avatarCropState.naturalHeight * avatarCropState.scale;
-
-  avatarCropState.pinchStartDistance = getPointerDistance(a, b);
-  avatarCropState.pinchStartScale = avatarCropState.scale;
-
-  avatarCropState.pinchAnchorX = (center.x - avatarCropState.x) / displayWidth;
-  avatarCropState.pinchAnchorY = (center.y - avatarCropState.y) / displayHeight;
-}
-
-function continueAvatarPinch() {
-  const points = Array.from(avatarCropState.pointers.values());
-  if (points.length < 2) return;
-
-  const [a, b] = points;
-
-  if (!avatarCropState.pinchStartDistance) {
-    startAvatarPinch();
-    return;
+    return copied;
   }
 
-  const center = getPointerCenter(a, b);
-  const distance = getPointerDistance(a, b);
-
-  const nextScale = clampAvatarScale(
-    avatarCropState.pinchStartScale * (distance / avatarCropState.pinchStartDistance)
-  );
-
-  avatarCropState.scale = nextScale;
-
-  const displayWidth = avatarCropState.naturalWidth * avatarCropState.scale;
-  const displayHeight = avatarCropState.naturalHeight * avatarCropState.scale;
-
-  avatarCropState.x = center.x - avatarCropState.pinchAnchorX * displayWidth;
-  avatarCropState.y = center.y - avatarCropState.pinchAnchorY * displayHeight;
-
-  clampAvatarCropPosition();
-  syncAvatarZoomInput();
-  renderAvatarCropImage();
-}
-
-    function clampAvatarCropPosition() {
-      const stageSize = getAvatarCropStageSize();
-
-      const displayWidth = avatarCropState.naturalWidth * avatarCropState.scale;
-      const displayHeight = avatarCropState.naturalHeight * avatarCropState.scale;
-
-      const minX = Math.min(0, stageSize - displayWidth);
-      const minY = Math.min(0, stageSize - displayHeight);
-
-      avatarCropState.x = Math.min(0, Math.max(minX, avatarCropState.x));
-      avatarCropState.y = Math.min(0, Math.max(minY, avatarCropState.y));
-    }
-
-    function renderAvatarCropImage() {
-      const img = document.getElementById("avatarCropImage");
-      if (!img || !avatarCropState.naturalWidth || !avatarCropState.naturalHeight) return;
-
-      const displayWidth = avatarCropState.naturalWidth * avatarCropState.scale;
-      const displayHeight = avatarCropState.naturalHeight * avatarCropState.scale;
-
-      img.style.width = `${displayWidth}px`;
-      img.style.height = `${displayHeight}px`;
-      img.style.transform = `translate(${avatarCropState.x}px, ${avatarCropState.y}px)`;
-    }
-
-    function initAvatarCropForImage(naturalWidth, naturalHeight) {
-      const stageSize = getAvatarCropStageSize();
-
-      avatarCropState.naturalWidth = naturalWidth;
-      avatarCropState.naturalHeight = naturalHeight;
-
-      avatarCropState.minScale = Math.max(
-        stageSize / naturalWidth,
-        stageSize / naturalHeight
-      );
-
-      avatarCropState.maxScale = Math.max(
-        avatarCropState.minScale * 4,
-        avatarCropState.minScale + 1
-      );
-
-      avatarCropState.scale = avatarCropState.minScale;
-
-      const displayWidth = naturalWidth * avatarCropState.scale;
-      const displayHeight = naturalHeight * avatarCropState.scale;
-
-      avatarCropState.x = (stageSize - displayWidth) / 2;
-      avatarCropState.y = (stageSize - displayHeight) / 2;
-
-      clampAvatarCropPosition();
-      syncAvatarZoomInput();
-      renderAvatarCropImage();
-    }
-
-    function openAvatarCropModal() {
-      const modal = document.getElementById("avatarCropModal");
-      if (!modal) return;
-
-      setAvatarEditorTexts();
-      modal.classList.add("active");
-      document.body.style.overflow = "hidden";
-    }
-
-    function resetAvatarCropState() {
-      if (avatarCropState.objectUrl) {
-        URL.revokeObjectURL(avatarCropState.objectUrl);
-      }
-
-      avatarCropState.objectUrl = "";
-      avatarCropState.naturalWidth = 0;
-      avatarCropState.naturalHeight = 0;
-      avatarCropState.scale = 1;
-      avatarCropState.minScale = 1;
-      avatarCropState.maxScale = 3;
-      avatarCropState.x = 0;
-      avatarCropState.y = 0;
-      avatarCropState.dragging = false;
-      avatarCropState.pointers.clear();
-avatarCropState.pinchStartDistance = 0;
-avatarCropState.pinchStartScale = 1;
-avatarCropState.pinchAnchorX = 0;
-avatarCropState.pinchAnchorY = 0;
-
-      const img = document.getElementById("avatarCropImage");
-      if (img) {
-        img.removeAttribute("src");
-        img.style.width = "";
-        img.style.height = "";
-        img.style.transform = "";
-      }
-    }
-
-    function closeAvatarCropModal() {
-      const modal = document.getElementById("avatarCropModal");
-      if (modal) {
-        modal.classList.remove("active");
-      }
-
-      resetAvatarCropState();
-
-      const profileMenu = document.getElementById("profileMenu");
-      if (!profileMenu?.classList.contains("active")) {
-        document.body.style.overflow = "";
-      }
-    }
-
-    function onAvatarZoomChange(e) {
-      const newScale = Number(e.target.value || 0);
-      const oldScale = avatarCropState.scale;
-
-      if (!newScale || !oldScale || !avatarCropState.naturalWidth || !avatarCropState.naturalHeight) {
-        return;
-      }
-
-      const stageSize = getAvatarCropStageSize();
-      const stageCenterX = stageSize / 2;
-      const stageCenterY = stageSize / 2;
-
-      const oldDisplayWidth = avatarCropState.naturalWidth * oldScale;
-      const oldDisplayHeight = avatarCropState.naturalHeight * oldScale;
-
-      const relativeCenterX = (stageCenterX - avatarCropState.x) / oldDisplayWidth;
-      const relativeCenterY = (stageCenterY - avatarCropState.y) / oldDisplayHeight;
-
-      avatarCropState.scale = newScale;
-
-      const newDisplayWidth = avatarCropState.naturalWidth * newScale;
-      const newDisplayHeight = avatarCropState.naturalHeight * newScale;
-
-      avatarCropState.x = stageCenterX - relativeCenterX * newDisplayWidth;
-      avatarCropState.y = stageCenterY - relativeCenterY * newDisplayHeight;
-
-      clampAvatarCropPosition();
-      renderAvatarCropImage();
-    }
-
-function startAvatarDrag(e) {
-  if (!avatarCropState.naturalWidth || !avatarCropState.naturalHeight) return;
-
-  const stage = e.currentTarget;
-  const point = getStagePointerPoint(stage, e);
-
-  avatarCropState.pointers.set(e.pointerId, point);
-  stage.setPointerCapture?.(e.pointerId);
-
-  if (avatarCropState.pointers.size === 1) {
-    avatarCropState.dragging = true;
-    avatarCropState.pointerStartX = point.x;
-    avatarCropState.pointerStartY = point.y;
-    avatarCropState.dragStartX = avatarCropState.x;
-    avatarCropState.dragStartY = avatarCropState.y;
-  } else if (avatarCropState.pointers.size === 2) {
-    avatarCropState.dragging = false;
-    startAvatarPinch();
-  }
-
-  e.preventDefault();
-}
-
-function moveAvatarDrag(e) {
-  const stage = e.currentTarget;
-
-  if (!avatarCropState.pointers.has(e.pointerId)) return;
-
-  const point = getStagePointerPoint(stage, e);
-  avatarCropState.pointers.set(e.pointerId, point);
-
-  if (avatarCropState.pointers.size >= 2) {
-    continueAvatarPinch();
-    e.preventDefault();
-    return;
-  }
-
-  if (!avatarCropState.dragging) return;
-
-  avatarCropState.x =
-    avatarCropState.dragStartX + (point.x - avatarCropState.pointerStartX);
-
-  avatarCropState.y =
-    avatarCropState.dragStartY + (point.y - avatarCropState.pointerStartY);
-
-  clampAvatarCropPosition();
-  renderAvatarCropImage();
-  e.preventDefault();
-}
-
-function endAvatarDrag(e) {
-  const stage = e.currentTarget;
-
-  avatarCropState.pointers.delete(e.pointerId);
-  stage.releasePointerCapture?.(e.pointerId);
-
-  if (avatarCropState.pointers.size === 1) {
-    const [remainingPoint] = Array.from(avatarCropState.pointers.values());
-
-    avatarCropState.dragging = true;
-    avatarCropState.pointerStartX = remainingPoint.x;
-    avatarCropState.pointerStartY = remainingPoint.y;
-    avatarCropState.dragStartX = avatarCropState.x;
-    avatarCropState.dragStartY = avatarCropState.y;
-    return;
-  }
-
-  avatarCropState.dragging = false;
-  avatarCropState.pinchStartDistance = 0;
-}
-
-    function bindAvatarCropEvents() {
-      const modal = document.getElementById("avatarCropModal");
-      const stage = document.getElementById("avatarCropStage");
-      const zoom = document.getElementById("avatarZoomRange");
-
-      if (!modal || !stage || !zoom || stage.dataset.bound === "1") {
-        return;
-      }
-
-      stage.dataset.bound = "1";
-
-      stage.addEventListener("pointerdown", startAvatarDrag);
-      stage.addEventListener("pointermove", moveAvatarDrag);
-      stage.addEventListener("pointerup", endAvatarDrag);
-      stage.addEventListener("pointercancel", endAvatarDrag);
-      stage.addEventListener("lostpointercapture", endAvatarDrag);
-
-      stage.addEventListener("dragstart", (e) => e.preventDefault());
-
-      zoom.addEventListener("input", onAvatarZoomChange);
-
-      modal.addEventListener("click", (e) => {
-        if (e.target === modal) {
-          closeAvatarCropModal();
-        }
-      });
-    }
-
-    function loadAvatarFileToCrop(file) {
-      if (!file) return;
-
-      const img = document.getElementById("avatarCropImage");
-      if (!img) return;
-
-      resetAvatarCropState();
-      openAvatarCropModal();
-
-      avatarCropState.objectUrl = URL.createObjectURL(file);
-
-      img.onload = () => {
-        requestAnimationFrame(() => {
-          initAvatarCropForImage(img.naturalWidth, img.naturalHeight);
-        });
-      };
-
-      img.src = avatarCropState.objectUrl;
-    }
-
-    function makeAvatarCropDataUrl() {
-      const img = document.getElementById("avatarCropImage");
-      const stageSize = getAvatarCropStageSize();
-      const outputSize = 512;
-
-      const canvas = document.createElement("canvas");
-      canvas.width = outputSize;
-      canvas.height = outputSize;
-
-      const ctx = canvas.getContext("2d");
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = "high";
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, outputSize, outputSize);
-
-      const ratio = outputSize / stageSize;
-
-      const drawWidth = avatarCropState.naturalWidth * avatarCropState.scale * ratio;
-      const drawHeight = avatarCropState.naturalHeight * avatarCropState.scale * ratio;
-      const drawX = avatarCropState.x * ratio;
-      const drawY = avatarCropState.y * ratio;
-
-      ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
-
-      return canvas.toDataURL("image/jpeg", 0.92);
-    }
-
-    async function saveAvatarFromCrop() {
-      if (state.isExternal || !state.currentUser) return;
-
-      const saveBtn = document.getElementById("avatarCropSaveBtn");
-      if (saveBtn) saveBtn.disabled = true;
-
-      try {
-        const avatarDataUrl = makeAvatarCropDataUrl();
-
-        const res = await api("/profile", {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            avatarDataUrl
-          })
-        });
-
-        if (!res.success) {
-          alert(pageT("alerts.avatarSaveError"));
-          return;
-        }
-
-        state.currentUser = { ...state.currentUser, ...res.user };
-
-        renderUserHeader(state.currentUser);
-        syncMenuUser();
-        updateNickHint();
-
-        localStorage.setItem(
-          "tp_avatar",
-          state.currentUser.avatarUrl ||
-          state.currentUser.avatarDataUrl ||
-          ""
-        );
-
-        window.dispatchEvent(
-          new CustomEvent("tp:profile-updated", {
-            detail: { user: state.currentUser }
-          })
-        );
-
-        closeAvatarCropModal();
-        closeProfileMenu();
-      } finally {
-        if (saveBtn) saveBtn.disabled = false;
-      }
-    }
-    function setDocumentTitle() {
-      document.title = state.isExternal
-        ? pageT("docTitleExternal")
-        : pageT("docTitleMy");
-    }
-
-function updateHtmlLang() {
-  document.documentElement.lang = getCurrentLang();
-}
-
-function markPageReady() {
-  document.documentElement.setAttribute("data-page-ready", "1");
-}
-
-    function updateEditButtonVisibility() {
-      const btn = document.getElementById("profileEditBtn");
-      if (!btn) return;
-      btn.style.display = state.isExternal ? "none" : "";
-    }
-
-    function resetExternalOffers() {
-      const wrap = document.getElementById("externalOffers");
-      const list = document.getElementById("offersList");
-      const title = document.getElementById("externalOffersTitle");
-
-      if (list) list.innerHTML = "";
-      if (title) title.textContent = "";
-      if (wrap) wrap.style.display = "none";
-    }
-
-    function backToMain() {
-      document.getElementById("menuMain").style.display = "block";
-      document.getElementById("menuNick").style.display = "none";
-      document.getElementById("menuNotify").style.display = "none";
-    }
-
-    function resetMenuScreens() {
-      backToMain();
-    }
-
-    function renderUserHeader(user) {
-      const usernameEl = document.getElementById("username");
-      const avatarEl = document.getElementById("avatar");
-      const userIdEl = document.getElementById("userId");
-      const sinceEl = document.getElementById("since");
-
-      usernameEl.textContent = user?.username || "";
-      avatarEl.src = user?.avatarUrl || user?.avatarDataUrl || DEFAULT_AVATAR;
-
-      if (user?.userId) {
-        userIdEl.style.display = "";
-        userIdEl.textContent = `UID: ${user.userId}`;
-        userIdEl.title = pageT("copyId");
-
-        userIdEl.onclick = async () => {
-          const copied = await copyTextSafe(user.userId);
-
-          if (copied) {
-            userIdEl.classList.add("copied");
-            setTimeout(() => userIdEl.classList.remove("copied"), 1200);
-            return;
-          }
-
-          alert(pageT("alerts.copyIdError"));
-        };
-      } else {
-        userIdEl.style.display = "none";
-        userIdEl.textContent = "";
-        userIdEl.onclick = null;
-      }
-
-      if (user?.createdAt) {
-        sinceEl.textContent = `${pageT("since")} ${formatDate(user.createdAt)}`;
-      } else {
-        sinceEl.textContent = "";
-      }
-    }
-
-    function syncMenuUser() {
-      const username = state.currentUser?.username || "";
-      const avatarSrc =
-        state.currentUser?.avatarUrl ||
-        state.currentUser?.avatarDataUrl ||
-        DEFAULT_AVATAR;
-
-      const menuUsername = document.getElementById("menuUsername");
-      const menuAvatar = document.getElementById("menuAvatar");
-
-      if (menuUsername) menuUsername.textContent = username;
-      if (menuAvatar) menuAvatar.src = avatarSrc;
-    }
-function stopTelegramLinkPolling() {
-  if (state.telegramPollTimer) {
-    clearInterval(state.telegramPollTimer);
-    state.telegramPollTimer = null;
-  }
-}
-
-function applyNotifyResponse(res) {
-  state.notify = {
-    site: !!res.notify?.site,
-    email: !!res.notify?.email,
-    telegram: !!res.notify?.telegram
-  };
-
-  state.telegramLinked = !!res.telegramLinked;
-  state.telegramUsername = String(res.telegramUsername || "");
-  state.telegramBotUsername = String(res.telegramBotUsername || "");
-
-  syncNotifyControls();
-}
-
-function syncNotifyControls() {
-  const siteInput = document.getElementById("notifySite");
-  const emailInput = document.getElementById("notifyEmail");
-  const telegramInput = document.getElementById("notifyTelegram");
-  const telegramStatus = document.getElementById("telegramStatus");
-  const telegramConnectBtn = document.getElementById("telegramConnectBtn");
-  const telegramUnlinkBtn = document.getElementById("telegramUnlinkBtn");
-  const telegramSwitchWrap = document.getElementById("telegramSwitchWrap");
-
-  if (siteInput) {
-    siteInput.checked = !!state.notify.site;
-  }
-
-  if (emailInput) {
-    emailInput.checked = !!state.notify.email;
-  }
-
-  if (telegramInput) {
-    telegramInput.checked = !!state.telegramLinked && !!state.notify.telegram;
-    telegramInput.disabled = !state.telegramLinked;
-  }
-
-  if (telegramSwitchWrap) {
-    telegramSwitchWrap.classList.toggle("is-disabled", !state.telegramLinked);
-  }
-
-  if (telegramStatus) {
-    if (state.telegramLinked) {
-      telegramStatus.textContent = state.telegramUsername
-        ? pageT("menu.telegramLinkedAs", { username: `@${state.telegramUsername}` })
-        : pageT("menu.telegramLinked");
-    } else {
-      telegramStatus.textContent = pageT("menu.telegramNotLinked");
+  function getFavs() {
+    try {
+      const raw = JSON.parse(localStorage.getItem("tp_favorites") || "[]");
+      return Array.isArray(raw) ? raw : [];
+    } catch {
+      return [];
     }
   }
 
-  if (telegramConnectBtn) {
-    telegramConnectBtn.hidden = !!state.telegramLinked;
+  function setFavs(arr) {
+    localStorage.setItem("tp_favorites", JSON.stringify(arr));
   }
 
-  if (telegramUnlinkBtn) {
-    telegramUnlinkBtn.hidden = !state.telegramLinked;
+  function getFavoriteLang() {
+    const lang = String(localStorage.getItem("tp_lang") || "ru").trim().toLowerCase();
+    return ["ru", "uk", "en"].includes(lang) ? lang : "ru";
   }
-}
 
-async function pollTelegramLinkStatus() {
-  const res = await api("/api/settings/notifications");
+  function isFavorite(offerId) {
+    const lang = getFavoriteLang();
 
-  if (!res.success) return;
-
-  const wasLinked = state.telegramLinked;
-
-  applyNotifyResponse(res);
-
-  if (!wasLinked && state.telegramLinked) {
-    stopTelegramLinkPolling();
-    alert(pageT("alerts.telegramLinkedSuccess"));
+    return getFavs().some(f => {
+      if (typeof f === "string") return f === offerId;
+      return f?.id === offerId && f?.lang === lang;
+    });
   }
-}
 
-function startTelegramLinkPolling() {
-  stopTelegramLinkPolling();
+  function toggleFavoriteState(offerId) {
+    const lang = getFavoriteLang();
+    const favs = getFavs();
 
-  state.telegramPollStartedAt = Date.now();
+    const index = favs.findIndex(f => {
+      if (typeof f === "string") return f === offerId;
+      return f?.id === offerId && f?.lang === lang;
+    });
 
-  state.telegramPollTimer = setInterval(async () => {
-    const expired = Date.now() - state.telegramPollStartedAt > 2 * 60 * 1000;
+    if (index >= 0) {
+      favs.splice(index, 1);
+      setFavs(favs);
+      return false;
+    }
 
-    if (expired) {
-      stopTelegramLinkPolling();
+    favs.push({ id: offerId, lang });
+    setFavs(favs);
+    return true;
+  }
+
+  function setAvatarEditorTexts() {
+    const root = document.getElementById("avatarCropModal");
+    if (!root) return;
+
+    if (window.tpI18n?.apply) {
+      window.tpI18n.apply(root);
+    }
+  }
+
+  function getAvatarCropStageSize() {
+    const stage = document.getElementById("avatarCropStage");
+    return stage ? stage.clientWidth : 320;
+  }
+
+  function syncAvatarZoomInput() {
+    const zoom = document.getElementById("avatarZoomRange");
+    if (!zoom) return;
+
+    zoom.min = String(avatarCropState.minScale);
+    zoom.max = String(avatarCropState.maxScale);
+    zoom.step = String(
+      Math.max((avatarCropState.maxScale - avatarCropState.minScale) / 200, 0.01)
+    );
+    zoom.value = String(avatarCropState.scale);
+  }
+
+  function clampAvatarScale(value) {
+    return Math.min(
+      avatarCropState.maxScale,
+      Math.max(avatarCropState.minScale, value)
+    );
+  }
+
+  function getStagePointerPoint(stage, e) {
+    const rect = stage.getBoundingClientRect();
+
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+  }
+
+  function getPointerDistance(a, b) {
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    return Math.hypot(dx, dy);
+  }
+
+  function getPointerCenter(a, b) {
+    return {
+      x: (a.x + b.x) / 2,
+      y: (a.y + b.y) / 2
+    };
+  }
+
+  function startAvatarPinch() {
+    const points = Array.from(avatarCropState.pointers.values());
+    if (points.length < 2) return;
+
+    const [a, b] = points;
+    const center = getPointerCenter(a, b);
+
+    const displayWidth = avatarCropState.naturalWidth * avatarCropState.scale;
+    const displayHeight = avatarCropState.naturalHeight * avatarCropState.scale;
+
+    avatarCropState.pinchStartDistance = getPointerDistance(a, b);
+    avatarCropState.pinchStartScale = avatarCropState.scale;
+
+    avatarCropState.pinchAnchorX = (center.x - avatarCropState.x) / displayWidth;
+    avatarCropState.pinchAnchorY = (center.y - avatarCropState.y) / displayHeight;
+  }
+
+  function continueAvatarPinch() {
+    const points = Array.from(avatarCropState.pointers.values());
+    if (points.length < 2) return;
+
+    const [a, b] = points;
+
+    if (!avatarCropState.pinchStartDistance) {
+      startAvatarPinch();
       return;
     }
 
-    await pollTelegramLinkStatus();
-  }, 3000);
-}
+    const center = getPointerCenter(a, b);
+    const distance = getPointerDistance(a, b);
 
-async function startTelegramLinkFlow() {
-  if (state.isExternal || !getToken()) return;
+    const nextScale = clampAvatarScale(
+      avatarCropState.pinchStartScale * (distance / avatarCropState.pinchStartDistance)
+    );
 
-  const res = await api("/api/settings/telegram/link", {
-    method: "POST"
-  });
+    avatarCropState.scale = nextScale;
 
-  if (!res.success) {
-    alert(res.message || pageT("alerts.telegramLinkStartError"));
-    return;
+    const displayWidth = avatarCropState.naturalWidth * avatarCropState.scale;
+    const displayHeight = avatarCropState.naturalHeight * avatarCropState.scale;
+
+    avatarCropState.x = center.x - avatarCropState.pinchAnchorX * displayWidth;
+    avatarCropState.y = center.y - avatarCropState.pinchAnchorY * displayHeight;
+
+    clampAvatarCropPosition();
+    syncAvatarZoomInput();
+    renderAvatarCropImage();
   }
 
-  state.telegramBotUsername = String(res.botUsername || "");
+  function clampAvatarCropPosition() {
+    const stageSize = getAvatarCropStageSize();
 
-  const popup = window.open(res.url, "_blank", "noopener,noreferrer");
+    const displayWidth = avatarCropState.naturalWidth * avatarCropState.scale;
+    const displayHeight = avatarCropState.naturalHeight * avatarCropState.scale;
 
-  if (!popup) {
-    window.location.href = res.url;
-    return;
+    const minX = Math.min(0, stageSize - displayWidth);
+    const minY = Math.min(0, stageSize - displayHeight);
+
+    avatarCropState.x = Math.min(0, Math.max(minX, avatarCropState.x));
+    avatarCropState.y = Math.min(0, Math.max(minY, avatarCropState.y));
   }
 
-  alert(pageT("alerts.telegramLinkInstructions"));
-  startTelegramLinkPolling();
-}
+  function renderAvatarCropImage() {
+    const img = document.getElementById("avatarCropImage");
+    if (!img || !avatarCropState.naturalWidth || !avatarCropState.naturalHeight) return;
 
-async function unlinkTelegram() {
-  if (state.isExternal || !getToken()) return;
+    const displayWidth = avatarCropState.naturalWidth * avatarCropState.scale;
+    const displayHeight = avatarCropState.naturalHeight * avatarCropState.scale;
 
-  const res = await api("/api/settings/telegram/unlink", {
-    method: "POST"
-  });
-
-  if (!res.success) {
-    alert(res.message || pageT("alerts.telegramUnlinkError"));
-    return;
+    img.style.width = `${displayWidth}px`;
+    img.style.height = `${displayHeight}px`;
+    img.style.transform = `translate(${avatarCropState.x}px, ${avatarCropState.y}px)`;
   }
 
-  applyNotifyResponse({
-    ...res,
-    telegramLinked: false,
-    telegramUsername: "",
-    telegramBotUsername: state.telegramBotUsername
-  });
-}
+  function initAvatarCropForImage(naturalWidth, naturalHeight) {
+    const stageSize = getAvatarCropStageSize();
 
-function bindNotifyControls() {
-  const telegramInput = document.getElementById("notifyTelegram");
-  const telegramConnectBtn = document.getElementById("telegramConnectBtn");
-  const telegramUnlinkBtn = document.getElementById("telegramUnlinkBtn");
-  const saveNotifyBtn = document.getElementById("saveNotifyBtn");
+    avatarCropState.naturalWidth = naturalWidth;
+    avatarCropState.naturalHeight = naturalHeight;
 
-  if (telegramInput && !telegramInput.dataset.bound) {
-    telegramInput.dataset.bound = "1";
+    avatarCropState.minScale = Math.max(
+      stageSize / naturalWidth,
+      stageSize / naturalHeight
+    );
 
-    telegramInput.addEventListener("change", async () => {
-      if (telegramInput.checked && !state.telegramLinked) {
-        telegramInput.checked = false;
-        await startTelegramLinkFlow();
+    avatarCropState.maxScale = Math.max(
+      avatarCropState.minScale * 4,
+      avatarCropState.minScale + 1
+    );
+
+    avatarCropState.scale = avatarCropState.minScale;
+
+    const displayWidth = naturalWidth * avatarCropState.scale;
+    const displayHeight = naturalHeight * avatarCropState.scale;
+
+    avatarCropState.x = (stageSize - displayWidth) / 2;
+    avatarCropState.y = (stageSize - displayHeight) / 2;
+
+    clampAvatarCropPosition();
+    syncAvatarZoomInput();
+    renderAvatarCropImage();
+  }
+
+  function openAvatarCropModal() {
+    const modal = document.getElementById("avatarCropModal");
+    if (!modal) return;
+
+    setAvatarEditorTexts();
+    modal.classList.add("active");
+    document.body.style.overflow = "hidden";
+  }
+
+  function resetAvatarCropState() {
+    if (avatarCropState.objectUrl) {
+      URL.revokeObjectURL(avatarCropState.objectUrl);
+    }
+
+    avatarCropState.objectUrl = "";
+    avatarCropState.naturalWidth = 0;
+    avatarCropState.naturalHeight = 0;
+    avatarCropState.scale = 1;
+    avatarCropState.minScale = 1;
+    avatarCropState.maxScale = 3;
+    avatarCropState.x = 0;
+    avatarCropState.y = 0;
+    avatarCropState.dragging = false;
+    avatarCropState.pointers.clear();
+    avatarCropState.pinchStartDistance = 0;
+    avatarCropState.pinchStartScale = 1;
+    avatarCropState.pinchAnchorX = 0;
+    avatarCropState.pinchAnchorY = 0;
+
+    const img = document.getElementById("avatarCropImage");
+    if (img) {
+      img.removeAttribute("src");
+      img.style.width = "";
+      img.style.height = "";
+      img.style.transform = "";
+    }
+  }
+
+  function closeAvatarCropModal() {
+    const modal = document.getElementById("avatarCropModal");
+    if (modal) {
+      modal.classList.remove("active");
+    }
+
+    resetAvatarCropState();
+
+    const profileMenu = document.getElementById("profileMenu");
+    if (!profileMenu?.classList.contains("active")) {
+      document.body.style.overflow = "";
+    }
+  }
+
+  function onAvatarZoomChange(e) {
+    const newScale = Number(e.target.value || 0);
+    const oldScale = avatarCropState.scale;
+
+    if (!newScale || !oldScale || !avatarCropState.naturalWidth || !avatarCropState.naturalHeight) {
+      return;
+    }
+
+    const stageSize = getAvatarCropStageSize();
+    const stageCenterX = stageSize / 2;
+    const stageCenterY = stageSize / 2;
+
+    const oldDisplayWidth = avatarCropState.naturalWidth * oldScale;
+    const oldDisplayHeight = avatarCropState.naturalHeight * oldScale;
+
+    const relativeCenterX = (stageCenterX - avatarCropState.x) / oldDisplayWidth;
+    const relativeCenterY = (stageCenterY - avatarCropState.y) / oldDisplayHeight;
+
+    avatarCropState.scale = newScale;
+
+    const newDisplayWidth = avatarCropState.naturalWidth * newScale;
+    const newDisplayHeight = avatarCropState.naturalHeight * newScale;
+
+    avatarCropState.x = stageCenterX - relativeCenterX * newDisplayWidth;
+    avatarCropState.y = stageCenterY - relativeCenterY * newDisplayHeight;
+
+    clampAvatarCropPosition();
+    renderAvatarCropImage();
+  }
+
+  function startAvatarDrag(e) {
+    if (!avatarCropState.naturalWidth || !avatarCropState.naturalHeight) return;
+
+    const stage = e.currentTarget;
+    const point = getStagePointerPoint(stage, e);
+
+    avatarCropState.pointers.set(e.pointerId, point);
+    stage.setPointerCapture?.(e.pointerId);
+
+    if (avatarCropState.pointers.size === 1) {
+      avatarCropState.dragging = true;
+      avatarCropState.pointerStartX = point.x;
+      avatarCropState.pointerStartY = point.y;
+      avatarCropState.dragStartX = avatarCropState.x;
+      avatarCropState.dragStartY = avatarCropState.y;
+    } else if (avatarCropState.pointers.size === 2) {
+      avatarCropState.dragging = false;
+      startAvatarPinch();
+    }
+
+    e.preventDefault();
+  }
+
+  function moveAvatarDrag(e) {
+    const stage = e.currentTarget;
+
+    if (!avatarCropState.pointers.has(e.pointerId)) return;
+
+    const point = getStagePointerPoint(stage, e);
+    avatarCropState.pointers.set(e.pointerId, point);
+
+    if (avatarCropState.pointers.size >= 2) {
+      continueAvatarPinch();
+      e.preventDefault();
+      return;
+    }
+
+    if (!avatarCropState.dragging) return;
+
+    avatarCropState.x =
+      avatarCropState.dragStartX + (point.x - avatarCropState.pointerStartX);
+
+    avatarCropState.y =
+      avatarCropState.dragStartY + (point.y - avatarCropState.pointerStartY);
+
+    clampAvatarCropPosition();
+    renderAvatarCropImage();
+    e.preventDefault();
+  }
+
+  function endAvatarDrag(e) {
+    const stage = e.currentTarget;
+
+    avatarCropState.pointers.delete(e.pointerId);
+    stage.releasePointerCapture?.(e.pointerId);
+
+    if (avatarCropState.pointers.size === 1) {
+      const [remainingPoint] = Array.from(avatarCropState.pointers.values());
+
+      avatarCropState.dragging = true;
+      avatarCropState.pointerStartX = remainingPoint.x;
+      avatarCropState.pointerStartY = remainingPoint.y;
+      avatarCropState.dragStartX = avatarCropState.x;
+      avatarCropState.dragStartY = avatarCropState.y;
+      return;
+    }
+
+    avatarCropState.dragging = false;
+    avatarCropState.pinchStartDistance = 0;
+  }
+
+  function bindAvatarCropEvents() {
+    const modal = document.getElementById("avatarCropModal");
+    const stage = document.getElementById("avatarCropStage");
+    const zoom = document.getElementById("avatarZoomRange");
+
+    if (!modal || !stage || !zoom || stage.dataset.bound === "1") {
+      return;
+    }
+
+    stage.dataset.bound = "1";
+
+    stage.addEventListener("pointerdown", startAvatarDrag);
+    stage.addEventListener("pointermove", moveAvatarDrag);
+    stage.addEventListener("pointerup", endAvatarDrag);
+    stage.addEventListener("pointercancel", endAvatarDrag);
+    stage.addEventListener("lostpointercapture", endAvatarDrag);
+
+    stage.addEventListener("dragstart", (e) => e.preventDefault());
+
+    zoom.addEventListener("input", onAvatarZoomChange);
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        closeAvatarCropModal();
       }
     });
   }
 
-  if (telegramConnectBtn && !telegramConnectBtn.dataset.bound) {
-    telegramConnectBtn.dataset.bound = "1";
-    telegramConnectBtn.addEventListener("click", startTelegramLinkFlow);
-  }
+  function loadAvatarFileToCrop(file) {
+    if (!file) return;
 
-  if (telegramUnlinkBtn && !telegramUnlinkBtn.dataset.bound) {
-    telegramUnlinkBtn.dataset.bound = "1";
-    telegramUnlinkBtn.addEventListener("click", unlinkTelegram);
-  }
+    const img = document.getElementById("avatarCropImage");
+    if (!img) return;
 
-  if (saveNotifyBtn && !saveNotifyBtn.dataset.bound) {
-    saveNotifyBtn.dataset.bound = "1";
-    saveNotifyBtn.addEventListener("click", saveNotifyFromMenu);
-  }
-}
-    function updateNickHint() {
-      const hintEl = document.getElementById("nickHint");
-      const saveBtn = document.getElementById("saveNickBtn");
+    resetAvatarCropState();
+    openAvatarCropModal();
 
-      if (!hintEl || !saveBtn) return;
+    avatarCropState.objectUrl = URL.createObjectURL(file);
 
-      if (state.isExternal || !state.currentUser) {
-        saveBtn.disabled = true;
-        return;
-      }
-
-      const nextChangeAt = getNextUsernameChangeAt(state.currentUser);
-
-      if (!nextChangeAt || Date.now() >= nextChangeAt) {
-        hintEl.textContent = pageT("menu.nickHint");
-        saveBtn.disabled = false;
-        return;
-      }
-
-      hintEl.textContent = pageT("menu.nickHintNext", {
-        date: formatDate(nextChangeAt)
+    img.onload = () => {
+      requestAnimationFrame(() => {
+        initAvatarCropForImage(img.naturalWidth, img.naturalHeight);
       });
-      saveBtn.disabled = true;
-    }
+    };
 
-    async function renderReviews(userId) {
-      const ratingLink = document.getElementById("ratingLink");
+    img.src = avatarCropState.objectUrl;
+  }
 
-      ratingLink.innerHTML = "";
-      ratingLink.onclick = null;
+  function makeAvatarCropDataUrl() {
+    const img = document.getElementById("avatarCropImage");
+    const stageSize = getAvatarCropStageSize();
+    const outputSize = 512;
 
-      if (!userId) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = outputSize;
+    canvas.height = outputSize;
 
-      const data = await fetch(`/api/users/${userId}/reviews-by-id`)
-        .then(r => r.json())
-        .catch(() => ({ success: false, reviews: [] }));
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, outputSize, outputSize);
 
-      const reviews = data.success ? data.reviews : [];
-      const count = reviews.length;
+    const ratio = outputSize / stageSize;
 
-      ratingLink.onclick = () => {
-        location.href = `/reviews.html?id=${userId}`;
-      };
+    const drawWidth = avatarCropState.naturalWidth * avatarCropState.scale * ratio;
+    const drawHeight = avatarCropState.naturalHeight * avatarCropState.scale * ratio;
+    const drawX = avatarCropState.x * ratio;
+    const drawY = avatarCropState.y * ratio;
 
-      if (count === 0) {
-        ratingLink.innerHTML = `<span class="rating-count">${pageT("noReviews")}</span>`;
-        return;
-      }
+    ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
 
-      if (count < 10) {
-        ratingLink.innerHTML = `<span class="rating-count">${formatReviewsCount(count)}</span>`;
-        return;
-      }
+    return canvas.toDataURL("image/jpeg", 0.92);
+  }
 
-      const avg = reviews.reduce((sum, item) => sum + (Number(item.rating) || 0), 0) / count;
+  async function saveAvatarFromCrop() {
+    if (state.isExternal || !state.currentUser) return;
 
-      ratingLink.innerHTML =
-        `${renderStars(avg)}<span class="rating-count">${formatReviewsCount(count)}</span>`;
-    }
+    const saveBtn = document.getElementById("avatarCropSaveBtn");
+    if (saveBtn) saveBtn.disabled = true;
 
-    async function renderExternalOffers(offers = []) {
-      const wrap = document.getElementById("externalOffers");
-      const titleEl = document.getElementById("externalOffersTitle");
-      const list = document.getElementById("offersList");
-
-      list.innerHTML = "";
-      wrap.style.display = "none";
-
-      if (!offers.length) {
-        return;
-      }
-
-      titleEl.textContent = `${pageT("offers")} (${offers.length})`;
-      wrap.style.display = "block";
-
-      for (const offer of offers) {
-        const card = tpOfferCard.createOfferCard(offer, {
-          showHeart: true,
-          heartActive: JSON.parse(localStorage.getItem("tp_favorites") || "[]").includes(offer.id),
-          onHeartClick: (currentOffer, cardEl, heartEl) => {
-            let favs = JSON.parse(localStorage.getItem("tp_favorites") || "[]");
-
-            if (favs.includes(currentOffer.id)) {
-              favs = favs.filter(id => id !== currentOffer.id);
-              heartEl.classList.remove("active");
-            } else {
-              favs.push(currentOffer.id);
-              heartEl.classList.add("active");
-            }
-
-            localStorage.setItem("tp_favorites", JSON.stringify(favs));
-          }
-        });
-
-        list.appendChild(card);
-      }
-
-      tpOfferCard.updatePrices(list);
-    }
-
-    async function loadOwnProfile() {
-      const token = getToken();
-
-      if (!token) {
-        goLogin();
-        return null;
-      }
-
-      const me = await api("/auth/me");
-
-      if (!me.success) {
-        goLogin();
-        return null;
-      }
-
-      return me.user;
-    }
-
-    async function loadExternalProfile(externalId) {
-      const data = await fetch(`/api/users/by-id/${externalId}`)
-        .then(r => r.json())
-        .catch(() => ({}));
-
-      if (!data.success) {
-        alert(pageT("alerts.userNotFound"));
-        return null;
-      }
-
-      await renderExternalOffers(data.offers || []);
-      return data.user;
-    }
-
-    async function init() {
-      updateHtmlLang();
-      setAvatarEditorTexts();
-
-      const params = new URLSearchParams(location.search);
-      const externalId = params.get("id");
-
-      state.isExternal = Boolean(externalId);
-      state.currentUser = null;
-
-      closeProfileMenu();
-      resetMenuScreens();
-      resetExternalOffers();
-      updateEditButtonVisibility();
-      bindNotifyControls();
-
-      const profileTitle = document.getElementById("profileTitle");
-      const nav = document.querySelector(".nav");
-
-      const user = externalId
-        ? await loadExternalProfile(externalId)
-        : await loadOwnProfile();
-
-      if (!user) return;
-
-      state.currentUser = user;
-
-      profileTitle.textContent = state.isExternal
-        ? pageT("externalTitle")
-        : pageT("myTitle");
-
-      setDocumentTitle();
-
-      if (nav) {
-        nav.style.display = state.isExternal ? "none" : "";
-      }
-
-      renderUserHeader(user);
-      syncMenuUser();
-      updateNickHint();
-      await renderReviews(user.userId);
-
-      if (!state.isExternal) {
-        await loadNotifyToMenu();
-      }
-    }
-
-    async function updatePrices() {
-      const els = document.querySelectorAll(".offer-price");
-
-      for (const el of els) {
-        const base = Number(el.dataset.price);
-        if (!base) continue;
-        el.textContent = await tpMoney.formatPrice(base);
-      }
-    }
-
-    function openProfileMenu() {
-      if (state.isExternal) return;
-
-      document.getElementById("profileMenu").classList.add("active");
-      document.body.style.overflow = "hidden";
-    }
-
-function closeProfileMenu() {
-  document.getElementById("profileMenu").classList.remove("active");
-  document.body.style.overflow = "";
-  resetMenuScreens();
-}
-
-    document.addEventListener("click", (e) => {
-      const menu = document.getElementById("profileMenu");
-      if (e.target === menu) {
-        closeProfileMenu();
-      }
-    });
-
-    async function logout() {
-      try {
-        await api("/auth/logout", { method: "POST" });
-      } catch (e) {}
-
-      localStorage.removeItem(TOKEN_KEY);
-      location.href = "/auth.html?mode=login";
-    }
-
-    async function editAvatar() {
-      if (state.isExternal || !state.currentUser) return;
-
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = "image/*";
-
-      input.onchange = () => {
-        const file = input.files?.[0];
-        if (!file) return;
-
-        if (!String(file.type || "").startsWith("image/")) {
-          alert(pageT("alerts.onlyImages"));
-          return;
-        }
-
-        loadAvatarFileToCrop(file);
-      };
-
-      input.click();
-    }
-
-    function openNickScreen() {
-      if (state.isExternal) return;
-
-      document.getElementById("menuMain").style.display = "none";
-      document.getElementById("menuNick").style.display = "block";
-      document.getElementById("menuNotify").style.display = "none";
-
-      const input = document.getElementById("nickInput");
-      if (input) {
-        input.value = state.currentUser?.username || "";
-        input.focus();
-        input.setSelectionRange(input.value.length, input.value.length);
-      }
-
-      updateNickHint();
-    }
-
-function openNotifyScreen() {
-  if (state.isExternal) return;
-
-  document.getElementById("menuMain").style.display = "none";
-  document.getElementById("menuNick").style.display = "none";
-  document.getElementById("menuNotify").style.display = "block";
-
-  syncNotifyControls();
-}
-
-    async function saveNickFromMenu() {
-      if (state.isExternal || !state.currentUser) return;
-
-      const input = document.getElementById("nickInput");
-      const newName = String(input?.value || "").trim();
-      const currentName = String(state.currentUser.username || "").trim();
-
-      if (!newName) {
-        alert(pageT("alerts.enterNickname"));
-        return;
-      }
-
-      if (newName.length < 3) {
-        alert(pageT("alerts.nickTooShort"));
-        return;
-      }
-
-      if (newName.length > 20) {
-        alert(pageT("alerts.nickTooLong"));
-        return;
-      }
-
-      if (newName === currentName) {
-        closeProfileMenu();
-        return;
-      }
+    try {
+      const avatarDataUrl = makeAvatarCropDataUrl();
 
       const res = await api("/profile", {
         method: "PUT",
@@ -2092,93 +1860,721 @@ function openNotifyScreen() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          username: newName
+          avatarDataUrl
         })
       });
 
       if (!res.success) {
-        if (res.code === "USERNAME_CHANGE_TOO_EARLY" && res.nextUsernameChangeAt) {
-          state.currentUser.nextUsernameChangeAt = Number(res.nextUsernameChangeAt);
-          updateNickHint();
-          alert(pageT("alerts.nickWaitUntil", {
-            date: formatDate(res.nextUsernameChangeAt)
-          }));
-          return;
-        }
-
-        alert(res.message || pageT("alerts.nickSaveError"));
+        alert(pageT("alerts.avatarSaveError"));
         return;
       }
 
       state.currentUser = { ...state.currentUser, ...res.user };
-      delete state.currentUser.nextUsernameChangeAt;
 
       renderUserHeader(state.currentUser);
       syncMenuUser();
       updateNickHint();
+
+      localStorage.setItem(
+        "tp_avatar",
+        state.currentUser.avatarUrl ||
+        state.currentUser.avatarDataUrl ||
+        ""
+      );
+
+      window.dispatchEvent(
+        new CustomEvent("tp:profile-updated", {
+          detail: { user: state.currentUser }
+        })
+      );
+
+      closeAvatarCropModal();
       closeProfileMenu();
+    } finally {
+      if (saveBtn) saveBtn.disabled = false;
+    }
+  }
+
+  function buildExternalProfileTitle(username) {
+    const safeUsername = String(username || "").trim();
+
+    if (!safeUsername) {
+      return pageText("externalTitle", "");
     }
 
-async function loadNotifyToMenu() {
-  if (state.isExternal || !getToken()) return;
+    return pageText(
+      "externalTitleNamed",
+      `${pageText("externalTitle", "")} ${safeUsername}`.trim(),
+      { username: safeUsername }
+    );
+  }
 
-  try {
+  function buildExternalDocumentTitle(username) {
+    const safeUsername = String(username || "").trim();
+
+    if (!safeUsername) {
+      return pageText("docTitleExternal", document.title);
+    }
+
+    return pageText(
+      "docTitleExternalNamed",
+      pageText("docTitleExternal", document.title),
+      { username: safeUsername }
+    );
+  }
+
+  function setDocumentTitle(user) {
+    if (state.isExternal) {
+      document.title = buildExternalDocumentTitle(user?.username);
+      return;
+    }
+
+    document.title = pageText("docTitleMy", document.title);
+  }
+
+  function updateHtmlLang() {
+    document.documentElement.lang = getCurrentLang();
+  }
+
+  function markPageReady() {
+    document.documentElement.setAttribute("data-page-ready", "1");
+  }
+
+  function updateEditButtonVisibility() {
+    const btn = document.getElementById("profileEditBtn");
+    if (!btn) return;
+    btn.style.display = state.isExternal ? "none" : "";
+  }
+
+  function resetExternalOffers() {
+    const wrap = document.getElementById("externalOffers");
+    const list = document.getElementById("offersList");
+    const title = document.getElementById("externalOffersTitle");
+
+    if (list) list.innerHTML = "";
+    if (title) title.textContent = "";
+    if (wrap) wrap.style.display = "none";
+  }
+
+  function backToMain() {
+    document.getElementById("menuMain").style.display = "block";
+    document.getElementById("menuNick").style.display = "none";
+    document.getElementById("menuNotify").style.display = "none";
+  }
+
+  function resetMenuScreens() {
+    backToMain();
+  }
+
+  function renderUserHeader(user) {
+    const usernameEl = document.getElementById("username");
+    const avatarEl = document.getElementById("avatar");
+    const userIdEl = document.getElementById("userId");
+    const sinceEl = document.getElementById("since");
+
+    usernameEl.textContent = user?.username || "";
+    avatarEl.src = user?.avatarUrl || user?.avatarDataUrl || DEFAULT_AVATAR;
+
+    if (user?.userId) {
+      userIdEl.style.display = "";
+      userIdEl.textContent = pageT("userIdPrefix", { id: user.userId });
+      userIdEl.title = pageT("copyId");
+
+      userIdEl.onclick = async () => {
+        const copied = await copyTextSafe(user.userId);
+
+        if (copied) {
+          userIdEl.classList.add("copied");
+          setTimeout(() => userIdEl.classList.remove("copied"), 1200);
+          return;
+        }
+
+        alert(pageT("alerts.copyIdError"));
+      };
+    } else {
+      userIdEl.style.display = "none";
+      userIdEl.textContent = "";
+      userIdEl.onclick = null;
+    }
+
+    if (user?.createdAt) {
+      sinceEl.textContent = `${pageT("since")} ${formatDate(user.createdAt)}`;
+    } else {
+      sinceEl.textContent = "";
+    }
+  }
+
+  function syncMenuUser() {
+    const username = state.currentUser?.username || "";
+    const avatarSrc =
+      state.currentUser?.avatarUrl ||
+      state.currentUser?.avatarDataUrl ||
+      DEFAULT_AVATAR;
+
+    const menuUsername = document.getElementById("menuUsername");
+    const menuAvatar = document.getElementById("menuAvatar");
+
+    if (menuUsername) menuUsername.textContent = username;
+    if (menuAvatar) menuAvatar.src = avatarSrc;
+  }
+
+  function stopTelegramLinkPolling() {
+    if (state.telegramPollTimer) {
+      clearInterval(state.telegramPollTimer);
+      state.telegramPollTimer = null;
+    }
+  }
+
+  function applyNotifyResponse(res) {
+    state.notify = {
+      site: !!res.notify?.site,
+      email: !!res.notify?.email,
+      telegram: !!res.notify?.telegram
+    };
+
+    state.telegramLinked = !!res.telegramLinked;
+    state.telegramUsername = String(res.telegramUsername || "");
+    state.telegramBotUsername = String(res.telegramBotUsername || "");
+
+    syncNotifyControls();
+  }
+
+  function syncNotifyControls() {
+    const siteInput = document.getElementById("notifySite");
+    const emailInput = document.getElementById("notifyEmail");
+    const telegramInput = document.getElementById("notifyTelegram");
+    const telegramStatus = document.getElementById("telegramStatus");
+    const telegramConnectBtn = document.getElementById("telegramConnectBtn");
+    const telegramUnlinkBtn = document.getElementById("telegramUnlinkBtn");
+    const telegramSwitchWrap = document.getElementById("telegramSwitchWrap");
+
+    if (siteInput) {
+      siteInput.checked = !!state.notify.site;
+    }
+
+    if (emailInput) {
+      emailInput.checked = !!state.notify.email;
+    }
+
+    if (telegramInput) {
+      telegramInput.checked = !!state.telegramLinked && !!state.notify.telegram;
+      telegramInput.disabled = !state.telegramLinked;
+    }
+
+    if (telegramSwitchWrap) {
+      telegramSwitchWrap.classList.toggle("is-disabled", !state.telegramLinked);
+    }
+
+    if (telegramStatus) {
+      if (state.telegramLinked) {
+        telegramStatus.textContent = state.telegramUsername
+          ? pageT("menu.telegramLinkedAs", { username: `@${state.telegramUsername}` })
+          : pageT("menu.telegramLinked");
+      } else {
+        telegramStatus.textContent = pageT("menu.telegramNotLinked");
+      }
+    }
+
+    if (telegramConnectBtn) {
+      telegramConnectBtn.hidden = !!state.telegramLinked;
+    }
+
+    if (telegramUnlinkBtn) {
+      telegramUnlinkBtn.hidden = !state.telegramLinked;
+    }
+  }
+
+  async function pollTelegramLinkStatus() {
     const res = await api("/api/settings/notifications");
 
     if (!res.success) return;
 
+    const wasLinked = state.telegramLinked;
+
     applyNotifyResponse(res);
-  } catch (e) {}
-}
 
-async function saveNotifyFromMenu() {
-  if (state.isExternal || !getToken()) return;
+    if (!wasLinked && state.telegramLinked) {
+      stopTelegramLinkPolling();
+      alert(pageT("alerts.telegramLinkedSuccess"));
+    }
+  }
 
-  const siteValue = !!document.getElementById("notifySite")?.checked;
-  const emailValue = !!document.getElementById("notifyEmail")?.checked;
-  const telegramValue = !!document.getElementById("notifyTelegram")?.checked;
+  function startTelegramLinkPolling() {
+    stopTelegramLinkPolling();
 
-  const res = await api("/api/settings/notifications", {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      site: siteValue,
-      email: emailValue,
-      telegram: state.telegramLinked ? telegramValue : false
-    })
-  });
+    state.telegramPollStartedAt = Date.now();
 
-  if (!res.success) {
-    if (res.code === "TELEGRAM_NOT_LINKED") {
-      await startTelegramLinkFlow();
+    state.telegramPollTimer = setInterval(async () => {
+      const expired = Date.now() - state.telegramPollStartedAt > 2 * 60 * 1000;
+
+      if (expired) {
+        stopTelegramLinkPolling();
+        return;
+      }
+
+      await pollTelegramLinkStatus();
+    }, 3000);
+  }
+
+  async function startTelegramLinkFlow() {
+    if (state.isExternal || !getToken()) return;
+
+    const res = await api("/api/settings/telegram/link", {
+      method: "POST"
+    });
+
+    if (!res.success) {
+      alert(res.message || pageT("alerts.telegramLinkStartError"));
       return;
     }
 
-    alert(res.message || pageT("alerts.notifySaveError"));
-    return;
+    state.telegramBotUsername = String(res.botUsername || "");
+
+    const popup = window.open(res.url, "_blank", "noopener,noreferrer");
+
+    if (!popup) {
+      window.location.href = res.url;
+      return;
+    }
+
+    alert(pageT("alerts.telegramLinkInstructions"));
+    startTelegramLinkPolling();
   }
 
-  applyNotifyResponse(res);
-  backToMain();
-}
+  async function unlinkTelegram() {
+    if (state.isExternal || !getToken()) return;
 
-    window.addEventListener("tp:currency-change", updatePrices);
+    const res = await api("/api/settings/telegram/unlink", {
+      method: "POST"
+    });
 
-document.addEventListener("DOMContentLoaded", async () => {
-  try {
-    bindAvatarCropEvents();
-    await window.tpI18n.load(window.tpI18n.currentLang);
+    if (!res.success) {
+      alert(res.message || pageT("alerts.telegramUnlinkError"));
+      return;
+    }
+
+    applyNotifyResponse({
+      ...res,
+      telegramLinked: false,
+      telegramUsername: "",
+      telegramBotUsername: state.telegramBotUsername
+    });
+  }
+
+  function bindNotifyControls() {
+    const telegramInput = document.getElementById("notifyTelegram");
+    const telegramConnectBtn = document.getElementById("telegramConnectBtn");
+    const telegramUnlinkBtn = document.getElementById("telegramUnlinkBtn");
+    const saveNotifyBtn = document.getElementById("saveNotifyBtn");
+
+    if (telegramInput && !telegramInput.dataset.bound) {
+      telegramInput.dataset.bound = "1";
+
+      telegramInput.addEventListener("change", async () => {
+        if (telegramInput.checked && !state.telegramLinked) {
+          telegramInput.checked = false;
+          await startTelegramLinkFlow();
+        }
+      });
+    }
+
+    if (telegramConnectBtn && !telegramConnectBtn.dataset.bound) {
+      telegramConnectBtn.dataset.bound = "1";
+      telegramConnectBtn.addEventListener("click", startTelegramLinkFlow);
+    }
+
+    if (telegramUnlinkBtn && !telegramUnlinkBtn.dataset.bound) {
+      telegramUnlinkBtn.dataset.bound = "1";
+      telegramUnlinkBtn.addEventListener("click", unlinkTelegram);
+    }
+
+    if (saveNotifyBtn && !saveNotifyBtn.dataset.bound) {
+      saveNotifyBtn.dataset.bound = "1";
+      saveNotifyBtn.addEventListener("click", saveNotifyFromMenu);
+    }
+  }
+
+  function updateNickHint() {
+    const hintEl = document.getElementById("nickHint");
+    const saveBtn = document.getElementById("saveNickBtn");
+
+    if (!hintEl || !saveBtn) return;
+
+    if (state.isExternal || !state.currentUser) {
+      saveBtn.disabled = true;
+      return;
+    }
+
+    const nextChangeAt = getNextUsernameChangeAt(state.currentUser);
+
+    if (!nextChangeAt || Date.now() >= nextChangeAt) {
+      hintEl.textContent = pageT("menu.nickHint");
+      saveBtn.disabled = false;
+      return;
+    }
+
+    hintEl.textContent = pageT("menu.nickHintNext", {
+      date: formatDate(nextChangeAt)
+    });
+    saveBtn.disabled = true;
+  }
+
+  async function renderReviews(userId) {
+    const ratingLink = document.getElementById("ratingLink");
+
+    ratingLink.innerHTML = "";
+    ratingLink.onclick = null;
+    ratingLink.classList.add("is-empty");
+
+    if (!userId) return;
+
+    const data = await fetch(`/api/users/${userId}/reviews-by-id`)
+      .then(r => r.json())
+      .catch(() => ({ success: false, reviews: [] }));
+
+    const reviews = data.success ? data.reviews : [];
+    const count = reviews.length;
+
+    if (count === 0) {
+      ratingLink.innerHTML = `<span class="rating-count">${pageT("noReviews")}</span>`;
+      return;
+    }
+
+    const avg =
+      reviews.reduce((sum, item) => sum + (Number(item.rating) || 0), 0) / count;
+
+    ratingLink.classList.remove("is-empty");
+    ratingLink.innerHTML =
+      `${renderStars(avg)}<span class="rating-count">${formatReviewsCount(count)}</span>`;
+
+    ratingLink.onclick = () => {
+      location.href = `/reviews.html?id=${encodeURIComponent(userId)}`;
+    };
+  }
+
+  async function renderExternalOffers(offers = []) {
+    const wrap = document.getElementById("externalOffers");
+    const titleEl = document.getElementById("externalOffersTitle");
+    const list = document.getElementById("offersList");
+
+    list.innerHTML = "";
+    wrap.style.display = "none";
+
+    if (!offers.length) {
+      return;
+    }
+
+    titleEl.textContent = `${pageT("offers")} (${offers.length})`;
+    wrap.style.display = "block";
+
+    for (const offer of offers) {
+      const card = tpOfferCard.createOfferCard(offer, {
+        showHeart: true,
+        heartActive: isFavorite(offer.id),
+        onHeartClick: (currentOffer, cardEl, heartEl) => {
+          const active = toggleFavoriteState(currentOffer.id);
+
+          if (active) {
+            heartEl.classList.add("active");
+          } else {
+            heartEl.classList.remove("active");
+          }
+        }
+      });
+
+      list.appendChild(card);
+    }
+
+    tpOfferCard.updatePrices(list);
+  }
+
+  async function loadOwnProfile() {
+    const token = getToken();
+
+    if (!token) {
+      goLogin();
+      return null;
+    }
+
+    const me = await api("/auth/me");
+
+    if (!me.success) {
+      goLogin();
+      return null;
+    }
+
+    return me.user;
+  }
+
+  async function loadExternalProfile(externalId) {
+    const data = await fetch(`/api/users/by-id/${externalId}`)
+      .then(r => r.json())
+      .catch(() => ({}));
+
+    if (!data.success) {
+      alert(pageT("alerts.userNotFound"));
+      return null;
+    }
+
+    await renderExternalOffers(data.offers || []);
+    return data.user;
+  }
+
+  async function init() {
+    updateHtmlLang();
+    setAvatarEditorTexts();
+
+    const params = new URLSearchParams(location.search);
+    const externalId = params.get("id");
+
+    state.isExternal = Boolean(externalId);
+    state.currentUser = null;
+
+    closeProfileMenu();
+    resetMenuScreens();
+    resetExternalOffers();
+    updateEditButtonVisibility();
+    bindNotifyControls();
+
+    const profileTitle = document.getElementById("profileTitle");
+    const nav = document.querySelector(".nav");
+
+    const user = externalId
+      ? await loadExternalProfile(externalId)
+      : await loadOwnProfile();
+
+    if (!user) return;
+
+    state.currentUser = user;
+
+    profileTitle.textContent = state.isExternal
+      ? buildExternalProfileTitle(user?.username)
+      : pageT("myTitle");
+
+    setDocumentTitle(user);
+
+    if (nav) {
+      nav.style.display = state.isExternal ? "none" : "";
+    }
+
+    renderUserHeader(user);
+    syncMenuUser();
+    updateNickHint();
+    await renderReviews(user.userId);
+
+    if (!state.isExternal) {
+      await loadNotifyToMenu();
+    }
+  }
+
+  async function updatePrices() {
+    const els = document.querySelectorAll(".offer-price");
+
+    for (const el of els) {
+      const base = Number(el.dataset.price);
+      if (!Number.isFinite(base)) continue;
+      el.textContent = await tpMoney.formatPrice(base);
+    }
+  }
+
+  function openProfileMenu() {
+    if (state.isExternal) return;
+
+    document.getElementById("profileMenu").classList.add("active");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeProfileMenu() {
+    document.getElementById("profileMenu").classList.remove("active");
+    document.body.style.overflow = "";
+    resetMenuScreens();
+  }
+
+  document.addEventListener("click", (e) => {
+    const menu = document.getElementById("profileMenu");
+    if (e.target === menu) {
+      closeProfileMenu();
+    }
+  });
+
+  async function logout() {
+    try {
+      await api("/auth/logout", { method: "POST" });
+    } catch (e) {}
+
+    localStorage.removeItem(TOKEN_KEY);
+    location.href = "/auth.html?mode=login";
+  }
+
+  async function editAvatar() {
+    if (state.isExternal || !state.currentUser) return;
+
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      if (!String(file.type || "").startsWith("image/")) {
+        alert(pageT("alerts.onlyImages"));
+        return;
+      }
+
+      loadAvatarFileToCrop(file);
+    };
+
+    input.click();
+  }
+
+  function openNickScreen() {
+    if (state.isExternal) return;
+
+    document.getElementById("menuMain").style.display = "none";
+    document.getElementById("menuNick").style.display = "block";
+    document.getElementById("menuNotify").style.display = "none";
+
+    const input = document.getElementById("nickInput");
+    if (input) {
+      input.value = state.currentUser?.username || "";
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    }
+
+    updateNickHint();
+  }
+
+  function openNotifyScreen() {
+    if (state.isExternal) return;
+
+    document.getElementById("menuMain").style.display = "none";
+    document.getElementById("menuNick").style.display = "none";
+    document.getElementById("menuNotify").style.display = "block";
+
+    syncNotifyControls();
+  }
+
+  async function saveNickFromMenu() {
+    if (state.isExternal || !state.currentUser) return;
+
+    const input = document.getElementById("nickInput");
+    const newName = String(input?.value || "").trim();
+    const currentName = String(state.currentUser.username || "").trim();
+
+    if (!newName) {
+      alert(pageT("alerts.enterNickname"));
+      return;
+    }
+
+    if (newName.length < 3) {
+      alert(pageT("alerts.nickTooShort"));
+      return;
+    }
+
+    if (newName.length > 20) {
+      alert(pageT("alerts.nickTooLong"));
+      return;
+    }
+
+    if (newName === currentName) {
+      closeProfileMenu();
+      return;
+    }
+
+    const res = await api("/profile", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        username: newName
+      })
+    });
+
+    if (!res.success) {
+      if (res.code === "USERNAME_CHANGE_TOO_EARLY" && res.nextUsernameChangeAt) {
+        state.currentUser.nextUsernameChangeAt = Number(res.nextUsernameChangeAt);
+        updateNickHint();
+        alert(pageT("alerts.nickWaitUntil", {
+          date: formatDate(res.nextUsernameChangeAt)
+        }));
+        return;
+      }
+
+      alert(res.message || pageT("alerts.nickSaveError"));
+      return;
+    }
+
+    state.currentUser = { ...state.currentUser, ...res.user };
+    delete state.currentUser.nextUsernameChangeAt;
+
+    renderUserHeader(state.currentUser);
+    syncMenuUser();
+    updateNickHint();
+    closeProfileMenu();
+  }
+
+  async function loadNotifyToMenu() {
+    if (state.isExternal || !getToken()) return;
+
+    try {
+      const res = await api("/api/settings/notifications");
+
+      if (!res.success) return;
+
+      applyNotifyResponse(res);
+    } catch (e) {}
+  }
+
+  async function saveNotifyFromMenu() {
+    if (state.isExternal || !getToken()) return;
+
+    const siteValue = !!document.getElementById("notifySite")?.checked;
+    const emailValue = !!document.getElementById("notifyEmail")?.checked;
+    const telegramValue = !!document.getElementById("notifyTelegram")?.checked;
+
+    const res = await api("/api/settings/notifications", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        site: siteValue,
+        email: emailValue,
+        telegram: state.telegramLinked ? telegramValue : false
+      })
+    });
+
+    if (!res.success) {
+      if (res.code === "TELEGRAM_NOT_LINKED") {
+        await startTelegramLinkFlow();
+        return;
+      }
+
+      alert(res.message || pageT("alerts.notifySaveError"));
+      return;
+    }
+
+    applyNotifyResponse(res);
+    backToMain();
+  }
+
+  window.addEventListener("tp:currency-change", updatePrices);
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    try {
+      bindAvatarCropEvents();
+      await window.tpI18n.load(window.tpI18n.currentLang);
+      await init();
+    } finally {
+      markPageReady();
+    }
+  });
+
+  window.addEventListener("tp:lang-change", async () => {
     await init();
-  } finally {
-    markPageReady();
-  }
-});
-
-window.addEventListener("tp:lang-change", async () => {
-  await init();
-});
-  </script>
+  });
+</script>
 </body>
 </html>

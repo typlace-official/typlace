@@ -1,11 +1,56 @@
 {
   "title": "Чати",
-  "chatsEmpty": "Список чатів порожній",
-  "pickChat": "Оберіть чат",
-  "writeMessage": "Написати повідомлення...",
-  "send": "Надіслати",
-  "noMessages": "Повідомлень немає",
+  "officialTitle": "Офіційні чати",
+  "scopeExit": "Звичайні чати",
+  "back": "Назад",
   "report": "Поскаржитися",
   "block": "Заблокувати",
-  "deleteChat": "Видалити чат"
+  "unblock": "Розблокувати",
+  "deleteChat": "Видалити чат",
+  "pickChat": "Виберіть чат",
+  "writeMessage": "Напишіть повідомлення",
+  "chatsEmpty": "У вас поки немає чатів",
+  "noMessages": "Повідомлень поки немає",
+  "blockedNotice": "Цього користувача заблоковано — надсилання повідомлень вимкнено.",
+  "chat": {
+    "actions": "Дії чату",
+    "attach": "Прикріпити",
+    "send": "Надіслати",
+    "mute": "Вимкнути сповіщення",
+    "unmute": "Увімкнути сповіщення",
+    "officialAccount": "Офіційний акаунт",
+    "officialWritePlaceholder": "Напишіть офіційне повідомлення",
+    "officialReadOnlyPlaceholder": "Офіційний чат доступний лише для читання",
+    "online": "У мережі",
+    "offline": "Не в мережі",
+    "justNow": "Щойно",
+    "minutesAgo": "Був(ла) {{count}} хв тому",
+    "hoursAgo": "Був(ла) {{count}} год тому",
+    "daysAgo": "Був(ла) {{count}} д тому",
+    "today": "Сьогодні",
+    "yesterday": "Вчора",
+    "photo": "📷 Фото",
+    "userFallback": "Користувач",
+    "noMessagesPreview": "Немає повідомлень"
+  },
+  "alerts": {
+    "errorTitle": "Помилка",
+    "confirmTitle": "Підтвердження",
+    "chatNotFound": "Чат не знайдено або немає доступу",
+    "fileSendError": "Не вдалося надіслати файл",
+    "sendMessageError": "Не вдалося надіслати повідомлення",
+    "orderCreateError": "Не вдалося створити замовлення",
+    "deleteChatError": "Не вдалося видалити чат"
+  },
+  "deleteConfirm": {
+    "text": "Видалити чат?",
+    "confirm": "Видалити",
+    "cancel": "Скасування"
+  },
+  "toasts": {
+    "notificationsOff": "Сповіщення вимкнено",
+    "notificationsOn": "Сповіщення увімкнено",
+    "userBlocked": "Користувача заблоковано",
+    "userUnblocked": "Користувача розблоковано"
+  }
 }

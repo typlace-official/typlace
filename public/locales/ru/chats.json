@@ -1,11 +1,56 @@
 {
   "title": "Чаты",
-  "chatsEmpty": "Список чатов пуст",
-  "pickChat": "Выберите чат",
-  "writeMessage": "Написать сообщение...",
-  "send": "Отправить",
-  "noMessages": "Сообщений нет",
+  "officialTitle": "Официальные чаты",
+  "scopeExit": "Обычные чаты",
+  "back": "Назад",
   "report": "Пожаловаться",
   "block": "Заблокировать",
-  "deleteChat": "Удалить чат"
+  "unblock": "Разблокировать",
+  "deleteChat": "Удалить чат",
+  "pickChat": "Выберите чат",
+  "writeMessage": "Напишите сообщение",
+  "chatsEmpty": "У вас пока нет чатов",
+  "noMessages": "Сообщений пока нет",
+  "blockedNotice": "Этот пользователь заблокирован — отправка сообщений отключена.",
+  "chat": {
+    "actions": "Действия чата",
+    "attach": "Прикрепить",
+    "send": "Отправить",
+    "mute": "Выключить уведомления",
+    "unmute": "Включить уведомления",
+    "officialAccount": "Официальный аккаунт",
+    "officialWritePlaceholder": "Напишите официальное сообщение",
+    "officialReadOnlyPlaceholder": "Официальный чат доступен только для чтения",
+    "online": "В сети",
+    "offline": "Не в сети",
+    "justNow": "Только что",
+    "minutesAgo": "Был(а) {{count}} мин назад",
+    "hoursAgo": "Был(а) {{count}} ч назад",
+    "daysAgo": "Был(а) {{count}} д назад",
+    "today": "Сегодня",
+    "yesterday": "Вчера",
+    "photo": "📷 Фото",
+    "userFallback": "Пользователь",
+    "noMessagesPreview": "Нет сообщений"
+  },
+  "alerts": {
+    "errorTitle": "Ошибка",
+    "confirmTitle": "Подтверждение",
+    "chatNotFound": "Чат не найден или нет доступа",
+    "fileSendError": "Не удалось отправить файл",
+    "sendMessageError": "Не удалось отправить сообщение",
+    "orderCreateError": "Не удалось создать заказ",
+    "deleteChatError": "Не удалось удалить чат"
+  },
+  "deleteConfirm": {
+    "text": "Удалить чат?",
+    "confirm": "Удалить",
+    "cancel": "Отмена"
+  },
+  "toasts": {
+    "notificationsOff": "Уведомления выключены",
+    "notificationsOn": "Уведомления включены",
+    "userBlocked": "Пользователь заблокирован",
+    "userUnblocked": "Пользователь разблокирован"
+  }
 }

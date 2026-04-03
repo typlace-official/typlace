@@ -2,144 +2,296 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Покупки — TyPlace</title>
+  <title data-i18n="page.title"></title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="/header.css">
-<link rel="stylesheet" href="/card.css">
-<link rel="stylesheet" href="/footer.css">
+  <link rel="stylesheet" href="/header.css">
+  <link rel="stylesheet" href="/card.css">
+  <link rel="stylesheet" href="/footer.css">
 
+<style>
+  :root{
+    --tp-header-space:110px;
+    --tp-page-bg:#f6f7f9;
+    --tp-text:#111827;
+    --tp-muted:#8b95a7;
+    --tp-border:#e5e7eb;
+    --tp-empty-blue:#7ea2ff;
+    --tp-empty-shadow:rgba(79,125,243,.14);
+    --tp-bottom-space:calc(24px + env(safe-area-inset-bottom, 0px));
+  }
 
-  <style>
-    body{
-      margin:0;
-      font-family: Inter, Arial, sans-serif;
-      background:#f6f7f9;
+  html,
+  body{
+    margin:0;
+    padding:0;
+    min-height:100%;
+    overflow-x:hidden;
+    background:var(--tp-page-bg);
+  }
+
+  body{
+    min-height:100svh;
+    display:flex;
+    flex-direction:column;
+    font-family:Inter, Arial, sans-serif;
+    color:var(--tp-text);
+    background:var(--tp-page-bg);
+  }
+
+  .page-content{
+    flex:1 0 auto;
+    width:100%;
+    padding-top:var(--tp-header-space);
+    box-sizing:border-box;
+  }
+
+  .page{
+    width:100%;
+    max-width:1200px;
+    margin:0 auto;
+    padding:0 16px var(--tp-bottom-space);
+    box-sizing:border-box;
+    display:flex;
+    flex-direction:column;
+    min-height:calc(100svh - var(--tp-header-space));
+  }
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin:8px 0 14px;
+    flex-wrap:wrap;
+  }
+
+  .topbar h2{
+    margin:0;
+  }
+
+  .filters{
+    margin-left:auto;
+    max-width:220px;
+    width:100%;
+  }
+
+  .select{
+    width:100%;
+    height:40px;
+    border-radius:12px;
+    border:1px solid var(--tp-border);
+    background:#fff;
+    padding:0 12px;
+    font-size:14px;
+    outline:none;
+    box-sizing:border-box;
+  }
+
+  .select:focus{
+    border-color:#cbd5e1;
+  }
+
+  .sales-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:16px;
+    width:100%;
+    align-content:start;
+    flex:1 0 auto;
+  }
+
+  .empty{
+    padding:24px;
+    color:#777;
+  }
+
+  .empty-state{
+    grid-column:1/-1;
+    min-height:calc(100svh - var(--tp-header-space) - 180px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px 0 8px;
+    box-sizing:border-box;
+  }
+
+  .empty-state-inner{
+    width:min(100%, 420px);
+    text-align:center;
+    padding:0 18px;
+    box-sizing:border-box;
+  }
+
+  .empty-illustration{
+    width:min(180px, 48vw);
+    margin:0 auto 20px;
+    filter:drop-shadow(0 16px 32px var(--tp-empty-shadow));
+  }
+
+  .empty-illustration svg{
+    display:block;
+    width:100%;
+    height:auto;
+  }
+
+  .empty-text{
+    color:#9ca3af;
+    font-size:16px;
+    line-height:1.45;
+    font-weight:400;
+    margin:0;
+  }
+
+  .offer-card{
+    position:relative;
+    background:#fff;
+    border-radius:16px;
+    border:1px solid #e5e7eb;
+    overflow:hidden;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    width:100%;
+  }
+
+  .order-badge{
+    position:absolute;
+    top:10px;
+    left:10px;
+    padding:4px 10px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+    color:#fff;
+    z-index:5;
+  }
+
+  .order-badge.pending{ background:#f59e0b; }
+  .order-badge.completed{ background:#16a34a; }
+  .order-badge.refunded{ background:#dc2626; }
+
+  .offer-image{
+    position:relative;
+    width:100%;
+    aspect-ratio:4/3;
+    background:#f3f4f6;
+    overflow:hidden;
+  }
+
+  .offer-image img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+
+  .offer-body{
+    padding:12px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    flex:1;
+  }
+
+  .offer-title{
+    font-size:14px;
+    font-weight:700;
+    line-height:1.35;
+    display:-webkit-box;
+    -webkit-line-clamp:4;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+    min-height:76px;
+    word-break:break-word;
+    overflow-wrap:anywhere;
+  }
+
+  .order-meta{
+    font-size:13px;
+    color:#6b7280;
+    font-weight:600;
+  }
+
+  .order-number{
+    font-size:12px;
+    color:#9ca3af;
+  }
+
+  .offer-price{
+    font-size:18px;
+    font-weight:800;
+    margin-top:auto;
+  }
+
+  .order-date{
+    font-size:12px;
+    color:#9ca3af;
+  }
+
+  @media (max-width:768px){
+    :root{
+      --tp-header-space:100px;
+      --tp-bottom-space:calc(24px + env(safe-area-inset-bottom, 0px));
     }
 
     .page{
-      max-width:1200px;
-      margin:24px auto;
-      padding:0 16px;
+      padding:0 12px var(--tp-bottom-space);
+    }
+  }
+
+  @media (max-width:640px){
+    :root{
+      --tp-bottom-space:calc(24px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .topbar{
+      flex-direction:column;
+      align-items:flex-start;
+      gap:12px;
+      margin:0 0 14px;
+    }
+
+    .filters{
+      margin-left:0;
+      width:220px;
+      max-width:100%;
     }
 
     .sales-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
-      gap:16px;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:12px;
     }
 
-
-    .empty{
-      padding:24px;
-      color:#777;
+    .offer-title{
+      font-size:13px;
+      -webkit-line-clamp:3;
+      min-height:auto;
     }
-/* ===== FILTER (копия из game.css) ===== */
 
-.filters{
-  margin-left:auto;
-  max-width:220px;
-}
+    .offer-price{
+      font-size:15px;
+    }
 
-.select{
-  height: 40px;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-  background:#fff;
-  padding: 0 12px;
-  font-size: 14px;
-  outline:none;
-}
+    .order-meta,
+    .order-number,
+    .order-date{
+      font-size:11px;
+    }
 
-.select:focus{
-  border-color:#cbd5e1;
-} 
-/* ===== NEW ORDER CARD ===== */
+    .empty-state{
+      min-height:calc(100svh - var(--tp-header-space) - 170px);
+      padding:18px 0 0;
+    }
 
-.order-badge{
-  position:absolute;
-  top:10px;
-  left:10px;
-  padding:4px 10px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:700;
-  color:#fff;
-  z-index:5;
-}
+    .empty-illustration{
+      width:min(160px, 46vw);
+    }
 
-.order-badge.pending{ background:#f59e0b; }
-.order-badge.completed{ background:#16a34a; }
-.order-badge.refunded{ background:#dc2626; }
-
-.offer-title{
-  font-size:14px;
-  font-weight:700;
-  line-height:1.35;
-
-  display:-webkit-box;
-  -webkit-line-clamp:4;
-  -webkit-box-orient:vertical;
-  overflow:hidden;
-
-  min-height:76px;
-
-  word-break: break-word;
-  overflow-wrap: anywhere;
-}
-
-.order-meta{
-  font-size:13px;
-  color:#6b7280;
-  font-weight:600;
-}
-
-.order-number{
-  font-size:12px;
-  color:#9ca3af;
-}
-.order-date{
-  font-size:12px;
-  color:#9ca3af;
-}
-.topbar{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin-bottom:14px;
-}
-/* ===== 📱 MOBILE 2 CARDS ===== */
-@media (max-width:640px){
-
-.page{
-  margin:16px auto;
-  padding:0 12px;
-}
-
-.sales-grid{
-  grid-template-columns:repeat(2, 1fr); /* 🔥 2 карточки */
-  gap:12px;
-}
-
-.offer-title{
-  font-size:13px;
-  -webkit-line-clamp:3;
-  min-height:auto;
-}
-
-.offer-price{
-  font-size:15px;
-}
-
-.order-meta,
-.order-number,
-.order-date{
-  font-size:11px;
-}
-
-}
-
-  </style>
+    .empty-text{
+      font-size:15px;
+    }
+  }
+</style>
 </head>
 
 <body>
@@ -147,24 +299,23 @@
 <div id="header-container"></div>
 
 <main class="page-content">
+  <div class="page">
 
-<div class="page">
+    <div class="topbar">
+      <h2 data-i18n="page.title"></h2>
 
-<div class="topbar">
-  <h2 style="margin:0;">Покупки</h2>
+      <div class="filters">
+        <select class="select" id="statusFilter">
+          <option value="all" data-i18n="page.filters.all"></option>
+          <option value="pending" data-i18n="page.filters.pending"></option>
+          <option value="completed" data-i18n="page.filters.completed"></option>
+          <option value="refunded" data-i18n="page.filters.refunded"></option>
+        </select>
+      </div>
+    </div>
 
-  <div class="filters">
-    <select class="select" id="statusFilter">
-      <option value="all">Статус</option>
-      <option value="pending">В процессе</option>
-      <option value="completed">Завершено</option>
-      <option value="refunded">Возврат</option>
-    </select>
+    <div id="list" class="sales-grid"></div>
   </div>
-</div>
-
-  <div id="list" class="sales-grid"></div>
-</div>
 </main>
 
 <div id="footer-container"></div>
@@ -187,20 +338,203 @@ const list = document.getElementById("list");
 const statusFilter = document.getElementById("statusFilter");
 let allPurchases = [];
 
-fetch("/api/my-purchases", {
-  headers:{ Authorization:"Bearer " + token }
-})
-.then(r => r.json())
-.then(d => {
-  if(!d.success){
-    list.innerHTML = "<div class='empty'>Ошибка загрузки</div>";
+function pageT(key, params = {}){
+  return window.tpI18n?.t(`page.${key}`, params) || key;
+}
+
+function pageText(key, fallback, params = {}){
+  const value = pageT(key, params);
+  return value === key ? fallback : value;
+}
+
+function getCurrentLang(){
+  const lang =
+    window.tpI18n?.currentLang ||
+    localStorage.getItem("tp_lang") ||
+    "ru";
+
+  const safeLang = String(lang).trim().toLowerCase();
+  return ["ru", "uk", "en"].includes(safeLang) ? safeLang : "ru";
+}
+
+function getCurrentLocale(){
+  const lang = getCurrentLang();
+
+  if(lang === "uk") return "uk-UA";
+  if(lang === "en") return "en-US";
+  return "ru-RU";
+}
+
+function normalizeOptionalLang(value){
+  const lang = String(value || "").trim().toLowerCase();
+  return ["ru", "uk", "en"].includes(lang) ? lang : "";
+}
+
+function getPurchaseOrderLang(purchase){
+  const snapshotLang = normalizeOptionalLang(
+    purchase?.offer?.orderLang ||
+    purchase?.orderLang
+  );
+
+  if (snapshotLang) {
+    return snapshotLang;
+  }
+
+  return getCurrentLang();
+}
+
+function getPurchaseTitle(purchase){
+  const offer = purchase?.offer || {};
+  const titleMap = offer.title || {};
+
+  const orderLang = getPurchaseOrderLang(purchase);
+
+  if (orderLang) {
+    return (
+      titleMap[orderLang] ||
+      titleMap.ru ||
+      titleMap.uk ||
+      titleMap.en ||
+      offer.mode ||
+      pageText("fallbacks.offer", "Предложение")
+    );
+  }
+
+  const currentLang = getCurrentLang();
+
+  return (
+    titleMap[currentLang] ||
+    titleMap.ru ||
+    titleMap.uk ||
+    titleMap.en ||
+    offer.mode ||
+    pageText("fallbacks.offer", "Предложение")
+  );
+}
+
+function escapeHtml(value){
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function formatMode(mode){
+  if(!mode) return "";
+
+  return String(mode)
+    .replace(/_/g," ")
+    .replace(/\b\w/g,l => l.toUpperCase());
+}
+
+function getStatusMeta(status){
+  if(status === "completed"){
+    return {
+      text: pageT("statuses.completed"),
+      className: "completed"
+    };
+  }
+
+  if(status === "refunded"){
+    return {
+      text: pageT("statuses.refunded"),
+      className: "refunded"
+    };
+  }
+
+  return {
+    text: pageT("statuses.pending"),
+    className: "pending"
+  };
+}
+
+function renderEmptyState(){
+  const text = escapeHtml(pageText("empty", "Покупок пока нет"));
+
+  list.innerHTML = `
+    <div class="empty-state">
+      <div class="empty-state-inner">
+        <div class="empty-illustration" aria-hidden="true">
+          <svg viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg" fill="none">
+            <defs>
+              <linearGradient id="bagFill" x1="46" y1="48" x2="132" y2="142" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#ffffff" stop-opacity=".96"/>
+                <stop offset="1" stop-color="#eaf0ff" stop-opacity=".82"/>
+              </linearGradient>
+
+              <linearGradient id="bagStroke" x1="50" y1="52" x2="128" y2="138" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#7ea2ff" stop-opacity=".72"/>
+                <stop offset="1" stop-color="#7ea2ff" stop-opacity=".26"/>
+              </linearGradient>
+
+              <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
+                gradientTransform="translate(90 94) rotate(90) scale(72 78)">
+                <stop offset="0" stop-color="#7ea2ff" stop-opacity=".24"/>
+                <stop offset=".65" stop-color="#7ea2ff" stop-opacity=".08"/>
+                <stop offset="1" stop-color="#7ea2ff" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+
+            <ellipse cx="90" cy="145" rx="42" ry="10" fill="#dfe7fb" opacity=".66"/>
+            <circle cx="90" cy="88" r="62" fill="url(#glow)"/>
+
+            <path
+              d="M58 72c0-20 14-34 32-34s32 14 32 34"
+              stroke="#9ab6ff"
+              stroke-width="4"
+              stroke-linecap="round"
+            />
+
+            <path
+              d="M52 68h76l-7 68c-.7 7-6.5 12-13.5 12h-35c-7 0-12.8-5-13.5-12L52 68Z"
+              fill="url(#bagFill)"
+              stroke="url(#bagStroke)"
+              stroke-width="3"
+            />
+
+            <path d="M71 92h38" stroke="#cfdcff" stroke-width="6" stroke-linecap="round"/>
+            <path d="M71 108h28" stroke="#dbe5ff" stroke-width="6" stroke-linecap="round"/>
+
+            <circle cx="120" cy="118" r="14" fill="#f4f7ff" stroke="#9ab6ff" stroke-width="3"/>
+            <path d="M120 111v14" stroke="#7ea2ff" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M113 118h14" stroke="#7ea2ff" stroke-width="3.5" stroke-linecap="round"/>
+
+            <path d="M42 110v6" stroke="#8aa9ff" stroke-width="3" stroke-linecap="round"/>
+            <path d="M39 113h6" stroke="#8aa9ff" stroke-width="3" stroke-linecap="round"/>
+
+            <path d="M140 54v8" stroke="#8aa9ff" stroke-width="3" stroke-linecap="round"/>
+            <path d="M136 58h8" stroke="#8aa9ff" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <p class="empty-text">${text}</p>
+      </div>
+    </div>
+  `;
+}
+
+async function loadPurchases(){
+  const res = await fetch("/api/my-purchases", {
+    headers:{ Authorization:"Bearer " + token }
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if(!data.success){
+    list.innerHTML = `
+      <div class="empty" style="grid-column:1/-1;">
+        ${escapeHtml(pageText("alerts.loadError", "Не удалось загрузить покупки"))}
+      </div>
+    `;
     return;
   }
 
-  allPurchases = d.purchases || [];
-
+  allPurchases = Array.isArray(data.purchases) ? data.purchases : [];
   renderList();
-});
+}
+
 function renderList(){
   list.innerHTML = "";
 
@@ -213,58 +547,37 @@ function renderList(){
   }
 
   if(!filtered.length){
-    list.innerHTML = `
-  <div class="empty" style="grid-column:1/-1;">
-    Нет покупок
-  </div>
-`;
-
+    renderEmptyState();
     return;
   }
 
   filtered.forEach(renderPurchase);
   updatePrices();
 }
-function formatMode(mode){
-  if(!mode) return "";
 
-  return mode
-    .replace(/_/g," ")
-    .replace(/\b\w/g,l=>l.toUpperCase());
-}
 function renderPurchase(p){
   const offer = p.offer || {};
+  const statusMeta = getStatusMeta(p.status);
 
-  let statusText = "";
-  let statusClass = "";
+  const image =
+    offer.imageUrl ||
+    offer.imageDataUrl ||
+    "/img/offer-default.png";
 
-  if(p.status === "pending"){
-    statusText = "В процессе";
-    statusClass = "pending";
-  } else if(p.status === "completed"){
-    statusText = "Завершено";
-    statusClass = "completed";
-  } else if(p.status === "refunded"){
-    statusText = "Возврат";
-    statusClass = "refunded";
-  }
+const title = escapeHtml(getPurchaseTitle(p));
 
-  const image = offer.imageUrl || "/img/offer-default.png";
+  const gameObj = (window.GAMES_LIST || []).find(g => g.id === offer.game);
+  const gameTitle = gameObj ? gameObj.name : offer.game;
 
-const title = buildOfferTitle(offer);
-
-const gameObj = (window.GAMES_LIST || []).find(g => g.id === offer.game);
-const gameTitle = gameObj ? gameObj.name : offer.game;
-
-const gameLine = [
-  gameTitle,
-  formatMode(offer.mode)
-].filter(Boolean).join(", ");
+  const gameLine = [
+    gameTitle,
+    formatMode(offer.mode)
+  ].filter(Boolean).join(", ");
 
   const orderNumber = p.orderNumber || p.id;
 
   const created = new Date(p.createdAt || Date.now());
-  const dateText = created.toLocaleDateString("ru-RU", {
+  const dateText = created.toLocaleDateString(getCurrentLocale(), {
     day:"numeric",
     month:"short",
     year:"numeric"
@@ -274,31 +587,32 @@ const gameLine = [
   card.className = "offer-card";
 
   card.innerHTML = `
-    <div class="order-badge ${statusClass}">
-      ${statusText}
+    <div class="order-badge ${statusMeta.className}">
+      ${escapeHtml(statusMeta.text)}
     </div>
 
     <div class="offer-image">
-      <img src="${image}" onerror="this.src='/img/offer-default.png'">
+      <img src="${escapeHtml(image)}" onerror="this.src='/img/offer-default.png'">
     </div>
 
     <div class="offer-body">
       <div class="offer-title">${title}</div>
 
       <div class="order-meta">
-        ${gameLine}
+        ${escapeHtml(gameLine)}
       </div>
 
-<div class="order-number">
-  Заказ ${orderNumber}
-</div>
-<div class="order-date">
-  ${dateText}
-</div>
+      <div class="order-number">
+        ${escapeHtml(pageT("orderNumber", { number: orderNumber }))}
+      </div>
 
-<div class="offer-price" data-price="${p.price}">
-  —
-</div>
+      <div class="order-date">
+        ${escapeHtml(dateText)}
+      </div>
+
+      <div class="offer-price" data-price="${p.price}">
+        —
+      </div>
     </div>
   `;
 
@@ -310,6 +624,7 @@ const gameLine = [
 }
 
 statusFilter.addEventListener("change", renderList);
+
 async function updatePrices(){
   const els = document.querySelectorAll(".offer-price");
 
@@ -323,6 +638,29 @@ async function updatePrices(){
 
 window.addEventListener("tp:currency-change", updatePrices);
 
+window.addEventListener("tp:lang-change", async () => {
+  if(window.tpI18n?.load){
+    await window.tpI18n.load(getCurrentLang());
+  }
+
+  if(window.tpI18n?.apply){
+    window.tpI18n.apply(document);
+  }
+
+  renderList();
+});
+
+document.addEventListener("DOMContentLoaded", async () => {
+  if(window.tpI18n?.load){
+    await window.tpI18n.load(getCurrentLang());
+  }
+
+  if(window.tpI18n?.apply){
+    window.tpI18n.apply(document);
+  }
+
+  await loadPurchases();
+});
 </script>
 
 </body>

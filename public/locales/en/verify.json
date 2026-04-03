@@ -1,0 +1,11 @@
+{
+  "title": "E-mail verification",
+  "heading": "Enter the code to verify your e-mail",
+  "codePlaceholder": "Code from the email",
+  "confirm": "Confirm",
+  "alerts": {
+    "emailNotFound": "Error: email not found. Please register again.",
+    "success": "E-mail verified!",
+    "error": "Verification error"
+  }
+}

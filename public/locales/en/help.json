@@ -1,6 +1,10 @@
 {
   "title": "Help Center",
-  "create": "Create Ticket",
-  "history": "Ticket History",
-  "rules": "Platform Rules"
+  "subtitle": "Choose the section you need below.",
+  "create": "Create a request",
+  "create_note": "Contact support and describe your issue.",
+  "history": "Request history",
+  "history_note": "View your previous tickets and support replies.",
+  "rules": "Platform rules",
+  "rules_note": "Open the main rules and important platform terms."
 }

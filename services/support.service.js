@@ -1,12 +1,18 @@
 const crypto = require("crypto");
 const prisma = require("../lib/prisma");
 
-let ioInstance = null;
-let onlineSocketsMap = null;
+let emitToUserSocketsFn = null;
 
-function setSocket(io, onlineSockets) {
-  ioInstance = io;
-  onlineSocketsMap = onlineSockets;
+function setSocket(_io, emitToUserSockets) {
+  emitToUserSocketsFn =
+    typeof emitToUserSockets === "function"
+      ? emitToUserSockets
+      : null;
+}
+
+function emitSupportEventToUser(email, event, payload) {
+  if (!emitToUserSocketsFn) return;
+  emitToUserSocketsFn(email, event, payload);
 }
 
 function toMs(value) {
@@ -306,23 +312,15 @@ if (staff && !ticket.assignedTo) {
 
   const updatedTicket = await getTicketById(ticket.id);
 
-  if (ioInstance && onlineSocketsMap) {
-    const ownerSocket = onlineSocketsMap.get(updatedTicket.userEmail);
-    if (ownerSocket) {
-      ioInstance.to(ownerSocket).emit("new-support-message", {
-        ticketId: updatedTicket.id
-      });
-    }
+emitSupportEventToUser(updatedTicket.userEmail, "new-support-message", {
+  ticketId: updatedTicket.id
+});
 
-    if (updatedTicket.assignedTo) {
-      const assignedSocket = onlineSocketsMap.get(updatedTicket.assignedTo);
-      if (assignedSocket) {
-        ioInstance.to(assignedSocket).emit("new-support-message", {
-          ticketId: updatedTicket.id
-        });
-      }
-    }
-  }
+if (updatedTicket.assignedTo) {
+  emitSupportEventToUser(updatedTicket.assignedTo, "new-support-message", {
+    ticketId: updatedTicket.id
+  });
+}
 
   return updatedTicket;
 }

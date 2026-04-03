@@ -2,24 +2,39 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Подтверждение e-mail</title>
+<title data-i18n="page.title"></title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  (() => {
+    const lang = localStorage.getItem("tp_lang");
+    const safeLang = ["ru", "uk", "en"].includes(lang) ? lang : "ru";
+    document.documentElement.lang = safeLang;
+  })();
+</script>
+
 <style>
 body{
-  font-family:Arial;
+  margin:0;
+  font-family:Arial, sans-serif;
   background:#f6f6f6;
 }
 .box{
   width:350px;
+  max-width:calc(100% - 32px);
   margin:120px auto;
   background:#fff;
   padding:20px;
   border-radius:10px;
   border:1px solid #ddd;
+  box-sizing:border-box;
 }
-input,button{
+input,
+button{
   width:100%;
   padding:10px;
   margin-top:10px;
+  box-sizing:border-box;
 }
 button{
   background:#1E50D4;
@@ -28,24 +43,37 @@ button{
   border-radius:6px;
   cursor:pointer;
 }
+button:hover{
+  opacity:.95;
+}
 </style>
 </head>
 <body>
 
 <div class="box">
-  <h3>Введите код для подтверждения e-mail</h3>
+  <h3 data-i18n="page.heading"></h3>
 
-  <input id="code" placeholder="Код из письма">
-  <button onclick="verify()">Подтвердить</button>
+  <input
+    id="code"
+    data-i18n-placeholder="page.codePlaceholder"
+  >
+
+  <button onclick="verify()" data-i18n="page.confirm"></button>
 </div>
 
+<script src="/i18n.js"></script>
+
 <script>
+function pageT(key, params = {}) {
+  return window.tpI18n?.t(`page.${key}`, params) || key;
+}
+
 async function verify(){
   const code = document.getElementById("code").value.trim();
   const email = localStorage.getItem("verifyEmail");
 
   if (!email) {
-    alert("Ошибка: email не найден. Зарегистрируйтесь заново.");
+    alert(pageT("alerts.emailNotFound"));
     location.href = "register.html";
     return;
   }
@@ -59,13 +87,25 @@ async function verify(){
   const data = await res.json();
 
   if (data.success) {
-    alert("E-mail подтверждён!");
+    alert(pageT("alerts.success"));
     localStorage.removeItem("verifyEmail");
     location.href = "login.html";
   } else {
-    alert(data.message);
+    alert(data.message || pageT("alerts.error"));
   }
 }
+
+document.addEventListener("DOMContentLoaded", async () => {
+  if (window.tpI18n?.load) {
+    await window.tpI18n.load(window.tpI18n.currentLang);
+  }
+});
+
+window.addEventListener("tp:lang-change", () => {
+  if (window.tpI18n?.apply) {
+    window.tpI18n.apply(document);
+  }
+});
 </script>
 
 </body>

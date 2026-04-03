@@ -1169,7 +1169,7 @@ body.tp-restoring-chat .right{
       <div class="panel left">
 <div class="left-top">
   <div class="left-title" id="chatsTitle" data-i18n="page.title"></div>
-  <button class="scope-exit-btn" id="scopeExitBtn" type="button">Обычные чаты</button>
+  <button class="scope-exit-btn" id="scopeExitBtn" type="button" data-i18n="page.scopeExit"></button>
 </div>
         <div class="chat-list" id="chatList"></div>
       </div>
@@ -1177,7 +1177,7 @@ body.tp-restoring-chat .right{
       <!-- RIGHT -->
       <div class="panel right" id="rightPanel">
         <div class="right-top" id="rightTop">
-          <button class="back-btn" id="backBtn" aria-label="Назад">←</button>
+          <button class="back-btn" id="backBtn" data-i18n-aria-label="page.back">←</button>
 <div class="right-title" id="activeUserLink">
   <div class="chat-ava" id="activeAva">?</div>
 
@@ -1189,13 +1189,13 @@ body.tp-restoring-chat .right{
 
 <div class="chat-actions" id="chatActions" style="display:none;">
 
-  <button
-    class="chat-notify-btn"
-    id="chatNotifyBtn"
-    type="button"
-    aria-label="Выключить уведомления"
-    title="Выключить уведомления"
-  >
+<button
+  class="chat-notify-btn"
+  id="chatNotifyBtn"
+  type="button"
+  data-i18n-aria-label="page.chat.mute"
+  data-i18n-title="page.chat.mute"
+>
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
       <path d="M15 17H9"></path>
       <path d="M18 16V11C18 7.69 15.31 5 12 5C8.69 5 6 7.69 6 11V16L4.5 17.5V18H19.5V17.5L18 16Z"></path>
@@ -1205,7 +1205,7 @@ body.tp-restoring-chat .right{
   </button>
 
   <div id="chatMenuWrapper" class="chat-menu-box">
-    <button class="menu-gear" id="chatMenuBtn" type="button" aria-label="Действия чата">
+    <button class="menu-gear" id="chatMenuBtn" type="button" data-i18n-aria-label="page.chat.actions">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
         <circle cx="12" cy="5" r="1.8"></circle>
         <circle cx="12" cy="12" r="1.8"></circle>
@@ -1228,15 +1228,13 @@ body.tp-restoring-chat .right{
           <div class="empty-right" id="emptyPick" data-i18n="page.pickChat"></div>
         </div>
 
-        <div class="notice" id="blockedNotice" style="display:none;">
-          Этот пользователь заблокирован — отправка сообщений отключена.
-        </div>
+<div class="notice" id="blockedNotice" style="display:none;" data-i18n="page.blockedNotice"></div>
 
         <div class="composer" id="composer">
           <input type="file" id="filePicker" accept="image/*" style="display:none;" />
-          <button class="mini-btn" id="attachBtn" title="Прикрепить">＋</button>
+          <button class="mini-btn" id="attachBtn" data-i18n-title="page.chat.attach">＋</button>
           <input type="text" id="msgInput" data-i18n-placeholder="page.writeMessage" />
-          <button class="send-btn" id="sendBtn" aria-label="Отправить">
+          <button class="send-btn" id="sendBtn" data-i18n-aria-label="page.chat.send">
   <svg width="20" height="20" viewBox="0 0 24 24">
     <path fill="white" d="M2 21L23 12L2 3L2 10L17 12L2 14Z"/>
   </svg>
@@ -1290,6 +1288,41 @@ const CHAT_VIEW_KEY = IS_OFFICIAL_SCOPE
   ? "tp_official_chat_view"
   : "tp_chat_view";
 
+const CHAT_BACK_KEY = "tp_chat_back";
+
+function getChatBackState(){
+  try{
+    const raw = sessionStorage.getItem(CHAT_BACK_KEY);
+    if(!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    if(!parsed || typeof parsed !== "object") return null;
+
+    return {
+      type: String(parsed.type || "").trim(),
+      offerId: String(parsed.offerId || "").trim(),
+      chatId: String(parsed.chatId || "").trim(),
+      ts: Number(parsed.ts || 0)
+    };
+  }catch{
+    return null;
+  }
+}
+
+function clearChatBackState(){
+  sessionStorage.removeItem(CHAT_BACK_KEY);
+}
+
+function cameFromOfferReferrer(){
+  try{
+    if(!document.referrer) return false;
+    const ref = new URL(document.referrer);
+    return ref.origin === window.location.origin && ref.pathname.endsWith("/offer.html");
+  }catch{
+    return false;
+  }
+}
+
 function withScope(url){
   if (!IS_OFFICIAL_SCOPE) return url;
   return url + (url.includes("?") ? "&" : "?") + "scope=official";
@@ -1307,6 +1340,31 @@ let currentUser = {
   email: "",
   role: "user"
 };
+
+function getCurrentLang(){
+  const lang =
+    window.tpI18n?.currentLang ||
+    localStorage.getItem("tp_lang") ||
+    "ru";
+
+  const safeLang = String(lang).trim().toLowerCase();
+  return ["ru", "uk", "en"].includes(safeLang) ? safeLang : "ru";
+}
+
+function getCurrentLocale(){
+  const lang = getCurrentLang();
+  if(lang === "uk") return "uk-UA";
+  if(lang === "en") return "en-US";
+  return "ru-RU";
+}
+
+function pageT(key, params = {}){
+  return window.tpI18n?.t(`page.${key}`, params) || key;
+}
+
+function commonT(key, params = {}){
+  return window.tpI18n?.t(`common.${key}`, params) || key;
+}
 
 async function loadMe(){
   const res = await fetch("/auth/me",{
@@ -1343,7 +1401,7 @@ const scopeExitBtn = document.getElementById("scopeExitBtn");
 
 if (IS_OFFICIAL_SCOPE) {
   if (chatsTitleEl) {
-    chatsTitleEl.textContent = "Официальные чаты";
+    chatsTitleEl.textContent = pageT("officialTitle");
   }
 
   if (scopeExitBtn) {
@@ -1356,20 +1414,21 @@ scopeExitBtn?.addEventListener("click", () => {
 });
 
 function getLastSeenText(lastSeen){
-  if(!lastSeen) return "Не в сети";
+  if(!lastSeen) return pageT("chat.offline");
 
   const diff = Date.now() - lastSeen;
   const minutes = Math.floor(diff / 60000);
 
-  if(minutes < 1) return "Только что";
-  if(minutes < 60) return `Был(а) ${minutes} мин назад`;
+  if(minutes < 1) return pageT("chat.justNow");
+  if(minutes < 60) return pageT("chat.minutesAgo", { count: minutes });
 
   const hours = Math.floor(minutes / 60);
-  if(hours < 24) return `Был(а) ${hours} ч назад`;
+  if(hours < 24) return pageT("chat.hoursAgo", { count: hours });
 
   const days = Math.floor(hours / 24);
-  return `Был(а) ${days} д назад`;
+  return pageT("chat.daysAgo", { count: days });
 }
+
 const DEFAULT_AVATAR = "/img/avatar-default.svg";
 const PUBLIC_PROFILE_BASE = "/profile.html?id=";
 
@@ -1515,8 +1574,8 @@ function updateChatNotifyButton(){
   const muted = isChatMuted(activeChatId);
 
   btn.classList.toggle("is-muted", muted);
-  btn.title = muted ? "Включить уведомления" : "Выключить уведомления";
-  btn.setAttribute("aria-label", muted ? "Включить уведомления" : "Выключить уведомления");
+btn.title = muted ? pageT("chat.unmute") : pageT("chat.mute");
+btn.setAttribute("aria-label", muted ? pageT("chat.unmute") : pageT("chat.mute"));
 }
 
 const filePicker = document.getElementById("filePicker");
@@ -1551,10 +1610,10 @@ filePicker.addEventListener("change", async (e) => {
   const data = await res.json();
 
 if (!data.success) {
-  await tpAlert(data.message || "Не удалось отправить файл", {
-    type: "error",
-    title: "Ошибка"
-  });
+await tpAlert(data.message || pageT("alerts.fileSendError"), {
+  type: "error",
+  title: pageT("alerts.errorTitle")
+});
   filePicker.value = "";
   return;
 }
@@ -1632,7 +1691,7 @@ function renderChatList(){
 
   chats.forEach(c => {
     const user = c.otherUser;
-    const username = user?.username || "Пользователь";
+    const username = user?.username || pageT("chat.userFallback");
     const userRole = user?.role || "user";
 
     const avatar =
@@ -1640,7 +1699,7 @@ function renderChatList(){
       user?.avatarDataUrl ||
       DEFAULT_AVATAR;
 
-    let lastText = "Нет сообщений";
+    let lastText = pageT("chat.noMessagesPreview");
 
     if (c.lastMessage) {
       if (window.tpChatSystem?.isSystemMessage?.(c.lastMessage)) {
@@ -1651,7 +1710,7 @@ function renderChatList(){
             ? c.lastMessage.text.slice(0, 40) + "..."
             : c.lastMessage.text;
       } else if (c.lastMessage.media?.length) {
-        lastText = "📷 Фото";
+        lastText = pageT("chat.photo");
       }
     }
 
@@ -1671,7 +1730,7 @@ function renderChatList(){
       (c.id === activeChatId ? " active" : "") +
       (hasUnread ? " has-unread" : "");
 
-    div.onclick = () => openChat(c.id);
+    div.onclick = () => openChat(c.id, { source: "list" });
 
     const safeLastText = escapeHtml(lastText);
 
@@ -1705,18 +1764,24 @@ function renderChatList(){
 
 /* ===== OPEN CHAT ===== */
 async function openChat(id, options = {}){
-  const { silent = false } = options;
+  const {
+    silent = false,
+    source = "unknown"
+  } = options;
 
   const chat = await ensureChatInState(id);
 
   if(!chat){
     if (!silent) {
-      await tpAlert("Чат не найден или нет доступа", {
-        type: "error",
-        title: "Ошибка"
-      });
+await tpAlert(pageT("alerts.chatNotFound"), {
+  type: "error",
+  title: pageT("alerts.errorTitle")
+});
     }
     return false;
+  }
+    if (source === "list") {
+    clearChatBackState();
   }
 
   document.getElementById("rightPanel").style.display = "flex";
@@ -1767,9 +1832,9 @@ async function openChat(id, options = {}){
 
     if (msgInput) {
       msgInput.value = "";
-      msgInput.placeholder = canWriteOfficial
-        ? "Напишите официальное сообщение"
-        : "Официальный чат доступен только для чтения";
+msgInput.placeholder = canWriteOfficial
+  ? pageT("chat.officialWritePlaceholder")
+  : pageT("chat.officialReadOnlyPlaceholder");
     }
   } else {
     chatActions.style.display = "flex";
@@ -1811,20 +1876,20 @@ async function openChat(id, options = {}){
 
     ava.innerHTML = `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;">`;
 
-    window.tpBadges.applyNameWithBadge(
-      document.getElementById("activeName"),
-      user.username || "Пользователь",
-      user.role || "user"
-    );
+window.tpBadges.applyNameWithBadge(
+  document.getElementById("activeName"),
+  user.username || pageT("chat.userFallback"),
+  user.role || "user"
+);
 
-    if (isOfficialChat && user?.email === "__official__@typlace.local") {
-      document.getElementById("activeSub").textContent = "Официальный аккаунт";
-    } else if (isOfficialChat) {
-      document.getElementById("activeSub").textContent = "";
-    } else {
-      document.getElementById("activeSub").textContent =
-        user.online ? "В сети" : getLastSeenText(user.lastSeen);
-    }
+if (isOfficialChat && user?.email === "__official__@typlace.local") {
+  document.getElementById("activeSub").textContent = pageT("chat.officialAccount");
+} else if (isOfficialChat) {
+  document.getElementById("activeSub").textContent = "";
+} else {
+  document.getElementById("activeSub").textContent =
+    user.online ? pageT("chat.online") : getLastSeenText(user.lastSeen);
+}
 
     updateActiveProfileLink(user);
   } else {
@@ -1911,33 +1976,30 @@ async function openChat(id, options = {}){
 }
 
 function formatDateDivider(date){
-
   const today = new Date();
   const d = new Date(date);
 
-  const isToday =
-    d.toDateString() === today.toDateString();
+  const isToday = d.toDateString() === today.toDateString();
 
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
 
-  const isYesterday =
-    d.toDateString() === yesterday.toDateString();
+  const isYesterday = d.toDateString() === yesterday.toDateString();
 
-  if(isToday) return "Сегодня";
-  if(isYesterday) return "Вчера";
+  if(isToday) return pageT("chat.today");
+  if(isYesterday) return pageT("chat.yesterday");
 
-  const options = { day:'numeric', month:'long' };
+  const options = { day: "numeric", month: "long" };
 
   if(d.getFullYear() !== today.getFullYear()){
-    options.year = 'numeric';
+    options.year = "numeric";
   }
 
-  return d.toLocaleDateString("ru-RU", options);
+  return d.toLocaleDateString(getCurrentLocale(), options);
 }
 
 function formatMessageTime(createdAt){
-  return new Date(createdAt).toLocaleTimeString("ru-RU", {
+  return new Date(createdAt).toLocaleTimeString(getCurrentLocale(), {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false
@@ -1998,7 +2060,7 @@ function getResolutionName(m){
 function getResolutionLabel(){
   return window.tpBadges?.getTranslatedLabel
     ? window.tpBadges.getTranslatedLabel("resolution")
-    : "Арбитраж";
+    : commonT("badges.resolution");
 }
 
 function renderResolutionMessageItem(m){
@@ -2178,10 +2240,10 @@ document.getElementById("sendBtn").onclick = async ()=>{
   const data = await res.json().catch(() => ({}));
 
   if(!data.success){
-    await tpAlert(data.message || "Не удалось отправить сообщение", {
-      type: "error",
-      title: "Ошибка"
-    });
+await tpAlert(data.message || pageT("alerts.sendMessageError"), {
+  type: "error",
+  title: pageT("alerts.errorTitle")
+});
     return;
   }
 
@@ -2238,23 +2300,41 @@ const savedChatExists =
   Boolean(savedChatId) &&
   chats.some(c => c.id === savedChatId);
 
-// если в localStorage лежит битый чат — чистим
 if (savedChatId && !savedChatExists) {
   localStorage.removeItem(CHAT_ID_KEY);
   localStorage.setItem(CHAT_VIEW_KEY, "list");
 }
 
+const chatBackState = !IS_OFFICIAL_SCOPE ? getChatBackState() : null;
+
+const pendingOfferChatId =
+  !IS_OFFICIAL_SCOPE &&
+  cameFromOfferReferrer() &&
+  chatBackState?.type === "offer" &&
+  chatBackState?.offerId &&
+  chatBackState?.chatId
+    ? chatBackState.chatId
+    : "";
+
 let startupChatId = "";
+let startupSource = "unknown";
 
 // если чат передан явно через ?id=..., открываем его всегда
 if (directChatIdFromUrl) {
   startupChatId = directChatIdFromUrl;
+  startupSource = "url";
 }
-// если это десктоп — при входе в чаты сразу открываем официальный чат
+// если пришли прямо с offer.html — сразу открываем нужный чат
+else if (pendingOfferChatId) {
+  startupChatId = pendingOfferChatId;
+  startupSource = "offer";
+}
+// если это десктоп — при входе в чаты сразу открываем стартовый чат
 else if (!IS_MOBILE_CHAT_LAYOUT) {
   startupChatId = getPreferredStartupChatId();
+  startupSource = "desktop";
 }
-// если это телефон — всегда остаёмся на списке чатов
+// если это телефон — остаёмся на списке
 else {
   localStorage.setItem(CHAT_VIEW_KEY, "list");
 }
@@ -2263,7 +2343,8 @@ if (startupChatId) {
   document.body.classList.add("tp-restoring-chat");
 
   await openChat(startupChatId, {
-    silent: !directChatIdFromUrl
+    silent: startupSource !== "url",
+    source: startupSource
   });
 
   if (directChatIdFromUrl) {
@@ -2297,10 +2378,10 @@ async function buyOffer(offerId){
   const data = await res.json();
 
 if(!data.success){
-  await tpAlert(data.message || "Не удалось создать заказ", {
-    type: "error",
-    title: "Ошибка"
-  });
+await tpAlert(data.message || pageT("alerts.orderCreateError"), {
+  type: "error",
+  title: pageT("alerts.errorTitle")
+});
   return;
 }
 
@@ -2322,11 +2403,13 @@ chatNotifyBtn?.addEventListener("click", () => {
   void chatNotifyBtn.offsetWidth;
   chatNotifyBtn.classList.add("tp-bell-pop");
 
-  tpToast(
-    isChatMuted(activeChatId) ? "Уведомления выключены" : "Уведомления включены",
-    "info",
-    { duration: 1800 }
-  );
+tpToast(
+  isChatMuted(activeChatId)
+    ? pageT("toasts.notificationsOff")
+    : pageT("toasts.notificationsOn"),
+  "info",
+  { duration: 1800 }
+);
 });
 
 menuBtn.onclick = () => {
@@ -2342,10 +2425,10 @@ document.addEventListener("click", (e) => {
 });
 
 document.getElementById("btnDelete").onclick = async () => {
-  const confirmed = await tpConfirm("Удалить чат?", {
-  title: "Подтверждение",
-  confirmText: "Удалить",
-  cancelText: "Отмена",
+const confirmed = await tpConfirm(pageT("deleteConfirm.text"), {
+  title: pageT("alerts.confirmTitle"),
+  confirmText: pageT("deleteConfirm.confirm"),
+  cancelText: pageT("deleteConfirm.cancel"),
   dangerConfirm: true
 });
 
@@ -2359,10 +2442,10 @@ if(!confirmed) return;
   const data = await res.json().catch(() => ({}));
 
 if(!data.success){
-  await tpAlert(data.message || "Не удалось удалить чат", {
-    type: "error",
-    title: "Ошибка"
-  });
+await tpAlert(data.message || pageT("alerts.deleteChatError"), {
+  type: "error",
+  title: pageT("alerts.errorTitle")
+});
   return;
 }
 
@@ -2370,6 +2453,7 @@ activeChatId = null;
 window.tpActiveChatId = null;
 localStorage.removeItem(CHAT_ID_KEY);
 localStorage.setItem(CHAT_VIEW_KEY, "list");
+clearChatBackState();
 
 document.body.classList.remove("tp-chat-open");
 document.getElementById("chatActions").style.display = "none";
@@ -2409,18 +2493,20 @@ if(!data.success) return;
 chat.blockedByMe = Boolean(data.blocked);
 
 if(data.blocked){
-  document.getElementById("btnBlock").textContent = "Разблокировать";
+  document.getElementById("btnBlock").textContent = pageT("unblock");
   document.getElementById("composer").style.display = "none";
   document.getElementById("blockedNotice").style.display = "block";
 } else {
-  document.getElementById("btnBlock").textContent = "Заблокировать";
+  document.getElementById("btnBlock").textContent = pageT("block");
   document.getElementById("composer").style.display = "flex";
   document.getElementById("blockedNotice").style.display = "none";
 }
 
 renderChatList();
 tpToast(
-  data.blocked ? "Пользователь заблокирован" : "Пользователь разблокирован",
+  data.blocked
+    ? pageT("toasts.userBlocked")
+    : pageT("toasts.userUnblocked"),
   "success"
 );
 
@@ -2504,8 +2590,39 @@ fetch(withScope(`/api/chats/${activeChatId}/read`), {
 const backBtn = document.getElementById("backBtn");
 
 backBtn?.addEventListener("click", () => {
+  const backState = !IS_OFFICIAL_SCOPE ? getChatBackState() : null;
+
+  const shouldReturnToOffer =
+    !IS_OFFICIAL_SCOPE &&
+    backState?.type === "offer" &&
+    backState?.offerId &&
+    backState?.chatId &&
+    activeChatId === backState.chatId;
+
+  if (shouldReturnToOffer) {
+    clearChatBackState();
+    localStorage.setItem(CHAT_VIEW_KEY, "list");
+    location.href = "/offer.html?id=" + encodeURIComponent(backState.offerId);
+    return;
+  }
+
   document.body.classList.remove("tp-chat-open");
   localStorage.setItem(CHAT_VIEW_KEY, "list");
+});
+
+window.addEventListener("tp:lang-change", async () => {
+  if (IS_OFFICIAL_SCOPE && chatsTitleEl) {
+    chatsTitleEl.textContent = pageT("officialTitle");
+  }
+
+  updateChatNotifyButton();
+  await loadChats();
+
+  if (activeChatId) {
+    await openChat(activeChatId, { silent: true });
+  } else {
+    window.tpI18n?.apply?.(document.body);
+  }
 });
 
 })();

@@ -1,0 +1,19 @@
+{
+  "title": "Продажи",
+  "empty": "Продаж пока нет",
+  "orderNumber": "Заказ {{number}}",
+  "filters": {
+    "all": "Статус",
+    "pending": "В процессе",
+    "completed": "Завершено",
+    "refunded": "Возврат"
+  },
+  "statuses": {
+    "pending": "В процессе",
+    "completed": "Завершено",
+    "refunded": "Возврат"
+  },
+  "alerts": {
+    "loadError": "Ошибка загрузки"
+  }
+}

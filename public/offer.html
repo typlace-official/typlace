@@ -13,7 +13,7 @@
 <style>
 html,
 body{
-  height:100%;
+  min-height:100%;
 }
 
 body{
@@ -22,31 +22,35 @@ body{
   flex-direction:column;
   font-family:Inter, Arial, sans-serif;
   background:#f6f7f9;
-  color:#111;
+  color:#111827;
 }
 
 .page-content{
-  flex:1;
+  flex:1 0 auto;
 }
 
 .page{
   max-width:1200px;
   margin:24px auto;
   padding:0 16px;
+  box-sizing:border-box;
 }
 
 .offer-page-card{
   max-width:800px;
   margin:0 auto;
   background:#fff;
-  border-radius:16px;
+  border-radius:20px;
   box-shadow:0 8px 30px rgba(0,0,0,.08);
-  padding:20px;
+  padding:20px 20px 28px;
+  box-sizing:border-box;
 }
 
 /* ===== GALLERY ===== */
 .tp-gallery{
   position:relative;
+  border-radius:18px;
+  overflow:hidden;
 }
 
 .offer-amount-badge{
@@ -67,12 +71,13 @@ body{
   top:12px;
   left:12px;
   z-index:20;
-  width:40px;
-  height:40px;
+  width:42px;
+  height:42px;
   border:none;
   border-radius:50%;
   background:rgba(0,0,0,.55);
   backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
   display:flex;
   align-items:center;
   justify-content:center;
@@ -84,14 +89,38 @@ body{
   height:20px;
   stroke:#fff;
   stroke-width:2.6;
+  stroke-linecap:round;
+  stroke-linejoin:round;
   fill:none;
+  display:block;
 }
 
-/* ===== TITLE / ID / FAVORITE ===== */
+/* ===== HEAD ===== */
+.offer-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-top:18px;
+}
+
+.offer-head-main{
+  flex:1;
+  min-width:0;
+}
+
+.offer-head-tools{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-shrink:0;
+  padding-top:2px;
+}
+
 .title{
   font-size:22px;
-  font-weight:600;
-  line-height:1.35;
+  font-weight:700;
+  line-height:1.3;
   color:#111827;
   display:-webkit-box;
   -webkit-line-clamp:2;
@@ -102,7 +131,7 @@ body{
 }
 
 .offer-public-id{
-  margin-top:6px;
+  margin-top:8px;
   display:inline-block;
   font-size:13px;
   font-weight:700;
@@ -120,24 +149,63 @@ body{
   color:#16a34a;
 }
 
+.offer-icon-btn,
 .offer-page-heart{
-  width:44px;
-  height:44px;
-  flex-shrink:0;
+  width:46px;
+  height:46px;
   border-radius:50%;
-  background:#fff;
   border:1px solid #e5e7eb;
+  background:#fff;
   display:flex;
   align-items:center;
   justify-content:center;
+  padding:0;
+  cursor:pointer;
+  box-sizing:border-box;
+  transition:background .15s ease, border-color .15s ease, transform .15s ease;
 }
 
-.offer-page-heart svg{
+.offer-icon-btn:hover,
+.offer-page-heart:hover{
+  background:#f9fafb;
+  border-color:#d1d5db;
+}
+
+.offer-icon-btn:active,
+.offer-page-heart:active{
+  transform:scale(.97);
+}
+
+.offer-icon-btn{
+  color:#6b7280;
+}
+
+.offer-page-heart{
+  color:#6b7280;
+}
+
+.offer-icon-btn svg,
+.offer-page-heart svg,
+.offer-chat-fab svg{
   width:22px;
   height:22px;
+  display:block;
   fill:none;
-  stroke:#6b7280;
+  stroke:currentColor;
   stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  vector-effect:non-scaling-stroke;
+}
+
+.offer-icon-btn.is-success{
+  color:#1d4ed8;
+  border-color:#bfdbfe;
+  background:#eff6ff;
+}
+
+.offer-page-heart.active{
+  color:#ef4444;
 }
 
 .offer-page-heart.active svg{
@@ -148,22 +216,25 @@ body{
 .offer-page-price{
   font-size:28px;
   font-weight:900;
-  margin:8px 0 12px;
+  margin:14px 0 18px;
+  color:#111827;
 }
 
 /* ===== ACTION BUTTONS ===== */
 #actionButtons{
   display:flex;
   gap:10px;
-  margin-top:28px;
+  margin-top:0;
+  margin-bottom:22px;
 }
 
 .buybtn{
-  flex:1;
-  height:48px;
-  border-radius:12px;
-  font-size:15px;
-  font-weight:600;
+  width:100%;
+  max-width:none;
+  height:54px;
+  border-radius:16px;
+  font-size:16px;
+  font-weight:700;
   cursor:pointer;
   transition:none;
 }
@@ -180,73 +251,30 @@ body{
   border:1.5px solid #2F5BEA;
 }
 
-/* ===== SHARE / REPORT ===== */
-.offer-tools{
-  display:flex;
-  gap:10px;
-  margin-top:12px;
-  margin-bottom:18px;
-}
-
-.offer-tool-btn{
-  flex:1;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  height:46px;
-  border-radius:14px;
-  border:1px solid #e5e7eb;
-  background:#fff;
-  color:#4b5563;
-  font-size:14px;
-  font-weight:600;
-  cursor:pointer;
-  transition:background .15s ease, border-color .15s ease, color .15s ease;
-}
-
-.offer-tool-btn:hover{
-  background:#f9fafb;
-  border-color:#d1d5db;
-}
-
-.offer-tool-btn svg{
-  width:18px;
-  height:18px;
-  stroke:currentColor;
-  fill:none;
-  stroke-width:2;
-  flex-shrink:0;
-}
-
-.offer-tool-btn.is-success{
-  color:#16a34a;
-  border-color:#bbf7d0;
-  background:#f0fdf4;
-}
-
 /* ===== SELLER ===== */
 .section{
-  margin-top:16px;
+  margin-top:24px;
 }
 
 .section-title{
-  font-size:14px;
+  font-size:13px;
   font-weight:800;
-  margin-bottom:6px;
-  color:#111;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:#9ca3af;
+  margin-bottom:12px;
 }
 
 .sellerTop{
   display:flex;
-  gap:12px;
+  gap:14px;
   align-items:center;
-  margin-bottom:6px;
+  margin-bottom:0;
 }
 
 .offer-page-avatar{
-  width:56px;
-  height:56px;
+  width:58px;
+  height:58px;
   position:relative;
   flex-shrink:0;
   overflow:visible;
@@ -284,23 +312,28 @@ body{
 .offer-page-card .seller-info{
   display:flex;
   flex-direction:column;
-  gap:3px;
+  gap:4px;
 }
 
 .offer-page-card .seller-name{
-  font-size:16px;
+  font-size:17px;
   font-weight:700;
   color:#111827;
+  line-height:1.2;
 }
 
 .offer-page-card .seller-rating,
 .offer-page-card .seller-on-site{
-  font-size:13px;
+  font-size:14px;
   font-weight:500;
   color:#6b7280;
   line-height:1.35;
   min-height:auto;
   display:block;
+}
+
+.offer-page-card .seller-rating{
+  width:fit-content;
 }
 
 .offer-page-card .seller-last-seen{
@@ -314,16 +347,64 @@ body{
 
 /* ===== DESCRIPTION ===== */
 .desc{
-  font-size:15px;
-  line-height:1.6;
-  color:#374151;
-  margin-bottom:16px;
+  font-size:16px;
+  line-height:1.7;
+  color:#111827;
+  margin-bottom:0;
+  white-space:pre-wrap;
   display:-webkit-box;
   -webkit-line-clamp:6;
   -webkit-box-orient:vertical;
   overflow:hidden;
   word-break:break-word;
   overflow-wrap:anywhere;
+}
+
+#expandDescBtn{
+  margin-top:10px !important;
+}
+
+/* ===== FLOAT CHAT ===== */
+.offer-chat-fab[hidden]{
+  display:none !important;
+}
+
+.offer-chat-fab{
+  position:fixed;
+  right:18px;
+  bottom:calc(104px + env(safe-area-inset-bottom, 0px));
+  z-index:120;
+  width:62px;
+  height:62px;
+  border:none;
+  border-radius:50%;
+  border:3px solid rgba(255,255,255,.92);
+  background:#2F5BEA;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+  box-shadow:0 18px 36px rgba(47,91,234,.28);
+  opacity:0;
+  transform:translateY(14px) scale(.92);
+  pointer-events:none;
+  transition:opacity .28s ease, transform .28s ease, box-shadow .2s ease;
+}
+
+.offer-chat-fab.is-visible{
+  opacity:1;
+  transform:translateY(0) scale(1);
+  pointer-events:auto;
+}
+
+.offer-chat-fab svg{
+  width:25px;
+  height:25px;
+}
+
+.offer-chat-fab:active{
+  transform:translateY(0) scale(.96);
 }
 
 /* ===== MOBILE ===== */
@@ -347,7 +428,7 @@ body{
     background:transparent;
     border-radius:0;
     box-shadow:none;
-    padding:0 16px 120px;
+    padding:0 16px 132px;
   }
 
   .tp-gallery{
@@ -369,18 +450,45 @@ body{
     display:none !important;
   }
 
+  .offer-head{
+    margin-top:16px;
+    gap:12px;
+  }
+
+  .offer-head-tools{
+    gap:8px;
+  }
+
+  .offer-icon-btn,
+  .offer-page-heart{
+    width:44px;
+    height:44px;
+  }
+
   .title{
     font-size:20px;
   }
 
   .offer-page-price{
     font-size:26px;
-    margin-top:12px;
+    margin:12px 0 16px;
+  }
+
+  #actionButtons{
+    margin-bottom:24px;
+  }
+
+  .buybtn{
+    height:54px;
+  }
+
+  .section{
+    margin-top:22px;
   }
 
   .offer-page-avatar{
-    width:48px;
-    height:48px;
+    width:52px;
+    height:52px;
   }
 
   .seller-status-dot{
@@ -390,16 +498,11 @@ body{
     bottom:-2px;
   }
 
-  .offer-tools{
-    gap:10px;
-    margin-top:12px;
-    margin-bottom:16px;
-  }
-
-  .offer-tool-btn{
-    height:44px;
-    font-size:13px;
-    border-radius:12px;
+  .offer-chat-fab{
+    right:16px;
+    bottom:calc(108px + env(safe-area-inset-bottom, 0px));
+    width:60px;
+    height:60px;
   }
 }
 
@@ -408,10 +511,159 @@ body{
     padding-top:0 !important;
   }
 }
+
 html:not(.i18n-ready) body{
   visibility:hidden;
 }
+.offer-chat-fab[hidden]{
+  display:none !important;
+}
+
+.offer-chat-fab{
+  position:fixed;
+  right:18px;
+  bottom:calc(104px + env(safe-area-inset-bottom, 0px));
+  z-index:120;
+  width:62px;
+  height:62px;
+  border:none;
+  border-radius:50%;
+  border:3px solid rgba(255,255,255,.92);
+  background:#2F5BEA;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+  box-shadow:0 18px 36px rgba(47,91,234,.28);
+
+  opacity:0;
+  transform:translateY(18px) scale(.9);
+  pointer-events:none;
+  transition:
+    opacity .34s ease,
+    transform .34s ease,
+    box-shadow .2s ease;
+}
+
+.offer-chat-fab.is-visible{
+  opacity:1;
+  transform:translateY(0) scale(1);
+  pointer-events:auto;
+}
+
+.offer-chat-fab svg{
+  width:25px;
+  height:25px;
+  display:block;
+  fill:none;
+  stroke:#fff;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+.offer-chat-fab:active{
+  transform:translateY(0) scale(.96);
+}
+
+@media (max-width:768px){
+  .offer-chat-fab{
+    right:16px;
+    bottom:calc(108px + env(safe-area-inset-bottom, 0px));
+    width:60px;
+    height:60px;
+  }
+}
+/* ===== OFFER FINAL POLISH ===== */
+
+.offer-head{
+  padding-bottom:18px;
+  border-bottom:1px solid #eceff3;
+}
+
+.offer-main-meta{
+  padding-bottom:22px;
+  border-bottom:1px solid #eceff3;
+}
+
+.offer-seller-section{
+  padding-top:20px;
+  padding-bottom:20px;
+  border-bottom:1px solid #eceff3;
+}
+
+.offer-desc-section{
+  padding-top:20px;
+}
+
+.offer-public-id{
+  margin-top:10px;
+  display:inline-flex;
+  align-items:center;
+  min-height:20px;
+  font-size:13px;
+  font-weight:700;
+  color:#9ca3af;
+  cursor:pointer;
+  user-select:none;
+  transition:color .18s ease;
+}
+
+.offer-public-id:hover{
+  color:#6b7280;
+}
+
+.offer-public-id.copied{
+  color:#16a34a;
+}
+
+.offer-page-price{
+  margin:16px 0 20px;
+}
+
+.section-title{
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:#b0b7c3;
+  margin-bottom:14px;
+}
+
+.desc{
+  font-size:16px;
+  line-height:1.72;
+  font-weight:400;
+  color:#374151;
+  white-space:pre-wrap;
+}
+
+@media (max-width:768px){
+  .offer-head{
+    padding-bottom:16px;
+  }
+
+  .offer-main-meta{
+    padding-bottom:20px;
+  }
+
+  .offer-seller-section{
+    padding-top:18px;
+    padding-bottom:18px;
+  }
+
+  .offer-desc-section{
+    padding-top:18px;
+  }
+
+  .desc{
+    font-size:15px;
+    line-height:1.7;
+  }
+}
 </style>
+
 <script>
 function markPageReady() {
   document.documentElement.classList.add("i18n-ready");
@@ -425,91 +677,80 @@ function markPageReady() {
 
 <main class="page-content">
   <div class="page">
-
-    <!-- OFFER -->
     <div class="offer-page-card">
 
-      <!-- ГАЛЕРЕЯ -->
-<div class="tp-gallery" id="gallery">
+      <div class="tp-gallery" id="gallery">
+        <button class="gallery-back-btn" onclick="history.back()" data-i18n-aria-label="page.common.back">
+          <svg viewBox="0 0 24 24">
+            <path d="M15 6L9 12L15 18"/>
+          </svg>
+        </button>
 
-  <button class="gallery-back-btn" onclick="history.back()" data-i18n-aria-label="page.common.back">
-    <svg viewBox="0 0 24 24">
-      <path d="M15 6L9 12L15 18"/>
-    </svg>
-  </button>
+        <div class="offer-amount-badge" id="amountBadge" style="display:none;"></div>
 
-  <div class="offer-amount-badge" id="amountBadge" style="display:none;"></div>
+        <button class="tp-gallery__arrow tp-gallery__arrow--left" id="galPrev">‹</button>
+        <div class="tp-gallery__track" id="galTrack"></div>
+        <button class="tp-gallery__arrow tp-gallery__arrow--right" id="galNext">›</button>
+        <div class="tp-gallery__dots" id="galDots"></div>
+        <div class="tp-gallery__counter" id="galleryCounter"></div>
+      </div>
 
-  <button class="tp-gallery__arrow tp-gallery__arrow--left" id="galPrev">‹</button>
-
-  <div class="tp-gallery__track" id="galTrack"></div>
-
-  <button class="tp-gallery__arrow tp-gallery__arrow--right" id="galNext">›</button>
-
-  <div class="tp-gallery__dots" id="galDots"></div>
-
-  <!-- NEW -->
-  <div class="tp-gallery__counter" id="galleryCounter"></div>
-
-</div>
-
-      <!-- ЗАГОЛОВОК -->
-      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:24px; margin-top:16px;">
-        <div style="flex:1;">
+      <div class="offer-head">
+        <div class="offer-head-main">
           <div class="title" id="title" data-i18n="page.loading"></div>
           <div class="offer-public-id" id="offerPublicId" data-i18n-title="page.copyOfferId"></div>
         </div>
 
-        <div id="favoriteBtn" class="offer-page-heart">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 21s-7-4.35-10-8.5C-1.5 7.5 3 3 7.5 6.5
-                     9.5 8 12 10.5 12 10.5S14.5 8 16.5 6.5
-                     C21 3 25.5 7.5 22 12.5
-                     19 16.65 12 21 12 21z"/>
-          </svg>
+        <div class="offer-head-tools">
+          <button type="button" class="offer-icon-btn" id="shareOfferBtn" data-i18n-aria-label="page.tools.share">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="18" cy="5.5" r="2.2"></circle>
+              <circle cx="6" cy="12" r="2.2"></circle>
+              <circle cx="18" cy="18.5" r="2.2"></circle>
+              <path d="M8 11l7.5-4.2"></path>
+              <path d="M8 13l7.5 4.2"></path>
+            </svg>
+          </button>
+
+          <button type="button" class="offer-icon-btn" id="reportOfferBtn" data-i18n-aria-label="page.tools.report">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 8.75v4.5"></path>
+              <path d="M12 17h.01"></path>
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            </svg>
+          </button>
+
+          <button type="button" id="favoriteBtn" class="offer-page-heart" data-i18n-aria-label="common.favorites">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 21s-7-4.35-10-8.5C-1.5 7.5 3 3 7.5 6.5
+                       9.5 8 12 10.5 12 10.5S14.5 8 16.5 6.5
+                       C21 3 25.5 7.5 22 12.5
+                       19 16.65 12 21 12 21z"/>
+            </svg>
+          </button>
         </div>
       </div>
 
-<button id="expandTitleBtn"
-  data-i18n="page.expand.showFull"
-  style="display:none;background:none;border:none;color:#1E50D4;font-weight:600;padding:0;margin-top:4px;cursor:pointer;"></button>
+      <button
+        id="expandTitleBtn"
+        data-i18n="page.expand.showFull"
+        style="display:none;background:none;border:none;color:#1E50D4;font-weight:600;padding:0;margin-top:4px;cursor:pointer;"
+      ></button>
 
-      <div class="offer-page-price" id="price" data-price=""></div>
+<div class="offer-main-meta">
+  <div class="offer-page-price" id="price" data-price=""></div>
 
-<div id="actionButtons">
-<button class="buybtn buy-primary" id="buyBtn" data-i18n="page.buttons.buy"></button>
-<button class="buybtn buy-secondary"
-        onclick="openChatWithSeller(offerId)"
-        data-i18n="page.buttons.writeSeller"></button>
+  <div id="actionButtons">
+    <button class="buybtn buy-primary" id="buyBtn" data-i18n="page.buttons.buy"></button>
+  </div>
 </div>
-<div class="offer-tools">
-  <button type="button" class="offer-tool-btn" id="shareOfferBtn">
-    <svg viewBox="0 0 24 24">
-      <path d="M8 12L16 7"></path>
-      <path d="M8 12L16 17"></path>
-      <circle cx="6" cy="12" r="2"></circle>
-      <circle cx="18" cy="6" r="2"></circle>
-      <circle cx="18" cy="18" r="2"></circle>
-    </svg>
-    <span id="shareOfferBtnText" data-i18n="page.tools.share"></span>
-  </button>
 
-  <button type="button" class="offer-tool-btn" id="reportOfferBtn">
-    <svg viewBox="0 0 24 24">
-      <path d="M12 9v4"></path>
-      <path d="M12 17h.01"></path>
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-    </svg>
-    <span id="reportOfferBtnText" data-i18n="page.tools.report"></span>
-  </button>
-</div>
-      <!-- ПРОДАВЕЦ -->
-      <div class="section">
-        <div class="sellerTop">
+<div class="section offer-seller-section">
+  <div class="sellerTop">
           <div class="offer-page-avatar">
-  <img id="sellerAvatar" src="/img/avatar-default.svg">
-  <span id="sellerStatusDot" class="seller-status-dot"></span>
-</div>
+            <img id="sellerAvatar" src="/img/avatar-default.svg">
+            <span id="sellerStatusDot" class="seller-status-dot"></span>
+          </div>
 
           <div class="seller-info">
             <div class="seller-name" id="sellerName">—</div>
@@ -519,18 +760,32 @@ function markPageReady() {
         </div>
       </div>
 
-      <!-- ОПИСАНИЕ -->
-      <div class="section" id="descSection">
-        <div class="section-title" data-i18n="page.sections.description"></div>
-        <div class="desc" id="desc"></div>
-<button id="expandDescBtn"
-  data-i18n="page.expand.showFull"
-  style="display:none;background:none;border:none;color:#1E50D4;font-weight:600;padding:0;margin-top:6px;cursor:pointer;"></button>
-      </div>
+<div class="section offer-desc-section" id="descSection">
+  <div class="section-title" data-i18n="page.sections.description"></div>
+  <div class="desc" id="desc"></div>
+  <button
+    id="expandDescBtn"
+    data-i18n="page.expand.showFull"
+    style="display:none;background:none;border:none;color:#1E50D4;font-weight:600;padding:0;margin-top:6px;cursor:pointer;"
+  ></button>
+</div>
 
     </div>
   </div>
 </main>
+
+<button
+  type="button"
+  class="offer-chat-fab"
+  id="chatFab"
+  onclick="openChatWithSeller(offerId)"
+  data-i18n-aria-label="page.buttons.writeSeller"
+  hidden
+>
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M21 11.5c0 4.418-4.03 8-9 8a9.9 9.9 0 0 1-3.88-.77L3 20l1.2-3.15A7.65 7.65 0 0 1 3 11.5c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+  </svg>
+</button>
 
 <div id="footer-container"></div>
 
@@ -562,6 +817,11 @@ function pageT(key, params = {}){
   return tr && tr !== fullKey ? tr : key;
 }
 
+function goToSellerReviews(userId){
+  const safeUserId = String(userId || "").trim();
+  if (!safeUserId) return;
+  location.href = `/reviews.html?id=${encodeURIComponent(safeUserId)}`;
+}
 </script>
 
 <script>
@@ -578,11 +838,13 @@ const sellerRatingEl = document.getElementById("sellerRating");
 const sellerOnSiteEl = document.getElementById("sellerOnSite");
 const shareOfferBtn = document.getElementById("shareOfferBtn");
 const reportOfferBtn = document.getElementById("reportOfferBtn");
-const reportOfferBtnText = document.getElementById("reportOfferBtnText");
+const chatFab = document.getElementById("chatFab");
 
 const SUPPORT_CREATE_URL = "/support-create.html";
 
 let currentOffer = null;
+let chatFabShowTimer = null;
+let chatFabHideTimer = null;
 
 if (!offerId) {
   history.back();
@@ -591,15 +853,42 @@ if (!offerId) {
 
 function renderStars(avg){
   const rounded = Math.round(avg || 0);
-
   let html = `<span style="color:#facc15;">`;
+
   for(let i = 1; i <= 5; i++){
     html += i <= rounded ? "★" : "☆";
   }
-  html += `</span>`;
 
+  html += `</span>`;
   return html;
 }
+
+function setChatFabVisible(visible){
+  if (!chatFab) return;
+
+  clearTimeout(chatFabShowTimer);
+  clearTimeout(chatFabHideTimer);
+
+  if (visible) {
+    chatFab.hidden = false;
+    chatFab.classList.remove("is-visible");
+
+    chatFabShowTimer = setTimeout(() => {
+      requestAnimationFrame(() => {
+        chatFab.classList.add("is-visible");
+      });
+    }, 260);
+
+    return;
+  }
+
+  chatFab.classList.remove("is-visible");
+
+  chatFabHideTimer = setTimeout(() => {
+    chatFab.hidden = true;
+  }, 340);
+}
+
 function renderUnavailable(message){
   const actions = document.getElementById("actionButtons");
 
@@ -616,152 +905,155 @@ function renderUnavailable(message){
       ${message}
     </div>
   `;
+
+  setChatFabVisible(false);
 }
 
-// ===== LOAD OFFER =====
 async function loadOffer(){
-const token = localStorage.getItem("tp_token");
+  const token = localStorage.getItem("tp_token");
 
-const res = await fetch(`/api/offers/${offerId}`, {
-  headers: token
-    ? { Authorization: "Bearer " + token }
-    : {}
-});
-
-const data = await res.json();
-
-if (!data.success) {
-  alert(pageT("alerts.offerNotFound"));
-  return;
-}
-
-if (data.deleted || !data.offer) {
-  renderUnavailable(pageT("status.deleted"));
-  return;
-}
-
-const o = data.offer;
-currentOffer = o;
-
-let unavailableMessage = null;
-
-if (data.deleted === true) {
-  unavailableMessage = pageT("status.deleted");
-} else if (o.status !== "active") {
-  unavailableMessage = pageT("status.sold");
-} else if (data.blockedBySeller === true) {
-  unavailableMessage = pageT("status.unavailable");
-}
-
-if (unavailableMessage) {
-  renderUnavailable(unavailableMessage);
-}
-
-if(token){
-
-  const meRes = await fetch("/auth/me",{
-    headers:{ Authorization:"Bearer " + token }
+  const res = await fetch(`/api/offers/${offerId}`, {
+    headers: token ? { Authorization: "Bearer " + token } : {}
   });
 
-  const meData = await meRes.json();
+  const data = await res.json();
 
-  const isOwner = meData.success && meData.user.userId === o.seller.userId;
-if (reportOfferBtn) {
-  reportOfferBtn.style.display = isOwner ? "none" : "";
-}
-const actions = document.getElementById("actionButtons");
-
-if(isOwner){
-
-  if(o.status === "active"){
-
-    const params = new URLSearchParams({
-      game: o.game,
-      mode: o.mode,
-      edit: o.id
-    });
-
-actions.innerHTML = `
-  <button class="buybtn"
-          style="background:#fff;color:#1E50D4;border:2px solid #1E50D4;"
-          onclick="location.href='/offer-create.html?${params.toString()}'">
-    ${pageT("buttons.edit")}
-  </button>
-`;
-
-  } else {
-    renderUnavailable(pageT("status.sold"));
+  if (!data.success) {
+    alert(pageT("alerts.offerNotFound"));
+    return;
   }
 
-} else {
-
-  // 👇 ДЛЯ ОБЫЧНОГО ПОЛЬЗОВАТЕЛЯ
-  if(o.status !== "active"){
-    renderUnavailable(pageT("status.sold"));
+  if (data.deleted || !data.offer) {
+    renderUnavailable(pageT("status.deleted"));
+    return;
   }
 
-}
-}
-// === КНОПКА КУПИТЬ ===
-const buyBtn = document.getElementById("buyBtn");
+  const o = data.offer;
+  currentOffer = o;
 
-if (buyBtn) {
-  buyBtn.onclick = async () => {
+  let unavailableMessage = null;
+  let isOwner = false;
 
-    const token = localStorage.getItem("tp_token");
+  if (data.deleted === true) {
+    unavailableMessage = pageT("status.deleted");
+  } else if (o.status !== "active") {
+    unavailableMessage = pageT("status.sold");
+  } else if (data.blockedBySeller === true) {
+    unavailableMessage = pageT("status.unavailable");
+  }
 
-    if (!token) {
-      location.href = "/auth.html?mode=login";
-      return;
-    }
-
-    buyBtn.disabled = true;
-    buyBtn.textContent = pageT("buttons.creatingOrder");
-
-    const res = await fetch("/api/orders/create", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      },
-      body: JSON.stringify({ offerId })
+  if (token) {
+    const meRes = await fetch("/auth/me", {
+      headers:{ Authorization:"Bearer " + token }
     });
 
-    const data = await res.json();
+    const meData = await meRes.json();
+    isOwner = meData.success && meData.user.userId === o.seller.userId;
 
-    if (!data.success) {
-      alert(data.message || pageT("alerts.orderCreateError"));
-      buyBtn.disabled = false;
-      buyBtn.textContent = pageT("buttons.buy");
-      return;
+    if (reportOfferBtn) {
+      reportOfferBtn.style.display = isOwner ? "none" : "";
     }
 
-    location.href = "/order.html?id=" + data.order.id;
-  };
-}
+    const actions = document.getElementById("actionButtons");
+
+    if (isOwner) {
+      if (o.status === "active") {
+        const editParams = new URLSearchParams({
+          game: o.game,
+          mode: o.mode,
+          edit: o.id
+        });
+
+        actions.innerHTML = `
+          <button class="buybtn"
+                  style="background:#fff;color:#1E50D4;border:2px solid #1E50D4;"
+                  onclick="location.href='/offer-create.html?${editParams.toString()}'">
+            ${pageT("buttons.edit")}
+          </button>
+        `;
+      } else {
+        renderUnavailable(pageT("status.sold"));
+      }
+    } else {
+      if (o.status !== "active") {
+        renderUnavailable(pageT("status.sold"));
+      }
+    }
+  }
+
+  if (unavailableMessage) {
+    renderUnavailable(unavailableMessage);
+  }
+
+  setChatFabVisible(!isOwner && o.status === "active" && data.blockedBySeller !== true);
+
+  const buyBtn = document.getElementById("buyBtn");
+
+  if (buyBtn) {
+    buyBtn.onclick = async () => {
+      const token = localStorage.getItem("tp_token");
+
+      if (!token) {
+        location.href = "/auth.html?mode=login";
+        return;
+      }
+
+      buyBtn.disabled = true;
+      buyBtn.textContent = pageT("buttons.creatingOrder");
+
+      const purchaseLang = getCurrentPageLang();
+
+      const res = await fetch("/api/orders/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token,
+          "X-TP-Lang": purchaseLang
+        },
+        body: JSON.stringify({
+          offerId,
+          lang: purchaseLang
+        })
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.message || pageT("alerts.orderCreateError"));
+        buyBtn.disabled = false;
+        buyBtn.textContent = pageT("buttons.buy");
+        return;
+      }
+
+      location.href = "/order.html?id=" + data.order.id;
+    };
+  }
 
   setupFavorite(o.id);
+
   const amountBadge = document.getElementById("amountBadge");
+  const qty = o.stock ?? o.amount;
 
-const qty = o.stock ?? o.amount;
+  if (qty && Number(qty) > 1 && o.mode !== "robux") {
+    amountBadge.textContent = `×${qty}`;
+    amountBadge.style.display = "block";
+  } else {
+    amountBadge.style.display = "none";
+  }
 
-if (qty && Number(qty) > 1 && o.mode !== "robux") {
-  amountBadge.textContent = `×${qty}`;
-  amountBadge.style.display = "block";
-} else {
-  amountBadge.style.display = "none";
-}
+  titleEl.textContent = buildOfferTitle(o);
 
-titleEl.textContent = buildOfferTitle(o);
   const offerPublicId = document.getElementById("offerPublicId");
 
 if (o.offerId) {
   offerPublicId.textContent = "OID: " + o.offerId;
-offerPublicId.title = pageT("copyOfferId");
+  offerPublicId.title = pageT("copyOfferId");
+  offerPublicId.classList.remove("copied");
 
   offerPublicId.onclick = async () => {
     try {
       await navigator.clipboard.writeText(o.offerId);
+
       offerPublicId.classList.add("copied");
 
       setTimeout(() => {
@@ -771,200 +1063,196 @@ offerPublicId.title = pageT("copyOfferId");
   };
 } else {
   offerPublicId.textContent = "";
+  offerPublicId.onclick = null;
 }
+
   setupTitleExpand();
-priceEl.dataset.price = o.price;
-await updatePrice();
+  priceEl.dataset.price = o.price;
+  await updatePrice();
 
-// seller
-sellerNameEl.textContent = o.seller.username;
+  sellerNameEl.textContent = o.seller.username;
 
-// 👉 Переход в профиль по ID
-if (o.seller.userId) {
+  if (o.seller.userId) {
+    sellerNameEl.style.cursor = "pointer";
+    sellerAvatarEl.style.cursor = "pointer";
 
-sellerNameEl.style.cursor = "pointer";
-sellerAvatarEl.style.cursor = "pointer";
+    async function goToSellerProfile() {
+      const token = localStorage.getItem("tp_token");
 
-async function goToSellerProfile() {
+      if (!token) {
+        location.href = `/profile.html?id=${o.seller.userId}`;
+        return;
+      }
 
-  const token = localStorage.getItem("tp_token");
+      const meRes = await fetch("/auth/me", {
+        headers: { Authorization: "Bearer " + token }
+      });
 
-  if (!token) {
-    location.href = `/profile.html?id=${o.seller.userId}`;
-    return;
+      const meData = await meRes.json();
+
+      if (meData.success && meData.user.userId === o.seller.userId) {
+        location.href = "/profile.html";
+      } else {
+        location.href = `/profile.html?id=${o.seller.userId}`;
+      }
+    }
+
+    sellerNameEl.onclick = goToSellerProfile;
+    sellerAvatarEl.onclick = goToSellerProfile;
   }
 
-  const meRes = await fetch("/auth/me", {
-    headers: { Authorization: "Bearer " + token }
-  });
+  const count = Number(o.seller.reviewsCount || 0);
 
-  const meData = await meRes.json();
-
-  if (meData.success && meData.user.userId === o.seller.userId) {
-    location.href = "/profile.html";
+  if (count === 0) {
+    sellerRatingEl.textContent = pageT("seller.noReviews");
   } else {
-    location.href = `/profile.html?id=${o.seller.userId}`;
-  }
-}
-
-sellerNameEl.onclick = goToSellerProfile;
-sellerAvatarEl.onclick = goToSellerProfile;
-
-}
-// ===== seller rating (оставляем твою систему, но нормальный вид) =====
-const count = Number(o.seller.reviewsCount || 0);
-
-if (count === 0) {
-sellerRatingEl.textContent = pageT("seller.noReviews");
-} else {
-sellerRatingEl.innerHTML = `
-  ${renderStars(o.seller.rating)}
-  <span style="margin-left:6px;">${formatReviewsCount(count)}</span>
-`;
-}
-
-function parseDateToMs(v){
-  if(!v) return 0;
-  if(typeof v === "number"){
-    // если пришло в секундах (10 цифр) — переводим в мс
-    return v < 1e12 ? v * 1000 : v;
-  }
-  const ms = Date.parse(v);
-  return Number.isNaN(ms) ? 0 : ms;
-}
-
-function pluralText(count, one, few, many){
-  return window.tpI18n?.plural(count, one, few, many) || many;
-}
-
-function formatReviewsCount(n){
-  const count = Math.abs(Number(n) || 0);
-  const word = pluralText(
-    count,
-    pageT("reviews.one"),
-    pageT("reviews.few"),
-    pageT("reviews.many")
-  );
-
-  return `${count} ${word}`;
-}
-
-function getTimeWord(unit, count){
-  return pluralText(
-    count,
-    pageT(`seller.words.${unit}.one`),
-    pageT(`seller.words.${unit}.few`),
-    pageT(`seller.words.${unit}.many`)
-  );
-}
-
-function formatOnSite(ms){
-  const diff = Date.now() - ms;
-  if (diff <= 0) return "";
-
-  const minute = 60 * 1000;
-  const hour = 60 * minute;
-  const day = 24 * hour;
-  const week = 7 * day;
-  const month = 30 * day;
-  const year = 365 * day;
-
-  const minutes = Math.floor(diff / minute);
-  const hours = Math.floor(diff / hour);
-  const days = Math.floor(diff / day);
-  const weeks = Math.floor(diff / week);
-  const months = Math.floor(diff / month);
-  const years = Math.floor(diff / year);
-
-  if (minutes < 1) {
-    return pageT("seller.onSite.lessMinute");
+    sellerRatingEl.innerHTML = `
+      ${renderStars(o.seller.rating)}
+      <span style="margin-left:6px;">${formatReviewsCount(count)}</span>
+    `;
   }
 
-  if (minutes < 60) {
-    return pageT("seller.onSite.minutes", {
-      count: minutes,
-      word: getTimeWord("minute", minutes)
+  if (o.seller.userId) {
+    sellerRatingEl.style.cursor = "pointer";
+    sellerRatingEl.onclick = () => goToSellerReviews(o.seller.userId);
+  } else {
+    sellerRatingEl.style.cursor = "";
+    sellerRatingEl.onclick = null;
+  }
+
+  function parseDateToMs(v){
+    if(!v) return 0;
+
+    if(typeof v === "number"){
+      return v < 1e12 ? v * 1000 : v;
+    }
+
+    const ms = Date.parse(v);
+    return Number.isNaN(ms) ? 0 : ms;
+  }
+
+  function pluralText(count, one, few, many){
+    return window.tpI18n?.plural(count, one, few, many) || many;
+  }
+
+  function formatReviewsCount(n){
+    return String(Math.abs(Number(n) || 0));
+  }
+
+  function getTimeWord(unit, count){
+    return pluralText(
+      count,
+      pageT(`seller.words.${unit}.one`),
+      pageT(`seller.words.${unit}.few`),
+      pageT(`seller.words.${unit}.many`)
+    );
+  }
+
+  function formatOnSite(ms){
+    const diff = Date.now() - ms;
+    if (diff <= 0) return "";
+
+    const minute = 60 * 1000;
+    const hour = 60 * minute;
+    const day = 24 * hour;
+    const week = 7 * day;
+    const month = 30 * day;
+    const year = 365 * day;
+
+    const minutes = Math.floor(diff / minute);
+    const hours = Math.floor(diff / hour);
+    const days = Math.floor(diff / day);
+    const weeks = Math.floor(diff / week);
+    const months = Math.floor(diff / month);
+    const years = Math.floor(diff / year);
+
+    if (minutes < 1) {
+      return pageT("seller.onSite.lessMinute");
+    }
+
+    if (minutes < 60) {
+      return pageT("seller.onSite.minutes", {
+        count: minutes,
+        word: getTimeWord("minute", minutes)
+      });
+    }
+
+    if (hours < 24) {
+      return pageT("seller.onSite.hours", {
+        count: hours,
+        word: getTimeWord("hour", hours)
+      });
+    }
+
+    if (days < 7) {
+      return pageT("seller.onSite.days", {
+        count: days,
+        word: getTimeWord("day", days)
+      });
+    }
+
+    if (weeks < 5) {
+      return pageT("seller.onSite.weeks", {
+        count: weeks,
+        word: getTimeWord("week", weeks)
+      });
+    }
+
+    if (months < 12) {
+      return pageT("seller.onSite.months", {
+        count: months,
+        word: getTimeWord("month", months)
+      });
+    }
+
+    return pageT("seller.onSite.years", {
+      count: years,
+      word: getTimeWord("year", years)
     });
   }
 
-  if (hours < 24) {
-    return pageT("seller.onSite.hours", {
-      count: hours,
-      word: getTimeWord("hour", hours)
-    });
+  const regMs =
+    parseDateToMs(o.seller.createdAt) ||
+    parseDateToMs(o.seller.registeredAt) ||
+    parseDateToMs(o.seller.created) ||
+    parseDateToMs(o.seller.createdAtMs);
+
+  if (regMs) {
+    sellerOnSiteEl.textContent = formatOnSite(regMs);
+    sellerOnSiteEl.style.display = "block";
+  } else {
+    sellerOnSiteEl.textContent = "";
+    sellerOnSiteEl.style.display = "none";
   }
 
-  if (days < 7) {
-    return pageT("seller.onSite.days", {
-      count: days,
-      word: getTimeWord("day", days)
-    });
+  sellerStatusDotEl.classList.remove("online", "offline");
+
+  if (o.seller.online === true) {
+    sellerStatusDotEl.classList.add("online");
+  } else {
+    sellerStatusDotEl.classList.add("offline");
   }
 
-  if (weeks < 5) {
-    return pageT("seller.onSite.weeks", {
-      count: weeks,
-      word: getTimeWord("week", weeks)
-    });
-  }
-
-  if (months < 12) {
-    return pageT("seller.onSite.months", {
-      count: months,
-      word: getTimeWord("month", months)
-    });
-  }
-
-  return pageT("seller.onSite.years", {
-    count: years,
-    word: getTimeWord("year", years)
-  });
-}
-
-// пробуем найти дату регистрации в разных возможных полях (на всякий)
-const regMs =
-  parseDateToMs(o.seller.createdAt) ||
-  parseDateToMs(o.seller.registeredAt) ||
-  parseDateToMs(o.seller.created) ||
-  parseDateToMs(o.seller.createdAtMs);
-
-if (regMs) {
-sellerOnSiteEl.textContent = formatOnSite(regMs);
-sellerOnSiteEl.style.display = "block";
-} else {
-sellerOnSiteEl.textContent = "";
-sellerOnSiteEl.style.display = "none";
-}
-
-sellerStatusDotEl.classList.remove("online", "offline");
-
-if (o.seller.online === true) {
-  sellerStatusDotEl.classList.add("online");
-} else {
-  sellerStatusDotEl.classList.add("offline");
-}
   if (o.seller.avatarUrl) {
     sellerAvatarEl.src = o.seller.avatarUrl;
   } else if (o.seller.avatarDataUrl) {
     sellerAvatarEl.src = o.seller.avatarDataUrl;
   }
 
-// ===== GALLERY =====
-const images = Array.isArray(o.images) && o.images.length
-  ? o.images
-  : (o.imageUrl ? [o.imageUrl] : []);
+  const images = Array.isArray(o.images) && o.images.length
+    ? o.images
+    : (o.imageUrl ? [o.imageUrl] : []);
 
-initGallery({
-  images,
-  trackId: "galTrack",
-  prevId: "galPrev",
-  nextId: "galNext",
-  galleryId: "gallery"
-});
-cleanupOfferUI(o);
-setupDescExpand();
+  initGallery({
+    images,
+    trackId: "galTrack",
+    prevId: "galPrev",
+    nextId: "galNext",
+    galleryId: "gallery"
+  });
 
-
+  cleanupOfferUI(o);
+  setupDescExpand();
 }
 
 function getFavs(){
@@ -1056,13 +1344,10 @@ window.addEventListener("tp:lang-change", async (e) => {
 
 async function updatePrice(){
   const basePrice = Number(priceEl.dataset.price);
-
   if (!Number.isFinite(basePrice) || basePrice <= 0) return;
-
   priceEl.textContent = await tpMoney.formatPrice(basePrice);
 }
 
-// ===== UI CLEANUP =====
 function cleanupOfferUI(o){
   const descText = getTextByLang(o.description);
   const section = document.getElementById("descSection");
@@ -1080,7 +1365,6 @@ function cleanupOfferUI(o){
 window.addEventListener("tp:currency-change", updatePrice);
 
 function setupTitleExpand(){
-  const titleEl = document.getElementById("title");
   const btn = document.getElementById("expandTitleBtn");
 
   titleEl.style.display = "-webkit-box";
@@ -1101,7 +1385,6 @@ function setupTitleExpand(){
 }
 
 function setupDescExpand(){
-  const descEl = document.getElementById("desc");
   const btn = document.getElementById("expandDescBtn");
 
   descEl.style.display = "-webkit-box";
@@ -1125,28 +1408,20 @@ function getOfferAbsoluteUrl(){
   return new URL(`/offer.html?id=${offerId}`, window.location.origin).toString();
 }
 
-function flashToolButton(btn, text){
+function flashToolButton(btn){
   if (!btn) return;
 
-  const span = btn.querySelector("span");
-  if (!span) return;
-
-  const oldText = span.textContent;
-
   btn.classList.add("is-success");
-  span.textContent = text;
 
   setTimeout(() => {
     btn.classList.remove("is-success");
-    span.textContent = oldText;
-  }, 1400);
+  }, 1200);
 }
 
 async function shareOffer(){
   if (!currentOffer) return;
 
-  const shareDoneText = pageT("tools.shareDone");
-const shareFailText = pageT("tools.shareFail");
+  const shareFailText = pageT("tools.shareFail");
   const url = getOfferAbsoluteUrl();
   const title = getTextByLang(currentOffer.title) || document.title;
 
@@ -1169,7 +1444,7 @@ const shareFailText = pageT("tools.shareFail");
 
   try {
     await navigator.clipboard.writeText(url);
-    flashToolButton(shareOfferBtn, shareDoneText);
+    flashToolButton(shareOfferBtn);
   } catch (e) {
     alert(shareFailText);
   }
@@ -1186,12 +1461,12 @@ function openOfferReportPage(){
     return;
   }
 
-  const params = new URLSearchParams({
+  const reportParams = new URLSearchParams({
     category: "report_offer",
     offerId: currentOffer.offerId ? `OID:${currentOffer.offerId}` : ""
   });
 
-  location.href = `${SUPPORT_CREATE_URL}?${params.toString()}`;
+  location.href = `${SUPPORT_CREATE_URL}?${reportParams.toString()}`;
 }
 
 if (shareOfferBtn) {
@@ -1222,11 +1497,10 @@ function setupFavorite(offerId){
     }
   };
 }
-
 </script>
+
 <script>
 async function openChatWithSeller(offerId){
-
   const token = localStorage.getItem("tp_token");
 
   if(!token){
@@ -1250,16 +1524,17 @@ async function openChatWithSeller(offerId){
     return;
   }
 
-// 🔥 если пользователь снова зашёл через кнопку,
-// убираем скрытие мини-блока
-localStorage.removeItem("tp_hide_offer_block_" + offerId);
+  localStorage.removeItem("tp_hide_offer_block_" + offerId);
+  localStorage.setItem("tp_active_chat", data.chat.id);
 
-// 🔥 сохраняем какой чат открыть
-localStorage.setItem("tp_active_chat", data.chat.id);
+  sessionStorage.setItem("tp_chat_back", JSON.stringify({
+    type: "offer",
+    offerId,
+    chatId: data.chat.id,
+    ts: Date.now()
+  }));
 
-// 🔥 переходим в чаты
-location.href = "/chats.html";
-
+  location.href = "/chats.html";
 }
 </script>
 

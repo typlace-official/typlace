@@ -40,20 +40,45 @@
   <link rel="stylesheet" href="/footer.css">
 
   <style>
+    :root{
+      --tp-header-space:110px;
+    }
+
+    html,
     body{
       margin:0;
-      font-family: Arial, sans-serif;
+      padding:0;
+      min-height:100%;
+      overflow-x:hidden;
       background:#f6f6f6;
+    }
+
+    body{
+      min-height:100svh;
+      font-family:Arial, sans-serif;
       color:#111;
+    }
+
+    img{
+      max-width:100%;
+    }
+
+    .page-content{
+      min-height:100svh;
+      padding-top:var(--tp-header-space);
+      box-sizing:border-box;
+      display:flex;
     }
 
     /* ===== layout ===== */
     .page{
       max-width:1100px;
+      width:100%;
       margin:0 auto;
       display:flex;
       gap:24px;
-      padding:24px 16px 60px;
+      padding:0 16px;
+      box-sizing:border-box;
     }
 
     /* ===== alphabet ===== */
@@ -86,6 +111,13 @@
     /* ===== content ===== */
     .content{
       flex:1;
+      min-width:0;
+      width:100%;
+      min-height:calc(100svh - var(--tp-header-space));
+      display:flex;
+      flex-direction:column;
+      box-sizing:border-box;
+      padding:8px 0 24px;
     }
 
     .letter-block{
@@ -143,9 +175,17 @@
     }
 
     @media (max-width: 768px){
+      :root{
+        --tp-header-space:100px;
+      }
+
       .page{
-        display:block;
-        padding:16px 12px 40px;
+        display:flex;
+        padding:0 12px;
+      }
+
+      .content{
+        padding:0 0 24px;
       }
 
       .letter-block{
@@ -176,29 +216,12 @@
       }
     }
 
-    html, body{
-      overflow-x:hidden;
-    }
-
-    .page{
-      width:100%;
-      box-sizing:border-box;
-    }
-
-    .content{
-      min-width:0;
-    }
-
-    img{
-      max-width:100%;
-    }
-
     /* ===== HOME ===== */
 
     .section-title{
       font-size:20px;
       font-weight:800;
-      margin-bottom:18px;
+      margin:0 0 18px;
       display:flex;
       align-items:center;
       gap:8px;
@@ -207,6 +230,7 @@
     .games-home{
       display:flex;
       gap:20px;
+      flex-wrap:wrap;
     }
 
     .game-home-card{
@@ -235,6 +259,7 @@
       font-size:14px;
       font-weight:500;
       margin-top:-2px;
+      text-align:center;
     }
 
     .home-note{
@@ -399,17 +424,17 @@
 
         renderGamesHome();
 
-await Promise.all([
-  (window.tpI18nReady && typeof window.tpI18nReady.then === "function")
-    ? window.tpI18nReady
-    : Promise.resolve(),
+        await Promise.all([
+          (window.tpI18nReady && typeof window.tpI18nReady.then === "function")
+            ? window.tpI18nReady
+            : Promise.resolve(),
 
-  (window.tpHeaderReady && typeof window.tpHeaderReady.then === "function")
-    ? window.tpHeaderReady
-    : waitForContainerContent("#header-container"),
+          (window.tpHeaderReady && typeof window.tpHeaderReady.then === "function")
+            ? window.tpHeaderReady
+            : waitForContainerContent("#header-container"),
 
-  waitForContainerContent("#footer-container")
-]);
+          waitForContainerContent("#footer-container")
+        ]);
       } catch (err) {
         console.error("Home boot error:", err);
       } finally {
